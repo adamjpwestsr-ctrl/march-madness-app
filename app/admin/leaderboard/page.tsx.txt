@@ -1,0 +1,91 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { supabase } from '../../../lib/supabaseClient'
+
+export default function LeaderboardPage() {
+  const [rows, setRows] = useState<any[]>([])
+
+  useEffect(() => {
+    loadLeaderboard()
+  }, [])
+
+  const loadLeaderboard = async () => {
+    const { data } = await supabase
+      .from('leaderboard_view')
+      .select('*')
+      .order('total_points', { ascending: false })
+
+    setRows(data ?? [])
+  }
+
+  const renderRankChange = (change: number | null) => {
+    if (change === null) return '—'
+    if (change > 0)
+      return (
+        <span style={{ color: '#16a34a', fontWeight: 700 }}>
+          ⬆ {change}
+        </span>
+      )
+    if (change < 0)
+      return (
+        <span style={{ color: '#dc2626', fontWeight: 700 }}>
+          ⬇ {Math.abs(change)}
+        </span>
+      )
+    return '—'
+  }
+
+  return (
+    <div style={{ padding: 30 }}>
+      <h1 style={{ fontSize: 28, fontWeight: 700, marginBottom: 20 }}>
+        Leaderboard
+      </h1>
+
+      <table
+        style={{
+          width: '100%',
+          borderCollapse: 'collapse',
+          background: 'white',
+          borderRadius: 8,
+          overflow: 'hidden'
+        }}
+      >
+        <thead style={{ background: '#0f172a', color: 'white' }}>
+          <tr>
+            <th style={{ padding: 12, textAlign: 'left' }}>Rank</th>
+            <th style={{ padding: 12, textAlign: 'left' }}>Δ</th>
+            <th style={{ padding: 12, textAlign: 'left' }}>User</th>
+            <th style={{ padding: 12, textAlign: 'left' }}>Points</th>
+            <th style={{ padding: 12, textAlign: 'left' }}>Tiebreaker</th>
+            <th style={{ padding: 12, textAlign: 'left' }}>Diff</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {rows.map((row, index) => (
+            <tr
+              key={row.user_id}
+              style={{
+                borderBottom: '1px solid #e2e8f0',
+                background: index % 2 === 0 ? '#f8fafc' : 'white'
+              }}
+            >
+              <td style={{ padding: 12 }}>{index + 1}</td>
+
+              {/* Rank Change Arrow */}
+              <td style={{ padding: 12 }}>
+                {renderRankChange(row.rank_change)}
+              </td>
+
+              <td style={{ padding: 12 }}>{row.username}</td>
+              <td style={{ padding: 12 }}>{row.total_points}</td>
+              <td style={{ padding: 12 }}>{row.tiebreaker ?? '—'}</td>
+              <td style={{ padding: 12 }}>{row.tiebreaker_diff ?? '—'}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}

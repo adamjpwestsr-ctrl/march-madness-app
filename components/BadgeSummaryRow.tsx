@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import BadgeHoverCard from "../BadgeHoverCard";
+import BadgeHoverCard from "./BadgeHoverCard";
 import { getBadgeTier } from "./BadgeTier";
 
 type BadgeSummaryRowProps = {

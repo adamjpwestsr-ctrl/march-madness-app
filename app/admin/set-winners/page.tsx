@@ -4,9 +4,9 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabaseClient'
 
 export default function AdminPage() {
-  const [games, setGames] = useState([])
-  const [selectedGame, setSelectedGame] = useState(null)
-  const [winner, setWinner] = useState(null)
+  const [games, setGames] = useState<any[] | null>(null)
+  const [selectedGame, setSelectedGame] = useState<number | null>(null)
+  const [winner, setWinner] = useState<string | null>(null)
 
   useEffect(() => {
     loadGames()
@@ -35,7 +35,7 @@ export default function AdminPage() {
     loadGames()
   }
 
-  const game = games.find(g => g.game_id === selectedGame)
+  const game = (games ?? []).find(g => g.game_id === selectedGame)
 
   return (
     <div style={{ padding: 20 }}>
@@ -44,7 +44,8 @@ export default function AdminPage() {
       {/* GAME SELECT DROPDOWN */}
       <select
         onChange={(e) => {
-          setSelectedGame(Number(e.target.value))
+          const value = e.target.value
+          setSelectedGame(value ? Number(value) : null)
           setWinner(null)
         }}
         style={{
@@ -56,7 +57,7 @@ export default function AdminPage() {
         }}
       >
         <option value="">Select Game</option>
-        {games.map(g => (
+        {(games ?? []).map(g => (
           <option
             key={g.game_id}
             value={g.game_id}

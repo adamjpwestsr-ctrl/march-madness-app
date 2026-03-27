@@ -26,14 +26,23 @@ export default function AdminBracketsPage() {
     }
   }, [selectedUser])
 
-  // ✅ FIXED: Supabase v2 distinct syntax
+  // ✅ Fetch all picks, then dedupe user_id in JS
   const loadUsers = async () => {
     const { data } = await supabase
       .from('picks')
-      .select('user_id', { distinct: true })
+      .select('user_id')
       .order('user_id')
 
-    setUsers(data ?? [])
+    const rows = data ?? []
+
+    const seen = new Set<number>()
+    const uniqueUsers = rows.filter((row: any) => {
+      if (seen.has(row.user_id)) return false
+      seen.add(row.user_id)
+      return true
+    })
+
+    setUsers(uniqueUsers)
   }
 
   const loadGames = async () => {

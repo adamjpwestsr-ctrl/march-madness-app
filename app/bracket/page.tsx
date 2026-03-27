@@ -288,7 +288,7 @@ export default function BracketPage() {
   </button>
 
   {hoveredTeam === game.team1 && (
-    <TeamHoverCard team={game.team1} />
+    <TeamHoverCard team={game.team1 ?? ''} />
   )}
 </div>
 

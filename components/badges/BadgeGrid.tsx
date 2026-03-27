@@ -2,17 +2,17 @@ import React from "react";
 import BadgeHoverCard from "../BadgeHoverCard";
 import { getBadgeTier } from "./BadgeTier";
 
-type BadgeStripProps = {
+type BadgeGridProps = {
   badges: {
     id: number;
-    name: string;
+    name: string;          // e.g. "underdog_count"
     description: string;
-    progress: number;
+    progress: number | any;
     goal: number;
   }[];
 };
 
-export default function BadgeStrip({ badges }: BadgeStripProps) {
+export default function BadgeGrid({ badges }: BadgeGridProps) {
   return (
     <div
       style={{
@@ -23,7 +23,13 @@ export default function BadgeStrip({ badges }: BadgeStripProps) {
       }}
     >
       {badges.map((badge) => {
-        const tier = getBadgeTier(badge.progress, badge.goal);
+        // Convert name → key expected by getBadgeTier
+        const key = badge.name;
+
+        // progress is the "value" for tier calculation
+        const value = badge.progress;
+
+        const tier = getBadgeTier(key, value);
 
         return (
           <BadgeHoverCard key={badge.id} badge={badge} tier={tier}>

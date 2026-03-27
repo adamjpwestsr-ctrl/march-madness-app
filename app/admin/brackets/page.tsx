@@ -26,15 +26,14 @@ export default function AdminBracketsPage() {
     }
   }, [selectedUser])
 
-  const loadUsers = async () => {
-    const { data } = await supabase
-      .from('picks')
-      .select('user_id')
-      .group('user_id')
-      .order('user_id')
+const loadUsers = async () => {
+  const { data } = await supabase
+    .from('picks')
+    .select('user_id', { distinct: true })
+    .order('user_id')
 
-    setUsers(data ?? [])
-  }
+  setUsers(data ?? [])
+}
 
   const loadGames = async () => {
     const { data } = await supabase

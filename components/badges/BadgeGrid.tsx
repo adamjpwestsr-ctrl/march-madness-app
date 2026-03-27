@@ -1,9 +1,9 @@
 "use client";
 
 import React from "react";
-import BadgeHoverCard from "./BadgeHoverCard";
-import BadgeProgress from "./badges/BadgeProgress";
-import { getBadgeTier } from "./badges/BadgeTier";
+import BadgeHoverCard from "../BadgeHoverCard";
+import BadgeProgress from "./BadgeProgress";
+import { getBadgeTier } from "./BadgeTier";
 
 type BadgeGridProps = {
   badges: any;

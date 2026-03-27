@@ -16,9 +16,19 @@ const checkLock = async () => {
     .select('lock_time')
     .single()
 
-  if (new Date() > new Date(data.lock_time)) {
-    setLocked(true)
-  }
+const { data } = await supabase
+  .from('bracket_submissions')
+  .select('lock_time')
+  .eq('user_id', userId)
+  .single()
+
+if (!data) {
+  setLocked(false)
+  return
+}
+
+if (new Date() > new Date(data.lock_time)) {
+  setLocked(true)
 }
 
 if (locked) return <p>Bracket is locked.</p>

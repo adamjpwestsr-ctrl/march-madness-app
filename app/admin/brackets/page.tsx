@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from 'react'
 import { supabase } from '../../../lib/supabaseClient'
 import ReadOnlyBracket from '../../../components/bracket/ReadOnlyBracket'
-import BadgeGrid from '@/components/BadgeGrid'   // ⭐ NEW IMPORT
+import BadgeGrid from '@/components/BadgeGrid'
 
 export default function AdminBracketsPage() {
   const [users, setUsers] = useState<any[]>([])
@@ -11,7 +11,7 @@ export default function AdminBracketsPage() {
   const [picks, setPicks] = useState<any[]>([])
   const [games, setGames] = useState<any[]>([])
   const [tiebreaker, setTiebreaker] = useState<number | null>(null)
-  const [badges, setBadges] = useState<any>(null)   // ⭐ NEW STATE
+  const [badges, setBadges] = useState<any>(null)
 
   useEffect(() => {
     loadUsers()
@@ -22,18 +22,19 @@ export default function AdminBracketsPage() {
     if (selectedUser) {
       loadUserPicks()
       loadTiebreaker()
-      loadBadges()   // ⭐ LOAD BADGES WHEN USER SELECTED
+      loadBadges()
     }
   }, [selectedUser])
 
-const loadUsers = async () => {
-  const { data } = await supabase
-    .from('picks')
-    .select('user_id', { distinct: true })
-    .order('user_id')
+  // ✅ FIXED: Supabase v2 distinct syntax
+  const loadUsers = async () => {
+    const { data } = await supabase
+      .from('picks')
+      .select('user_id', { distinct: true })
+      .order('user_id')
 
-  setUsers(data ?? [])
-}
+    setUsers(data ?? [])
+  }
 
   const loadGames = async () => {
     const { data } = await supabase
@@ -63,12 +64,11 @@ const loadUsers = async () => {
     setTiebreaker(data?.tiebreaker ?? null)
   }
 
-  // ⭐ LOAD BADGES FOR THIS USER'S BRACKET
   const loadBadges = async () => {
     const { data } = await supabase
       .from('bracket_badges')
       .select('badges')
-      .eq('bracket_id', selectedUser)   // your bracket_id == user_id in admin viewer
+      .eq('bracket_id', selectedUser)
       .single()
 
     setBadges(data?.badges ?? {})
@@ -181,7 +181,7 @@ const loadUsers = async () => {
               </h3>
             </div>
 
-            {/* ⭐ BADGE GRID INSERTED HERE ⭐ */}
+            {/* BADGE GRID */}
             <div style={{ marginTop: 20 }}>
               <BadgeGrid badges={badges} />
             </div>

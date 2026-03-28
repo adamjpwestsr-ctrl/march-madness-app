@@ -17,7 +17,7 @@ type MulliganModalProps = {
   game: Game | null;
   aliveTeams: string[];
   onSubmit: (team: string) => void | Promise<void>;
-};
+}
 
 type Game = {
   game_id: number

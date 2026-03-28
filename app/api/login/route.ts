@@ -66,7 +66,8 @@ export async function POST(req: Request) {
     isAdmin: !!user.is_admin
   }
 
-  cookies().set('mm_session', JSON.stringify(sessionPayload), {
+  const cookieStore = await cookies();
+  cookieStore.set('mm_session', JSON.stringify(sessionPayload), {
     httpOnly: true,
     sameSite: 'lax',
     path: '/',

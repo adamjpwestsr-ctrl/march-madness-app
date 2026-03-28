@@ -1,32 +1,41 @@
 import { SupabaseClient } from '@supabase/supabase-js'
 
-type ApproveMulliganRequest = {
-  request_id: number
-  admin_id: string
+type RequestMulliganParams = {
+  user_id: string
+  game_id: number
+  original_team: string
+  replacement_team: string
 }
 
-export const approve_mulligan = async (
+export const request_mulligan = async (
   supabase: SupabaseClient,
-  params: ApproveMulliganRequest
+  params: RequestMulliganParams
 ) => {
-  const { request_id, admin_id } = params
+  const { user_id, game_id, original_team, replacement_team } = params
 
-  // Fetch the request
-  const { data: req } = await supabase
-    .from('mulligan_requests')
-    .select('*')
-    .eq('id', request_id)
+  // Check mulligans remaining
+  const { data: used } = await supabase
+    .from('mulligans_used')
+    .select('used')
+    .eq('user_id', user_id)
     .single()
 
-  if (!req) {
-    return { error: 'Request not found' }
+  if (used && used.used >= 2) {
+    return { error: 'No mulligans remaining' }
   }
 
-  // Approve it
-  await supabase
+  // Insert request
+  const { data, error } = await supabase
     .from('mulligan_requests')
-    .update({ status: 'approved', admin_id })
-    .eq('id', request_id)
+    .insert({
+      user_id,
+      game_id,
+      original_team,
+      replacement_team,
+      status: 'pending'
+    })
+    .select()
+    .single()
 
-  return { success: true }
+  return { data, error }
 }

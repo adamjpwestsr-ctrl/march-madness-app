@@ -632,16 +632,10 @@ const renderGameButtons = (game: Game) => {
         })}
       </div>
 
-      <MulliganModal
-        isOpen={showMulliganModal}
-        onClose={() => setShowMulliganModal(false)}
-        game={selectedGame}
-        aliveTeams={aliveTeams}
-        onSubmit={async (replacementTeam: string) => {
-          await submitMulliganRequest(selectedGame, replacementTeam)
-          setShowMulliganModal(false)
-        }}
-      />
-    </div>
-  )
-}
+type MulliganModalProps = {
+  isOpen: boolean;
+  onClose: () => void;
+  game: Game | null;
+  aliveTeams: string[];
+  onSubmit: (team: string) => void | Promise<void>;
+};

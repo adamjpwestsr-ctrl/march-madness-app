@@ -11,6 +11,14 @@ import BadgeGrid from "@/components/BadgeGrid";
 const TEAM_BLOCK_HEIGHT = 52
 const ROUND_COLUMN_WIDTH = 150
 
+type MulliganModalProps = {
+  isOpen: boolean;
+  onClose: () => void;
+  game: Game | null;
+  aliveTeams: string[];
+  onSubmit: (team: string) => void | Promise<void>;
+};
+
 type Game = {
   game_id: number
   round: number
@@ -631,11 +639,3 @@ const renderGameButtons = (game: Game) => {
           )
         })}
       </div>
-
-type MulliganModalProps = {
-  isOpen: boolean;
-  onClose: () => void;
-  game: Game | null;
-  aliveTeams: string[];
-  onSubmit: (team: string) => void | Promise<void>;
-};

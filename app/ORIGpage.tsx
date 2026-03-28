@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 
 export default function Home() {
-  const [games, setGames] = useState([])
-  const [picks, setPicks] = useState({})
+  const [games, setGames] = useState<any[]>([])
+  const [picks, setPicks] = useState<any[]>([])
 
   useEffect(() => {
     fetchGames()
@@ -18,7 +18,7 @@ export default function Home() {
       .eq('round', 1)
       .order('game_id')
 
-    setGames(data)
+    setGames(data ?? [])
   }
 
   const handlePick = (gameId, team) => {

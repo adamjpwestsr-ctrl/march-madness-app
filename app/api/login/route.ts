@@ -66,13 +66,14 @@ export async function POST(req: Request) {
     isAdmin: !!user.is_admin
   }
 
-  const cookieStore = await cookies();
-  cookieStore.set('mm_session', JSON.stringify(sessionPayload), {
-    httpOnly: true,
-    sameSite: 'lax',
-    path: '/',
-    maxAge: 60 * 60 * 24 * 7 // 7 days
-  })
+const cookieStore = await cookies();
+
+cookieStore.set('mm_session', JSON.stringify(sessionPayload), {
+  httpOnly: true,
+  sameSite: 'lax',
+  path: '/',
+  maxAge: 60 * 60 * 24 * 7 // 7 days
+});
 
   return NextResponse.json(
     {

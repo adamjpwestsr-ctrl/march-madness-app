@@ -2,13 +2,24 @@
 
 import React from "react";
 
+type MulliganModalProps = {
+  isOpen: boolean;
+  onClose: () => void;
+  game: {
+    original_team: string;
+    [key: string]: any;
+  } | null;
+  aliveTeams: string[];
+  onSubmit: (team: string) => void | Promise<void>;
+};
+
 export default function MulliganModal({
   isOpen,
   onClose,
   game,
   aliveTeams,
   onSubmit
-}) {
+}: MulliganModalProps) {
   const [selectedTeam, setSelectedTeam] = React.useState("");
 
   if (!isOpen || !game) return null;

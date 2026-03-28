@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { getTeamLogo } from '../../../lib/getTeamLogo'
+import { getTeamLogo } from '../../lib/getTeamLogo'
 
 export default function HistoryOverlay({
   round,

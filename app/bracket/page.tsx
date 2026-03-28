@@ -11,6 +11,14 @@ import BadgeGrid from "@/components/BadgeGrid";
 const TEAM_BLOCK_HEIGHT = 52
 const ROUND_COLUMN_WIDTH = 150
 
+type MulliganModalProps = {
+  isOpen: boolean;
+  onClose: () => void;
+  game: Game | null;
+  aliveTeams: string[];
+  onSubmit: (team: string) => void | Promise<void>;
+}
+
 type Game = {
   game_id: number
   round: number
@@ -197,204 +205,193 @@ export default function BracketPage() {
     )
   )
 
-  const renderGameButtons = (game: Game) => {
-    const disabled = !isEnabled(game)
-    const selected = picks[game.game_id]
+const renderGameButtons = (game: Game) => {
+  const disabled = !isEnabled(game)
+  const selected = picks[game.game_id]
 
-    const finalFourTeams = highlightFinalFourPath ? getFinalFourTeams() : null
-    const isInFinalFourPath =
-      highlightFinalFourPath &&
-      finalFourTeams &&
-      ((game.team1 && finalFourTeams.has(game.team1)) ||
-        (game.team2 && finalFourTeams.has(game.team2)))
+  const finalFourTeams = highlightFinalFourPath ? getFinalFourTeams() : null
+  const isInFinalFourPath =
+    highlightFinalFourPath &&
+    finalFourTeams &&
+    ((game.team1 && finalFourTeams.has(game.team1)) ||
+      (game.team2 && finalFourTeams.has(game.team2)))
 
-    const baseStyle: React.CSSProperties = {
-      height: TEAM_BLOCK_HEIGHT,
-      width: '100%',
-      borderRadius: 10,
-      borderWidth: 2,
-      borderStyle: 'solid',
-      borderColor: isInFinalFourPath ? '#16A34A' : '#1D4ED8',
-      background:
-        'linear-gradient(135deg, rgba(15,23,42,0.96), rgba(30,64,175,0.9))',
-      color: '#e5e7eb',
-      fontWeight: 600,
-      cursor: disabled ? 'not-allowed' : 'pointer',
-      opacity: disabled ? 0.5 : 1,
-      transition:
-        'transform 0.14s ease, box-shadow 0.14s ease, border-color 0.14s ease, background 0.14s ease',
-      boxShadow: '0 3px 8px rgba(0,0,0,0.18)',
-      outline: 'none',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      padding: '0 10px',
-      textAlign: 'left',
-      gap: 8
-    }
+  const baseStyle: React.CSSProperties = {
+    height: TEAM_BLOCK_HEIGHT,
+    width: '100%',
+    borderRadius: 10,
+    borderWidth: 2,
+    borderStyle: 'solid',
+    borderColor: isInFinalFourPath ? '#16A34A' : '#1D4ED8',
+    background:
+      'linear-gradient(135deg, rgba(15,23,42,0.96), rgba(30,64,175,0.9))',
+    color: '#e5e7eb',
+    fontWeight: 600,
+    cursor: disabled ? 'not-allowed' : 'pointer',
+    opacity: disabled ? 0.5 : 1,
+    transition:
+      'transform 0.14s ease, box-shadow 0.14s ease, border-color 0.14s ease, background 0.14s ease',
+    boxShadow: '0 3px 8px rgba(0,0,0,0.18)',
+    outline: 'none',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '0 10px',
+    textAlign: 'left',
+    gap: 8
+  }
 
-    const selectedStyle: React.CSSProperties = {
-      background: isInFinalFourPath
-        ? 'linear-gradient(135deg, #16A34A, #15803D)'
-        : 'linear-gradient(135deg, #1D4ED8, #1E40AF)',
-      transform: 'translateY(-1px)',
-      boxShadow: '0 6px 14px rgba(0,0,0,0.35)',
-      borderColor: isInFinalFourPath ? '#16A34A' : '#1D4ED8'
-    }
+  const selectedStyle: React.CSSProperties = {
+    background: isInFinalFourPath
+      ? 'linear-gradient(135deg, #16A34A, #15803D)'
+      : 'linear-gradient(135deg, #1D4ED8, #1E40AF)',
+    transform: 'translateY(-1px)',
+    boxShadow: '0 6px 14px rgba(0,0,0,0.35)',
+    borderColor: isInFinalFourPath ? '#16A34A' : '#1D4ED8'
+  }
 
-    const logo1 = getTeamLogo(game.team1)
-    const logo2 = getTeamLogo(game.team2)
+  const logo1 = getTeamLogo(game.team1)
+  const logo2 = getTeamLogo(game.team2)
 
-    return (
-      <div style={{ marginBottom: 10, position: 'relative', paddingLeft: 0 }}>
+  return (
+    <div style={{ marginBottom: 10, position: 'relative', paddingLeft: 0 }}>
 
-{/* TEAM 1 BUTTON */}
-<div
-  style={{
-    position: 'relative',
-    display: 'block',     // <-- FIXED
-    width: '100%',        // <-- FIXED
-  }}
-  onMouseEnter={() => {
-    if (!game.team1) return
-    console.log("ENTERED WRAPPER")
-    setHoveredTeam(game.team1)
-  }}
-  onMouseLeave={() => {
-    console.log("LEFT WRAPPER")
-    setHoveredTeam(null)
-  }}
->
-  <button
-    disabled={disabled}
-    onClick={() => handlePick(game.game_id, game.team1)}
-    style={{
-      ...baseStyle,
-      ...(selected === game.team1 ? selectedStyle : {})
-    }}
-  >
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-      {logo1 && (
-        <img
-          src={logo1}
-          style={{ width: 22, height: 22, borderRadius: 9999 }}
-        />
-      )}
-      <span style={{ fontSize: 13, whiteSpace: 'nowrap' }}>
-        {game.seed1 ? `${game.seed1} ` : ''}
-        {game.team1}
-      </span>
-    </div>
-  </button>
-
-  {hoveredTeam === game.team1 && (
-    <TeamHoverCard team={game.team1} />
-  )}
-</div>
-
-{/* TEAM 2 BUTTON */}
-<div
-  style={{
-    position: 'relative',
-    display: 'block',     // <-- FIXED
-    width: '100%',        // <-- FIXED
-  }}
-  onMouseEnter={() => {
-    if (!game.team2) return
-    console.log("ENTERED WRAPPER")
-    setHoveredTeam(game.team1)
-  }}
-  onMouseLeave={() => {
-    console.log("LEFT WRAPPER")
-    setHoveredTeam(null)
-  }}
->
-  <button
-    disabled={disabled}
-    onClick={() => handlePick(game.game_id, game.team2)}
-    style={{
-      ...baseStyle,
-      ...(selected === game.team2 ? selectedStyle : {})
-    }}
-  >
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-      {logo2 && (
-        <img
-          src={logo2}
-          style={{ width: 22, height: 22, borderRadius: 9999 }}
-        />
-      )}
-      <span style={{ fontSize: 13, whiteSpace: 'nowrap' }}>
-        {game.seed2 ? `${game.seed2} ` : ''}
-        {game.team2}
-      </span>
-    </div>
-  </button>
-
-  {hoveredTeam === game.team2 && (
-    <TeamHoverCard team={game.team2} />
-  )}
-</div>
-
-        {/* MULLIGAN BUTTON */}
-        {isEligibleForMulligan(game) && (
-          <div style={{ position: 'relative', display: 'inline-block' }}>
-            <button
-              onClick={() => openMulliganRequestModal(game)}
-              onMouseEnter={() => setShowTooltip(game.game_id)}
-              onMouseLeave={() => setShowTooltip(null)}
-              style={{
-                marginLeft: 8,
-                background: 'transparent',
-                border: 'none',
-                cursor: 'pointer',
-                fontSize: 18,
-                color: '#e5e7eb',
-                opacity: 0.85,
-                transition: 'opacity 0.15s ease'
-              }}
-            >
-              ⟳
-            </button>
-
-            {showTooltip === game.game_id && (
-              <div
-                style={{
-                  position: 'absolute',
-                  top: '120%',
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  width: 260,
-                  background: 'rgba(15,23,42,0.95)',
-                  color: '#e5e7eb',
-                  padding: '12px 14px',
-                  borderRadius: 8,
-                  boxShadow: '0 6px 18px rgba(0,0,0,0.45)',
-                  fontSize: 12,
-                  zIndex: 9999,
-                  lineHeight: 1.45
-                }}
-              >
-                <strong style={{ fontSize: 13 }}>Mulligan</strong>
-                <br />
-                <br />
-                • Replace a team you picked that has already lost.<br />
-                • Only allowed if the team was originally projected to reach the
-                Sweet 16 or deeper.<br />
-                • Choose any team still alive in the tournament.<br />
-                • Only the games where you originally advanced that team will
-                update.<br />
-                • Mulligans allow points for future rounds.<br />
-                • You get 2 total Mulligans.<br />
-                • Mulligans require admin approval.<br />
-                • Mulligan picks are marked with a ⭐ on the leaderboard.
-              </div>
+      {/* TEAM 1 BUTTON */}
+      <div
+        style={{
+          position: 'relative',
+          display: 'block',
+          width: '100%',
+        }}
+        onMouseEnter={() => {
+          if (!game.team1) return
+          setHoveredTeam(game.team1)
+        }}
+        onMouseLeave={() => setHoveredTeam(null)}
+      >
+        <button
+          disabled={disabled}
+          onClick={() => handlePick(game.game_id, game.team1)}
+          style={{
+            ...baseStyle,
+            ...(selected === game.team1 ? selectedStyle : {})
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {logo1 && (
+              <img
+                src={logo1}
+                style={{ width: 22, height: 22, borderRadius: 9999 }}
+              />
             )}
+            <span style={{ fontSize: 13, whiteSpace: 'nowrap' }}>
+              {game.seed1 ? `${game.seed1} ` : ''}
+              {game.team1}
+            </span>
           </div>
+        </button>
+
+        {hoveredTeam === game.team1 && (
+          <TeamHoverCard team={game.team1 ?? ''} />
         )}
       </div>
-    )
-  }
+
+      {/* TEAM 2 BUTTON */}
+      <div
+        style={{
+          position: 'relative',
+          display: 'block',
+          width: '100%',
+        }}
+        onMouseEnter={() => {
+          if (!game.team2) return
+          setHoveredTeam(game.team2)   // ✅ FIXED (was incorrectly team1)
+        }}
+        onMouseLeave={() => setHoveredTeam(null)}
+      >
+        <button
+          disabled={disabled}
+          onClick={() => handlePick(game.game_id, game.team2)}
+          style={{
+            ...baseStyle,
+            ...(selected === game.team2 ? selectedStyle : {})
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {logo2 && (
+              <img
+                src={logo2}
+                style={{ width: 22, height: 22, borderRadius: 9999 }}
+              />
+            )}
+            <span style={{ fontSize: 13, whiteSpace: 'nowrap' }}>
+              {game.seed2 ? `${game.seed2} ` : ''}
+              {game.team2}
+            </span>
+          </div>
+        </button>
+
+        {hoveredTeam === game.team2 && (
+          <TeamHoverCard team={game.team2 ?? ''} />   // ✅ FIXED nullability
+        )}
+      </div>
+
+      {/* MULLIGAN BUTTON */}
+      {isEligibleForMulligan(game) && (
+        <div style={{ position: 'relative', display: 'inline-block' }}>
+          <button
+            onClick={() => openMulliganRequestModal(game)}
+            onMouseEnter={() => setShowTooltip(game.game_id)}
+            onMouseLeave={() => setShowTooltip(null)}
+            style={{
+              marginLeft: 8,
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: 18,
+              color: '#e5e7eb',
+              opacity: 0.85,
+              transition: 'opacity 0.15s ease'
+            }}
+          >
+            ⟳
+          </button>
+
+          {showTooltip === game.game_id && (
+            <div
+              style={{
+                position: 'absolute',
+                top: '120%',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: 260,
+                background: 'rgba(15,23,42,0.95)',
+                color: '#e5e7eb',
+                padding: '12px 14px',
+                borderRadius: 8,
+                boxShadow: '0 6px 18px rgba(0,0,0,0.45)',
+                fontSize: 12,
+                zIndex: 9999,
+                lineHeight: 1.45
+              }}
+            >
+              <strong style={{ fontSize: 13 }}>Mulligan</strong>
+              <br /><br />
+              • Replace a team you picked that has already lost.<br />
+              • Only allowed if the team was originally projected to reach the Sweet 16 or deeper.<br />
+              • Choose any team still alive in the tournament.<br />
+              • Only the games where you originally advanced that team will update.<br />
+              • Mulligans allow points for future rounds.<br />
+              • You get 2 total Mulligans.<br />
+              • Mulligans require admin approval.<br />
+              • Mulligan picks are marked with a ⭐ on the leaderboard.
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
 
   const groupByRound = (games: Game[]) => {
     const rounds: Record<number, Game[]> = {}
@@ -639,20 +636,10 @@ export default function BracketPage() {
                 </>
               )}
             </div>
-          )
+         )
         })}
       </div>
-
-      <MulliganModal
-        isOpen={showMulliganModal}
-        onClose={() => setShowMulliganModal(false)}
-        game={selectedGame}
-        aliveTeams={aliveTeams}
-        onSubmit={async replacementTeam => {
-          await submitMulliganRequest(selectedGame, replacementTeam)
-          setShowMulliganModal(false)
-        }}
-      />
     </div>
   )
 }
+

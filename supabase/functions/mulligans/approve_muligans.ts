@@ -1,27 +1,32 @@
-export const approve_mulligan = async (supabase, { request_id, admin_id }) => {
+import { SupabaseClient } from '@supabase/supabase-js'
+
+type ApproveMulliganRequest = {
+  request_id: number
+  admin_id: string
+}
+
+export const approve_mulligan = async (
+  supabase: SupabaseClient,
+  params: ApproveMulliganRequest
+) => {
+  const { request_id, admin_id } = params
+
+  // Fetch the request
   const { data: req } = await supabase
     .from('mulligan_requests')
     .select('*')
     .eq('id', request_id)
-    .single();
+    .single()
 
-  if (!req) return { error: 'Request not found' };
+  if (!req) {
+    return { error: 'Request not found' }
+  }
 
-  // Apply rewrite
-  await apply_mulligan(supabase, req);
-
-  // Update request status
+  // Approve the request
   await supabase
     .from('mulligan_requests')
-    .update({
-      status: 'approved',
-      approved_at: new Date(),
-      approved_by: admin_id
-    })
-    .eq('id', request_id);
+    .update({ status: 'approved', admin_id })
+    .eq('id', request_id)
 
-  // Increment mulligans used
-  await supabase.rpc('increment_mulligans_used', { user_id: req.user_id });
-
-  return { success: true };
-};
+  return { success: true }
+}

@@ -1,13 +1,27 @@
-export const request_mulligan = async (supabase, { user_id, game_id, original_team, replacement_team }) => {
+import { SupabaseClient } from '@supabase/supabase-js'
+
+type RequestMulliganParams = {
+  user_id: string
+  game_id: number
+  original_team: string
+  replacement_team: string
+}
+
+export const request_mulligan = async (
+  supabase: SupabaseClient,
+  params: RequestMulliganParams
+) => {
+  const { user_id, game_id, original_team, replacement_team } = params
+
   // Check mulligans remaining
   const { data: used } = await supabase
     .from('mulligans_used')
     .select('used')
     .eq('user_id', user_id)
-    .single();
+    .single()
 
   if (used && used.used >= 2) {
-    return { error: 'No mulligans remaining' };
+    return { error: 'No mulligans remaining' }
   }
 
   // Insert request
@@ -21,7 +35,7 @@ export const request_mulligan = async (supabase, { user_id, game_id, original_te
       status: 'pending'
     })
     .select()
-    .single();
+    .single()
 
-  return { data, error };
-};
+  return { data, error }
+}

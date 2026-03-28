@@ -1,3 +1,5 @@
+export type Picks = Record<number, string>;
+
 export type Game = {
   game_id: number;
   round: number;
@@ -8,5 +10,12 @@ export type Game = {
   seed2: number | null;
   source_game1: number | null;
   source_game2: number | null;
-  original_team?: string; // add if your modal uses it
+  winner?: string | null;
+};
+
+export type Pick = {
+  game_id: number;
+  selected_team: string;
+  winner?: string | null;
+  points_awarded?: number;
 };

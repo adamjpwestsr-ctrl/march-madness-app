@@ -639,3 +639,5 @@ const renderGameButtons = (game: Game) => {
           )
         })}
       </div>
+      )
+      }

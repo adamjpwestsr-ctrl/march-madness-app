@@ -2,6 +2,18 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabaseClient'
+import { getSession } from '../../lib/session';
+
+export default async function AdminPage() {
+  const session = await getSession();
+
+  return (
+    <div>
+      <h1>Admin Panel</h1>
+      <p>Logged in as {session?.email}</p>
+    </div>
+  );
+}
 
 type BracketStatusRow = {
   user_id: number

@@ -624,7 +624,7 @@ const renderGameButtons = (game: Game) => {
                 ))}
               </div>
 
-              {region === 'Championship' && (
+{region === 'Championship' && (
   <>
     <div
       style={{

@@ -20,7 +20,7 @@ export async function POST(req: Request) {
     .eq('email', email.toLowerCase())
     .single()
 
-  // If user not found → create access request and notify user
+  // User not found → create access request
   if (!user) {
     await supabase.from('access_requests').insert({ email: email.toLowerCase() })
 
@@ -34,7 +34,7 @@ export async function POST(req: Request) {
     )
   }
 
-  // If user is admin and no adminCode yet → ask for code
+  // Admin but no code yet → ask for code
   if (user.is_admin && !adminCode) {
     return NextResponse.json(
       {
@@ -45,7 +45,7 @@ export async function POST(req: Request) {
     )
   }
 
-  // If user is admin and adminCode is wrong
+  // Admin with wrong code
   if (user.is_admin && adminCode && adminCode !== user.admin_code) {
     return NextResponse.json(
       {
@@ -56,23 +56,22 @@ export async function POST(req: Request) {
     )
   }
 
-  // At this point:
-  // - normal user with valid email, OR
-  // - admin with correct code
-
+  // Normal user OR admin with correct code
   const sessionPayload = {
     userId: user.id,
     email: user.email,
     isAdmin: !!user.is_admin
   }
 
-const cookieStore = await cookies();
+  // Correct cookie handling for Route Handlers
+  const cookieStore = await cookies()
 
-cookieStore.set('mm_session', JSON.stringify(sessionPayload), {
-  httpOnly: true,
-  sameSite: 'lax',
-  path: '/',
-});
+  cookieStore.set('mm_session', JSON.stringify(sessionPayload), {
+    httpOnly: true,
+    sameSite: 'lax',
+    path: '/',
+    secure: process.env.NODE_ENV === 'production'
+  })
 
   return NextResponse.json(
     {

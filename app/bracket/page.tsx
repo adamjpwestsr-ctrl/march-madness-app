@@ -686,7 +686,9 @@ const renderGameButtons = (game: Game) => {
    </>
 )}
       </div>
-    ))}
+    </div>
+  );
+})}
   </div>
 </div>
 );

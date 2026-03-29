@@ -64,14 +64,13 @@ export async function POST(req: Request) {
   }
 
   // Correct cookie handling for Route Handlers
-  const cookieStore = await cookies()
-
-  cookieStore.set('mm_session', JSON.stringify(sessionPayload), {
-    httpOnly: true,
-    sameSite: 'lax',
-    path: '/',
-    secure: process.env.NODE_ENV === 'production'
-  })
+const cookieStore = await cookies();
+cookieStore.set('mm_session', JSON.stringify(sessionPayload), {
+  httpOnly: true,
+  sameSite: 'lax',
+  path: '/',
+  secure: process.env.NODE_ENV === 'production'
+});
 
   return NextResponse.json(
     {

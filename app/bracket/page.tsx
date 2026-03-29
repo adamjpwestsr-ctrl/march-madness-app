@@ -689,4 +689,5 @@ const renderGameButtons = (game: Game) => {
       ))}        {/* closes regionOrder.map */}
     </div>       {/* closes grid wrapper */}
   </div>         {/* closes page wrapper */}
-}               {/* closes component */}
+);
+}               // closes component

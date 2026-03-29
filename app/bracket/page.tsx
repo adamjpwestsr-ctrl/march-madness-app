@@ -683,10 +683,11 @@ const renderGameButtons = (game: Game) => {
         Submit Bracket
       </button>
     </div>
-  </>
+   </>
 )}
-        </div>
-      )}
+      </div>
+    ))}
   </div>
+</div>
 );
 }

@@ -634,35 +634,36 @@ const renderGameButtons = (game: Game) => {
                       borderTop: '1px solid rgba(148,163,184,0.35)'
                     }}
                   >
-                    <input
-                      type="number"
-                      value={tiebreaker}
-                      onChange={e => setTiebreaker(e.target.value)}
-                      style={{
-  padding: '8px 12px',
-  borderRadius: 8,
-  border: '1px solid #475569',
-  fontSize: 14,
-  width: 120,
-  background: '#1e293b',
-  color: '#f1f5f9',
-  marginBottom: 6
-}}
-                    <div
-                      style={{
-                        fontSize: 14,
-                        fontWeight: 600,
-                        color: '#e5e7eb',
-                        lineHeight: 1.2
-                      }}
-                    >
-                      Tiebreaker
-                      <br />
-                      <span style={{ opacity: 0.8 }}>
-                        (Total Final Score)
-                      </span>
-                    </div>
-                  </div>
+                  <input
+  type="number"
+  value={tiebreaker}
+  onChange={e => setTiebreaker(e.target.value)}
+  style={{
+    padding: '8px 12px',
+    borderRadius: 8,
+    border: '1px solid #475569',
+    fontSize: 14,
+    width: 120,
+    background: '#1e293b',
+    color: '#f1f5f9',
+    marginBottom: 6,
+  }}
+/>
+
+<div
+  style={{
+    fontSize: 14,
+    fontWeight: 600,
+    color: '#e5e7eb',
+    lineHeight: 1.2
+  }}
+>
+  Tiebreaker
+  <br />
+  <span style={{ opacity: 0.8 }}>
+    (Total Final Score)
+  </span>
+</div>
 
                   <div style={{ marginTop: 20, textAlign: 'center' }}>
                     <button

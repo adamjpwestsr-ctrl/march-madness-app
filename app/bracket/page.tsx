@@ -6,6 +6,18 @@ import { getTeamLogo } from '../../lib/getTeamLogo'
 import MulliganModal from '../../components/bracket/MulliganModal'
 import TeamHoverCard from '../../components/TeamHoverCard'
 import BadgeGrid from "@/components/BadgeGrid";
+import { getSession } from '../lib/session';
+
+export default async function BracketPage() {
+  const session = await getSession();
+
+  return (
+    <div>
+      <h1>Welcome, {session?.email}</h1>
+      {/* bracket UI */}
+    </div>
+  );
+}
 
 
 const TEAM_BLOCK_HEIGHT = 52

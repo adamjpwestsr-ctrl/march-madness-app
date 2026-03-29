@@ -120,28 +120,77 @@ export default function BracketPage() {
     setGames(Object.values(gameMap))
   }
 
-  const submitBracket = async () => {
-    const picksArray = Object.entries(picks).map(([gameId, team]) => ({
-      user_id: userId,
-      game_id: parseInt(gameId),
-      selected_team: team
-    }))
-
-    await supabase.from('bracket_submissions').upsert({
-      user_id: userId,
-      tiebreaker,
-      submitted_at: new Date()
-    })
-
-    const { error } = await supabase.from('picks').insert(picksArray)
-    if (error) {
-      console.error('Error submitting bracket:', error)
-      alert('Error submitting bracket')
+const submitBracket = async () => {
+  try {
+    if (!tiebreaker) {
+      alert('Please enter a tiebreaker score before submitting.')
       return
     }
 
-    alert('Bracket submitted!')
+    if (Object.keys(picks).length === 0) {
+      alert('Please make some picks before submitting.')
+      return
+    }
+
+    const user_id = userId; // replace with session user later
+
+    // 1. Create a new bracket row
+    const { data: bracket, error: bracketError } = await supabase
+      .from('brackets')
+      .insert({
+        user_id,
+        bracket_name: 'Main Bracket'
+      })
+      .select()
+      .single();
+
+    if (bracketError || !bracket) {
+      console.error('Error creating bracket:', bracketError);
+      alert('Error creating bracket');
+      return;
+    }
+
+    const bracketId = bracket.bracket_id;
+
+    // 2. Insert submission metadata
+    const { error: submissionError } = await supabase
+      .from('bracket_submissions')
+      .insert({
+        bracket_id: bracketId,
+        tiebreaker,
+        submitted_at: new Date().toISOString()
+      });
+
+    if (submissionError) {
+      console.error('Error saving submission:', submissionError);
+      alert('Error submitting bracket');
+      return;
+    }
+
+    // 3. Insert all picks with bracket_id
+    const picksArray = Object.entries(picks).map(([gameId, team]) => ({
+      bracket_id: bracketId,
+      game_id: parseInt(gameId),
+      selected_team: team
+    }));
+
+    const { error: picksError } = await supabase
+      .from('picks')
+      .insert(picksArray);
+
+    if (picksError) {
+      console.error('Error saving picks:', picksError);
+      alert('Error submitting bracket');
+      return;
+    }
+
+    alert('Bracket submitted!');
+  } catch (err) {
+    console.error('Unexpected error:', err);
+    alert('Error submitting bracket');
   }
+};
+
 
   const resetBracket = async () => {
     setPicks({})
@@ -590,16 +639,15 @@ const renderGameButtons = (game: Game) => {
                       value={tiebreaker}
                       onChange={e => setTiebreaker(e.target.value)}
                       style={{
-                        padding: '8px 12px',
-                        borderRadius: 8,
-                        border: '1px solid #cbd5e1',
-                        fontSize: 14,
-                        width: 120,
-                        background: '#f8fafc',
-                        marginBottom: 6
-                      }}
-                    />
-
+  padding: '8px 12px',
+  borderRadius: 8,
+  border: '1px solid #475569',
+  fontSize: 14,
+  width: 120,
+  background: '#1e293b',
+  color: '#f1f5f9',
+  marginBottom: 6
+}}
                     <div
                       style={{
                         fontSize: 14,

@@ -6,7 +6,8 @@ import { getTeamLogo } from '../../lib/getTeamLogo'
 import MulliganModal from '../../components/bracket/MulliganModal'
 import TeamHoverCard from '../../components/TeamHoverCard'
 import BadgeGrid from "@/components/BadgeGrid";
-import { getSession } from '../lib/session';
+import { getSession } from '../../lib/session';
+
 
 export default async function BracketPage() {
   const session = await getSession();

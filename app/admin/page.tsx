@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabaseClient'
-import { getSession } from '../../lib/session';
+import { getSession } from '../lib/session';
 
 export default async function AdminPage() {
   const session = await getSession();

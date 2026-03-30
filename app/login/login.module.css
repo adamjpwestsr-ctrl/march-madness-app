@@ -1,0 +1,50 @@
+.pageWrapper {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #0f172a; /* deep navy */
+}
+
+.formWrapper {
+  position: relative;
+  z-index: 10;
+  background: rgba(15, 23, 42, 0.85);
+  padding: 32px;
+  border-radius: 12px;
+  width: 360px;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(6px);
+}
+
+.floatingLogos {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.18;
+}
+
+.floatingLogos img {
+  position: absolute;
+  width: 120px;
+  animation: bounce 18s linear infinite alternate;
+}
+
+/* Different starting positions + speeds */
+.logo1 { top: 10%; left: 5%; animation-duration: 22s; }
+.logo2 { top: 60%; left: 80%; animation-duration: 26s; }
+.logo3 { top: 30%; left: 40%; animation-duration: 20s; }
+.logo4 { top: 75%; left: 10%; animation-duration: 24s; }
+.logo5 { top: 5%; left: 70%; animation-duration: 28s; }
+
+@keyframes bounce {
+  0%   { transform: translate(0, 0) rotate(0deg); }
+  25%  { transform: translate(120px, -80px) rotate(8deg); }
+  50%  { transform: translate(-100px, 100px) rotate(-6deg); }
+  75%  { transform: translate(140px, 60px) rotate(10deg); }
+  100% { transform: translate(-120px, -100px) rotate(-8deg); }
+}

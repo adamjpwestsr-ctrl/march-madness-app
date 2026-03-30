@@ -7,12 +7,13 @@ import MulliganModal from '../../components/bracket/MulliganModal'
 import TeamHoverCard from '../../components/TeamHoverCard'
 import BadgeGrid from "@/components/BadgeGrid";
 import { getSession } from '../lib/session';
-
-
+import BracketClient from './BracketClient';
 
 export default async function BracketPage() {
   const session = await getSession();
 
+  return <BracketClient session={session} />;
+}
   return (
     <div>
       <h1>Welcome, {session?.email}</h1>

@@ -1,8 +1,13 @@
-import { cookies } from 'next/headers';
-import { createServerClient } from '@supabase/ssr';
+import { cookies } from "next/headers";
+import { createServerClient } from "@supabase/ssr";
 
-export async function getSession() {
-  const cookieStore = cookies();
+type SessionResult = {
+  userId: string;
+  email: string;
+} | null;
+
+export async function getSession(): Promise<SessionResult> {
+  const cookieStore = await cookies();
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -24,6 +29,6 @@ export async function getSession() {
 
   return {
     userId: session.user.id,
-    email: session.user.email
+    email: session.user.email ?? ""
   };
 }

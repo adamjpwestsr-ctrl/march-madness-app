@@ -1,0 +1,6 @@
+handicap
+
+. The app only uses the best 8 rounds out of the last 20 to calculate your handicap, which is standard for most handicap calculators. You will not see every round used to calculate this, only the best 8. I see that your best 8 differentials range from 13.7 to 17.7, so the other 12 rounds from your last 20 not being used would have a higher differential than 17.7. This round in particular has a differential of 18.2, so at this moment it will not be included in your handicap calculation. However, the rounds that are not included now may be included in the future, depending on how good those rounds are, because some of your better rounds will fall out from the last 20 rounds played.
+
+git config --global user.name "Adam West"
+git config --global user.email "adamjpwestsr@gmail.com"

@@ -154,6 +154,28 @@ export default function LoginPage() {
               Go to your brackets
             </button>
 
+
+<button
+  onClick={() => {
+    navigator.clipboard.writeText(window.location.href);
+    alert("Link copied to clipboard!");
+  }}
+  style={{
+    marginTop: 12,
+    padding: "10px 16px",
+    background: "#1e293b",
+    borderRadius: 8,
+    border: "1px solid #334155",
+    color: "white",
+    fontSize: 16,
+    cursor: "pointer",
+    width: "100%",
+  }}
+>
+  Share Bracket Link
+</button>
+
+
             {isAdmin && (
               <button
                 onClick={handleGoToAdmin}

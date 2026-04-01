@@ -9,6 +9,7 @@
   background: #0f172a; /* deep navy */
 }
 
+/* Ensure the form is ALWAYS clickable */
 .formWrapper {
   position: relative;
   z-index: 10;
@@ -18,13 +19,15 @@
   width: 360px;
   box-shadow: 0 0 40px rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(6px);
+  pointer-events: auto; /* <-- CRITICAL */
 }
 
+/* Ensure floating logos NEVER block clicks */
 .floatingLogos {
   position: absolute;
   inset: 0;
   z-index: 1;
-  pointer-events: none;
+  pointer-events: none; /* <-- CRITICAL */
   opacity: 0.18;
 }
 
@@ -32,6 +35,7 @@
   position: absolute;
   width: 120px;
   animation: bounce 18s linear infinite alternate;
+  pointer-events: none; /* <-- EXTRA SAFETY */
 }
 
 /* Different starting positions + speeds */

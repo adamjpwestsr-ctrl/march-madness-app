@@ -1,8 +1,0 @@
-
-Round	When to run	Command
-Round of 64	After all 32 games are scored	select snapshot_leaderboard(1);
-Round of 32	After all 16 games are scored	select snapshot_leaderboard(2);
-Sweet 16	After all 8 games are scored	select snapshot_leaderboard(3);
-Elite 8	After all 4 games are scored	select snapshot_leaderboard(4);
-Final Four	After both games are scored	select snapshot_leaderboard(5);
-Championship	After the final game	select snapshot_leaderboard(6);

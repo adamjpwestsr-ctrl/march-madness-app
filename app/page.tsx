@@ -65,11 +65,11 @@ export default function LoginPage() {
   }
 
   const handleGoToBrackets = () => {
-    window.location.href = '/bracket' // adjust if your route is different
+    window.location.href = '/bracket'
   }
 
   const handleGoToAdmin = () => {
-    window.location.href = '/admin' // adjust to your actual admin route
+    window.location.href = '/admin'
   }
 
   const showEmailStep = step === 'email'
@@ -77,8 +77,19 @@ export default function LoginPage() {
   const showDoneStep = step === 'done'
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-slate-950 text-slate-50">
-      <div className="w-full max-w-md rounded-xl border border-slate-800 bg-slate-900/70 p-6 shadow-xl">
+    <main className="relative min-h-screen flex items-center justify-center bg-slate-950 text-slate-50 overflow-hidden">
+
+      {/* Floating Logos */}
+      <div className="absolute inset-0 opacity-20 pointer-events-none">
+        <img src="/logos/uconn.png" className="floating-logo absolute top-10 left-10 w-28 animate-bounce-slow" />
+        <img src="/logos/duke.png" className="floating-logo absolute top-1/2 left-3/4 w-28 animate-bounce-slower" />
+        <img src="/logos/unc.png" className="floating-logo absolute top-1/3 left-1/4 w-28 animate-bounce-slowest" />
+        <img src="/logos/kansas.png" className="floating-logo absolute bottom-10 left-1/3 w-28 animate-bounce-slow" />
+        <img src="/logos/arizona.png" className="floating-logo absolute bottom-20 right-10 w-28 animate-bounce-slower" />
+      </div>
+
+      {/* Login Card */}
+      <div className="relative z-10 w-full max-w-md rounded-xl border border-slate-800 bg-slate-900/70 p-6 shadow-xl backdrop-blur-md">
         <h1 className="text-2xl font-semibold text-center mb-2">
           March Madness Bracket Room
         </h1>
@@ -96,9 +107,7 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {showEmailStep && (
               <>
-                <label className="block text-sm font-medium mb-1">
-                  Email
-                </label>
+                <label className="block text-sm font-medium mb-1">Email</label>
                 <input
                   type="email"
                   required
@@ -119,9 +128,7 @@ export default function LoginPage() {
 
             {showAdminCodeStep && (
               <>
-                <label className="block text-sm font-medium mb-1">
-                  Admin 4-digit code
-                </label>
+                <label className="block text-sm font-medium mb-1">Admin 4-digit code</label>
                 <input
                   type="password"
                   inputMode="numeric"
@@ -154,27 +161,15 @@ export default function LoginPage() {
               Go to your brackets
             </button>
 
-
-<button
-  onClick={() => {
-    navigator.clipboard.writeText(window.location.href);
-    alert("Link copied to clipboard!");
-  }}
-  style={{
-    marginTop: 12,
-    padding: "10px 16px",
-    background: "#1e293b",
-    borderRadius: 8,
-    border: "1px solid #334155",
-    color: "white",
-    fontSize: 16,
-    cursor: "pointer",
-    width: "100%",
-  }}
->
-  Share Bracket Link
-</button>
-
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(window.location.href);
+                alert("Link copied to clipboard!");
+              }}
+              className="w-full rounded-md bg-slate-800 px-3 py-2 text-sm font-medium hover:bg-slate-700"
+            >
+              Share Bracket Link
+            </button>
 
             {isAdmin && (
               <button

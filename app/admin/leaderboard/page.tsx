@@ -1,12 +1,12 @@
-// app/admin/brackets/page.tsx
+// app/admin/leaderboard/page.tsx
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createServerClient } from "@supabase/auth-helpers-nextjs";
-import BracketsClient from "./BracketsClient";
+import LeaderboardClient from "./LeaderboardClient";
 
 const ADMIN_EMAILS = ["adamjpwestsr@gmail.com", "lfahearn@gmail.com"];
 
-export default async function BracketsAdminPage() {
+export default async function LeaderboardAdminPage() {
   const cookieStore = await cookies();
 
   const supabase = createServerClient(
@@ -26,7 +26,7 @@ export default async function BracketsAdminPage() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
-      <BracketsClient />
+      <LeaderboardClient />
     </div>
   );
 }

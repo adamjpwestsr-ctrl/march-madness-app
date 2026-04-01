@@ -2,13 +2,15 @@
 
 import React from "react";
 
+type MulliganPick = {
+  selected_team: string;
+  [key: string]: any;
+};
+
 type MulliganModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  game: {
-    original_team: string;
-    [key: string]: any;
-  } | null;
+  game: MulliganPick | null;
   aliveTeams: string[];
   onSubmit: (team: string) => void | Promise<void>;
 };
@@ -54,7 +56,7 @@ export default function MulliganModal({
         </h2>
 
         <p style={{ marginBottom: 16, fontSize: 14, lineHeight: 1.4 }}>
-          Replace <strong>{game.original_team}</strong> with a team still alive
+          Replace <strong>{game.selected_team}</strong> with a team still alive
           in the tournament.
         </p>
 

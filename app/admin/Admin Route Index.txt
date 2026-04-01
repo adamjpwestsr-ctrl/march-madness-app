@@ -1,0 +1,28 @@
+app
+  admin
+    page.tsx                → Admin dashboard (server)
+    AdminClient.tsx         → Dashboard UI (client)
+
+    games
+      page.tsx              → Game results admin (server)
+      GamesClient.tsx       → Winner selection + propagation
+
+    brackets
+      page.tsx              → Bracket management (server)
+      BracketsClient.tsx    → Viewresetdelete brackets + pick viewer
+
+    mulligans
+      page.tsx              → Mulligan approvals (server)
+      MulligansClient.tsx   → Approvedeny + propagate picks
+
+    users
+      page.tsx              → User management (server)
+      UsersClient.tsx       → User list + brackets + mulligans
+
+    tools
+      page.tsx              → Bracket generators + simulations (server)
+      ToolsClient.tsx       → Chalkupsetperfect + simulate + reset
+
+    leaderboard
+      page.tsx              → Leaderboard tools (server)
+      LeaderboardClient.tsx → Recalc scores, stars, ranks, tiebreakers

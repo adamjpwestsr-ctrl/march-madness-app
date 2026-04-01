@@ -2,88 +2,79 @@
 
 import Link from "next/link";
 
-type AdminClientProps = {
-  session: {
-    userId: string;
-    email: string;
-  } | null;
-};
-
-export default function AdminClient({ session }: AdminClientProps) {
+export default function AdminClient({ adminEmail }: { adminEmail: string }) {
   return (
-    <div style={{ padding: 24, color: "#e5e7eb" }}>
-      <h1 style={{ fontSize: 28, fontWeight: 700, marginBottom: 24 }}>
+    <div
+      style={{
+        padding: 30,
+        fontFamily:
+          'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+        background: "#0f172a",
+        minHeight: "100vh",
+        color: "#e5e7eb",
+      }}
+    >
+      <h1
+        style={{
+          fontSize: 32,
+          fontWeight: 700,
+          marginBottom: 20,
+          textAlign: "center",
+          letterSpacing: 0.5,
+        }}
+      >
         Admin Dashboard
       </h1>
 
-      {!session && (
-        <p style={{ color: "#f87171", marginBottom: 20 }}>
-          You must be logged in to access admin tools.
-        </p>
-      )}
+      <p
+        style={{
+          textAlign: "center",
+          marginBottom: 30,
+          opacity: 0.8,
+          fontSize: 14,
+        }}
+      >
+        Logged in as <strong>{adminEmail}</strong>
+      </p>
 
-      {session && (
-        <p style={{ marginBottom: 20, color: "#94a3b8" }}>
-          Logged in as <strong>{session.email}</strong>
-        </p>
-      )}
-
-      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        <Link
-          href="/admin/set-winners"
-          style={{
-            padding: 12,
-            background: "#1e293b",
-            borderRadius: 8,
-            border: "1px solid #334155",
-            color: "white",
-            textDecoration: "none",
-          }}
-        >
-          Set Game Winners
-        </Link>
-
-        <Link
-          href="/admin/edit-bracket"
-          style={{
-            padding: 12,
-            background: "#1e293b",
-            borderRadius: 8,
-            border: "1px solid #334155",
-            color: "white",
-            textDecoration: "none",
-          }}
-        >
-          Edit User Brackets
-        </Link>
-
-        <Link
-          href="/admin/mulligans"
-          style={{
-            padding: 12,
-            background: "#1e293b",
-            borderRadius: 8,
-            border: "1px solid #334155",
-            color: "white",
-            textDecoration: "none",
-          }}
-        >
-          Mulligan Manager
-        </Link>
-
-        <Link
-          href="/admin/leaderboard"
-          style={{
-            padding: 12,
-            background: "#1e293b",
-            borderRadius: 8,
-            border: "1px solid #334155",
-            color: "white",
-            textDecoration: "none",
-          }}
-        >
-          Leaderboard Admin
-        </Link>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+          gap: 20,
+          maxWidth: 1000,
+          margin: "0 auto",
+        }}
+      >
+        {[
+          { href: "/admin/games", label: "Game Results" },
+          { href: "/admin/brackets", label: "Bracket Management" },
+          { href: "/admin/mulligans", label: "Mulligan Approvals" },
+          { href: "/admin/users", label: "User Management" },
+          { href: "/admin/tools", label: "Bracket Tools & Simulations" },
+          { href: "/admin/leaderboard", label: "Leaderboard Tools" },
+        ].map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            style={{
+              display: "block",
+              padding: 20,
+              background: "rgba(30,41,59,0.9)",
+              borderRadius: 12,
+              border: "1px solid rgba(148,163,184,0.35)",
+              textDecoration: "none",
+              color: "#e5e7eb",
+              fontWeight: 600,
+              fontSize: 16,
+              textAlign: "center",
+              boxShadow: "0 8px 20px rgba(0,0,0,0.35)",
+              transition: "transform 0.15s ease, box-shadow 0.15s ease",
+            }}
+          >
+            {item.label}
+          </Link>
+        ))}
       </div>
     </div>
   );

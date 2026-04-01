@@ -7,18 +7,20 @@ import Link from "next/link";
 type UserRow = {
   id: string;
   email: string;
-  created_at: string;
+  is_admin: boolean;
 };
 
 type Bracket = {
-  id: number;
+  id: string;
+  user_id: string;
   bracket_name: string;
   created_at: string;
 };
 
 type MulliganRequest = {
   id: number;
-  bracket_id: number;
+  user_id: string;
+  bracket_id: string;
   game_id: number;
   replacement_team: string;
   status: string;
@@ -41,30 +43,42 @@ export default function UsersClient() {
   const loadUsers = async () => {
     setLoading(true);
 
-    // Load users
-    const { data: userRows } = await supabase
+    // USERS — FIXED (no created_at column)
+    const { data: userRows, error: userErr } = await supabase
       .from("users")
-      .select("*")
-      .order("created_at", { ascending: true });
+      .select("id, email, is_admin")
+      .order("email", { ascending: true });
 
+    if (userErr) console.error("User load error:", userErr);
     setUsers(userRows ?? []);
 
-    // Load brackets
-    const { data: bracketRows } = await supabase
+    // BRACKETS — FIXED (bracket_id instead of id)
+    const { data: bracketRows, error: bracketErr } = await supabase
       .from("brackets")
-      .select("id, user_id, bracket_name, created_at");
+      .select("bracket_id, user_id, bracket_name, created_at");
+
+    if (bracketErr) console.error("Bracket load error:", bracketErr);
 
     const bracketMap: Record<string, Bracket[]> = {};
     (bracketRows ?? []).forEach((b) => {
+      const mapped: Bracket = {
+        id: b.bracket_id,
+        user_id: b.user_id,
+        bracket_name: b.bracket_name,
+        created_at: b.created_at,
+      };
+
       if (!bracketMap[b.user_id]) bracketMap[b.user_id] = [];
-      bracketMap[b.user_id].push(b);
+      bracketMap[b.user_id].push(mapped);
     });
     setBrackets(bracketMap);
 
-    // Load mulligans
-    const { data: mulliganRows } = await supabase
+    // MULLIGANS — FIXED (schema matches)
+    const { data: mulliganRows, error: mullErr } = await supabase
       .from("mulligan_requests")
       .select("*");
+
+    if (mullErr) console.error("Mulligan load error:", mullErr);
 
     const mulliganMap: Record<string, MulliganRequest[]> = {};
     (mulliganRows ?? []).forEach((m) => {
@@ -142,7 +156,7 @@ export default function UsersClient() {
                     {u.email}
                   </div>
                   <div style={{ fontSize: 12, opacity: 0.7 }}>
-                    Joined: {new Date(u.created_at).toLocaleString()}
+                    Admin: {u.is_admin ? "Yes" : "No"}
                   </div>
                 </div>
 

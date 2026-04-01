@@ -1,28 +1,28 @@
 // app/admin/users/page.tsx
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { createServerClient } from "@supabase/auth-helpers-nextjs";
 import UsersClient from "./UsersClient";
-
-const ADMIN_EMAILS = ["adamjpwestsr@gmail.com", "lfahearn@gmail.com"];
 
 export default async function UsersAdminPage() {
   const cookieStore = await cookies();
+  const sessionCookie = cookieStore.get("mm_session");
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { cookies: cookieStore }
-  );
+  // No custom session → redirect to login
+  if (!sessionCookie) {
+    redirect("/login");
+  }
 
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+  let session;
+  try {
+    session = JSON.parse(sessionCookie.value);
+  } catch {
+    redirect("/login");
+  }
 
-  if (!session) redirect("/login");
-
-  const email = session.user.email;
-  if (!email || !ADMIN_EMAILS.includes(email)) redirect("/");
+  // Must be admin (commissioner counts as admin)
+  if (!session.isAdmin) {
+    redirect("/bracket");
+  }
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">

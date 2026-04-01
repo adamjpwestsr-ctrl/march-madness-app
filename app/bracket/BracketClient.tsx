@@ -30,15 +30,13 @@ type MulliganPick = Game & {
 
 type BracketClientProps = {
   bracketId: number;
-  userId: string;
+  userEmail: string;
   bracketName: string;
 };
 
-
-
 export default function BracketClient({
   bracketId,
-  userId,
+  userEmail,
   bracketName,
 }: BracketClientProps) {
   const [games, setGames] = useState<Game[]>([]);
@@ -49,11 +47,19 @@ export default function BracketClient({
   const [showTooltip, setShowTooltip] = useState<number | null>(null);
   const [tiebreaker, setTiebreaker] = useState("");
   const [hoveredTeam, setHoveredTeam] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
   useEffect(() => {
     fetchGames();
     fetchExistingPicks();
   }, [bracketId]);
+
+  const showSaved = (msg = "Saved") => {
+    setSaving(false);
+    setSaveMessage(msg);
+    setTimeout(() => setSaveMessage(null), 1500);
+  };
 
   const fetchGames = async () => {
     const { data, error } = await supabase
@@ -90,39 +96,106 @@ export default function BracketClient({
     if (Object.keys(existing).length > 0) {
       updateFutureRounds(existing);
     }
+
+    // Load tiebreaker if exists
+    const { data: submissionRow, error: submissionError } = await supabase
+      .from("bracket_submissions")
+      .select("tiebreaker")
+      .eq("bracket_id", bracketId)
+      .maybeSingle();
+
+    if (!submissionError && submissionRow?.tiebreaker != null) {
+      setTiebreaker(String(submissionRow.tiebreaker));
+    }
   };
 
- const openMulliganRequestModal = (game: Game) => {
-  const selected_team = picks[game.game_id];
-  if (!selected_team) return; // no pick made for this game
+  const openMulliganRequestModal = (game: Game) => {
+    const selected_team = picks[game.game_id];
+    if (!selected_team) return;
 
-  setSelectedGame({
-    ...game,
-    selected_team,
-  });
-  setShowMulliganModal(true);
-};
-
+    setSelectedGame({
+      ...game,
+      selected_team,
+    });
+    setShowMulliganModal(true);
+  };
 
   const submitMulliganRequest = async (
-  game: MulliganPick | null,
-  replacementTeam: string
-) => {
-  if (!game) return;
+    game: MulliganPick | null,
+    replacementTeam: string
+  ) => {
+    if (!game) return;
 
-  const { error } = await supabase.from("mulligan_requests").insert({
-    user_id: userId,
-    game_id: game.game_id,
-    original_team: game.selected_team,
-    replacement_team: replacementTeam,
-    status: "pending",
-    bracket_id: bracketId,
-  });
+    const { error } = await supabase.from("mulligan_requests").insert({
+      email: userEmail,
+      game_id: game.game_id,
+      original_team: game.selected_team,
+      replacement_team: replacementTeam,
+      status: "pending",
+      bracket_id: bracketId,
+    });
 
-  if (error) {
-    console.error("Mulligan request failed:", error);
-  }
-};
+    if (error) {
+      console.error("Mulligan request failed:", error);
+    }
+  };
+
+  const savePick = async (gameId: number, team: string) => {
+    try {
+      setSaving(true);
+      const { error } = await supabase
+        .from("picks")
+        .upsert(
+          {
+            bracket_id: bracketId,
+            game_id: gameId,
+            selected_team: team,
+          },
+          { onConflict: "bracket_id,game_id" }
+        );
+
+      if (error) {
+        console.error("Error auto-saving pick:", error);
+        setSaving(false);
+        return;
+      }
+
+      showSaved();
+    } catch (err) {
+      console.error("Unexpected error auto-saving pick:", err);
+      setSaving(false);
+    }
+  };
+
+  const saveTiebreaker = async (value: string) => {
+    if (!value) return;
+    const num = parseInt(value, 10);
+    if (Number.isNaN(num)) return;
+
+    try {
+      setSaving(true);
+      const { error } = await supabase
+        .from("bracket_submissions")
+        .upsert(
+          {
+            bracket_id: bracketId,
+            tiebreaker: num,
+          },
+          { onConflict: "bracket_id" }
+        );
+
+      if (error) {
+        console.error("Error auto-saving tiebreaker:", error);
+        setSaving(false);
+        return;
+      }
+
+      showSaved();
+    } catch (err) {
+      console.error("Unexpected error auto-saving tiebreaker:", err);
+      setSaving(false);
+    }
+  };
 
   const handlePick = (gameId: number, team: string | null) => {
     if (!team) return;
@@ -134,6 +207,7 @@ export default function BracketClient({
 
     setPicks(updated);
     updateFutureRounds(updated);
+    void savePick(gameId, team);
   };
 
   const updateFutureRounds = (updatedPicks: Picks) => {
@@ -168,14 +242,16 @@ export default function BracketClient({
         return;
       }
 
-      // 1. Insert submission metadata
       const { error: submissionError } = await supabase
         .from("bracket_submissions")
-        .insert({
-          bracket_id: bracketId,
-          tiebreaker,
-          submitted_at: new Date().toISOString(),
-        });
+        .upsert(
+          {
+            bracket_id: bracketId,
+            tiebreaker: parseInt(tiebreaker, 10),
+            submitted_at: new Date().toISOString(),
+          },
+          { onConflict: "bracket_id" }
+        );
 
       if (submissionError) {
         console.error("Error saving submission:", submissionError);
@@ -183,7 +259,6 @@ export default function BracketClient({
         return;
       }
 
-      // 2. Upsert all picks with bracket_id
       const picksArray = Object.entries(picks).map(([gameId, team]) => ({
         bracket_id: bracketId,
         game_id: parseInt(gameId),
@@ -501,6 +576,20 @@ export default function BracketClient({
           overflowY: "auto",
         }}
       >
+        {/* Save indicator */}
+        <div
+          style={{
+            position: "fixed",
+            top: 12,
+            right: 16,
+            fontSize: 12,
+            opacity: 0.9,
+          }}
+        >
+          {saving && <span>Saving…</span>}
+          {!saving && saveMessage && <span>{saveMessage}</span>}
+        </div>
+
         <h1
           style={{
             marginBottom: 20,
@@ -515,9 +604,7 @@ export default function BracketClient({
 
         <div style={{ marginBottom: 16, textAlign: "center" }}>
           <button
-            onClick={() =>
-              setHighlightFinalFourPath((prev) => !prev)
-            }
+            onClick={() => setHighlightFinalFourPath((prev) => !prev)}
             style={{
               padding: "8px 16px",
               fontSize: 14,
@@ -658,9 +745,8 @@ export default function BracketClient({
                       <input
                         type="number"
                         value={tiebreaker}
-                        onChange={(e) =>
-                          setTiebreaker(e.target.value)
-                        }
+                        onChange={(e) => setTiebreaker(e.target.value)}
+                        onBlur={(e) => void saveTiebreaker(e.target.value)}
                         style={{
                           padding: "8px 12px",
                           borderRadius: 8,

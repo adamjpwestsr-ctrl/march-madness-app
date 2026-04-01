@@ -8,15 +8,17 @@ export default function LoginForm() {
 
   const [email, setEmail] = useState('');
   const [adminCode, setAdminCode] = useState('');
-  const [step, setStep] = useState<'email' | 'admin' | 'requested' | 'error'>('email');
+  const [step, setStep] = useState<'email' | 'admin' | 'requested' | 'done'>('email');
   const [error, setError] = useState('');
+  const [isAdmin, setIsAdmin] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setError('');
 
     const res = await fetch('/api/login', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },   // REQUIRED
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, adminCode }),
     });
 
@@ -35,12 +37,18 @@ export default function LoginForm() {
         setError('Incorrect admin code');
         break;
 
-      case 'admin': // commissioner auto-login
-        router.push('/admin');
+      case 'admin':
+        setIsAdmin(true);
+        setStep('done');
         break;
 
-      case 'ok': // normal user or admin with correct code
-        router.push(data.isAdmin ? '/admin' : '/bracket');
+      case 'ok':
+        if (data.isAdmin) {
+          setIsAdmin(true);
+          setStep('done');
+        } else {
+          router.push('/bracket');
+        }
         break;
 
       default:
@@ -49,36 +57,88 @@ export default function LoginForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} className="space-y-4">
+
+      {/* STEP 1 — EMAIL */}
       {step === 'email' && (
         <>
-          <h2>Enter your email</h2>
+          <label className="block text-sm font-medium">Enter your email</label>
+
           <input
             type="email"
             value={email}
             onChange={e => setEmail(e.target.value)}
             required
+            className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
-          <button type="submit">Continue</button>
+
+          <button
+            type="submit"
+            className="w-full rounded-md bg-emerald-500 px-3 py-2 text-sm font-semibold text-slate-950 hover:bg-emerald-400"
+          >
+            Continue
+          </button>
         </>
       )}
 
+      {/* STEP 2 — ADMIN CODE */}
       {step === 'admin' && (
         <>
-          <h2>Admin code required</h2>
+          <label className="block text-sm font-medium">Admin Code</label>
+
           <input
             type="password"
             value={adminCode}
             onChange={e => setAdminCode(e.target.value)}
             required
+            className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
-          {error && <p style={{ color: 'red' }}>{error}</p>}
-          <button type="submit">Verify</button>
+
+          {error && <p className="text-red-400 text-sm">{error}</p>}
+
+          <button
+            type="submit"
+            className="w-full rounded-md bg-emerald-500 px-3 py-2 text-sm font-semibold text-slate-950 hover:bg-emerald-400"
+          >
+            Verify
+          </button>
         </>
       )}
 
+      {/* STEP 3 — UNKNOWN USER */}
       {step === 'requested' && (
-        <p>Your email has been sent to the commissioner for approval.</p>
+        <p className="text-center text-slate-300">
+          Your email has been sent to the commissioner.
+        </p>
+      )}
+
+      {/* STEP 4 — DONE (ADMIN OR KNOWN USER) */}
+      {step === 'done' && (
+        <div className="space-y-3 text-center">
+          <p className="text-slate-300">
+            {isAdmin
+              ? "Welcome, Commissioner. Choose where to go next."
+              : "You're in. Choose where to go next."}
+          </p>
+
+          <button
+            type="button"
+            onClick={() => router.push('/bracket')}
+            className="w-full rounded-md bg-emerald-500 px-3 py-2 text-sm font-semibold text-slate-950 hover:bg-emerald-400"
+          >
+            Go to Brackets
+          </button>
+
+          {isAdmin && (
+            <button
+              type="button"
+              onClick={() => router.push('/admin')}
+              className="w-full rounded-md bg-blue-500 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-400"
+            >
+              Go to Admin Page
+            </button>
+          )}
+        </div>
       )}
     </form>
   );

@@ -4,14 +4,14 @@ import { useEffect, useState } from "react";
 import { supabase } from "../../../lib/supabaseClient";
 
 type Bracket = {
-  id: number;
+  id: string; // mapped from bracket_id
   user_id: string;
   bracket_name: string;
   created_at: string;
 };
 
 type Submission = {
-  bracket_id: number;
+  bracket_id: string;
   tiebreaker: number | null;
   submitted_at: string | null;
 };
@@ -23,10 +23,10 @@ type Pick = {
 
 export default function BracketsClient() {
   const [brackets, setBrackets] = useState<Bracket[]>([]);
-  const [submissions, setSubmissions] = useState<Record<number, Submission>>({});
+  const [submissions, setSubmissions] = useState<Record<string, Submission>>({});
   const [users, setUsers] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
-  const [viewingBracket, setViewingBracket] = useState<number | null>(null);
+  const [viewingBracket, setViewingBracket] = useState<string | null>(null);
   const [picks, setPicks] = useState<Pick[]>([]);
   const [loadingPicks, setLoadingPicks] = useState(false);
 
@@ -37,28 +37,42 @@ export default function BracketsClient() {
   const loadBrackets = async () => {
     setLoading(true);
 
-    const { data: bracketRows } = await supabase
+    // BRACKETS — FIXED
+    const { data: bracketRows, error: bracketErr } = await supabase
       .from("brackets")
-      .select("*")
+      .select("bracket_id, user_id, bracket_name, created_at")
       .order("created_at", { ascending: false });
 
-    setBrackets(bracketRows ?? []);
+    if (bracketErr) console.error("Bracket load error:", bracketErr);
 
-    // Load submissions
-    const { data: submissionRows } = await supabase
+    setBrackets(
+      (bracketRows ?? []).map((b) => ({
+        id: b.bracket_id,
+        user_id: b.user_id,
+        bracket_name: b.bracket_name,
+        created_at: b.created_at,
+      }))
+    );
+
+    // SUBMISSIONS — FIXED
+    const { data: submissionRows, error: subErr } = await supabase
       .from("bracket_submissions")
       .select("*");
 
-    const submissionMap: Record<number, Submission> = {};
+    if (subErr) console.error("Submission load error:", subErr);
+
+    const submissionMap: Record<string, Submission> = {};
     (submissionRows ?? []).forEach((s) => {
       submissionMap[s.bracket_id] = s;
     });
     setSubmissions(submissionMap);
 
-    // Load user emails
-    const { data: userRows } = await supabase
+    // USERS — FIXED
+    const { data: userRows, error: userErr } = await supabase
       .from("users")
       .select("id, email");
+
+    if (userErr) console.error("User load error:", userErr);
 
     const userMap: Record<string, string> = {};
     (userRows ?? []).forEach((u) => {
@@ -69,31 +83,33 @@ export default function BracketsClient() {
     setLoading(false);
   };
 
-  const loadBracketPicks = async (bracketId: number) => {
+  const loadBracketPicks = async (bracketId: string) => {
     setLoadingPicks(true);
 
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("picks")
       .select("game_id, selected_team")
       .eq("bracket_id", bracketId)
       .order("game_id");
 
+    if (error) console.error("Pick load error:", error);
+
     setPicks(data ?? []);
     setLoadingPicks(false);
   };
 
-  const deleteBracket = async (bracketId: number) => {
+  const deleteBracket = async (bracketId: string) => {
     if (!confirm("Delete this bracket?")) return;
 
     await supabase.from("picks").delete().eq("bracket_id", bracketId);
     await supabase.from("bracket_submissions").delete().eq("bracket_id", bracketId);
-    await supabase.from("brackets").delete().eq("id", bracketId);
+    await supabase.from("brackets").delete().eq("bracket_id", bracketId);
 
     alert("Bracket deleted.");
     loadBrackets();
   };
 
-  const resetBracket = async (bracketId: number) => {
+  const resetBracket = async (bracketId: string) => {
     if (!confirm("Reset all picks for this bracket?")) return;
 
     await supabase.from("picks").delete().eq("bracket_id", bracketId);

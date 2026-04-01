@@ -19,80 +19,63 @@ export async function POST(req: Request) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
-  // Commissioner auto-recognition (you + Liam)
-  const isCommissioner = ADMINS.includes(email.toLowerCase());
-  if (isCommissioner) {
-    return NextResponse.json({
-      status: "admin",
-      message: "Welcome commissioner!"
+  const normalizedEmail = email.toLowerCase();
+
+  // Commissioner auto-login
+  if (ADMINS.includes(normalizedEmail)) {
+    const cookieStore = await cookies();
+    cookieStore.set("mm_session", JSON.stringify({
+      userId: "commissioner",
+      email: normalizedEmail,
+      isAdmin: true
+    }), {
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+      secure: process.env.NODE_ENV === "production"
     });
+
+    return NextResponse.json({ status: "admin" });
   }
 
-  // Look up user in the users table
+  // Look up user
   const { data: user } = await supabase
     .from("users")
     .select("*")
-    .eq("email", email.toLowerCase())
+    .eq("email", normalizedEmail)
     .single();
 
-  // User not found → create access request
+  // Not found → create access request
   if (!user) {
-    await supabase.from("access_requests").insert({
-      email: email.toLowerCase()
-    });
-
-    return NextResponse.json(
-      {
-        status: "requested",
-        message:
-          "Your email has been sent to the commissioner. You’ll be able to enter your bracket once you’re on the roster."
-      },
-      { status: 200 }
-    );
+    await supabase.from("access_requests").insert({ email: normalizedEmail });
+    return NextResponse.json({ status: "requested" });
   }
 
-  // Admin but no code yet → ask for code
+  // Admin but no code yet
   if (user.is_admin && !adminCode) {
-    return NextResponse.json(
-      {
-        status: "needsAdminCode",
-        message: "Enter your 4-digit admin code to continue."
-      },
-      { status: 200 }
-    );
+    return NextResponse.json({ status: "needsAdminCode" });
   }
 
-  // Admin with wrong code
+  // Admin wrong code
   if (user.is_admin && adminCode && adminCode !== user.admin_code) {
-    return NextResponse.json(
-      {
-        status: "invalidAdminCode",
-        message: "That code doesn’t match. Try again."
-      },
-      { status: 401 }
-    );
+    return NextResponse.json({ status: "invalidAdminCode" });
   }
 
   // Normal user OR admin with correct code
-  const sessionPayload = {
+  const cookieStore = await cookies();
+  cookieStore.set("mm_session", JSON.stringify({
     userId: user.id,
     email: user.email,
     isAdmin: !!user.is_admin
-  };
-
-  const cookieStore = await cookies();
-  cookieStore.set("mm_session", JSON.stringify(sessionPayload), {
+  }), {
     httpOnly: true,
     sameSite: "lax",
     path: "/",
     secure: process.env.NODE_ENV === "production"
   });
 
-  return NextResponse.json(
-    {
-      status: "ok",
-      isAdmin: !!user.is_admin
-    },
-    { status: 200 }
-  );
+  return NextResponse.json({
+    status: "ok",
+    isAdmin: !!user.is_admin
+  });
 }

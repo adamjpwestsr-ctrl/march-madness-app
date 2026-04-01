@@ -16,6 +16,7 @@ export default function LoginForm() {
 
     const res = await fetch('/api/login', {
       method: 'POST',
+      headers: { 'Content-Type': 'application/json' },   // REQUIRED
       body: JSON.stringify({ email, adminCode }),
     });
 
@@ -34,9 +35,16 @@ export default function LoginForm() {
         setError('Incorrect admin code');
         break;
 
-      case 'ok':
+      case 'admin': // commissioner auto-login
+        router.push('/admin');
+        break;
+
+      case 'ok': // normal user or admin with correct code
         router.push(data.isAdmin ? '/admin' : '/bracket');
         break;
+
+      default:
+        setError('Unexpected error. Try again.');
     }
   }
 

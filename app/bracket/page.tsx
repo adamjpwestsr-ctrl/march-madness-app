@@ -13,20 +13,19 @@ import {
 } from "./actions";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-export default async function BracketPage({ searchParams }: { searchParams?: { bid?: string } }) {
-  // ⭐ DEBUG LOGGING
-  console.log("BRACKET PAGE URL:", SUPABASE_URL);
-  console.log("BRACKET PAGE ANON KEY:", ANON_KEY?.slice(0, 10));
-  console.log("BRACKET PAGE SERVICE KEY:", SERVICE_ROLE_KEY?.slice(0, 10));
-
+export default async function BracketPage({
+  searchParams,
+}: {
+  searchParams?: { bid?: string };
+}) {
+  // ⭐ SESSION CHECK
   const cookieStore = await cookies();
   const sessionCookie = cookieStore.get("mm_session");
   if (!sessionCookie) redirect("/login");
 
-  let session: { userId?: number | string; email?: string; isAdmin?: boolean };
+  let session: { userId?: number; email?: string; isAdmin?: boolean };
   try {
     session = JSON.parse(sessionCookie.value);
   } catch {
@@ -39,37 +38,30 @@ export default async function BracketPage({ searchParams }: { searchParams?: { b
 
   if (!email) redirect("/login");
 
+  // ⭐ SUPABASE CLIENT
   const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
-  // ⭐ DEBUG QUERY
-  const { data: debugUsers, error: debugErr } = await supabase
-    .from("users")
-    .select("email");
-
-  console.log("BRACKET PAGE DEBUG USERS:", debugUsers, debugErr);
-
+  // ⭐ RESOLVE USER ID
   let userId: number | null = null;
 
   if (typeof rawUserId === "number") {
     userId = rawUserId;
   } else {
-    const { data: user, error: userErr } = await supabase
+    // Admin fallback (should not happen anymore)
+    const { data: user } = await supabase
       .from("users")
       .select("user_id, email, is_admin")
       .ilike("email", email)
       .single();
 
-    if (userErr || !user) {
-      if (!isAdmin) {
-        console.error("User lookup error in BracketPage:", userErr);
-        redirect("/login");
-      }
-      userId = null;
-    } else {
-      userId = user.user_id;
+    if (!user) {
+      redirect("/login");
     }
+
+    userId = user.user_id;
   }
 
+  // ⭐ LOAD BRACKETS FOR THIS USER
   let brackets: {
     bracket_id: string;
     bracket_name: string | null;
@@ -89,6 +81,7 @@ export default async function BracketPage({ searchParams }: { searchParams?: { b
     brackets = data ?? [];
   }
 
+  // ⭐ NO BRACKETS → SHOW CREATE BUTTON
   if (!brackets || brackets.length === 0) {
     return (
       <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center gap-6">
@@ -112,6 +105,7 @@ export default async function BracketPage({ searchParams }: { searchParams?: { b
     );
   }
 
+  // ⭐ DETERMINE ACTIVE BRACKET
   const selectedId =
     typeof searchParams?.bid === "string" ? searchParams.bid : undefined;
 
@@ -120,6 +114,7 @@ export default async function BracketPage({ searchParams }: { searchParams?: { b
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex">
+      {/* SIDEBAR */}
       <aside className="w-72 bg-slate-900 border-r border-slate-800 p-4 flex flex-col gap-4">
         <h2 className="text-xl font-bold mb-2">Your Brackets</h2>
 
@@ -236,15 +231,17 @@ export default async function BracketPage({ searchParams }: { searchParams?: { b
         )}
       </aside>
 
+      {/* MAIN CONTENT */}
       <main className="flex-1 p-6">
         <BracketSelectorShell
           brackets={brackets}
           activeId={activeBracket.bracket_id}
         />
 
+        {/* ⭐ OPTION A FIX APPLIED */}
         <BracketShell
           bracketId={activeBracket.bracket_id}
-          userId={userId}
+          userId={userId!}
           userEmail={email}
           bracketName={activeBracket.bracket_name ?? "My Bracket"}
         />

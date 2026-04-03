@@ -44,7 +44,7 @@ export default function LoginForm() {
           setIsAdmin(true);
           setStep('done');
         } else {
-          // ⭐ FIX: Force full reload so server reads cookie
+          // ⭐ FORCE FULL PAGE LOAD SO SERVER READS COOKIE
           window.location.href = '/bracket';
         }
         break;
@@ -55,72 +55,77 @@ export default function LoginForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <>
+      {/* FORM ONLY HANDLES EMAIL + ADMIN CODE */}
+      {step !== 'done' && (
+        <form onSubmit={handleSubmit} className="space-y-4">
 
-      {/* STEP 1 — EMAIL */}
-      {step === 'email' && (
-        <>
-          <label className="block text-sm font-medium">Enter your email</label>
+          {/* STEP 1 — EMAIL */}
+          {step === 'email' && (
+            <>
+              <label className="block text-sm font-medium">Enter your email</label>
 
-          <input
-            type="email"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            required
-            className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-          />
+              <input
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                required
+                className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              />
 
-          <button
-            type="submit"
-            className="w-full rounded-md bg-emerald-500 px-3 py-2 text-sm font-semibold text-slate-950 hover:bg-emerald-400"
-          >
-            Continue
-          </button>
-        </>
-      )}
+              <button
+                type="submit"
+                className="w-full rounded-md bg-emerald-500 px-3 py-2 text-sm font-semibold text-slate-950 hover:bg-emerald-400"
+              >
+                Continue
+              </button>
+            </>
+          )}
 
-      {/* STEP 2 — ADMIN CODE */}
-      {step === 'admin' && (
-        <>
-          <label className="block text-sm font-medium">Admin Code</label>
+          {/* STEP 2 — ADMIN CODE */}
+          {step === 'admin' && (
+            <>
+              <label className="block text-sm font-medium">Admin Code</label>
 
-          <input
-            type="password"
-            value={adminCode}
-            onChange={e => setAdminCode(e.target.value)}
-            required
-            className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-          />
+              <input
+                type="password"
+                value={adminCode}
+                onChange={e => setAdminCode(e.target.value)}
+                required
+                className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              />
 
-          {error && <p className="text-red-400 text-sm">{error}</p>}
+              {error && <p className="text-red-400 text-sm">{error}</p>}
 
-          <button
-            type="submit"
-            className="w-full rounded-md bg-emerald-500 px-3 py-2 text-sm font-semibold text-slate-950 hover:bg-emerald-400"
-          >
-            Verify
-          </button>
-        </>
-      )}
+              <button
+                type="submit"
+                className="w-full rounded-md bg-emerald-500 px-3 py-2 text-sm font-semibold text-slate-950 hover:bg-emerald-400"
+              >
+                Verify
+              </button>
+            </>
+          )}
 
-      {/* STEP 3 — UNKNOWN USER */}
-      {step === 'requested' && (
-        <p className="text-center text-slate-300">
-          Your email has been sent to the commissioner.
-        </p>
+          {/* STEP 3 — UNKNOWN USER */}
+          {step === 'requested' && (
+            <p className="text-center text-slate-300">
+              Your email has been sent to the commissioner.
+            </p>
+          )}
+        </form>
       )}
 
       {/* STEP 4 — DONE (ADMIN OR KNOWN USER) */}
       {step === 'done' && (
-        <div className="space-y-3 text-center">
+        <div className="space-y-3 text-center mt-6">
           <p className="text-slate-300">
             {isAdmin
               ? "Welcome, Commissioner. Choose where to go next."
               : "You're in. Choose where to go next."}
           </p>
 
+          {/* ⭐ BUTTONS ARE NOW OUTSIDE THE FORM — FIXES CLICK ISSUE */}
           <button
-            type="button"
             onClick={() => (window.location.href = '/bracket')}
             className="w-full rounded-md bg-emerald-500 px-3 py-2 text-sm font-semibold text-slate-950 hover:bg-emerald-400"
           >
@@ -129,7 +134,6 @@ export default function LoginForm() {
 
           {isAdmin && (
             <button
-              type="button"
               onClick={() => (window.location.href = '/admin')}
               className="w-full rounded-md bg-blue-500 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-400"
             >
@@ -138,6 +142,6 @@ export default function LoginForm() {
           )}
         </div>
       )}
-    </form>
+    </>
   );
 }

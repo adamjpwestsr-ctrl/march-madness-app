@@ -27,14 +27,26 @@ export default function BracketClient({
   games,
   picks,
   onPick,
+  onReset,
 }: {
   bracket: { bracket_id: string };
   games: Game[];
   picks: Pick[];
   onPick: (gameId: number, teamId: string) => void;
+  onReset: () => void;
 }) {
-  const regions = ["East", "West", "South", "Midwest"];
-  const finalFourRegions = ["Final Four", "Championship"];
+  const regions = ["East", "West", "South", "Midwest", "Final Four", "Championship"];
+
+  // ⭐ FIXED: Picks override DB winners
+  const getSelectedTeamId = (game: Game): string | null => {
+    const pick = picks.find((p) => p.game_id === game.game_id);
+    if (pick) return pick.team_id;
+
+    // Only use DB winners for Final Four / Championship
+    if (game.round >= 5) return game.winner_team_id;
+
+    return null;
+  };
 
   const gamesByRegion: Record<string, Game[]> = {};
   games.forEach((g) => {
@@ -42,53 +54,10 @@ export default function BracketClient({
     gamesByRegion[g.region].push(g);
   });
 
-  const getSelectedTeamId = (game: Game): string | null => {
-    const pick = picks.find((p) => p.game_id === game.game_id);
-    if (pick) return pick.team_id;
-    return game.winner_team_id;
-  };
-
-  const renderRegion = (region: string) => {
-    const regionGames = (gamesByRegion[region] || []).slice().sort((a, b) => a.round - b.round);
-    if (!regionGames.length) return null;
-
-    const rounds = Array.from(new Set(regionGames.map((g) => g.round))).sort(
-      (a, b) => a - b
-    );
-
-    return (
-      <div className="flex gap-4">
-        {rounds.map((round) => {
-          const roundGames = regionGames.filter((g) => g.round === round);
-          return (
-            <div key={`${region}-round-${round}`} className="flex flex-col gap-2">
-              <div className="text-xs font-semibold text-slate-400 mb-1">
-                {roundLabel(round)}
-              </div>
-              {roundGames.map((game) => {
-                const selectedTeamId = getSelectedTeamId(game);
-                return (
-                  <div
-                    key={game.game_id}
-                    className="flex flex-col gap-1 bg-slate-800/60 rounded-md p-2"
-                  >
-                    {renderTeamButton(game, game.team1, selectedTeamId, onPick)}
-                    {renderTeamButton(game, game.team2, selectedTeamId, onPick)}
-                  </div>
-                );
-              })}
-            </div>
-          );
-        })}
-      </div>
-    );
-  };
-
   const renderTeamButton = (
     game: Game,
     team: Team | null,
-    selectedTeamId: string | null,
-    onPick: (gameId: number, teamId: string) => void
+    selectedTeamId: string | null
   ) => {
     if (!team) {
       return (
@@ -138,41 +107,87 @@ export default function BracketClient({
     }
   };
 
+  const renderRegion = (region: string) => {
+    const regionGames = (gamesByRegion[region] || []).slice().sort((a, b) => a.round - b.round);
+    if (!regionGames.length) return null;
+
+    const rounds = Array.from(new Set(regionGames.map((g) => g.round))).sort(
+      (a, b) => a - b
+    );
+
+    return (
+      <div className="flex gap-4">
+        {rounds.map((round) => {
+          const roundGames = regionGames.filter((g) => g.round === round);
+          return (
+            <div key={`${region}-round-${round}`} className="flex flex-col gap-2">
+              <div className="text-xs font-semibold text-slate-400 mb-1">
+                {roundLabel(round)}
+              </div>
+              {roundGames.map((game) => {
+                const selectedTeamId = getSelectedTeamId(game);
+                return (
+                  <div
+                    key={game.game_id}
+                    className="flex flex-col gap-1 bg-slate-800/60 rounded-md p-2"
+                  >
+                    {renderTeamButton(game, game.team1, selectedTeamId)}
+                    {renderTeamButton(game, game.team2, selectedTeamId)}
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
   return (
-    <div className="flex gap-4 overflow-x-auto">
-      {/* Left column: East (top), South (bottom) */}
-      <div className="flex flex-col gap-6 min-w-[480px]">
-        <div>
-          <h3 className="text-sm font-semibold mb-2 text-slate-200">East</h3>
-          {renderRegion("East")}
-        </div>
-        <div>
-          <h3 className="text-sm font-semibold mb-2 text-slate-200">South</h3>
-          {renderRegion("South")}
-        </div>
-      </div>
+    <div className="flex flex-col gap-6">
+      {/* ⭐ Reset Button */}
+      <button
+        onClick={onReset}
+        className="self-start px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm"
+      >
+        Reset Bracket
+      </button>
 
-      {/* Center column: Final Four + Championship */}
-      <div className="flex flex-col justify-center gap-6 min-w-[320px]">
-        <div>
-          <h3 className="text-sm font-semibold mb-2 text-slate-200">Final Four</h3>
-          {renderRegion("Final Four")}
+      <div className="flex gap-4 overflow-x-auto">
+        {/* Left column: East (top), South (bottom) */}
+        <div className="flex flex-col gap-6 min-w-[480px]">
+          <div>
+            <h3 className="text-sm font-semibold mb-2 text-slate-200">East</h3>
+            {renderRegion("East")}
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold mb-2 text-slate-200">South</h3>
+            {renderRegion("South")}
+          </div>
         </div>
-        <div>
-          <h3 className="text-sm font-semibold mb-2 text-slate-200">Championship</h3>
-          {renderRegion("Championship")}
-        </div>
-      </div>
 
-      {/* Right column: West (top), Midwest (bottom) */}
-      <div className="flex flex-col gap-6 min-w-[480px]">
-        <div>
-          <h3 className="text-sm font-semibold mb-2 text-slate-200">West</h3>
-          {renderRegion("West")}
+        {/* Center column: Final Four + Championship */}
+        <div className="flex flex-col justify-center gap-6 min-w-[320px]">
+          <div>
+            <h3 className="text-sm font-semibold mb-2 text-slate-200">Final Four</h3>
+            {renderRegion("Final Four")}
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold mb-2 text-slate-200">Championship</h3>
+            {renderRegion("Championship")}
+          </div>
         </div>
-        <div>
-          <h3 className="text-sm font-semibold mb-2 text-slate-200">Midwest</h3>
-          {renderRegion("Midwest")}
+
+        {/* Right column: West (top), Midwest (bottom) */}
+        <div className="flex flex-col gap-6 min-w-[480px]">
+          <div>
+            <h3 className="text-sm font-semibold mb-2 text-slate-200">West</h3>
+            {renderRegion("West")}
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold mb-2 text-slate-200">Midwest</h3>
+            {renderRegion("Midwest")}
+          </div>
         </div>
       </div>
     </div>

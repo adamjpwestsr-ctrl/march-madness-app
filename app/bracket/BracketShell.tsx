@@ -18,6 +18,7 @@ export default function BracketShell({
   const [bracketData, setBracketData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Load bracket data
   const loadBracket = async () => {
     try {
       setLoading(true);
@@ -43,6 +44,7 @@ export default function BracketShell({
     loadBracket();
   }, [bracketId]);
 
+  // Save a pick
   const handlePick = async (gameId: number, teamId: string) => {
     try {
       await fetch("/api/pick", {
@@ -60,6 +62,21 @@ export default function BracketShell({
       await loadBracket();
     } catch (err) {
       console.error("Pick save error:", err);
+    }
+  };
+
+  // ⭐ Reset bracket picks
+  const handleReset = async () => {
+    try {
+      await fetch("/api/bracket/reset", {
+        method: "POST",
+        body: JSON.stringify({ bracketId }),
+        headers: { "Content-Type": "application/json" },
+      });
+
+      await loadBracket();
+    } catch (err) {
+      console.error("Reset bracket error:", err);
     }
   };
 
@@ -87,6 +104,7 @@ export default function BracketShell({
           picks={picks}
           games={games}
           onPick={handlePick}
+          onReset={handleReset}
         />
       </div>
     </div>

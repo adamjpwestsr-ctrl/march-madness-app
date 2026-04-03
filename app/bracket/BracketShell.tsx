@@ -18,7 +18,6 @@ export default function BracketShell({
   const [bracketData, setBracketData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Load bracket data
   const loadBracket = async () => {
     try {
       setLoading(true);
@@ -44,7 +43,6 @@ export default function BracketShell({
     loadBracket();
   }, [bracketId]);
 
-  // Save a pick
   const handlePick = async (gameId: number, teamId: string) => {
     try {
       await fetch("/api/pick", {
@@ -65,7 +63,6 @@ export default function BracketShell({
     }
   };
 
-  // ⭐ Reset bracket picks
   const handleReset = async () => {
     try {
       await fetch("/api/bracket/reset", {
@@ -98,15 +95,13 @@ export default function BracketShell({
     <div className="bg-slate-900 border border-slate-800 rounded-lg p-6 shadow-xl">
       <h2 className="text-xl font-bold mb-4">{bracketName}</h2>
 
-      <div className="text-slate-300">
-        <BracketClient
-          bracket={bracket}
-          picks={picks}
-          games={games}
-          onPick={handlePick}
-          onReset={handleReset}
-        />
-      </div>
+      <BracketClient
+        bracket={bracket}
+        picks={picks}
+        games={games}
+        onPick={handlePick}
+        onReset={handleReset}
+      />
     </div>
   );
 }

@@ -9,45 +9,46 @@ export async function GET(req: Request) {
     auth: { persistSession: false },
   });
 
-  // Load all games from your existing schema
+  const url = new URL(req.url);
+  const bracketId = url.searchParams.get("bracketId");
+
   const { data: rawGames, error: gameError } = await supabase
     .from("games")
     .select("*")
     .order("round", { ascending: true })
-    .order("game_number", { ascending: true });
+    .order("game_id", { ascending: true });
 
   if (gameError) {
     console.error("Game load error:", gameError);
     return NextResponse.json({ error: "Failed to load games" }, { status: 500 });
   }
 
-  // Transform into the structure BracketClient expects
-  const games = rawGames.map((g) => ({
+  const games = (rawGames || []).map((g) => ({
     game_id: g.game_id,
     round: g.round,
     region: g.region,
-    next_game_id: g.source_game1 ?? null, // your schema uses source_game1
+    next_game_id: g.next_game_id ?? g.source_game1 ?? null,
     team1: g.team1
-      ? { team_id: g.team1, name: g.team1, seed: g.seed1 }
+      ? { team_id: g.team1, name: g.team1, seed: g.seed1 ?? null }
       : null,
     team2: g.team2
-      ? { team_id: g.team2, name: g.team2, seed: g.seed2 }
+      ? { team_id: g.team2, name: g.team2, seed: g.seed2 ?? null }
       : null,
     winner_team_id: g.winner ?? null,
   }));
 
-  // Load picks for the current bracket
-  const url = new URL(req.url);
-  const bracketId = url.searchParams.get("bracketId");
-
-  let picks = [];
+  let picks: any[] = [];
   if (bracketId) {
-    const { data: pickData } = await supabase
+    const { data: pickData, error: pickError } = await supabase
       .from("picks")
       .select("*")
       .eq("bracket_id", bracketId);
 
-    picks = pickData || [];
+    if (pickError) {
+      console.error("Pick load error:", pickError);
+    } else {
+      picks = pickData || [];
+    }
   }
 
   return NextResponse.json({

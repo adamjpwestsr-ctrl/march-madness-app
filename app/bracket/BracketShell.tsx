@@ -1,7 +1,7 @@
 "use client";
 
-import BracketClient from "./BracketClient";
 import { useEffect, useState } from "react";
+import BracketClient from "./BracketClient";
 
 export default function BracketShell({
   bracketId,
@@ -18,36 +18,32 @@ export default function BracketShell({
   const [bracketData, setBracketData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Load bracket + picks + games
-  useEffect(() => {
-    async function load() {
-      try {
-        setLoading(true);
+  const loadBracket = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(`/api/bracket?bracketId=${bracketId}`, {
+        cache: "no-store",
+      });
+      const json = await res.json();
 
-        const res = await fetch(`/api/bracket?bracketId=${bracketId}`, {
-          cache: "no-store",
-        });
-
-        const json = await res.json();
-
-        if (!json || json.error) {
-          setError("Failed to load bracket.");
-        } else {
-          setBracketData(json);
-        }
-      } catch (err) {
-        console.error("Bracket load error:", err);
+      if (!json || json.error) {
         setError("Failed to load bracket.");
-      } finally {
-        setLoading(false);
+      } else {
+        setBracketData(json);
       }
+    } catch (err) {
+      console.error("Bracket load error:", err);
+      setError("Failed to load bracket.");
+    } finally {
+      setLoading(false);
     }
+  };
 
-    load();
+  useEffect(() => {
+    loadBracket();
   }, [bracketId]);
 
-  // Handle pick submission
-  const handlePick = async (gameId: string, teamId: string) => {
+  const handlePick = async (gameId: number, teamId: string) => {
     try {
       await fetch("/api/pick", {
         method: "POST",
@@ -61,12 +57,7 @@ export default function BracketShell({
         },
       });
 
-      // Reload bracket after pick
-      const res = await fetch(`/api/bracket?bracketId=${bracketId}`, {
-        cache: "no-store",
-      });
-      const json = await res.json();
-      setBracketData(json);
+      await loadBracket();
     } catch (err) {
       console.error("Pick save error:", err);
     }

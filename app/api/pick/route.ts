@@ -11,32 +11,22 @@ export async function POST(req: Request) {
 
   const { bracketId, gameId, teamId } = await req.json();
 
-  // ------------------------------------------------------------
-  // 1. SAVE PICK
-  // ------------------------------------------------------------
   await supabase.from("picks").upsert(
     {
       bracket_id: bracketId,
       game_id: gameId,
-      team_id: teamId, // team name
+      team_id: teamId,
     },
     {
       onConflict: "bracket_id,game_id",
     }
   );
 
-  // ------------------------------------------------------------
-  // 2. UPDATE WINNER IN CURRENT GAME
-  // ------------------------------------------------------------
   await supabase
     .from("games")
     .update({ winner: teamId })
     .eq("game_id", gameId);
 
-  // ------------------------------------------------------------
-  // 3. DOWNSTREAM PROPAGATION
-  // ------------------------------------------------------------
-  // Load the game we just updated
   const { data: currentGame } = await supabase
     .from("games")
     .select("*")
@@ -47,15 +37,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true });
   }
 
-  // Determine the next game this feeds into
-  const nextGameId = currentGame.source_game1 || currentGame.source_game2;
-
+  const nextGameId = currentGame.next_game_id ?? currentGame.source_game1 ?? null;
   if (!nextGameId) {
-    // No downstream game (Final Four or Championship)
     return NextResponse.json({ success: true });
   }
 
-  // Load the next game
   const { data: nextGame } = await supabase
     .from("games")
     .select("*")
@@ -66,62 +52,51 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true });
   }
 
-  // ------------------------------------------------------------
-  // 4. PLACE WINNER INTO NEXT GAME
-  // ------------------------------------------------------------
-  let updateFields: any = {};
+  const updateFields: any = {};
 
-  // If this game is source_game1 for the next game → fill team1
-  if (nextGame.source_game1 === currentGame.game_id) {
+  if (nextGame.source_game1 === currentGame.game_id || nextGame.next_game_id === currentGame.game_id) {
     updateFields.team1 = teamId;
-    updateFields.seed1 = null; // optional: clear seed
+    updateFields.seed1 = null;
   }
 
-  // If this game is source_game2 for the next game → fill team2
   if (nextGame.source_game2 === currentGame.game_id) {
     updateFields.team2 = teamId;
     updateFields.seed2 = null;
   }
 
-  // Update the next game with the new team
-  await supabase
-    .from("games")
-    .update(updateFields)
-    .eq("game_id", nextGameId);
+  if (Object.keys(updateFields).length > 0) {
+    await supabase
+      .from("games")
+      .update(updateFields)
+      .eq("game_id", nextGameId);
+  }
 
-  // ------------------------------------------------------------
-  // 5. CLEAR DOWNSTREAM WINNERS (invalidate future rounds)
-  // ------------------------------------------------------------
-  async function clearDownstream(gameId: number) {
+  async function clearDownstream(gameIdToClear: number) {
     const { data: g } = await supabase
       .from("games")
       .select("*")
-      .eq("game_id", gameId)
+      .eq("game_id", gameIdToClear)
       .single();
 
     if (!g) return;
 
-    // Clear winner
     await supabase
       .from("games")
       .update({ winner: null })
-      .eq("game_id", gameId);
+      .eq("game_id", gameIdToClear);
 
-    // Clear picks for this game
     await supabase
       .from("picks")
       .delete()
-      .eq("game_id", gameId)
+      .eq("game_id", gameIdToClear)
       .eq("bracket_id", bracketId);
 
-    // Recurse into next game
-    const nextId = g.source_game1 || g.source_game2;
+    const nextId = g.next_game_id ?? g.source_game1 ?? null;
     if (nextId) {
       await clearDownstream(nextId);
     }
   }
 
-  // Clear downstream winners starting from the next game
   await clearDownstream(nextGameId);
 
   return NextResponse.json({ success: true });

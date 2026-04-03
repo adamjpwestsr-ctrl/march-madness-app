@@ -23,22 +23,26 @@ export async function POST(req: Request) {
 
   // 1. ADMIN EMAILS — require admin code
   if (ADMINS.includes(normalizedEmail)) {
-    // If no code yet → ask for it
     if (!adminCode) {
       return NextResponse.json({ status: "needsAdminCode" });
     }
 
-    // If wrong code → reject
     if (adminCode !== "1234") {
       return NextResponse.json({ status: "invalidAdminCode" });
     }
 
-    // Correct code → log in as admin
+    // Look up admin user_id
+    const { data: adminUser } = await supabase
+      .from("users")
+      .select("user_id, email, is_admin")
+      .eq("email", normalizedEmail)
+      .single();
+
     const cookieStore = await cookies();
     cookieStore.set(
       "mm_session",
       JSON.stringify({
-        userId: "commissioner",
+        userId: adminUser?.user_id ?? "commissioner",
         email: normalizedEmail,
         isAdmin: true,
       }),
@@ -56,7 +60,7 @@ export async function POST(req: Request) {
   // 2. LOOK UP USER IN DATABASE
   const { data: user } = await supabase
     .from("users")
-    .select("*")
+    .select("user_id, email, is_admin")
     .eq("email", normalizedEmail)
     .single();
 
@@ -71,7 +75,7 @@ export async function POST(req: Request) {
   cookieStore.set(
     "mm_session",
     JSON.stringify({
-      userId: user.id,
+      userId: user.user_id,   // <-- FIXED
       email: user.email,
       isAdmin: !!user.is_admin,
     }),

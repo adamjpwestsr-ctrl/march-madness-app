@@ -2,6 +2,14 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createClient } from "@supabase/supabase-js";
 
+console.log("SUPABASE URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
+
+const { data: debugUsers } = await supabase
+  .from("users")
+  .select("email");
+
+console.log("DEBUG USERS:", debugUsers);
+
 const ADMINS = [
   "adamjpwestsr@gmail.com",
   "lfahearn@gmail.com",

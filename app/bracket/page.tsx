@@ -82,7 +82,7 @@ export default async function BracketPage({
   }
 
   // ⭐ NO BRACKETS → SHOW CREATE BUTTON
-  if (!brackets || brackets.length === 0) {
+  if (!Array.isArray(brackets) || brackets.length === 0) {
     return (
       <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center gap-6">
         <p className="text-lg">
@@ -109,8 +109,24 @@ export default async function BracketPage({
   const selectedId =
     typeof searchParams?.bid === "string" ? searchParams.bid : undefined;
 
-  const activeBracket =
-    brackets.find((b) => String(b.bracket_id) === selectedId) ?? brackets[0];
+if (!Array.isArray(brackets) || brackets.length === 0) {
+  return (
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center gap-6">
+      <p className="text-lg">No brackets found for this account.</p>
+      <form action={createBracket}>
+        <button
+          type="submit"
+          className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg text-white font-semibold shadow-lg"
+        >
+          Create Your First Bracket
+        </button>
+      </form>
+    </div>
+  );
+}
+
+const activeBracket =
+  brackets.find((b) => String(b.bracket_id) === selectedId) ?? brackets[0];
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex">

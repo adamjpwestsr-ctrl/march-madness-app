@@ -20,13 +20,12 @@ export default async function BracketPage({
 }: {
   searchParams?: { bid?: string };
 }) {
-
   // SESSION CHECK
   const cookieStore = await cookies();
   const sessionCookie = cookieStore.get("mm_session");
   if (!sessionCookie) redirect("/login");
 
-  let session;
+  let session: { userId?: number; email?: string; isAdmin?: boolean };
   try {
     session = JSON.parse(sessionCookie.value);
   } catch {
@@ -39,11 +38,13 @@ export default async function BracketPage({
 
   if (!email) redirect("/login");
 
-  // SUPABASE CLIENT
-  const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+  // SUPABASE CLIENT (SERVER-SAFE)
+  const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
+    auth: { persistSession: false },
+  });
 
   // RESOLVE USER ID
-  let userId = null;
+  let userId: number | null = null;
 
   if (typeof rawUserId === "number") {
     userId = rawUserId;
@@ -61,13 +62,12 @@ export default async function BracketPage({
 
   // LOAD BRACKETS
   let brackets: {
-  bracket_id: string;
-  bracket_name: string | null;
-  icon: string | null;
-  created_at: string | null;
-  updated_at: string | null;
-}[] = [];
-
+    bracket_id: string;
+    bracket_name: string | null;
+    icon: string | null;
+    created_at: string | null;
+    updated_at: string | null;
+  }[] = [];
 
   if (userId !== null) {
     const { data, error } = await supabase

@@ -1,11 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 
 export default function LoginForm() {
-  const router = useRouter();
-
   const [email, setEmail] = useState('');
   const [adminCode, setAdminCode] = useState('');
   const [step, setStep] = useState<'email' | 'admin' | 'requested' | 'done'>('email');
@@ -47,7 +44,8 @@ export default function LoginForm() {
           setIsAdmin(true);
           setStep('done');
         } else {
-          router.push('/bracket');
+          // ⭐ FIX: Force full reload so server reads cookie
+          window.location.href = '/bracket';
         }
         break;
 
@@ -123,7 +121,7 @@ export default function LoginForm() {
 
           <button
             type="button"
-            onClick={() => router.push('/bracket')}
+            onClick={() => (window.location.href = '/bracket')}
             className="w-full rounded-md bg-emerald-500 px-3 py-2 text-sm font-semibold text-slate-950 hover:bg-emerald-400"
           >
             Go to Brackets
@@ -132,7 +130,7 @@ export default function LoginForm() {
           {isAdmin && (
             <button
               type="button"
-              onClick={() => router.push('/admin')}
+              onClick={() => (window.location.href = '/admin')}
               className="w-full rounded-md bg-blue-500 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-400"
             >
               Go to Admin Page

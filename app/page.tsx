@@ -1,34 +1,52 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
+import { useEffect } from "react";
+import Image from "next/image";
 
 export default function LandingPage() {
+  // Redirect after animation completes
   useEffect(() => {
     const timer = setTimeout(() => {
-      window.location.href = '/login';
-    }, 5000);
+      window.location.href = "/login";
+    }, 5000); // 5 seconds
+
     return () => clearTimeout(timer);
   }, []);
 
   return (
-    <main className="relative min-h-screen flex items-center justify-center bg-slate-950 text-slate-50 overflow-hidden">
+    <div className="relative w-full h-screen bg-slate-900 overflow-hidden flex items-center justify-center">
 
-      {/* Floating Logos */}
-      <div className="absolute inset-0 opacity-20 pointer-events-none">
-        <img src="/logos/uconn.png" className="absolute top-10 left-10 w-28 animate-bounce-slow" />
-        <img src="/logos/duke.png" className="absolute top-1/2 left-3/4 w-28 animate-bounce-slower" />
-        <img src="/logos/unc.png" className="absolute top-1/3 left-1/4 w-28 animate-bounce-slowest" />
-        <img src="/logos/kansas.png" className="absolute bottom-10 left-1/3 w-28 animate-bounce-slow" />
-        <img src="/logos/arizona.png" className="absolute bottom-20 right-10 w-28 animate-bounce-slower" />
-        <img src="/logos/basketball.png" className="absolute bottom-20 right-10 w-28 animate-bounce-slower" />
-      </div>
-
-      <div className="relative z-10 text-center px-6">
-        <h1 className="text-4xl font-bold mb-4">Welcome to the Bracket Room</h1>
-        <p className="text-slate-400 text-lg">
-          Preparing the court… redirecting you to login.
+      {/* Sponsored By Message */}
+      <div className="absolute top-6 left-1/2 -translate-x-1/2 text-center">
+        <p className="text-slate-300 text-sm tracking-wide">
+          Sponsored by <span className="font-semibold">YOUR BUSINESS HERE</span>
         </p>
       </div>
-    </main>
+
+      {/* Moving Sponsor Logo */}
+      <a
+        href="https://yourfriendswebsite.com"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="moving-logo absolute"
+      >
+        <Image
+          src="/sponsor-logo.png" // Place this file in /public
+          alt="Sponsor Logo"
+          width={140}
+          height={140}
+        />
+      </a>
+
+      {/* Your existing floating logos background */}
+      <div className="absolute inset-0 -z-10">
+        {/* Keep your floating logos or background animation here */}
+      </div>
+
+      {/* Optional main title */}
+      <h1 className="text-white text-3xl font-bold drop-shadow-lg">
+        Welcome to the Bracket
+      </h1>
+    </div>
   );
 }

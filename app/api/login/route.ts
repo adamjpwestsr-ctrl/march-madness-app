@@ -2,14 +2,6 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createClient } from "@supabase/supabase-js";
 
-console.log("SUPABASE URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
-
-const { data: debugUsers } = await supabase
-  .from("users")
-  .select("email");
-
-console.log("DEBUG USERS:", debugUsers);
-
 const ADMINS = [
   "adamjpwestsr@gmail.com",
   "lfahearn@gmail.com",
@@ -24,10 +16,20 @@ export async function POST(req: Request) {
 
   const normalizedEmail = email.toLowerCase();
 
+  // ⭐ CREATE SUPABASE CLIENT FIRST
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
+
+  // ⭐ DEBUG LOGGING — THIS IS WHAT WE NEED
+  console.log("SUPABASE URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
+
+  const { data: debugUsers, error: debugErr } = await supabase
+    .from("users")
+    .select("email");
+
+  console.log("DEBUG USERS:", debugUsers, debugErr);
 
   // 1. ADMIN EMAILS — require admin code
   if (ADMINS.includes(normalizedEmail)) {
@@ -39,12 +41,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ status: "invalidAdminCode" });
     }
 
-    // Look up admin user_id
-const { data: adminUser } = await supabase
-  .from("users")
-  .select("user_id, email, is_admin")
-  .ilike("email", normalizedEmail)
-  .single();
+    // Look up admin user_id if it exists
+    const { data: adminUser } = await supabase
+      .from("users")
+      .select("user_id, email, is_admin")
+      .ilike("email", normalizedEmail)
+      .single();
 
     const cookieStore = await cookies();
     cookieStore.set(
@@ -65,12 +67,12 @@ const { data: adminUser } = await supabase
     return NextResponse.json({ status: "admin" });
   }
 
-  // 2. LOOK UP USER IN DATABASE
+  // 2. LOOK UP USER IN DATABASE (CASE-INSENSITIVE)
   const { data: user } = await supabase
-  .from("users")
-  .select("*")
-  .ilike("email", normalizedEmail)
-  .single();
+    .from("users")
+    .select("*")
+    .ilike("email", normalizedEmail)
+    .single();
 
   // 3. UNKNOWN USER → create access request
   if (!user) {
@@ -83,7 +85,7 @@ const { data: adminUser } = await supabase
   cookieStore.set(
     "mm_session",
     JSON.stringify({
-      userId: user.user_id,   // <-- FIXED
+      userId: user.user_id,
       email: user.email,
       isAdmin: !!user.is_admin,
     }),

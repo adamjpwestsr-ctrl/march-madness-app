@@ -7,6 +7,7 @@ import { createClient } from "@supabase/supabase-js";
 
 import BracketShell from "./BracketShell";
 import BracketSelectorShell from "./BracketSelectorShell";
+import BracketIconSelector from "./BracketIconSelector";
 
 import {
   createBracket,
@@ -149,30 +150,11 @@ export default async function BracketPage({
                       </span>
                     </a>
 
-                    <form action={updateBracketIcon}>
-                      <input
-                        type="hidden"
-                        name="bracketId"
-                        value={b.bracket_id}
-                      />
-                      <select
-                        name="icon"
-                        defaultValue={b.icon || "🏀"}
-                        className="bg-slate-900 text-sm rounded px-1 py-0.5"
-                        onChange={(e) => e.target.form?.requestSubmit()}
-                      >
-                        <option value="🏀">🏀</option>
-                        <option value="🔥">🔥</option>
-                        <option value="🎯">🎯</option>
-                        <option value="⭐">⭐</option>
-                        <option value="💰">💰</option>
-                        <option value="🐺">🐺</option>
-                        <option value="🐯">🐯</option>
-                        <option value="🐻">🐻</option>
-                        <option value="🦅">🦅</option>
-                        <option value="🐉">🐉</option>
-                      </select>
-                    </form>
+                    {/* FIXED: icon selector moved to client component */}
+                    <BracketIconSelector
+                      bracketId={b.bracket_id}
+                      currentIcon={b.icon}
+                    />
                   </div>
 
                   <div className="mt-1 text-xs opacity-80">

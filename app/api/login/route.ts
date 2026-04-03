@@ -32,11 +32,11 @@ export async function POST(req: Request) {
     }
 
     // Look up admin user_id
-    const { data: adminUser } = await supabase
-      .from("users")
-      .select("user_id, email, is_admin")
-      .eq("email", normalizedEmail)
-      .single();
+const { data: adminUser } = await supabase
+  .from("users")
+  .select("user_id, email, is_admin")
+  .ilike("email", normalizedEmail)
+  .single();
 
     const cookieStore = await cookies();
     cookieStore.set(
@@ -59,10 +59,10 @@ export async function POST(req: Request) {
 
   // 2. LOOK UP USER IN DATABASE
   const { data: user } = await supabase
-    .from("users")
-    .select("user_id, email, is_admin")
-    .eq("email", normalizedEmail)
-    .single();
+  .from("users")
+  .select("*")
+  .ilike("email", normalizedEmail)
+  .single();
 
   // 3. UNKNOWN USER → create access request
   if (!user) {

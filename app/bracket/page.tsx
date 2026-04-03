@@ -60,7 +60,14 @@ export default async function BracketPage({
   }
 
   // LOAD BRACKETS
-  let brackets = [];
+  let brackets: {
+  bracket_id: string;
+  bracket_name: string | null;
+  icon: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+}[] = [];
+
 
   if (userId !== null) {
     const { data, error } = await supabase

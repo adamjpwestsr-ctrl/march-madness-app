@@ -16,6 +16,7 @@ export async function POST(req: Request) {
 
   const normalizedEmail = email.toLowerCase();
 
+  // Create Supabase client with service role key
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -62,7 +63,7 @@ export async function POST(req: Request) {
     cookieStore.set(
       "mm_session",
       JSON.stringify({
-        userId: adminUser.user_id,
+        userId: adminUser!.user_id,   // ⭐ FIXED
         email: normalizedEmail,
         isAdmin: true,
       }),
@@ -85,11 +86,13 @@ export async function POST(req: Request) {
     .ilike("email", normalizedEmail)
     .single();
 
+  // Unknown user → create access request
   if (!user) {
     await supabase.from("access_requests").insert({ email: normalizedEmail });
     return NextResponse.json({ status: "requested" });
   }
 
+  // Known user → set session cookie
   const cookieStore = await cookies();
   cookieStore.set(
     "mm_session",

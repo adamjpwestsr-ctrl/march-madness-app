@@ -23,7 +23,11 @@ export default function BracketShell({
     async function load() {
       try {
         setLoading(true);
-        const res = await fetch(`/api/bracket?bid=${bracketId}`);
+
+        const res = await fetch(`/api/bracket?bracketId=${bracketId}`, {
+          cache: "no-store",
+        });
+
         const json = await res.json();
 
         if (!json || json.error) {
@@ -56,17 +60,20 @@ export default function BracketShell({
           "Content-Type": "application/json",
         },
       });
+
+      // Reload bracket after pick
+      const res = await fetch(`/api/bracket?bracketId=${bracketId}`, {
+        cache: "no-store",
+      });
+      const json = await res.json();
+      setBracketData(json);
     } catch (err) {
       console.error("Pick save error:", err);
     }
   };
 
   if (loading) {
-    return (
-      <div className="text-slate-300 text-lg">
-        Loading bracket…
-      </div>
-    );
+    return <div className="text-slate-300 text-lg">Loading bracket…</div>;
   }
 
   if (error || !bracketData) {
@@ -81,11 +88,8 @@ export default function BracketShell({
 
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-lg p-6 shadow-xl">
-      <h2 className="text-xl font-bold mb-4">
-        {bracketName}
-      </h2>
+      <h2 className="text-xl font-bold mb-4">{bracketName}</h2>
 
-      {/* Bracket UI */}
       <div className="text-slate-300">
         <BracketClient
           bracket={bracket}

@@ -5,85 +5,124 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 export async function POST(req: Request) {
-  try {
-    const { bracketId, gameId, teamId } = await req.json();
+  const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
+    auth: { persistSession: false },
+  });
 
-    if (!bracketId || !gameId || !teamId) {
-      return NextResponse.json(
-        { error: "Missing required fields." },
-        { status: 400 }
-      );
+  const { bracketId, gameId, teamId } = await req.json();
+
+  // ------------------------------------------------------------
+  // 1. SAVE PICK
+  // ------------------------------------------------------------
+  await supabase.from("picks").upsert(
+    {
+      bracket_id: bracketId,
+      game_id: gameId,
+      team_id: teamId, // team name
+    },
+    {
+      onConflict: "bracket_id,game_id",
     }
+  );
 
-    const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
-      auth: { persistSession: false },
-    });
+  // ------------------------------------------------------------
+  // 2. UPDATE WINNER IN CURRENT GAME
+  // ------------------------------------------------------------
+  await supabase
+    .from("games")
+    .update({ winner: teamId })
+    .eq("game_id", gameId);
 
-    // 1. UPSERT THE PICK
-    const { error: upsertError } = await supabase
-      .from("picks")
-      .upsert(
-        {
-          bracket_id: bracketId,
-          game_id: gameId,
-          team_id: teamId,
-        },
-        { onConflict: "bracket_id,game_id" }
-      );
+  // ------------------------------------------------------------
+  // 3. DOWNSTREAM PROPAGATION
+  // ------------------------------------------------------------
+  // Load the game we just updated
+  const { data: currentGame } = await supabase
+    .from("games")
+    .select("*")
+    .eq("game_id", gameId)
+    .single();
 
-    if (upsertError) {
-      console.error("Pick upsert error:", upsertError);
-      return NextResponse.json(
-        { error: "Failed to save pick." },
-        { status: 500 }
-      );
-    }
+  if (!currentGame) {
+    return NextResponse.json({ success: true });
+  }
 
-    // 2. GET DOWNSTREAM GAMES (RPC)
-    const { data: downstream, error: downstreamError } = await supabase.rpc(
-      "get_downstream_games",
-      { input_game_id: gameId }
-    );
+  // Determine the next game this feeds into
+  const nextGameId = currentGame.source_game1 || currentGame.source_game2;
 
-    if (downstreamError) {
-      console.error("Downstream RPC error:", downstreamError);
-      return NextResponse.json(
-        { error: "Failed to update downstream games." },
-        { status: 500 }
-      );
-    }
+  if (!nextGameId) {
+    // No downstream game (Final Four or Championship)
+    return NextResponse.json({ success: true });
+  }
 
-    // 3. UPDATE DOWNSTREAM PICKS
-    if (Array.isArray(downstream)) {
-      for (const g of downstream) {
-        await supabase
-          .from("picks")
-          .upsert(
-            {
-              bracket_id: bracketId,
-              game_id: g.game_id,
-              team_id: g.winner_team_id,
-            },
-            { onConflict: "bracket_id,game_id" }
-          );
-      }
-    }
+  // Load the next game
+  const { data: nextGame } = await supabase
+    .from("games")
+    .select("*")
+    .eq("game_id", nextGameId)
+    .single();
 
-    // 4. RETURN UPDATED PICKS
-    const { data: updatedPicks } = await supabase
-      .from("picks")
+  if (!nextGame) {
+    return NextResponse.json({ success: true });
+  }
+
+  // ------------------------------------------------------------
+  // 4. PLACE WINNER INTO NEXT GAME
+  // ------------------------------------------------------------
+  let updateFields: any = {};
+
+  // If this game is source_game1 for the next game → fill team1
+  if (nextGame.source_game1 === currentGame.game_id) {
+    updateFields.team1 = teamId;
+    updateFields.seed1 = null; // optional: clear seed
+  }
+
+  // If this game is source_game2 for the next game → fill team2
+  if (nextGame.source_game2 === currentGame.game_id) {
+    updateFields.team2 = teamId;
+    updateFields.seed2 = null;
+  }
+
+  // Update the next game with the new team
+  await supabase
+    .from("games")
+    .update(updateFields)
+    .eq("game_id", nextGameId);
+
+  // ------------------------------------------------------------
+  // 5. CLEAR DOWNSTREAM WINNERS (invalidate future rounds)
+  // ------------------------------------------------------------
+  async function clearDownstream(gameId: number) {
+    const { data: g } = await supabase
+      .from("games")
       .select("*")
+      .eq("game_id", gameId)
+      .single();
+
+    if (!g) return;
+
+    // Clear winner
+    await supabase
+      .from("games")
+      .update({ winner: null })
+      .eq("game_id", gameId);
+
+    // Clear picks for this game
+    await supabase
+      .from("picks")
+      .delete()
+      .eq("game_id", gameId)
       .eq("bracket_id", bracketId);
 
-    return NextResponse.json({
-      success: true,
-      picks: updatedPicks || [],
-    });
-  } catch (err) {
-    console.error("Pick API error:", err);
-    return NextResponse.json(
-      { error: "Server error saving pick." },
-      { status: 500 }
-    );
+    // Recurse into next game
+    const nextId = g.source_game1 || g.source_game2;
+    if (nextId) {
+      await clearDownstream(nextId);
+    }
   }
+
+  // Clear downstream winners starting from the next game
+  await clearDownstream(nextGameId);
+
+  return NextResponse.json({ success: true });
 }

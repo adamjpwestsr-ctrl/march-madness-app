@@ -21,10 +21,23 @@ export async function createBracket() {
 
   const supabase = getSupabase();
 
+  // Look up user_id from email
+  const { data: user, error: userErr } = await supabase
+    .from("users")
+    .select("user_id, email")
+    .eq("email", email)
+    .single();
+
+  if (userErr || !user) {
+    console.error("User lookup error in createBracket:", userErr);
+    redirect("/login");
+  }
+
   const { data, error } = await supabase
     .from("brackets")
     .insert({
-      email,
+      user_id: user.user_id,
+      email: user.email,
       bracket_name: "My Bracket",
       icon: "🏀",
     })
@@ -45,7 +58,10 @@ export async function deleteBracket(formData: FormData) {
   const supabase = getSupabase();
 
   await supabase.from("picks").delete().eq("bracket_id", bracketId);
-  await supabase.from("bracket_submissions").delete().eq("bracket_id", bracketId);
+  await supabase
+    .from("bracket_submissions")
+    .delete()
+    .eq("bracket_id", bracketId);
   await supabase.from("brackets").delete().eq("bracket_id", bracketId);
 
   redirect("/bracket");

@@ -38,13 +38,26 @@ export default async function BracketPage({
 
   if (!email) redirect("/login");
 
-  // Supabase client (server-side)
   const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+
+  // Look up user_id from email
+  const { data: user, error: userErr } = await supabase
+    .from("users")
+    .select("user_id, email, is_admin")
+    .eq("email", email)
+    .single();
+
+  if (userErr || !user) {
+    console.error("User lookup error in BracketPage:", userErr);
+    redirect("/login");
+  }
+
+  const userId = user.user_id;
 
   const { data: brackets, error: bracketsError } = await supabase
     .from("brackets")
     .select("bracket_id, bracket_name, icon, created_at, updated_at")
-    .eq("email", email)
+    .eq("user_id", userId)
     .order("created_at", { ascending: true });
 
   if (bracketsError) console.error("Bracket load error:", bracketsError);
@@ -112,7 +125,11 @@ export default async function BracketPage({
 
                   {/* Emoji Picker */}
                   <form action={updateBracketIcon}>
-                    <input type="hidden" name="bracketId" value={b.bracket_id} />
+                    <input
+                      type="hidden"
+                      name="bracketId"
+                      value={b.bracket_id}
+                    />
                     <select
                       name="icon"
                       defaultValue={b.icon || "🏀"}
@@ -141,7 +158,11 @@ export default async function BracketPage({
 
                 {/* Rename */}
                 <form action={renameBracket} className="mt-2 flex gap-2">
-                  <input type="hidden" name="bracketId" value={b.bracket_id} />
+                  <input
+                    type="hidden"
+                    name="bracketId"
+                    value={b.bracket_id}
+                  />
                   <input
                     name="newName"
                     defaultValue={b.bracket_name || "My Bracket"}
@@ -158,7 +179,11 @@ export default async function BracketPage({
                 {/* Admin-only delete */}
                 {isAdmin && (
                   <form action={deleteBracket} className="mt-2">
-                    <input type="hidden" name="bracketId" value={b.bracket_id} />
+                    <input
+                      type="hidden"
+                      name="bracketId"
+                      value={b.bracket_id}
+                    />
                     <button
                       type="submit"
                       className="text-xs text-red-400 hover:text-red-300"
@@ -192,6 +217,7 @@ export default async function BracketPage({
 
         <BracketShell
           bracketId={activeBracket.bracket_id}
+          userId={userId}
           userEmail={email}
           bracketName={activeBracket.bracket_name ?? "My Bracket"}
         />

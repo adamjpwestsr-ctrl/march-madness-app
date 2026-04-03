@@ -4,10 +4,10 @@ import { useEffect, useState } from "react";
 import { supabase } from "../../../lib/supabaseClient";
 
 type Bracket = {
-  id: string; // mapped from bracket_id
-  user_id: string;
+  bracket_id: string;
+  user_id: number;
   bracket_name: string;
-  created_at: string;
+  created_at: string | null;
 };
 
 type Submission = {
@@ -23,8 +23,10 @@ type Pick = {
 
 export default function BracketsClient() {
   const [brackets, setBrackets] = useState<Bracket[]>([]);
-  const [submissions, setSubmissions] = useState<Record<string, Submission>>({});
-  const [users, setUsers] = useState<Record<string, string>>({});
+  const [submissions, setSubmissions] = useState<
+    Record<string, Submission>
+  >({});
+  const [users, setUsers] = useState<Record<number, string>>({});
   const [loading, setLoading] = useState(false);
   const [viewingBracket, setViewingBracket] = useState<string | null>(null);
   const [picks, setPicks] = useState<Pick[]>([]);
@@ -37,24 +39,15 @@ export default function BracketsClient() {
   const loadBrackets = async () => {
     setLoading(true);
 
-    // BRACKETS — FIXED
     const { data: bracketRows, error: bracketErr } = await supabase
       .from("brackets")
       .select("bracket_id, user_id, bracket_name, created_at")
       .order("created_at", { ascending: false });
 
     if (bracketErr) console.error("Bracket load error:", bracketErr);
+    setBrackets(bracketRows ?? []);
 
-    setBrackets(
-      (bracketRows ?? []).map((b) => ({
-        id: b.bracket_id,
-        user_id: b.user_id,
-        bracket_name: b.bracket_name,
-        created_at: b.created_at,
-      }))
-    );
-
-    // SUBMISSIONS — FIXED
+    // Load submissions
     const { data: submissionRows, error: subErr } = await supabase
       .from("bracket_submissions")
       .select("*");
@@ -67,16 +60,16 @@ export default function BracketsClient() {
     });
     setSubmissions(submissionMap);
 
-    // USERS — FIXED
+    // Load user emails
     const { data: userRows, error: userErr } = await supabase
       .from("users")
-      .select("id, email");
+      .select("user_id, email");
 
     if (userErr) console.error("User load error:", userErr);
 
-    const userMap: Record<string, string> = {};
+    const userMap: Record<number, string> = {};
     (userRows ?? []).forEach((u) => {
-      userMap[u.id] = u.email;
+      userMap[u.user_id] = u.email ?? `User #${u.user_id}`;
     });
     setUsers(userMap);
 
@@ -102,7 +95,10 @@ export default function BracketsClient() {
     if (!confirm("Delete this bracket?")) return;
 
     await supabase.from("picks").delete().eq("bracket_id", bracketId);
-    await supabase.from("bracket_submissions").delete().eq("bracket_id", bracketId);
+    await supabase
+      .from("bracket_submissions")
+      .delete()
+      .eq("bracket_id", bracketId);
     await supabase.from("brackets").delete().eq("bracket_id", bracketId);
 
     alert("Bracket deleted.");
@@ -113,7 +109,10 @@ export default function BracketsClient() {
     if (!confirm("Reset all picks for this bracket?")) return;
 
     await supabase.from("picks").delete().eq("bracket_id", bracketId);
-    await supabase.from("bracket_submissions").delete().eq("bracket_id", bracketId);
+    await supabase
+      .from("bracket_submissions")
+      .delete()
+      .eq("bracket_id", bracketId);
 
     alert("Bracket reset.");
     loadBrackets();
@@ -154,12 +153,12 @@ export default function BracketsClient() {
         }}
       >
         {brackets.map((b) => {
-          const sub = submissions[b.id];
+          const sub = submissions[b.bracket_id];
           const email = users[b.user_id] ?? "Unknown";
 
           return (
             <div
-              key={b.id}
+              key={b.bracket_id}
               style={{
                 background: "rgba(30,41,59,0.9)",
                 borderRadius: 12,
@@ -183,7 +182,10 @@ export default function BracketsClient() {
                     User: {email}
                   </div>
                   <div style={{ fontSize: 12, opacity: 0.6 }}>
-                    Created: {new Date(b.created_at).toLocaleString()}
+                    Created:{" "}
+                    {b.created_at
+                      ? new Date(b.created_at).toLocaleString()
+                      : "Unknown"}
                   </div>
                 </div>
 
@@ -209,8 +211,8 @@ export default function BracketsClient() {
               >
                 <button
                   onClick={() => {
-                    setViewingBracket(b.id);
-                    loadBracketPicks(b.id);
+                    setViewingBracket(b.bracket_id);
+                    loadBracketPicks(b.bracket_id);
                   }}
                   style={{
                     padding: "6px 12px",
@@ -226,7 +228,7 @@ export default function BracketsClient() {
                 </button>
 
                 <button
-                  onClick={() => resetBracket(b.id)}
+                  onClick={() => resetBracket(b.bracket_id)}
                   style={{
                     padding: "6px 12px",
                     borderRadius: 8,
@@ -241,7 +243,7 @@ export default function BracketsClient() {
                 </button>
 
                 <button
-                  onClick={() => deleteBracket(b.id)}
+                  onClick={() => deleteBracket(b.bracket_id)}
                   style={{
                     padding: "6px 12px",
                     borderRadius: 8,
@@ -295,7 +297,7 @@ export default function BracketsClient() {
                 marginBottom: 12,
               }}
             >
-              Picks for Bracket #{viewingBracket}
+              Picks for Bracket {viewingBracket}
             </h2>
 
             {loadingPicks && (

@@ -5,22 +5,24 @@ import { supabase } from "../../../lib/supabaseClient";
 import Link from "next/link";
 
 type UserRow = {
-  id: string;
-  email: string;
-  is_admin: boolean;
+  user_id: number;
+  name: string | null;
+  email: string | null;
+  is_admin: boolean | null;
+  admin_code: string | null;
 };
 
 type Bracket = {
-  id: string;
-  user_id: string;
+  bracket_id: string;
+  user_id: number;
   bracket_name: string;
-  created_at: string;
+  created_at: string | null;
 };
 
 type MulliganRequest = {
   id: number;
-  user_id: string;
-  bracket_id: string;
+  user_id: number;
+  bracket_id: string | null;
   game_id: number;
   replacement_team: string;
   status: string;
@@ -29,12 +31,12 @@ type MulliganRequest = {
 
 export default function UsersClient() {
   const [users, setUsers] = useState<UserRow[]>([]);
-  const [brackets, setBrackets] = useState<Record<string, Bracket[]>>({});
-  const [mulligans, setMulligans] = useState<Record<string, MulliganRequest[]>>(
-    {}
-  );
+  const [brackets, setBrackets] = useState<Record<number, Bracket[]>>({});
+  const [mulligans, setMulligans] = useState<
+    Record<number, MulliganRequest[]>
+  >({});
   const [loading, setLoading] = useState(false);
-  const [expandedUser, setExpandedUser] = useState<string | null>(null);
+  const [expandedUser, setExpandedUser] = useState<number | null>(null);
 
   useEffect(() => {
     loadUsers();
@@ -43,44 +45,37 @@ export default function UsersClient() {
   const loadUsers = async () => {
     setLoading(true);
 
-    // USERS — FIXED (no created_at column)
+    // Load users
     const { data: userRows, error: userErr } = await supabase
       .from("users")
-      .select("id, email, is_admin")
-      .order("email", { ascending: true });
+      .select("user_id, name, email, is_admin, admin_code")
+      .order("user_id", { ascending: true });
 
-    if (userErr) console.error("User load error:", userErr);
+    if (userErr) console.error("Users load error:", userErr);
     setUsers(userRows ?? []);
 
-    // BRACKETS — FIXED (bracket_id instead of id)
+    // Load brackets
     const { data: bracketRows, error: bracketErr } = await supabase
       .from("brackets")
       .select("bracket_id, user_id, bracket_name, created_at");
 
-    if (bracketErr) console.error("Bracket load error:", bracketErr);
+    if (bracketErr) console.error("Brackets load error:", bracketErr);
 
-    const bracketMap: Record<string, Bracket[]> = {};
+    const bracketMap: Record<number, Bracket[]> = {};
     (bracketRows ?? []).forEach((b) => {
-      const mapped: Bracket = {
-        id: b.bracket_id,
-        user_id: b.user_id,
-        bracket_name: b.bracket_name,
-        created_at: b.created_at,
-      };
-
       if (!bracketMap[b.user_id]) bracketMap[b.user_id] = [];
-      bracketMap[b.user_id].push(mapped);
+      bracketMap[b.user_id].push(b);
     });
     setBrackets(bracketMap);
 
-    // MULLIGANS — FIXED (schema matches)
-    const { data: mulliganRows, error: mullErr } = await supabase
+    // Load mulligans
+    const { data: mulliganRows, error: mulliganErr } = await supabase
       .from("mulligan_requests")
       .select("*");
 
-    if (mullErr) console.error("Mulligan load error:", mullErr);
+    if (mulliganErr) console.error("Mulligans load error:", mulliganErr);
 
-    const mulliganMap: Record<string, MulliganRequest[]> = {};
+    const mulliganMap: Record<number, MulliganRequest[]> = {};
     (mulliganRows ?? []).forEach((m) => {
       if (!mulliganMap[m.user_id]) mulliganMap[m.user_id] = [];
       mulliganMap[m.user_id].push(m);
@@ -90,7 +85,7 @@ export default function UsersClient() {
     setLoading(false);
   };
 
-  const toggleExpand = (userId: string) => {
+  const toggleExpand = (userId: number) => {
     setExpandedUser((prev) => (prev === userId ? null : userId));
   };
 
@@ -129,12 +124,12 @@ export default function UsersClient() {
         }}
       >
         {users.map((u) => {
-          const userBrackets = brackets[u.id] ?? [];
-          const userMulligans = mulligans[u.id] ?? [];
+          const userBrackets = brackets[u.user_id] ?? [];
+          const userMulligans = mulligans[u.user_id] ?? [];
 
           return (
             <div
-              key={u.id}
+              key={u.user_id}
               style={{
                 background: "rgba(30,41,59,0.9)",
                 borderRadius: 12,
@@ -153,7 +148,10 @@ export default function UsersClient() {
               >
                 <div>
                   <div style={{ fontSize: 16, fontWeight: 700 }}>
-                    {u.email}
+                    {u.name || u.email || `User #${u.user_id}`}
+                  </div>
+                  <div style={{ fontSize: 13, opacity: 0.8 }}>
+                    {u.email ?? "No email"}
                   </div>
                   <div style={{ fontSize: 12, opacity: 0.7 }}>
                     Admin: {u.is_admin ? "Yes" : "No"}
@@ -161,7 +159,7 @@ export default function UsersClient() {
                 </div>
 
                 <button
-                  onClick={() => toggleExpand(u.id)}
+                  onClick={() => toggleExpand(u.user_id)}
                   style={{
                     padding: "6px 12px",
                     borderRadius: 8,
@@ -173,7 +171,7 @@ export default function UsersClient() {
                     height: 36,
                   }}
                 >
-                  {expandedUser === u.id ? "Hide" : "View"}
+                  {expandedUser === u.user_id ? "Hide" : "View"}
                 </button>
               </div>
 
@@ -182,7 +180,7 @@ export default function UsersClient() {
                 style={{
                   fontSize: 13,
                   opacity: 0.85,
-                  marginBottom: expandedUser === u.id ? 12 : 0,
+                  marginBottom: expandedUser === u.user_id ? 12 : 0,
                 }}
               >
                 Brackets: <strong>{userBrackets.length}</strong> · Mulligans:{" "}
@@ -190,7 +188,7 @@ export default function UsersClient() {
               </div>
 
               {/* EXPANDED DETAILS */}
-              {expandedUser === u.id && (
+              {expandedUser === u.user_id && (
                 <div
                   style={{
                     marginTop: 10,
@@ -217,7 +215,7 @@ export default function UsersClient() {
 
                   {userBrackets.map((b) => (
                     <div
-                      key={b.id}
+                      key={b.bracket_id}
                       style={{
                         padding: "6px 10px",
                         borderRadius: 8,
@@ -228,10 +226,13 @@ export default function UsersClient() {
                       }}
                     >
                       <div style={{ fontWeight: 600 }}>
-                        {b.bracket_name} (#{b.id})
+                        {b.bracket_name} ({b.bracket_id})
                       </div>
                       <div style={{ opacity: 0.7, fontSize: 12 }}>
-                        Created: {new Date(b.created_at).toLocaleString()}
+                        Created:{" "}
+                        {b.created_at
+                          ? new Date(b.created_at).toLocaleString()
+                          : "Unknown"}
                       </div>
 
                       <div style={{ marginTop: 6, display: "flex", gap: 8 }}>

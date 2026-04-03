@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function BracketShell({
   bracketId,
@@ -14,23 +14,51 @@ export default function BracketShell({
   bracketName: string;
 }) {
   const [loading, setLoading] = useState(true);
-  const [bracket, setBracket] = useState<any>(null);
+  const [bracketData, setBracketData] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
 
+  // Load bracket + picks + games
   useEffect(() => {
-    async function loadBracket() {
+    async function load() {
       try {
+        setLoading(true);
         const res = await fetch(`/api/bracket?bid=${bracketId}`);
         const json = await res.json();
-        setBracket(json);
+
+        if (!json || json.error) {
+          setError("Failed to load bracket.");
+        } else {
+          setBracketData(json);
+        }
       } catch (err) {
         console.error("Bracket load error:", err);
+        setError("Failed to load bracket.");
       } finally {
         setLoading(false);
       }
     }
 
-    loadBracket();
+    load();
   }, [bracketId]);
+
+  // Handle pick submission
+  const handlePick = async (gameId: string, teamId: string) => {
+    try {
+      await fetch("/api/pick", {
+        method: "POST",
+        body: JSON.stringify({
+          bracketId,
+          gameId,
+          teamId,
+        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+    } catch (err) {
+      console.error("Pick save error:", err);
+    }
+  };
 
   if (loading) {
     return (
@@ -40,13 +68,15 @@ export default function BracketShell({
     );
   }
 
-  if (!bracket) {
+  if (error || !bracketData) {
     return (
       <div className="text-red-400 text-lg">
-        Failed to load bracket.
+        {error || "Failed to load bracket."}
       </div>
     );
   }
+
+  const { bracket, picks, games } = bracketData;
 
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-lg p-6 shadow-xl">
@@ -54,12 +84,14 @@ export default function BracketShell({
         {bracketName}
       </h2>
 
-      {/* Placeholder for your bracket UI */}
+      {/* Bracket UI */}
       <div className="text-slate-300">
-        {/* Replace with your actual bracket rendering */}
-        <pre className="text-xs bg-slate-800 p-4 rounded">
-          {JSON.stringify(bracket, null, 2)}
-        </pre>
+        <BracketClient
+          bracket={bracket}
+          picks={picks}
+          games={games}
+          onPick={handlePick}
+        />
       </div>
     </div>
   );

@@ -21,12 +21,11 @@ export default async function BracketPage({
 }: {
   searchParams?: { bid?: string };
 }) {
-  // Read session cookie
   const cookieStore = await cookies();
   const sessionCookie = cookieStore.get("mm_session");
   if (!sessionCookie) redirect("/login");
 
-  let session;
+  let session: { userId?: number | string; email?: string; isAdmin?: boolean };
   try {
     session = JSON.parse(sessionCookie.value);
   } catch {
@@ -35,47 +34,78 @@ export default async function BracketPage({
 
   const email = session.email;
   const isAdmin = !!session.isAdmin;
+  const rawUserId = session.userId;
 
   if (!email) redirect("/login");
 
   const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
-  // Look up user_id from email
-  const { data: user, error: userErr } = await supabase
-    .from("users")
-    .select("user_id, email, is_admin")
-    .eq("email", email)
-    .single();
+  // If this is the commissioner/admin without a DB user row,
+  // allow access but don't try to resolve a user_id.
+  let userId: number | null = null;
 
-  if (userErr || !user) {
-    console.error("User lookup error in BracketPage:", userErr);
-    redirect("/login");
+  if (typeof rawUserId === "number") {
+    userId = rawUserId;
+  } else {
+    // Try to resolve user_id from email for normal users
+    const { data: user, error: userErr } = await supabase
+      .from("users")
+      .select("user_id, email, is_admin")
+      .eq("email", email)
+      .single();
+
+    if (userErr || !user) {
+      // If not admin, they must exist in users
+      if (!isAdmin) {
+        console.error("User lookup error in BracketPage:", userErr);
+        redirect("/login");
+      }
+      // Admin without a users row: allow access but no personal brackets
+      userId = null;
+    } else {
+      userId = user.user_id;
+    }
   }
 
-  const userId = user.user_id;
+  let brackets: {
+    bracket_id: string;
+    bracket_name: string | null;
+    icon: string | null;
+    created_at: string | null;
+    updated_at: string | null;
+  }[] = [];
 
-  const { data: brackets, error: bracketsError } = await supabase
-    .from("brackets")
-    .select("bracket_id, bracket_name, icon, created_at, updated_at")
-    .eq("user_id", userId)
-    .order("created_at", { ascending: true });
+  if (userId !== null) {
+    const { data, error: bracketsError } = await supabase
+      .from("brackets")
+      .select("bracket_id, bracket_name, icon, created_at, updated_at")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: true });
 
-  if (bracketsError) console.error("Bracket load error:", bracketsError);
+    if (bracketsError) console.error("Bracket load error:", bracketsError);
+    brackets = data ?? [];
+  }
 
-  // No brackets yet
+  // No brackets yet for this user
   if (!brackets || brackets.length === 0) {
     return (
       <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center gap-6">
-        <p className="text-lg">No brackets found for this account.</p>
+        <p className="text-lg">
+          {userId === null
+            ? "No personal brackets for this admin account."
+            : "No brackets found for this account."}
+        </p>
 
-        <form action={createBracket}>
-          <button
-            type="submit"
-            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg text-white font-semibold shadow-lg"
-          >
-            Create Your First Bracket
-          </button>
-        </form>
+        {userId !== null && (
+          <form action={createBracket}>
+            <button
+              type="submit"
+              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg text-white font-semibold shadow-lg"
+            >
+              Create Your First Bracket
+            </button>
+          </form>
+        )}
       </div>
     );
   }
@@ -150,13 +180,11 @@ export default async function BracketPage({
                   </form>
                 </div>
 
-                {/* Timestamps */}
                 <div className="mt-1 text-xs opacity-80">
                   {created && <div>Created: {created}</div>}
                   {updated && <div>Updated: {updated}</div>}
                 </div>
 
-                {/* Rename */}
                 <form action={renameBracket} className="mt-2 flex gap-2">
                   <input
                     type="hidden"
@@ -176,7 +204,6 @@ export default async function BracketPage({
                   </button>
                 </form>
 
-                {/* Admin-only delete */}
                 {isAdmin && (
                   <form action={deleteBracket} className="mt-2">
                     <input
@@ -197,18 +224,18 @@ export default async function BracketPage({
           })}
         </div>
 
-        {/* Create Another Bracket */}
-        <form action={createBracket} className="mt-auto">
-          <button
-            type="submit"
-            className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white font-semibold shadow"
-          >
-            + Create Another Bracket
-          </button>
-        </form>
+        {userId !== null && (
+          <form action={createBracket} className="mt-auto">
+            <button
+              type="submit"
+              className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white font-semibold shadow"
+            >
+              + Create Another Bracket
+            </button>
+          </form>
+        )}
       </aside>
 
-      {/* MAIN CONTENT */}
       <main className="flex-1 p-6">
         <BracketSelectorShell
           brackets={brackets}

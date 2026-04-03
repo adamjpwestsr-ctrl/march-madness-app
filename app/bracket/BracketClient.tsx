@@ -35,14 +35,10 @@ export default function BracketClient({
   onPick: (gameId: number, teamId: string) => void;
   onReset: () => void;
 }) {
-  const regions = ["East", "West", "South", "Midwest", "Final Four", "Championship"];
-
-  // ⭐ FIXED: Picks override DB winners
   const getSelectedTeamId = (game: Game): string | null => {
     const pick = picks.find((p) => p.game_id === game.game_id);
     if (pick) return pick.team_id;
 
-    // Only use DB winners for Final Four / Championship
     if (game.round >= 5) return game.winner_team_id;
 
     return null;
@@ -71,7 +67,7 @@ export default function BracketClient({
 
     return (
       <button
-        type="button"
+        type="button"  // ⭐ FIX: prevents page refresh
         onClick={() => onPick(game.game_id, team.team_id)}
         className={`flex items-center justify-between px-2 py-1 rounded text-xs border transition
           ${
@@ -145,8 +141,8 @@ export default function BracketClient({
 
   return (
     <div className="flex flex-col gap-6">
-      {/* ⭐ Reset Button */}
       <button
+        type="button"
         onClick={onReset}
         className="self-start px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm"
       >
@@ -154,7 +150,6 @@ export default function BracketClient({
       </button>
 
       <div className="flex gap-4 overflow-x-auto">
-        {/* Left column: East (top), South (bottom) */}
         <div className="flex flex-col gap-6 min-w-[480px]">
           <div>
             <h3 className="text-sm font-semibold mb-2 text-slate-200">East</h3>
@@ -166,7 +161,6 @@ export default function BracketClient({
           </div>
         </div>
 
-        {/* Center column: Final Four + Championship */}
         <div className="flex flex-col justify-center gap-6 min-w-[320px]">
           <div>
             <h3 className="text-sm font-semibold mb-2 text-slate-200">Final Four</h3>
@@ -178,7 +172,6 @@ export default function BracketClient({
           </div>
         </div>
 
-        {/* Right column: West (top), Midwest (bottom) */}
         <div className="flex flex-col gap-6 min-w-[480px]">
           <div>
             <h3 className="text-sm font-semibold mb-2 text-slate-200">West</h3>

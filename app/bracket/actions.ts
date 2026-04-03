@@ -1,96 +1,68 @@
 "use server";
 
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
+import { cookies } from "next/headers";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-function getSupabase() {
-  return createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
-}
+const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 export async function createBracket() {
   const cookieStore = await cookies();
   const sessionCookie = cookieStore.get("mm_session");
-  if (!sessionCookie) redirect("/login");
+
+  if (!sessionCookie) throw new Error("Not logged in");
 
   const session = JSON.parse(sessionCookie.value);
-  const email = session.email;
 
-  const supabase = getSupabase();
-
-  // Look up user_id from email
-  const { data: user, error: userErr } = await supabase
-    .from("users")
-    .select("user_id, email")
-    .eq("email", email)
-    .single();
-
-  if (userErr || !user) {
-    console.error("User lookup error in createBracket:", userErr);
-    redirect("/login");
+  if (!session.userId) {
+    throw new Error("Missing userId in session");
   }
+
+  const supabase = createClient(SUPABASE_URL, ANON_KEY);
 
   const { data, error } = await supabase
     .from("brackets")
     .insert({
-      user_id: user.user_id,
-      email: user.email,
+      user_id: session.userId,
       bracket_name: "My Bracket",
       icon: "🏀",
     })
-    .select("bracket_id")
+    .select()
     .single();
 
   if (error) {
     console.error("Create bracket error:", error);
-    return;
+    throw new Error("Failed to create bracket");
   }
 
-  redirect(`/bracket?bid=${data.bracket_id}`);
+  return data;
 }
 
 export async function deleteBracket(formData: FormData) {
-  const bracketId = formData.get("bracketId") as string;
+  const bracketId = formData.get("bracketId");
 
-  const supabase = getSupabase();
-
-  await supabase.from("picks").delete().eq("bracket_id", bracketId);
-  await supabase
-    .from("bracket_submissions")
-    .delete()
-    .eq("bracket_id", bracketId);
+  const supabase = createClient(SUPABASE_URL, ANON_KEY);
   await supabase.from("brackets").delete().eq("bracket_id", bracketId);
-
-  redirect("/bracket");
 }
 
 export async function renameBracket(formData: FormData) {
-  const bracketId = formData.get("bracketId") as string;
-  const newName = formData.get("newName") as string;
+  const bracketId = formData.get("bracketId");
+  const newName = formData.get("newName");
 
-  const supabase = getSupabase();
-
+  const supabase = createClient(SUPABASE_URL, ANON_KEY);
   await supabase
     .from("brackets")
     .update({ bracket_name: newName })
     .eq("bracket_id", bracketId);
-
-  redirect(`/bracket?bid=${bracketId}`);
 }
 
 export async function updateBracketIcon(formData: FormData) {
-  const bracketId = formData.get("bracketId") as string;
-  const icon = formData.get("icon") as string;
+  const bracketId = formData.get("bracketId");
+  const icon = formData.get("icon");
 
-  const supabase = getSupabase();
-
+  const supabase = createClient(SUPABASE_URL, ANON_KEY);
   await supabase
     .from("brackets")
     .update({ icon })
     .eq("bracket_id", bracketId);
-
-  redirect(`/bracket?bid=${bracketId}`);
 }

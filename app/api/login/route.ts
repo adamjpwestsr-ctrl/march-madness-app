@@ -16,22 +16,12 @@ export async function POST(req: Request) {
 
   const normalizedEmail = email.toLowerCase();
 
-  // ⭐ CREATE SUPABASE CLIENT FIRST
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
-  // ⭐ DEBUG LOGGING — THIS IS WHAT WE NEED
-  console.log("SUPABASE URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
-
-  const { data: debugUsers, error: debugErr } = await supabase
-    .from("users")
-    .select("email");
-
-  console.log("DEBUG USERS:", debugUsers, debugErr);
-
-  // 1. ADMIN EMAILS — require admin code
+  // ⭐ ADMIN LOGIN FLOW
   if (ADMINS.includes(normalizedEmail)) {
     if (!adminCode) {
       return NextResponse.json({ status: "needsAdminCode" });
@@ -41,18 +31,38 @@ export async function POST(req: Request) {
       return NextResponse.json({ status: "invalidAdminCode" });
     }
 
-    // Look up admin user_id if it exists
-    const { data: adminUser } = await supabase
+    // Look up admin in users table
+    let { data: adminUser } = await supabase
       .from("users")
       .select("user_id, email, is_admin")
       .ilike("email", normalizedEmail)
       .single();
 
+    // ⭐ If admin does NOT exist, create them
+    if (!adminUser) {
+      const { data: newAdmin, error: newAdminErr } = await supabase
+        .from("users")
+        .insert({
+          email: normalizedEmail,
+          is_admin: true,
+        })
+        .select()
+        .single();
+
+      if (newAdminErr) {
+        console.error("Admin creation error:", newAdminErr);
+        return NextResponse.json({ status: "error" });
+      }
+
+      adminUser = newAdmin;
+    }
+
+    // ⭐ Set session cookie with REAL user_id
     const cookieStore = await cookies();
     cookieStore.set(
       "mm_session",
       JSON.stringify({
-        userId: adminUser?.user_id ?? "commissioner",
+        userId: adminUser.user_id,
         email: normalizedEmail,
         isAdmin: true,
       }),
@@ -67,20 +77,19 @@ export async function POST(req: Request) {
     return NextResponse.json({ status: "admin" });
   }
 
-  // 2. LOOK UP USER IN DATABASE (CASE-INSENSITIVE)
+  // ⭐ NORMAL USER LOGIN FLOW
+
   const { data: user } = await supabase
     .from("users")
     .select("*")
     .ilike("email", normalizedEmail)
     .single();
 
-  // 3. UNKNOWN USER → create access request
   if (!user) {
     await supabase.from("access_requests").insert({ email: normalizedEmail });
     return NextResponse.json({ status: "requested" });
   }
 
-  // 4. KNOWN USER → log them in
   const cookieStore = await cookies();
   cookieStore.set(
     "mm_session",

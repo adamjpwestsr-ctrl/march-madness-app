@@ -1,4 +1,3 @@
-// app/bracket/page.tsx
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
@@ -14,13 +13,15 @@ import {
 } from "./actions";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-export default async function BracketPage({
-  searchParams,
-}: {
-  searchParams?: { bid?: string };
-}) {
+export default async function BracketPage({ searchParams }: { searchParams?: { bid?: string } }) {
+  // ⭐ DEBUG LOGGING
+  console.log("BRACKET PAGE URL:", SUPABASE_URL);
+  console.log("BRACKET PAGE ANON KEY:", ANON_KEY?.slice(0, 10));
+  console.log("BRACKET PAGE SERVICE KEY:", SERVICE_ROLE_KEY?.slice(0, 10));
+
   const cookieStore = await cookies();
   const sessionCookie = cookieStore.get("mm_session");
   if (!sessionCookie) redirect("/login");
@@ -40,27 +41,29 @@ export default async function BracketPage({
 
   const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
-  // If this is the commissioner/admin without a DB user row,
-  // allow access but don't try to resolve a user_id.
+  // ⭐ DEBUG QUERY
+  const { data: debugUsers, error: debugErr } = await supabase
+    .from("users")
+    .select("email");
+
+  console.log("BRACKET PAGE DEBUG USERS:", debugUsers, debugErr);
+
   let userId: number | null = null;
 
   if (typeof rawUserId === "number") {
     userId = rawUserId;
   } else {
-    // Try to resolve user_id from email for normal users
     const { data: user, error: userErr } = await supabase
       .from("users")
       .select("user_id, email, is_admin")
-      .eq("email", email)
+      .ilike("email", email)
       .single();
 
     if (userErr || !user) {
-      // If not admin, they must exist in users
       if (!isAdmin) {
         console.error("User lookup error in BracketPage:", userErr);
         redirect("/login");
       }
-      // Admin without a users row: allow access but no personal brackets
       userId = null;
     } else {
       userId = user.user_id;
@@ -86,7 +89,6 @@ export default async function BracketPage({
     brackets = data ?? [];
   }
 
-  // No brackets yet for this user
   if (!brackets || brackets.length === 0) {
     return (
       <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center gap-6">
@@ -118,7 +120,6 @@ export default async function BracketPage({
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex">
-      {/* SIDEBAR */}
       <aside className="w-72 bg-slate-900 border-r border-slate-800 p-4 flex flex-col gap-4">
         <h2 className="text-xl font-bold mb-2">Your Brackets</h2>
 
@@ -153,7 +154,6 @@ export default async function BracketPage({
                     </span>
                   </a>
 
-                  {/* Emoji Picker */}
                   <form action={updateBracketIcon}>
                     <input
                       type="hidden"

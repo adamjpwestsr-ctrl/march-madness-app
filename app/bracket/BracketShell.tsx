@@ -1,5 +1,6 @@
 "use client";
 
+import BracketClient from "./BracketClient";
 import { useEffect, useState } from "react";
 
 export default function BracketShell({

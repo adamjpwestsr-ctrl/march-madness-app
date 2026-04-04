@@ -143,16 +143,3 @@ export default function LoginPage() {
     </div>
   );
 }
-
-            <button
-              onClick={() => setShowAbout(false)}
-              className="mt-6 w-full bg-emerald-500 py-2 rounded-lg hover:bg-emerald-400"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}

@@ -28,7 +28,7 @@ export default function LandingPage() {
 
       {/* Moving Sponsor Logo */}
       <a
-        href="https://yourfriendswebsite.com"
+        href="https://lawnhacker.com"
         target="_blank"
         rel="noopener noreferrer"
         className="moving-logo absolute"
@@ -36,8 +36,8 @@ export default function LandingPage() {
         <Image
           src="/sponsor-logo.png"
           alt="Sponsor Logo"
-          width={260}
-          height={260}
+          width={520}
+          height={520}
           className="
             drop-shadow-[0_0_25px_rgba(16,185,129,1)]
             drop-shadow-[0_0_60px_rgba(16,185,129,0.9)]
@@ -48,7 +48,7 @@ export default function LandingPage() {
 
       {/* Main Title */}
       <h1 className="text-white text-5xl font-extrabold drop-shadow-2xl">
-        Welcome to the Bracket
+        Are You Ready For The Madness!
       </h1>
     </div>
   );

@@ -20,7 +20,7 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
     if (!email) return;
 
     const { data, error } = await supabase
-      .from("players")
+      .from("users")
       .select("is_admin")
       .eq("email", email.toLowerCase())
       .maybeSingle();

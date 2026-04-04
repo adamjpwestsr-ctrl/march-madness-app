@@ -18,7 +18,19 @@ export async function GET(req: Request) {
 
   const query = supabase
     .from("forum_posts")
-    .select("id,email,message,thread_id,created_at")
+    .select(
+      `
+      id,
+      email,
+      message,
+      thread_id,
+      created_at,
+      forum_reactions (
+        emoji,
+        email
+      )
+    `
+    )
     .order("created_at", { ascending: true })
     .limit(200);
 

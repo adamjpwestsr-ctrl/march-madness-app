@@ -2,25 +2,44 @@
 
 import { useEffect, useState, useRef } from "react";
 
+type ForumReaction = {
+  emoji: string;
+  email: string;
+};
+
 type ForumPost = {
   id: string;
   email: string;
   message: string;
   thread_id: string | null;
   created_at: string;
+  forum_reactions?: ForumReaction[];
 };
 
-const THREADS = [
-  { id: null as string | null, label: "Main Chat" },
-  // Future: add real thread IDs from DB
-];
+type ForumThread = {
+  id: string;
+  title: string;
+  created_by: string;
+  created_at: string;
+};
 
 export default function ForumPanel() {
   const [posts, setPosts] = useState<ForumPost[]>([]);
+  const [threads, setThreads] = useState<ForumThread[]>([]);
   const [message, setMessage] = useState("");
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showThreadModal, setShowThreadModal] = useState(false);
+  const [newThreadTitle, setNewThreadTitle] = useState("");
   const bottomRef = useRef<HTMLDivElement | null>(null);
+
+  const loadThreads = async () => {
+    const res = await fetch("/api/forum/threads", { cache: "no-store" });
+    const json = await res.json();
+    if (json.threads) {
+      setThreads(json.threads);
+    }
+  };
 
   const loadPosts = async (threadId: string | null) => {
     const params = threadId ? `?threadId=${threadId}` : "";
@@ -39,11 +58,13 @@ export default function ForumPanel() {
   };
 
   useEffect(() => {
+    loadThreads();
+  }, []);
+
+  useEffect(() => {
     loadPosts(activeThreadId);
-    // simple polling for Phase 1
     const id = setInterval(() => loadPosts(activeThreadId), 5000);
     return () => clearInterval(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeThreadId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -68,14 +89,56 @@ export default function ForumPanel() {
     }
   };
 
+  const handleReaction = async (postId: string, emoji: string) => {
+    await fetch("/api/forum/reactions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ postId, emoji }),
+    });
+
+    await loadPosts(activeThreadId);
+  };
+
+  const createThread = async () => {
+    if (!newThreadTitle.trim()) return;
+
+    const res = await fetch("/api/forum/threads", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: newThreadTitle }),
+    });
+
+    const json = await res.json();
+    if (json.thread) {
+      setShowThreadModal(false);
+      setNewThreadTitle("");
+      await loadThreads();
+      setActiveThreadId(json.thread.id);
+    }
+  };
+
   return (
     <div className="flex flex-col h-full bg-slate-900 border border-slate-800 rounded-lg">
+
+      {/* HEADER */}
       <div className="border-b border-slate-800 px-4 py-3 flex items-center justify-between">
         <h2 className="text-lg font-semibold text-slate-100">Pool Chat</h2>
+
         <div className="flex gap-2 text-xs">
-          {THREADS.map((t) => (
+          <button
+            onClick={() => setActiveThreadId(null)}
+            className={`px-2 py-1 rounded ${
+              activeThreadId === null
+                ? "bg-blue-600 text-white"
+                : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+            }`}
+          >
+            Main Chat
+          </button>
+
+          {threads.map((t) => (
             <button
-              key={t.label}
+              key={t.id}
               onClick={() => setActiveThreadId(t.id)}
               className={`px-2 py-1 rounded ${
                 t.id === activeThreadId
@@ -83,12 +146,20 @@ export default function ForumPanel() {
                   : "bg-slate-800 text-slate-300 hover:bg-slate-700"
               }`}
             >
-              {t.label}
+              {t.title}
             </button>
           ))}
+
+          <button
+            onClick={() => setShowThreadModal(true)}
+            className="px-2 py-1 rounded bg-green-600 text-white hover:bg-green-700"
+          >
+            + New Thread
+          </button>
         </div>
       </div>
 
+      {/* POSTS */}
       <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 text-sm">
         {posts.map((p) => {
           const name = p.email.split("@")[0];
@@ -104,13 +175,42 @@ export default function ForumPanel() {
                 <span>•</span>
                 <span>{time}</span>
               </div>
+
               <div className="text-slate-100">{p.message}</div>
+
+              {/* REACTIONS */}
+              <div className="flex gap-2 mt-1">
+                {["🔥", "😂", "😭", "🏀"].map((emoji) => {
+                  const count =
+                    p.forum_reactions?.filter((r) => r.emoji === emoji).length ||
+                    0;
+
+                  const userReacted = p.forum_reactions?.some(
+                    (r) => r.emoji === emoji && r.email === p.email
+                  );
+
+                  return (
+                    <button
+                      key={emoji}
+                      onClick={() => handleReaction(p.id, emoji)}
+                      className={`px-2 py-1 rounded text-xs border ${
+                        userReacted
+                          ? "bg-blue-600 border-blue-500 text-white"
+                          : "bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700"
+                      }`}
+                    >
+                      {emoji} {count > 0 && <span className="ml-1">{count}</span>}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           );
         })}
         <div ref={bottomRef} />
       </div>
 
+      {/* INPUT */}
       <form
         onSubmit={handleSubmit}
         className="border-t border-slate-800 px-4 py-3 flex gap-2"
@@ -130,6 +230,38 @@ export default function ForumPanel() {
           Send
         </button>
       </form>
+
+      {/* THREAD CREATION MODAL */}
+      {showThreadModal && (
+        <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center">
+          <div className="bg-slate-800 p-6 rounded-lg w-80 space-y-4 border border-slate-700">
+            <h3 className="text-lg font-semibold text-slate-100">New Thread</h3>
+
+            <input
+              className="w-full bg-slate-900 text-slate-100 rounded px-3 py-2 border border-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              placeholder="Thread title..."
+              value={newThreadTitle}
+              onChange={(e) => setNewThreadTitle(e.target.value)}
+            />
+
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setShowThreadModal(false)}
+                className="px-3 py-2 bg-slate-700 text-slate-300 rounded hover:bg-slate-600"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={createThread}
+                className="px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+              >
+                Create
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

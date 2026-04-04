@@ -7,20 +7,38 @@ import { redirect } from "next/navigation";
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-// Create a server-side Supabase client
+// Server-side Supabase client (service role)
 const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
   auth: { persistSession: false },
 });
 
-// ⭐ CREATE BRACKET — now accepts FormData and uses email
+// ⭐ CREATE BRACKET — uses email, but still fills user_id for legacy schema
 export async function createBracket(formData: FormData) {
   const email = formData.get("email")?.toString().toLowerCase();
   if (!email) throw new Error("Missing email");
 
+  // Look up user_id from users table to satisfy existing brackets schema
+  const { data: user, error: userError } = await supabase
+    .from("users")
+    .select("user_id")
+    .eq("email", email)
+    .maybeSingle();
+
+  if (userError) {
+    console.error("Lookup user_id error:", userError);
+    throw new Error("Failed to resolve user for bracket");
+  }
+
+  if (!user || user.user_id == null) {
+    console.error("No user_id found for email:", email);
+    throw new Error("User not found for bracket creation");
+  }
+
   const { data, error } = await supabase
     .from("brackets")
     .insert({
-      email,
+      user_id: user.user_id, // ✅ keep DB happy
+      email,                 // ✅ new world
       bracket_name: "My Bracket",
       icon: "🏀",
     })
@@ -43,7 +61,7 @@ export async function deleteBracket(formData: FormData) {
   await supabase.from("brackets").delete().eq("bracket_id", bracketId);
 }
 
-// ⭐ RENAME BRACKET — now checks email for safety
+// ⭐ RENAME BRACKET — checks email via session for safety
 export async function renameBracket(formData: FormData) {
   const bracketId = formData.get("bracketId");
   const newName = formData.get("newName");
@@ -63,7 +81,7 @@ export async function renameBracket(formData: FormData) {
     .eq("email", email);
 }
 
-// ⭐ UPDATE BRACKET ICON — now checks email for safety
+// ⭐ UPDATE BRACKET ICON — checks email via session for safety
 export async function updateBracketIcon(formData: FormData) {
   const bracketId = formData.get("bracketId");
   const icon = formData.get("icon");

@@ -17,9 +17,12 @@ export default function LandingPage() {
     <div className="relative w-full h-screen bg-slate-900 overflow-hidden flex items-center justify-center">
 
       {/* Sponsored By Message */}
-      <div className="absolute top-6 left-1/2 -translate-x-1/2 text-center">
-        <p className="text-slate-300 text-sm tracking-wide">
-          Sponsored by <span className="font-semibold">YOUR BUSINESS HERE</span>
+      <div className="absolute top-10 left-1/2 -translate-x-1/2 text-center">
+        <p className="text-slate-200 text-3xl font-extrabold tracking-wide drop-shadow-[0_0_18px_rgba(16,185,129,0.8)]">
+          Sponsored by{" "}
+          <span className="text-emerald-400 drop-shadow-[0_0_25px_rgba(16,185,129,1)]">
+            YOUR BUSINESS HERE
+          </span>
         </p>
       </div>
 
@@ -31,20 +34,20 @@ export default function LandingPage() {
         className="moving-logo absolute"
       >
         <Image
-          src="/sponsor-logo.png" // Place this file in /public
+          src="/sponsor-logo.png"
           alt="Sponsor Logo"
-          width={140}
-          height={140}
+          width={260}
+          height={260}
+          className="
+            drop-shadow-[0_0_25px_rgba(16,185,129,1)]
+            drop-shadow-[0_0_60px_rgba(16,185,129,0.9)]
+            drop-shadow-[0_0_120px_rgba(16,185,129,0.7)]
+          "
         />
       </a>
 
-      {/* Your existing floating logos background */}
-      <div className="absolute inset-0 -z-10">
-        {/* Keep your floating logos or background animation here */}
-      </div>
-
-      {/* Optional main title */}
-      <h1 className="text-white text-3xl font-bold drop-shadow-lg">
+      {/* Main Title */}
+      <h1 className="text-white text-5xl font-extrabold drop-shadow-2xl">
         Welcome to the Bracket
       </h1>
     </div>

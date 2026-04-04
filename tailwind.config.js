@@ -13,9 +13,9 @@ module.exports = {
         },
       },
       animation: {
-        "bounce-slow": "bounce 6s infinite",
-        "bounce-slower": "bounce 10s infinite",
-        "bounce-slowest": "bounce 14s infinite",
+        "bounce-slow": "bounce 6s ease-in-out infinite",
+        "bounce-slower": "bounce 10s ease-in-out infinite",
+        "bounce-slowest": "bounce 14s ease-in-out infinite",
       },
     },
   },

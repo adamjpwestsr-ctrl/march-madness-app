@@ -10,7 +10,10 @@ type LoginFormProps = {
 export default function LoginForm({ onStepChange }: LoginFormProps) {
   const [email, setEmail] = useState("");
   const [adminCode, setAdminCode] = useState("");
-  const [step, setStep] = useState<"email" | "admin" | "requested" | "error">("email");
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [step, setStep] = useState<
+    "email" | "choice" | "admin" | "requested" | "error"
+  >("email");
 
   useEffect(() => {
     if (onStepChange) onStepChange(step);
@@ -36,15 +39,14 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
       return;
     }
 
-    if (data.is_admin) {
-      setStep("admin");
-      return;
-    }
+    // Save admin flag
+    setIsAdmin(data.is_admin);
 
-    window.location.href = "/bracket";
+    // BOTH admins and regular users go to the choice screen
+    setStep("choice");
   };
 
-  const handleAdminVerify = async () => {
+  const handleAdminVerify = () => {
     if (adminCode === process.env.NEXT_PUBLIC_ADMIN_CODE) {
       window.location.href = "/admin";
     } else {
@@ -54,6 +56,7 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
 
   return (
     <div className="w-full">
+      {/* EMAIL STEP */}
       {step === "email" && (
         <>
           <input
@@ -73,6 +76,35 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
         </>
       )}
 
+      {/* CHOICE SCREEN */}
+      {step === "choice" && (
+        <div className="flex flex-col space-y-4 mt-4">
+          <button
+            onClick={() => (window.location.href = "/bracket")}
+            className="w-full bg-emerald-500 py-3 rounded-lg text-white font-bold hover:bg-emerald-400 transition"
+          >
+            Enter Brackets
+          </button>
+
+          <button
+            onClick={() => (window.location.href = "/leaderboard")}
+            className="w-full bg-slate-700 py-3 rounded-lg text-white font-bold hover:bg-slate-600 transition"
+          >
+            View Leaderboard
+          </button>
+
+          {isAdmin && (
+            <button
+              onClick={() => setStep("admin")}
+              className="w-full bg-indigo-500 py-3 rounded-lg text-white font-bold hover:bg-indigo-400 transition"
+            >
+              Admin Portal
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* ADMIN CODE STEP */}
       {step === "admin" && (
         <>
           <input
@@ -89,15 +121,24 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
           >
             Verify
           </button>
+
+          <button
+            onClick={() => setStep("choice")}
+            className="mt-3 w-full text-slate-400 underline hover:text-slate-300"
+          >
+            Back
+          </button>
         </>
       )}
 
+      {/* REQUESTED APPROVAL */}
       {step === "requested" && (
         <p className="text-center text-slate-300 mt-4">
-          Your email has been sent to the admin for approval.
+          Your email has been sent to the commissioners for approval.
         </p>
       )}
 
+      {/* ERROR */}
       {step === "error" && (
         <p className="text-center text-red-400 mt-4">
           Something went wrong. Try again.

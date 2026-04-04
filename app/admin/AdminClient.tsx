@@ -53,6 +53,9 @@ export default function AdminClient({ adminEmail }: { adminEmail: string }) {
           { href: "/admin/users", label: "User Management" },
           { href: "/admin/tools", label: "Bracket Tools & Simulations" },
           { href: "/admin/leaderboard", label: "Leaderboard Tools" },
+
+          // ⭐ NEW ITEM ADDED HERE
+          { href: "/admin/pending-users", label: "Pending Users" },
         ].map((item) => (
           <Link
             key={item.href}

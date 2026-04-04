@@ -19,7 +19,12 @@ import {
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-export default async function BracketPage({ searchParams }) {
+export default async function BracketPage({
+  searchParams,
+}: {
+  searchParams?: { bid?: string };
+}) {
+
   try {
     // SESSION CHECK
     const cookieStore = await cookies();

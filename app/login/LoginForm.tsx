@@ -34,7 +34,13 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
       return;
     }
 
+    // ⭐ UNKNOWN USER → ADD TO pending_users
     if (!data) {
+      await supabase.from("pending_users").upsert({
+        email: email.toLowerCase(),
+        status: "pending",
+      });
+
       setStep("requested");
       return;
     }

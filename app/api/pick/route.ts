@@ -11,8 +11,24 @@ export async function POST(req: Request) {
 
   const { bracketId, gameId, teamId } = await req.json();
 
+  // ⭐ 1. Look up bracket owner so we can get user_id
+  const { data: bracket, error: bracketErr } = await supabase
+    .from("brackets")
+    .select("user_id")
+    .eq("bracket_id", bracketId)
+    .single();
+
+  if (bracketErr || !bracket) {
+    console.error("Bracket lookup failed:", bracketErr);
+    return NextResponse.json({ error: "Bracket not found" }, { status: 400 });
+  }
+
+  const userId = bracket.user_id;
+
+  // ⭐ 2. Save pick with BOTH user_id + bracket_id
   await supabase.from("picks").upsert(
     {
+      user_id: userId,
       bracket_id: bracketId,
       game_id: gameId,
       team_id: teamId,
@@ -22,11 +38,13 @@ export async function POST(req: Request) {
     }
   );
 
+  // ⭐ 3. Update winner in games table
   await supabase
     .from("games")
     .update({ winner: teamId })
     .eq("game_id", gameId);
 
+  // ⭐ 4. Load current game
   const { data: currentGame } = await supabase
     .from("games")
     .select("*")
@@ -37,7 +55,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true });
   }
 
-  const nextGameId = currentGame.next_game_id ?? currentGame.source_game1 ?? null;
+  // ⭐ 5. Determine next game
+  const nextGameId =
+    currentGame.next_game_id ?? currentGame.source_game1 ?? null;
+
   if (!nextGameId) {
     return NextResponse.json({ success: true });
   }
@@ -52,9 +73,13 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true });
   }
 
+  // ⭐ 6. Update next game’s team slots
   const updateFields: any = {};
 
-  if (nextGame.source_game1 === currentGame.game_id || nextGame.next_game_id === currentGame.game_id) {
+  if (
+    nextGame.source_game1 === currentGame.game_id ||
+    nextGame.next_game_id === currentGame.game_id
+  ) {
     updateFields.team1 = teamId;
     updateFields.seed1 = null;
   }
@@ -71,6 +96,7 @@ export async function POST(req: Request) {
       .eq("game_id", nextGameId);
   }
 
+  // ⭐ 7. Clear downstream picks
   async function clearDownstream(gameIdToClear: number) {
     const { data: g } = await supabase
       .from("games")

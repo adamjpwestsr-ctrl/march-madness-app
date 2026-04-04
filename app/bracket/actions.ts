@@ -12,15 +12,10 @@ const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
   auth: { persistSession: false },
 });
 
-// ⭐ CREATE BRACKET — now uses email instead of user_id
+// ⭐ CREATE BRACKET — now accepts FormData and uses email
 export async function createBracket(formData: FormData) {
-  const cookieStore = await cookies();
-  const sessionCookie = cookieStore.get("mm_session");
-  if (!sessionCookie) throw new Error("Not logged in");
-
-  const session = JSON.parse(sessionCookie.value);
-  const email = session.email?.toLowerCase();
-  if (!email) throw new Error("Missing email in session");
+  const email = formData.get("email")?.toString().toLowerCase();
+  if (!email) throw new Error("Missing email");
 
   const { data, error } = await supabase
     .from("brackets")

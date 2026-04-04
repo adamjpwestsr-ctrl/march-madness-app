@@ -24,7 +24,6 @@ export default async function BracketPage({
 }: {
   searchParams?: { bid?: string };
 }) {
-
   try {
     // SESSION CHECK
     const cookieStore = await cookies();
@@ -48,7 +47,7 @@ export default async function BracketPage({
       auth: { persistSession: false },
     });
 
-    // LOAD BRACKETS BY EMAIL (NOT USER_ID)
+    // LOAD BRACKETS BY EMAIL
     const { data: brackets, error } = await supabase
       .from("brackets")
       .select("bracket_id, bracket_name, icon, created_at, updated_at")
@@ -188,11 +187,17 @@ export default async function BracketPage({
             activeId={activeBracket.bracket_id}
           />
 
-          <BracketShell
-            bracketId={activeBracket.bracket_id}
-            userEmail={email}
-            bracketName={activeBracket.bracket_name ?? "My Bracket"}
-          />
+          {/* ⭐ FIX: Prevent parent forms from hijacking bracket clicks */}
+          <div
+            onClick={(e) => e.stopPropagation()}
+            onSubmit={(e) => e.preventDefault()}
+          >
+            <BracketShell
+              bracketId={activeBracket.bracket_id}
+              userEmail={email}
+              bracketName={activeBracket.bracket_name ?? "My Bracket"}
+            />
+          </div>
         </main>
       </div>
     );

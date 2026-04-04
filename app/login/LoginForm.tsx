@@ -3,12 +3,15 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
-export default function LoginForm({ onStepChange }) {
+type LoginFormProps = {
+  onStepChange?: (step: string) => void;
+};
+
+export default function LoginForm({ onStepChange }: LoginFormProps) {
   const [email, setEmail] = useState("");
   const [adminCode, setAdminCode] = useState("");
-  const [step, setStep] = useState("email"); // "email" | "admin" | "requested" | "error"
+  const [step, setStep] = useState<"email" | "admin" | "requested" | "error">("email");
 
-  // Notify parent page when step changes
   useEffect(() => {
     if (onStepChange) onStepChange(step);
   }, [step, onStepChange]);

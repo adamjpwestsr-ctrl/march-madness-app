@@ -19,27 +19,22 @@ import {
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-export default async function BracketPage({
-  searchParams,
-}: {
-  searchParams?: { bid?: string };
-}) {
+export default async function BracketPage({ searchParams }) {
   try {
     // SESSION CHECK
     const cookieStore = await cookies();
     const sessionCookie = cookieStore.get("mm_session");
     if (!sessionCookie) redirect("/login");
 
-    let session: { userId?: number; email?: string; isAdmin?: boolean };
+    let session;
     try {
       session = JSON.parse(sessionCookie.value);
     } catch {
       redirect("/login");
     }
 
-    const email = session.email;
+    const email = session.email?.toLowerCase();
     const isAdmin = !!session.isAdmin;
-    const rawUserId = session.userId;
 
     if (!email) redirect("/login");
 
@@ -48,60 +43,32 @@ export default async function BracketPage({
       auth: { persistSession: false },
     });
 
-    // RESOLVE USER ID
-    let userId: number | null = null;
+    // LOAD BRACKETS BY EMAIL (NOT USER_ID)
+    const { data: brackets, error } = await supabase
+      .from("brackets")
+      .select("bracket_id, bracket_name, icon, created_at, updated_at")
+      .eq("email", email)
+      .order("created_at", { ascending: true });
 
-    if (typeof rawUserId === "number") {
-      userId = rawUserId;
-    } else {
-      const { data: user } = await supabase
-        .from("users")
-        .select("user_id, email, is_admin")
-        .ilike("email", email)
-        .single();
+    if (error) console.error("Bracket load error:", error);
 
-      if (!user) redirect("/login");
-
-      userId = user.user_id;
-    }
-
-    // LOAD BRACKETS
-    let brackets: {
-      bracket_id: string;
-      bracket_name: string | null;
-      icon: string | null;
-      created_at: string | null;
-      updated_at: string | null;
-    }[] = [];
-
-    if (userId !== null) {
-      const { data, error } = await supabase
-        .from("brackets")
-        .select("bracket_id, bracket_name, icon, created_at, updated_at")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: true });
-
-      if (error) console.error("Bracket load error:", error);
-
-      brackets = Array.isArray(data) ? data : [];
-    }
+    const safeBrackets = Array.isArray(brackets) ? brackets : [];
 
     // NO BRACKETS → SHOW CREATE BUTTON
-    if (brackets.length === 0) {
+    if (safeBrackets.length === 0) {
       return (
         <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center gap-6">
           <p className="text-lg">No brackets found for this account.</p>
 
-          {userId !== null && (
-            <form action={createBracket}>
-              <button
-                type="submit"
-                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg text-white font-semibold shadow-lg"
-              >
-                Create Your First Bracket
-              </button>
-            </form>
-          )}
+          <form action={createBracket}>
+            <input type="hidden" name="email" value={email} />
+            <button
+              type="submit"
+              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg text-white font-semibold shadow-lg"
+            >
+              Create Your First Bracket
+            </button>
+          </form>
         </div>
       );
     }
@@ -111,7 +78,8 @@ export default async function BracketPage({
       typeof searchParams?.bid === "string" ? searchParams.bid : undefined;
 
     const activeBracket =
-      brackets.find((b) => String(b.bracket_id) === selectedId) ?? brackets[0];
+      safeBrackets.find((b) => String(b.bracket_id) === selectedId) ??
+      safeBrackets[0];
 
     return (
       <div className="min-h-screen bg-slate-950 text-slate-100 flex">
@@ -120,7 +88,7 @@ export default async function BracketPage({
           <h2 className="text-xl font-bold mb-2">Your Brackets</h2>
 
           <div className="flex flex-col gap-3">
-            {brackets.map((b) => {
+            {safeBrackets.map((b) => {
               const created = b.created_at
                 ? new Date(b.created_at).toLocaleDateString()
                 : "";
@@ -150,7 +118,6 @@ export default async function BracketPage({
                       </span>
                     </a>
 
-                    {/* FIXED: icon selector moved to client component */}
                     <BracketIconSelector
                       bracketId={b.bracket_id}
                       currentIcon={b.icon}
@@ -163,11 +130,8 @@ export default async function BracketPage({
                   </div>
 
                   <form action={renameBracket} className="mt-2 flex gap-2">
-                    <input
-                      type="hidden"
-                      name="bracketId"
-                      value={b.bracket_id}
-                    />
+                    <input type="hidden" name="bracketId" value={b.bracket_id} />
+                    <input type="hidden" name="email" value={email} />
                     <input
                       name="newName"
                       defaultValue={b.bracket_name || "My Bracket"}
@@ -201,28 +165,26 @@ export default async function BracketPage({
             })}
           </div>
 
-          {userId !== null && (
-            <form action={createBracket} className="mt-auto">
-              <button
-                type="submit"
-                className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white font-semibold shadow"
-              >
-                + Create Another Bracket
-              </button>
-            </form>
-          )}
+          <form action={createBracket} className="mt-auto">
+            <input type="hidden" name="email" value={email} />
+            <button
+              type="submit"
+              className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white font-semibold shadow"
+            >
+              + Create Another Bracket
+            </button>
+          </form>
         </aside>
 
         {/* MAIN CONTENT */}
         <main className="flex-1 p-6">
           <BracketSelectorShell
-            brackets={brackets}
+            brackets={safeBrackets}
             activeId={activeBracket.bracket_id}
           />
 
           <BracketShell
             bracketId={activeBracket.bracket_id}
-            userId={userId!}
             userEmail={email}
             bracketName={activeBracket.bracket_name ?? "My Bracket"}
           />

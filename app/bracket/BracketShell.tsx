@@ -5,12 +5,10 @@ import BracketClient from "./BracketClient";
 
 export default function BracketShell({
   bracketId,
-  userId,
   userEmail,
   bracketName,
 }: {
   bracketId: string;
-  userId: number;
   userEmail: string;
   bracketName: string;
 }) {

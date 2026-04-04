@@ -41,7 +41,7 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
       return;
     }
 
-    window.location.href = "/brackets";
+    window.location.href = "/bracket";
   };
 
   const handleAdminVerify = async () => {

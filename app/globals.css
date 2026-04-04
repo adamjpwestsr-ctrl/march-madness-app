@@ -1,18 +1,18 @@
 @import "tailwindcss";
 
 .moving-logo {
-  animation: slideAcross 5s linear forwards;
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  animation: slideAcross 8s linear forwards;
 }
 
 @keyframes slideAcross {
   0% {
-    left: -350px;
-    top: 50%;
-    transform: translateY(-50%);
+    transform: translate(-350px, -50%);
   }
   100% {
-    left: calc(100% + 350px);
-    top: 50%;
-    transform: translateY(-50%);
+    transform: translate(calc(100vw + 350px), -50%);
   }
 }

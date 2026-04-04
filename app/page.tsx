@@ -36,8 +36,8 @@ export default function LandingPage() {
         <Image
           src="/sponsor-logo.png"
           alt="Sponsor Logo"
-          width={520}
-          height={520}
+          width={300}
+          height={300}
           className="
             drop-shadow-[0_0_25px_rgba(16,185,129,1)]
             drop-shadow-[0_0_60px_rgba(16,185,129,0.9)]

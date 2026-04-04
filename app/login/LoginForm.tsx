@@ -1,147 +1,105 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabaseClient";
 
-export default function LoginForm() {
-  const [email, setEmail] = useState('');
-  const [adminCode, setAdminCode] = useState('');
-  const [step, setStep] = useState<'email' | 'admin' | 'requested' | 'done'>('email');
-  const [error, setError] = useState('');
-  const [isAdmin, setIsAdmin] = useState(false);
+export default function LoginForm({ onStepChange }) {
+  const [email, setEmail] = useState("");
+  const [adminCode, setAdminCode] = useState("");
+  const [step, setStep] = useState("email"); // "email" | "admin" | "requested" | "error"
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError('');
+  // Notify parent page when step changes
+  useEffect(() => {
+    if (onStepChange) onStepChange(step);
+  }, [step, onStepChange]);
 
-    const res = await fetch('/api/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, adminCode }),
-    });
+  const handleEmailSubmit = async () => {
+    if (!email) return;
 
-    const data = await res.json();
+    const { data, error } = await supabase
+      .from("players")
+      .select("is_admin")
+      .eq("email", email.toLowerCase())
+      .maybeSingle();
 
-    switch (data.status) {
-      case 'requested':
-        setStep('requested');
-        break;
-
-      case 'needsAdminCode':
-        setStep('admin');
-        break;
-
-      case 'invalidAdminCode':
-        setError('Incorrect admin code');
-        break;
-
-      case 'admin':
-        setIsAdmin(true);
-        setStep('done');
-        break;
-
-      case 'ok':
-        if (data.isAdmin) {
-          setIsAdmin(true);
-          setStep('done');
-        } else {
-          // ⭐ FORCE FULL PAGE LOAD SO SERVER READS COOKIE
-          window.location.href = '/bracket';
-        }
-        break;
-
-      default:
-        setError('Unexpected error. Try again.');
+    if (error) {
+      console.error(error);
+      setStep("error");
+      return;
     }
-  }
+
+    if (!data) {
+      setStep("requested");
+      return;
+    }
+
+    if (data.is_admin) {
+      setStep("admin");
+      return;
+    }
+
+    window.location.href = "/brackets";
+  };
+
+  const handleAdminVerify = async () => {
+    if (adminCode === process.env.NEXT_PUBLIC_ADMIN_CODE) {
+      window.location.href = "/admin";
+    } else {
+      setStep("error");
+    }
+  };
 
   return (
-    <>
-      {/* FORM ONLY HANDLES EMAIL + ADMIN CODE */}
-      {step !== 'done' && (
-        <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="w-full">
+      {step === "email" && (
+        <>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@example.com"
+            className="w-full p-3 rounded-lg bg-slate-800 text-white border border-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+          />
 
-          {/* STEP 1 — EMAIL */}
-          {step === 'email' && (
-            <>
-              <label className="block text-sm font-medium">Enter your email</label>
-
-              <input
-                type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                required
-                className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              />
-
-              <button
-                type="submit"
-                className="w-full rounded-md bg-emerald-500 px-3 py-2 text-sm font-semibold text-slate-950 hover:bg-emerald-400"
-              >
-                Continue
-              </button>
-            </>
-          )}
-
-          {/* STEP 2 — ADMIN CODE */}
-          {step === 'admin' && (
-            <>
-              <label className="block text-sm font-medium">Admin Code</label>
-
-              <input
-                type="password"
-                value={adminCode}
-                onChange={e => setAdminCode(e.target.value)}
-                required
-                className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              />
-
-              {error && <p className="text-red-400 text-sm">{error}</p>}
-
-              <button
-                type="submit"
-                className="w-full rounded-md bg-emerald-500 px-3 py-2 text-sm font-semibold text-slate-950 hover:bg-emerald-400"
-              >
-                Verify
-              </button>
-            </>
-          )}
-
-          {/* STEP 3 — UNKNOWN USER */}
-          {step === 'requested' && (
-            <p className="text-center text-slate-300">
-              Your email has been sent to the commissioner.
-            </p>
-          )}
-        </form>
-      )}
-
-      {/* STEP 4 — DONE (ADMIN OR KNOWN USER) */}
-      {step === 'done' && (
-        <div className="space-y-3 text-center mt-6">
-          <p className="text-slate-300">
-            {isAdmin
-              ? "Welcome, Commissioner. Choose where to go next."
-              : "You're in. Choose where to go next."}
-          </p>
-
-          {/* ⭐ BUTTONS ARE NOW OUTSIDE THE FORM — FIXES CLICK ISSUE */}
           <button
-            onClick={() => (window.location.href = '/bracket')}
-            className="w-full rounded-md bg-emerald-500 px-3 py-2 text-sm font-semibold text-slate-950 hover:bg-emerald-400"
+            onClick={handleEmailSubmit}
+            className="mt-6 w-full bg-emerald-500 py-3 rounded-lg text-white font-bold hover:bg-emerald-400 transition"
           >
-            Go to Brackets
+            Continue
           </button>
-
-          {isAdmin && (
-            <button
-              onClick={() => (window.location.href = '/admin')}
-              className="w-full rounded-md bg-blue-500 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-400"
-            >
-              Go to Admin Page
-            </button>
-          )}
-        </div>
+        </>
       )}
-    </>
+
+      {step === "admin" && (
+        <>
+          <input
+            type="text"
+            value={adminCode}
+            onChange={(e) => setAdminCode(e.target.value)}
+            placeholder="Enter admin code"
+            className="w-full p-3 rounded-lg bg-slate-800 text-white border border-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+          />
+
+          <button
+            onClick={handleAdminVerify}
+            className="mt-6 w-full bg-emerald-500 py-3 rounded-lg text-white font-bold hover:bg-emerald-400 transition"
+          >
+            Verify
+          </button>
+        </>
+      )}
+
+      {step === "requested" && (
+        <p className="text-center text-slate-300 mt-4">
+          Your email has been sent to the admin for approval.
+        </p>
+      )}
+
+      {step === "error" && (
+        <p className="text-center text-red-400 mt-4">
+          Something went wrong. Try again.
+        </p>
+      )}
+    </div>
   );
 }

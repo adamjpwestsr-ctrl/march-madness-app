@@ -5,13 +5,17 @@ import LoginForm from "./LoginForm";
 
 export default function LoginPage() {
   const [showAbout, setShowAbout] = useState(false);
+  const [currentStep, setCurrentStep] = useState("email");
+
+  const labelText =
+    currentStep === "email" ? "Enter your email" : "Admin Code";
 
   return (
     <div
       className="relative min-h-screen w-full bg-cover bg-center bg-no-repeat flex items-center justify-center"
       style={{ backgroundImage: "url('/background-bracket.png')" }}
     >
-      {/* Dark overlay for readability */}
+      {/* Dark overlay */}
       <div className="absolute inset-0 bg-black bg-opacity-50"></div>
 
       {/* Login Card */}
@@ -31,7 +35,7 @@ export default function LoginPage() {
         {/* Label + About Link */}
         <div className="flex justify-between items-center w-full mb-2">
           <label className="text-white text-lg font-semibold">
-            Enter your email
+            {labelText}
           </label>
 
           <button
@@ -42,8 +46,8 @@ export default function LoginPage() {
           </button>
         </div>
 
-        {/* EMBEDDED LOGIN FORM (keeps your full login logic working) */}
-        <LoginForm />
+        {/* LoginForm with step callback */}
+        <LoginForm onStepChange={setCurrentStep} />
       </div>
 
       {/* ABOUT MODAL */}
@@ -53,21 +57,11 @@ export default function LoginPage() {
             <h2 className="text-2xl font-bold mb-4">About Our Bracket Challenge</h2>
 
             <ul className="space-y-3 text-sm leading-relaxed">
-              <li>
-                <strong>Multiple Brackets:</strong> You can create up to 5 brackets and all you need is your email!
-              </li>
-              <li>
-                <strong>Leaderboard:</strong> After submitting, visit the leaderboard anytime to see how you stack up.
-              </li>
-              <li>
-                <strong>Sign‑In:</strong> Your email is your key — no password needed. If you're new, the admin approves your entry.
-              </li>
-              <li>
-                <strong>Mulligans:</strong> Each player gets two mulligans — you can “undo” your pick if your pick loses in the first 2 rounds.
-              </li>
-              <li>
-                <strong>Prizes:</strong> Top finishers win bragging rights and money, because sometimes money is better than bragging rights.
-              </li>
+             <li><strong>Multiple Brackets:</strong> You can create up to 5 brackets and all you need is your email!</li>
+              <li><strong>Leaderboard:</strong> After submitting, visit the leaderboard anytime to see how you stack up.</li>
+              <li><strong>Sign‑In:</strong> Your email is your key — no password needed. If you're new, the admin approves your entry.</li>
+              <li><strong>Mulligans:</strong> Each player gets two mulligans — you can “undo” your pick if your pick loses in the first 2 rounds.</li>
+              <li><strong>Prizes:</strong> Top finishers win bragging rights and money, because some times money is better than bragging rights.</li>
             </ul>
 
             <button

@@ -2,10 +2,10 @@
 
 .moving-logo {
   position: absolute;
-  top: 50%;
+  top: 35%; /* moved up */
   left: 0;
   transform: translateY(-50%);
-  animation: slideAcross 8s linear forwards;
+  animation: slideAcross 5s linear forwards;
 }
 
 @keyframes slideAcross {

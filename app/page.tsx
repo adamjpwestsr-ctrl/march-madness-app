@@ -57,8 +57,15 @@ export default function LandingPage() {
 
       {/* Main Title */}
       <h1 className="text-white text-5xl font-extrabold drop-shadow-2xl mt-40">
-        Welcome to the Bracket
+        Are You Ready For The Madness!
       </h1>
+{/* Copyright Footer */}
+<div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-center">
+  <p className="text-slate-500 text-xs tracking-wide">
+    © 2026 - Adam West
+  </p>
+</div>
+
     </div>
   );
 }

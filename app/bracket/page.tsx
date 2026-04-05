@@ -188,10 +188,10 @@ export default async function BracketPage({
           />
 
           <BracketShell
-            bracketId={activeBracket.bracket_id}
-            userEmail={email}
-            bracketName={activeBracket.bracket_name ?? "My Bracket"}
-          />
+  bracketId={activeBracket.bracket_id}
+  bracketName={activeBracket.bracket_name ?? "My Bracket"}
+/>
+
         </main>
       </div>
     );

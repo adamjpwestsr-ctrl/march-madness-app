@@ -2,7 +2,6 @@
 
 //ADDED FOR TESTING
 console.log("BracketClient hydrated");
-console.log("onPick is", onPick);
 
 type Team = {
   team_id: string;
@@ -33,6 +32,9 @@ export default function BracketClient({
   onPick,
   onReset,
 }: {
+ console.log("BracketClient hydrated");
+  console.log("onPick is", onPick);
+
   bracket: { bracket_id: string };
   games: Game[];
   picks: Pick[];

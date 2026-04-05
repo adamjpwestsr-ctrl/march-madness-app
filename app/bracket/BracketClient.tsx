@@ -1,5 +1,6 @@
 "use client";
 
+//ADDED FOR TESTING
 console.log("BracketClient hydrated");
 
 

@@ -7,10 +7,6 @@ export default function BracketShell({
   bracketId,
   userEmail,
   bracketName,
-}: {
-  bracketId: string;
-  userEmail: string;
-  bracketName: string;
 }) {
   const [loading, setLoading] = useState(true);
   const [bracketData, setBracketData] = useState<any>(null);
@@ -18,17 +14,11 @@ export default function BracketShell({
 
   const loadBracket = async () => {
     try {
-      setLoading(true);
       const res = await fetch(`/api/bracket?bracketId=${bracketId}`, {
         cache: "no-store",
       });
       const json = await res.json();
-
-      if (!json || json.error) {
-        setError("Failed to load bracket.");
-      } else {
-        setBracketData(json);
-      }
+      setBracketData(json);
     } catch (err) {
       console.error("Bracket load error:", err);
       setError("Failed to load bracket.");
@@ -41,38 +31,36 @@ export default function BracketShell({
     loadBracket();
   }, [bracketId]);
 
+  // ⭐ Optimistic pick update
   const handlePick = async (gameId: number, teamId: string) => {
-    try {
-      await fetch("/api/pick", {
-        method: "POST",
-        body: JSON.stringify({
-          bracketId,
-          gameId,
-          teamId,
-        }),
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+    // 1. Optimistically update UI
+    setBracketData((prev) => {
+      if (!prev) return prev;
 
-      await loadBracket();
-    } catch (err) {
-      console.error("Pick save error:", err);
-    }
+      const newPicks = [
+        ...prev.picks.filter((p) => p.game_id !== gameId),
+        { bracket_id: bracketId, game_id: gameId, selected_team: teamId },
+      ];
+
+      return { ...prev, picks: newPicks };
+    });
+
+    // 2. Fire request (non-blocking)
+    fetch("/api/pick", {
+      method: "POST",
+      body: JSON.stringify({ bracketId, gameId, teamId }),
+      headers: { "Content-Type": "application/json" },
+    }).then(() => loadBracket());
   };
 
   const handleReset = async () => {
-    try {
-      await fetch("/api/bracket/reset", {
-        method: "POST",
-        body: JSON.stringify({ bracketId }),
-        headers: { "Content-Type": "application/json" },
-      });
+    await fetch("/api/bracket/reset", {
+      method: "POST",
+      body: JSON.stringify({ bracketId }),
+      headers: { "Content-Type": "application/json" },
+    });
 
-      await loadBracket();
-    } catch (err) {
-      console.error("Reset bracket error:", err);
-    }
+    loadBracket();
   };
 
   if (loading) {

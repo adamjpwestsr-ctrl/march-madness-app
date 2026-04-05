@@ -41,8 +41,9 @@ export default function BracketClient({
   console.log("onPick is", onPick);
 
   const getSelectedTeamId = (game: Game): string | null => {
-    const pick = picks.find((p) => p.game_id === game.game_id);
-    if (pick) return pick.selected_team;
+  const pick = picks.find((p) => p.game_id === game.game_id);
+  return pick ? pick.selected_team : null;
+};
 
     if (game.round >= 5) return game.winner_team_id;
 

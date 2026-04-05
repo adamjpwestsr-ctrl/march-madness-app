@@ -14,6 +14,7 @@ export async function POST(req: Request) {
 
   const { bracketId, gameId, teamId } = await req.json();
 
+  // 1. Get user_id for this bracket
   const { data: bracket, error: bracketErr } = await supabase
     .from("brackets")
     .select("user_id")
@@ -27,23 +28,26 @@ export async function POST(req: Request) {
 
   const userId = bracket.user_id;
 
-await supabase.from("picks").upsert(
-  {
-    user_id: userId,
-    bracket_id: bracketId,
-    game_id: gameId,
-    selected_team: teamId,
-  },
-  {
-    onConflict: "bracket_id,game_id",
-  }
-);
+  // 2. Save pick using selected_team (your schema)
+  await supabase.from("picks").upsert(
+    {
+      user_id: userId,
+      bracket_id: bracketId,
+      game_id: gameId,
+      selected_team: teamId,
+    },
+    {
+      onConflict: "bracket_id,game_id",
+    }
+  );
 
+  // 3. Update winner in games table
   await supabase
     .from("games")
     .update({ winner: teamId })
     .eq("game_id", gameId);
 
+  // 4. Load current game
   const { data: currentGame } = await supabase
     .from("games")
     .select("*")
@@ -54,8 +58,11 @@ await supabase.from("picks").upsert(
     return NextResponse.json({ success: true });
   }
 
+  // 5. Determine next game based on your schema
+  // source_game1 → feeds into team1
+  // source_game2 → feeds into team2
   const nextGameId =
-    currentGame.next_game_id ?? currentGame.source_game1 ?? null;
+    currentGame.source_game1 || currentGame.source_game2 || null;
 
   if (!nextGameId) {
     return NextResponse.json({ success: true });
@@ -71,12 +78,10 @@ await supabase.from("picks").upsert(
     return NextResponse.json({ success: true });
   }
 
+  // 6. Update next game’s team slots correctly
   const updateFields: any = {};
 
-  if (
-    nextGame.source_game1 === currentGame.game_id ||
-    nextGame.next_game_id === currentGame.game_id
-  ) {
+  if (nextGame.source_game1 === currentGame.game_id) {
     updateFields.team1 = teamId;
     updateFields.seed1 = null;
   }
@@ -93,6 +98,7 @@ await supabase.from("picks").upsert(
       .eq("game_id", nextGameId);
   }
 
+  // 7. Clear downstream picks recursively
   async function clearDownstream(gameIdToClear: number) {
     const { data: g } = await supabase
       .from("games")
@@ -113,7 +119,7 @@ await supabase.from("picks").upsert(
       .eq("game_id", gameIdToClear)
       .eq("bracket_id", bracketId);
 
-    const nextId = g.next_game_id ?? g.source_game1 ?? null;
+    const nextId = g.source_game1 || g.source_game2 || null;
     if (nextId) {
       await clearDownstream(nextId);
     }

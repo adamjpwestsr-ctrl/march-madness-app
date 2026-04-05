@@ -30,7 +30,6 @@ export async function GET(req: Request) {
     game_id: g.game_id,
     round: g.round,
     region: g.region,
-    next_game_id: g.next_game_id ?? g.source_game1 ?? null,
     team1: g.team1
       ? { team_id: g.team1, name: g.team1, seed: g.seed1 ?? null }
       : null,
@@ -38,20 +37,18 @@ export async function GET(req: Request) {
       ? { team_id: g.team2, name: g.team2, seed: g.seed2 ?? null }
       : null,
     winner_team_id: g.winner ?? null,
+    source_game1: g.source_game1,
+    source_game2: g.source_game2,
   }));
 
   let picks: any[] = [];
   if (bracketId) {
-    const { data: pickData, error: pickError } = await supabase
+    const { data: pickData } = await supabase
       .from("picks")
       .select("*")
       .eq("bracket_id", bracketId);
 
-    if (pickError) {
-      console.error("Pick load error:", pickError);
-    } else {
-      picks = pickData || [];
-    }
+    picks = pickData || [];
   }
 
   return NextResponse.json({

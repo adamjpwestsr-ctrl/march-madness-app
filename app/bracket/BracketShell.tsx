@@ -90,11 +90,7 @@ export default function BracketShell({
   const { bracket, picks, games } = bracketData;
 
   return (
-    <div
-      className="bg-slate-900 border border-slate-800 rounded-lg p-6 shadow-xl"
-      onClick={(e) => e.stopPropagation()}
-      onSubmit={(e) => e.preventDefault()}
-    >
+    <div className="bg-slate-900 border border-slate-800 rounded-lg p-6 shadow-xl">
       <h2 className="text-xl font-bold mb-4">{bracketName}</h2>
 
       <BracketClient

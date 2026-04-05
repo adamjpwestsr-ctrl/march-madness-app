@@ -3,6 +3,41 @@
 import { useEffect, useState } from "react";
 import BracketClient from "./BracketClient";
 
+// -----------------------------
+// Types matching your API shape
+// -----------------------------
+type Pick = {
+  bracket_id: string;
+  game_id: number;
+  selected_team: string;
+};
+
+type Team = {
+  team_id: string;
+  name: string;
+  seed: number | null;
+};
+
+type Game = {
+  game_id: number;
+  round: number;
+  region: string;
+  team1: Team | null;
+  team2: Team | null;
+  winner_team_id: string | null;
+  source_game1: number | null;
+  source_game2: number | null;
+};
+
+type BracketData = {
+  bracket: { bracket_id: string };
+  picks: Pick[];
+  games: Game[];
+};
+
+// -----------------------------
+// Component
+// -----------------------------
 export default function BracketShell({
   bracketId,
   bracketName,
@@ -10,9 +45,10 @@ export default function BracketShell({
   bracketId: string;
   bracketName: string;
 }) {
-  const [bracketData, setBracketData] = useState<any>(null);
+  const [bracketData, setBracketData] = useState<BracketData | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Load bracket from API
   const loadBracket = async () => {
     try {
       const res = await fetch(`/api/bracket?bracketId=${bracketId}`, {
@@ -30,13 +66,14 @@ export default function BracketShell({
     loadBracket();
   }, [bracketId]);
 
-  // ⭐ Optimistic pick update with NO flicker
+  // -----------------------------
+  // Optimistic pick update (no flicker)
+  // -----------------------------
   const handlePick = (gameId: number, teamId: string) => {
-    // 1. Optimistic UI
-    setBracketData((prev: any) => {
+    setBracketData((prev) => {
       if (!prev) return prev;
 
-      const newPicks = [
+      const newPicks: Pick[] = [
         ...prev.picks.filter((p) => p.game_id !== gameId),
         { bracket_id: bracketId, game_id: gameId, selected_team: teamId },
       ];
@@ -44,17 +81,20 @@ export default function BracketShell({
       return { ...prev, picks: newPicks };
     });
 
-    // 2. Fire request (non-blocking)
+    // Fire request (non-blocking)
     fetch("/api/pick", {
       method: "POST",
       body: JSON.stringify({ bracketId, gameId, teamId }),
       headers: { "Content-Type": "application/json" },
     });
 
-    // 3. Background refresh (NO flicker)
+    // Background refresh (no flicker)
     setTimeout(loadBracket, 50);
   };
 
+  // -----------------------------
+  // Reset bracket
+  // -----------------------------
   const handleReset = async () => {
     await fetch("/api/bracket/reset", {
       method: "POST",
@@ -65,6 +105,9 @@ export default function BracketShell({
     loadBracket();
   };
 
+  // -----------------------------
+  // Render
+  // -----------------------------
   if (!bracketData) {
     return <div className="text-slate-300 text-lg">Loading bracket…</div>;
   }

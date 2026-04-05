@@ -2,12 +2,9 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createClient } from "@supabase/supabase-js";
 
-export const dynamic = "force-dynamic"; // ⭐ Prevent route caching in production
+export const dynamic = "force-dynamic"; // Prevent caching
 
-const ADMINS = [
-  "adamjpwestsr@gmail.com",
-  "lfahearn@gmail.com",
-];
+const ADMINS = ["adamjpwestsr@gmail.com", "lfahearn@gmail.com"];
 
 export async function POST(req: Request) {
   const { email, adminCode } = await req.json();
@@ -18,16 +15,15 @@ export async function POST(req: Request) {
 
   const normalizedEmail = email.toLowerCase();
 
-  // ⭐ Correct server-side Supabase client
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    {
-      auth: { persistSession: false }, // ⭐ Required for server routes
-    }
+    { auth: { persistSession: false } }
   );
 
-  // ⭐ ADMIN LOGIN FLOW
+  // -----------------------------
+  // ADMIN LOGIN FLOW
+  // -----------------------------
   if (ADMINS.includes(normalizedEmail)) {
     if (!adminCode) {
       return NextResponse.json({ status: "needsAdminCode" });
@@ -37,14 +33,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ status: "invalidAdminCode" });
     }
 
-    // Look up admin in users table
     let { data: adminUser } = await supabase
       .from("users")
       .select("user_id, email, is_admin")
       .ilike("email", normalizedEmail)
       .single();
 
-    // ⭐ If admin does NOT exist, create them
     if (!adminUser) {
       const { data: newAdmin, error: newAdminErr } = await supabase
         .from("users")
@@ -63,7 +57,7 @@ export async function POST(req: Request) {
       adminUser = newAdmin;
     }
 
-    // ⭐ Set session cookie with REAL user_id
+    // ⭐ MOBILE‑SAFE COOKIE
     const cookieStore = await cookies();
     cookieStore.set(
       "mm_session",
@@ -74,29 +68,30 @@ export async function POST(req: Request) {
       }),
       {
         httpOnly: true,
-        sameSite: "lax",
+        sameSite: "none", // ⭐ REQUIRED for mobile
+        secure: true,     // ⭐ REQUIRED for HTTPS (Vercel)
         path: "/",
-        secure: process.env.NODE_ENV === "production",
       }
     );
 
     return NextResponse.json({ status: "admin" });
   }
 
-  // ⭐ NORMAL USER LOGIN FLOW
+  // -----------------------------
+  // NORMAL USER LOGIN FLOW
+  // -----------------------------
   const { data: user } = await supabase
     .from("users")
     .select("*")
     .ilike("email", normalizedEmail)
     .single();
 
-  // Unknown user → create access request
   if (!user) {
     await supabase.from("access_requests").insert({ email: normalizedEmail });
     return NextResponse.json({ status: "requested" });
   }
 
-  // Known user → set session cookie
+  // ⭐ MOBILE‑SAFE COOKIE
   const cookieStore = await cookies();
   cookieStore.set(
     "mm_session",
@@ -107,9 +102,9 @@ export async function POST(req: Request) {
     }),
     {
       httpOnly: true,
-      sameSite: "lax",
+      sameSite: "none", // ⭐ REQUIRED
+      secure: true,     // ⭐ REQUIRED
       path: "/",
-      secure: process.env.NODE_ENV === "production",
     }
   );
 

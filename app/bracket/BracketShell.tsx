@@ -3,12 +3,7 @@
 import { useEffect, useState } from "react";
 import BracketClient from "./BracketClient";
 
-export default function BracketShell({
-  bracketId,
-  userEmail,
-  bracketName,
-}) {
-  const [loading, setLoading] = useState(true);
+export default function BracketShell({ bracketId, bracketName }) {
   const [bracketData, setBracketData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -22,8 +17,6 @@ export default function BracketShell({
     } catch (err) {
       console.error("Bracket load error:", err);
       setError("Failed to load bracket.");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -31,9 +24,9 @@ export default function BracketShell({
     loadBracket();
   }, [bracketId]);
 
-  // ⭐ Optimistic pick update
-  const handlePick = async (gameId: number, teamId: string) => {
-    // 1. Optimistically update UI
+  // ⭐ Optimistic pick update with NO flicker
+  const handlePick = (gameId: number, teamId: string) => {
+    // 1. Optimistic UI
     setBracketData((prev) => {
       if (!prev) return prev;
 
@@ -50,7 +43,10 @@ export default function BracketShell({
       method: "POST",
       body: JSON.stringify({ bracketId, gameId, teamId }),
       headers: { "Content-Type": "application/json" },
-    }).then(() => loadBracket());
+    });
+
+    // 3. Background refresh (NO flicker)
+    setTimeout(loadBracket, 50);
   };
 
   const handleReset = async () => {
@@ -63,16 +59,8 @@ export default function BracketShell({
     loadBracket();
   };
 
-  if (loading) {
+  if (!bracketData) {
     return <div className="text-slate-300 text-lg">Loading bracket…</div>;
-  }
-
-  if (error || !bracketData) {
-    return (
-      <div className="text-red-400 text-lg">
-        {error || "Failed to load bracket."}
-      </div>
-    );
   }
 
   const { bracket, picks, games } = bracketData;

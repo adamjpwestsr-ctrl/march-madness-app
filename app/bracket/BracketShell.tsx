@@ -33,7 +33,7 @@ export default function BracketShell({
   // ⭐ Optimistic pick update with NO flicker
   const handlePick = (gameId: number, teamId: string) => {
     // 1. Optimistic UI
-    setBracketData((prev) => {
+    setBracketData((prev: any) => {
       if (!prev) return prev;
 
       const newPicks = [

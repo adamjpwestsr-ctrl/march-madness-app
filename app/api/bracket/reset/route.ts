@@ -1,3 +1,6 @@
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
@@ -11,7 +14,6 @@ export async function POST(req: Request) {
 
   const { bracketId } = await req.json();
 
-  // Delete all picks for this bracket
   await supabase.from("picks").delete().eq("bracket_id", bracketId);
 
   return NextResponse.json({ success: true });

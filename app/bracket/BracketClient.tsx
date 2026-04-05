@@ -67,7 +67,8 @@ export default function BracketClient({
 
     return (
       <button
-        type="button"  // ⭐ FIX: prevents page refresh
+        type="button"
+        form="__none__"   // ⭐ FINAL FIX: fully detaches from all forms
         onClick={() => onPick(game.game_id, team.team_id)}
         className={`flex items-center justify-between px-2 py-1 rounded text-xs border transition
           ${
@@ -143,6 +144,7 @@ export default function BracketClient({
     <div className="flex flex-col gap-6">
       <button
         type="button"
+        form="__none__"   // ⭐ Prevents Reset from triggering parent forms
         onClick={onReset}
         className="self-start px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm"
       >

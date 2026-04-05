@@ -10,10 +10,11 @@ type Game = {
   game_id: number;
   round: number;
   region: string;
-  next_game_id: number | null;
   team1: Team | null;
   team2: Team | null;
   winner_team_id: string | null;
+  source_game1: number | null;
+  source_game2: number | null;
 };
 
 type Pick = {
@@ -35,21 +36,16 @@ export default function BracketClient({
   onPick: (gameId: number, teamId: string) => void;
   onReset: () => void;
 }) {
-
-  // ⭐ Correct placement — inside the component function
   console.log("BracketClient hydrated");
   console.log("onPick is", onPick);
 
+  // ⭐ Correct pick lookup
   const getSelectedTeamId = (game: Game): string | null => {
-  const pick = picks.find((p) => p.game_id === game.game_id);
-  return pick ? pick.selected_team : null;
-};
-
-    if (game.round >= 5) return game.winner_team_id;
-
-    return null;
+    const pick = picks.find((p) => p.game_id === game.game_id);
+    return pick ? pick.selected_team : null;
   };
 
+  // Group games by region
   const gamesByRegion: Record<string, Game[]> = {};
   games.forEach((g) => {
     if (!gamesByRegion[g.region]) gamesByRegion[g.region] = [];

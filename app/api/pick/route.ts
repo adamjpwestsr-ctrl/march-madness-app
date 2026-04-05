@@ -15,13 +15,18 @@ export async function POST(req: Request) {
   const { bracketId, gameId, teamId } = await req.json();
 
   // 1. Get user_id
-  const { data: bracket } = await supabase
-    .from("brackets")
-    .select("user_id")
-    .eq("bracket_id", bracketId)
-    .single();
+const { data: bracket, error: bracketErr } = await supabase
+  .from("brackets")
+  .select("user_id")
+  .eq("bracket_id", bracketId)
+  .single();
 
-  const userId = bracket.user_id;
+if (bracketErr || !bracket) {
+  console.error("Bracket lookup failed:", bracketErr);
+  return NextResponse.json({ error: "Bracket not found" }, { status: 400 });
+}
+
+const userId = bracket.user_id!;
 
   // 2. Save pick
   await supabase.from("picks").upsert(

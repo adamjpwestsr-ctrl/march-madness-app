@@ -187,17 +187,12 @@ export default async function BracketPage({
             activeId={activeBracket.bracket_id}
           />
 
-          {/* ⭐ FIX: Prevent parent forms from hijacking bracket clicks */}
-          <div
-            onClick={(e) => e.stopPropagation()}
-            onSubmit={(e) => e.preventDefault()}
-          >
-            <BracketShell
-              bracketId={activeBracket.bracket_id}
-              userEmail={email}
-              bracketName={activeBracket.bracket_name ?? "My Bracket"}
-            />
-          </div>
+          {/* BracketShell now handles event isolation */}
+          <BracketShell
+            bracketId={activeBracket.bracket_id}
+            userEmail={email}
+            bracketName={activeBracket.bracket_name ?? "My Bracket"}
+          />
         </main>
       </div>
     );

@@ -1,8 +1,5 @@
 "use client";
 
-//ADDED FOR TESTING
-console.log("BracketClient hydrated");
-
 type Team = {
   team_id: string;
   name: string;
@@ -32,15 +29,17 @@ export default function BracketClient({
   onPick,
   onReset,
 }: {
- console.log("BracketClient hydrated");
-  console.log("onPick is", onPick);
-
   bracket: { bracket_id: string };
   games: Game[];
   picks: Pick[];
   onPick: (gameId: number, teamId: string) => void;
   onReset: () => void;
 }) {
+
+  // ⭐ Correct placement — inside the component function
+  console.log("BracketClient hydrated");
+  console.log("onPick is", onPick);
+
   const getSelectedTeamId = (game: Game): string | null => {
     const pick = picks.find((p) => p.game_id === game.game_id);
     if (pick) return pick.team_id;
@@ -74,7 +73,7 @@ export default function BracketClient({
     return (
       <button
         type="button"
-        form="__none__"   // ⭐ FINAL FIX: fully detaches from all forms
+        form="__none__"
         onClick={() => onPick(game.game_id, team.team_id)}
         className={`flex items-center justify-between px-2 py-1 rounded text-xs border transition
           ${
@@ -150,7 +149,7 @@ export default function BracketClient({
     <div className="flex flex-col gap-6">
       <button
         type="button"
-        form="__none__"   // ⭐ Prevents Reset from triggering parent forms
+        form="__none__"
         onClick={onReset}
         className="self-start px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm"
       >

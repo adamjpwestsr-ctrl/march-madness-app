@@ -88,7 +88,7 @@ export default async function BracketPage({
     return (
       <div className="min-h-screen bg-slate-950 text-slate-100 flex">
         {/* SIDEBAR */}
-        <aside className="w-72 bg-slate-900 border-r border-slate-800 p-4 flex flex-col gap-4">
+        <aside className="w-72 bg-slate-900 border-r border-slate-800 p-4 flex flex-col gap-4 relative z-10">
           <h2 className="text-xl font-bold mb-2">Your Brackets</h2>
 
           <div className="flex flex-col gap-3">
@@ -114,7 +114,7 @@ export default async function BracketPage({
                   <div className="flex items-center justify-between gap-2">
                     <a
                       href={`/bracket?bid=${b.bracket_id}`}
-                      className="flex-1 flex items-center gap-2 font-semibold"
+                      className="flex items-center gap-2 font-semibold w-fit shrink-0"
                     >
                       <span>{b.icon || "🏀"}</span>
                       <span className="truncate">
@@ -181,13 +181,12 @@ export default async function BracketPage({
         </aside>
 
         {/* MAIN CONTENT */}
-        <main className="flex-1 p-6">
+        <main className="flex-1 p-6 relative z-0">
           <BracketSelectorShell
             brackets={safeBrackets}
             activeId={activeBracket.bracket_id}
           />
 
-          {/* BracketShell now handles event isolation */}
           <BracketShell
             bracketId={activeBracket.bracket_id}
             userEmail={email}

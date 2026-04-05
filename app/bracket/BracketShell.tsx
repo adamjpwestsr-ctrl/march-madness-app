@@ -3,7 +3,13 @@
 import { useEffect, useState } from "react";
 import BracketClient from "./BracketClient";
 
-export default function BracketShell({ bracketId, bracketName }) {
+export default function BracketShell({
+  bracketId,
+  bracketName,
+}: {
+  bracketId: string;
+  bracketName: string;
+}) {
   const [bracketData, setBracketData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
 

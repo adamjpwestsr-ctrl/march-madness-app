@@ -19,7 +19,7 @@ type Game = {
 type Pick = {
   bracket_id: string;
   game_id: number;
-  team_id: string;
+  selected_team: string;
 };
 
 export default function BracketClient({
@@ -42,7 +42,7 @@ export default function BracketClient({
 
   const getSelectedTeamId = (game: Game): string | null => {
     const pick = picks.find((p) => p.game_id === game.game_id);
-    if (pick) return pick.team_id;
+    if (pick) return pick.selected_team;
 
     if (game.round >= 5) return game.winner_team_id;
 

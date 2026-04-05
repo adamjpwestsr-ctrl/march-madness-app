@@ -27,17 +27,17 @@ export async function POST(req: Request) {
 
   const userId = bracket.user_id;
 
-  await supabase.from("picks").upsert(
-    {
-      user_id: userId,
-      bracket_id: bracketId,
-      game_id: gameId,
-      team_id: teamId,
-    },
-    {
-      onConflict: "bracket_id,game_id",
-    }
-  );
+await supabase.from("picks").upsert(
+  {
+    user_id: userId,
+    bracket_id: bracketId,
+    game_id: gameId,
+    selected_team: teamId,
+  },
+  {
+    onConflict: "bracket_id,game_id",
+  }
+);
 
   await supabase
     .from("games")

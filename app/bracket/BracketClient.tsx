@@ -2,7 +2,7 @@
 
 //ADDED FOR TESTING
 console.log("BracketClient hydrated");
-
+console.log("onPick is", onPick);
 
 type Team = {
   team_id: string;

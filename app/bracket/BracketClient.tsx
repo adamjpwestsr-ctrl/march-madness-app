@@ -1,6 +1,7 @@
+"use client";
+
 console.log("BracketClient hydrated");
 
-"use client";
 
 type Team = {
   team_id: string;

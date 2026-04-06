@@ -1,5 +1,7 @@
 "use client";
 
+import { useState, useEffect } from "react";
+
 type Team = {
   team_id: string;
   name: string;
@@ -23,6 +25,13 @@ type Pick = {
   selected_team: string;
 };
 
+const CHAMPIONSHIP_GAME_ID = 63;
+
+// ⭐ Bulldog SVG (inline)
+const BulldogIcon = () => (
+  <span className="ml-1 text-lg leading-none">🐶</span>
+);
+
 export default function BracketClient({
   bracket,
   games,
@@ -36,21 +45,31 @@ export default function BracketClient({
   onPick: (gameId: number, teamId: string) => void;
   onReset: () => void;
 }) {
-  console.log("BracketClient hydrated");
-  console.log("onPick is", onPick);
+  const [localPicks, setLocalPicks] = useState(picks);
+  const [tiebreaker, setTiebreaker] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  // ⭐ Correct pick lookup
+  // Sync local picks when server refreshes
+  useEffect(() => {
+    setLocalPicks(picks);
+  }, [picks]);
+
   const getSelectedTeamId = (game: Game): string | null => {
-    const pick = picks.find((p) => p.game_id === game.game_id);
+    const pick = localPicks.find((p) => p.game_id === game.game_id);
     return pick ? pick.selected_team : null;
   };
 
-  // Group games by region
-  const gamesByRegion: Record<string, Game[]> = {};
-  games.forEach((g) => {
-    if (!gamesByRegion[g.region]) gamesByRegion[g.region] = [];
-    gamesByRegion[g.region].push(g);
-  });
+  // ⭐ Instant UI update wrapper
+  const handlePick = (gameId: number, teamId: string) => {
+    // Update local picks immediately
+    setLocalPicks((prev) => {
+      const filtered = prev.filter((p) => p.game_id !== gameId);
+      return [...filtered, { bracket_id: bracket.bracket_id, game_id: gameId, selected_team: teamId }];
+    });
+
+    // Trigger backend
+    onPick(gameId, teamId);
+  };
 
   const renderTeamButton = (
     game: Game,
@@ -67,11 +86,20 @@ export default function BracketClient({
 
     const isSelected = selectedTeamId === team.team_id;
 
+    // Determine underdog
+    let isUnderdog = false;
+    if (game.team1 && game.team2 && isSelected) {
+      const opponent = team.team_id === game.team1.team_id ? game.team2 : game.team1;
+      if (team.seed !== null && opponent?.seed !== null) {
+        isUnderdog = team.seed > opponent.seed;
+      }
+    }
+
     return (
       <button
         type="button"
         form="__none__"
-        onClick={() => onPick(game.game_id, team.team_id)}
+        onClick={() => handlePick(game.game_id, team.team_id)}
         className={`flex items-center justify-between px-2 py-1 rounded text-xs border transition
           ${
             isSelected
@@ -79,9 +107,10 @@ export default function BracketClient({
               : "bg-slate-900/60 border-slate-600 text-slate-100 hover:bg-slate-700/80"
           }`}
       >
-        <span className="mr-2 text-slate-300">
+        <span className="mr-2 text-slate-300 flex items-center">
           {team.seed !== null ? `${team.seed}. ` : ""}
           {team.name}
+          {isUnderdog && <BulldogIcon />}
         </span>
       </button>
     );
@@ -105,6 +134,12 @@ export default function BracketClient({
         return `Round ${round}`;
     }
   };
+
+  const gamesByRegion: Record<string, Game[]> = {};
+  games.forEach((g) => {
+    if (!gamesByRegion[g.region]) gamesByRegion[g.region] = [];
+    gamesByRegion[g.region].push(g);
+  });
 
   const renderRegion = (region: string) => {
     const regionGames = (gamesByRegion[region] || []).slice().sort((a, b) => a.round - b.round);
@@ -132,6 +167,40 @@ export default function BracketClient({
                   >
                     {renderTeamButton(game, game.team1, selectedTeamId)}
                     {renderTeamButton(game, game.team2, selectedTeamId)}
+
+                    {/* ⭐ Tiebreaker UI under Championship */}
+                    {game.game_id === CHAMPIONSHIP_GAME_ID && (
+                      <div className="mt-2 flex flex-col gap-2">
+                        <input
+                          type="number"
+                          placeholder="Championship total points tiebreaker"
+                          value={tiebreaker}
+                          onChange={(e) => setTiebreaker(e.target.value)}
+                          className="px-2 py-1 text-xs bg-slate-900/60 border border-slate-600 rounded text-slate-200"
+                        />
+
+                        <button
+                          disabled={submitting}
+                          onClick={async () => {
+                            setSubmitting(true);
+                            const res = await fetch("/api/bracket/submit", {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({
+                                bracketId: bracket.bracket_id,
+                                tiebreaker: Number(tiebreaker),
+                              }),
+                            });
+                            setSubmitting(false);
+                            if (res.ok) alert("Bracket submitted!");
+                            else alert("Submission failed");
+                          }}
+                          className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs"
+                        >
+                          {submitting ? "Submitting..." : "Submit Bracket"}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 );
               })}

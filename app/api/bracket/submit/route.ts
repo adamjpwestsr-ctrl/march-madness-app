@@ -71,9 +71,25 @@ export async function POST(req: Request) {
   }
 
   // -----------------------------
-  // VALIDATE CHAMPION PICK
+  // FIXED: VALIDATE CHAMPION PICK
   // -----------------------------
-  const championshipPick = picks.find((p: any) => p.round === 6);
+  const { data: champGame, error: champErr } = await supabase
+    .from("games")
+    .select("game_id")
+    .eq("round", 6)
+    .single();
+
+  if (champErr || !champGame) {
+    return NextResponse.json(
+      { error: "Championship game not found" },
+      { status: 500 }
+    );
+  }
+
+  const championshipPick = picks.find(
+    (p: any) => p.game_id === champGame.game_id
+  );
+
   if (!championshipPick || !championshipPick.selected_team) {
     return NextResponse.json(
       { error: "Champion pick is required" },
@@ -153,9 +169,6 @@ export async function POST(req: Request) {
     if (!game?.next_game_id) continue;
 
     const nextGameId = game.next_game_id;
-
-    const slot =
-      game.slot === 1 || game.slot === "1" ? "team1" : "team2";
 
     await supabase
       .from("picks")

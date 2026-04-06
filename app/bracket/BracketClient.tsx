@@ -27,7 +27,7 @@ type Pick = {
 
 const CHAMPIONSHIP_GAME_ID = 63;
 
-// ⭐ Bulldog SVG (inline)
+// ⭐ Bulldog icon
 const BulldogIcon = () => (
   <span className="ml-1 text-lg leading-none">🐶</span>
 );
@@ -36,6 +36,28 @@ const BulldogIcon = () => (
 const CrownIcon = () => (
   <span className="ml-1 text-base leading-none">👑</span>
 );
+
+// ⭐ Legend Component
+function BracketLegend() {
+  return (
+    <div className="flex flex-wrap gap-4 text-xs text-slate-300 bg-slate-800/60 border border-slate-700 rounded-md px-3 py-2">
+      <div className="flex items-center gap-1">
+        <span className="text-base">👑</span>
+        <span>Champion Pick</span>
+      </div>
+
+      <div className="flex items-center gap-1">
+        <span className="text-base">🐶</span>
+        <span>Underdog (higher seed beats lower seed)</span>
+      </div>
+
+      <div className="flex items-center gap-1 opacity-70">
+        <span className="text-base">🍀</span>
+        <span>Mulligan (coming soon)</span>
+      </div>
+    </div>
+  );
+}
 
 export default function BracketClient({
   bracket,
@@ -62,7 +84,7 @@ export default function BracketClient({
     setLocalPicks(picks);
   }, [picks]);
 
-  // Fetch lock date and compute locked state
+  // Fetch lock date
   useEffect(() => {
     async function loadLockDate() {
       try {
@@ -78,7 +100,6 @@ export default function BracketClient({
           setIsLocked(false);
         }
       } catch {
-        // If lock date fails to load, default to unlocked
         setIsLocked(false);
       }
     }
@@ -90,7 +111,7 @@ export default function BracketClient({
     return pick ? pick.selected_team : null;
   };
 
-  // ⭐ Instant UI update wrapper (respects lock)
+  // ⭐ Instant UI update wrapper
   const handlePick = (gameId: number, teamId: string) => {
     if (isLocked) return;
 
@@ -130,9 +151,7 @@ export default function BracketClient({
       }
     }
 
-    // Champion highlight
-    const isChampionshipGame = game.game_id === CHAMPIONSHIP_GAME_ID;
-    const isChampion = isChampionshipGame && isSelected;
+    const isChampion = game.game_id === CHAMPIONSHIP_GAME_ID && isSelected;
 
     return (
       <button
@@ -241,6 +260,7 @@ export default function BracketClient({
 
                             setSubmitting(true);
                             setSubmittedBanner("");
+
                             const res = await fetch("/api/bracket/submit", {
                               method: "POST",
                               headers: { "Content-Type": "application/json" },
@@ -250,6 +270,7 @@ export default function BracketClient({
                                 picks: localPicks,
                               }),
                             });
+
                             setSubmitting(false);
 
                             if (res.ok) {
@@ -258,7 +279,8 @@ export default function BracketClient({
                             } else {
                               const data = await res.json().catch(() => null);
                               alert(
-                                data?.error || "Submission failed. Please try again."
+                                data?.error ||
+                                  "Submission failed. Please try again."
                               );
                             }
                           }}
@@ -305,6 +327,10 @@ export default function BracketClient({
         )}
       </div>
 
+      {/* ⭐ Legend */}
+      <BracketLegend />
+
+      {/* Reset button */}
       <button
         type="button"
         form="__none__"
@@ -317,6 +343,7 @@ export default function BracketClient({
         Reset Bracket
       </button>
 
+      {/* Bracket layout */}
       <div className="flex gap-4 overflow-x-auto">
         <div className="flex flex-col gap-6 min-w-[480px]">
           <div>

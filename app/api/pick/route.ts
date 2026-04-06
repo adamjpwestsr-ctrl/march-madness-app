@@ -14,19 +14,19 @@ export async function POST(req: Request) {
 
   const { bracketId, gameId, teamId } = await req.json();
 
-  // 1. Get user_id
-const { data: bracket, error: bracketErr } = await supabase
-  .from("brackets")
-  .select("user_id")
-  .eq("bracket_id", bracketId)
-  .single();
+  // 1. Get user_id for this bracket
+  const { data: bracket, error: bracketErr } = await supabase
+    .from("brackets")
+    .select("user_id")
+    .eq("bracket_id", bracketId)
+    .single();
 
-if (bracketErr || !bracket) {
-  console.error("Bracket lookup failed:", bracketErr);
-  return NextResponse.json({ error: "Bracket not found" }, { status: 400 });
-}
+  if (bracketErr || !bracket) {
+    console.error("Bracket lookup failed:", bracketErr);
+    return NextResponse.json({ error: "Bracket not found" }, { status: 400 });
+  }
 
-const userId = bracket.user_id!;
+  const userId = bracket.user_id!;
 
   // 2. Save pick
   await supabase.from("picks").upsert(
@@ -39,13 +39,13 @@ const userId = bracket.user_id!;
     { onConflict: "bracket_id,game_id" }
   );
 
-  // 3. Update winner
+  // 3. Update winner for this game
   await supabase
     .from("games")
     .update({ winner: teamId })
     .eq("game_id", gameId);
 
-  // 4. Load current game
+  // 4. Load the current game
   const { data: currentGame } = await supabase
     .from("games")
     .select("*")
@@ -54,29 +54,29 @@ const userId = bracket.user_id!;
 
   if (!currentGame) return NextResponse.json({ success: true });
 
-  // 5. Determine next game based on schema
-  const nextGameId =
-    currentGame.source_game1 || currentGame.source_game2 || null;
-
-  if (!nextGameId) return NextResponse.json({ success: true });
-
+  // 5. Find the NEXT game (the one that depends on THIS game)
   const { data: nextGame } = await supabase
     .from("games")
     .select("*")
-    .eq("game_id", nextGameId)
+    .or(`source_game1.eq.${gameId},source_game2.eq.${gameId}`)
     .single();
 
-  if (!nextGame) return NextResponse.json({ success: true });
+  if (!nextGame) {
+    // No next game → end of bracket path
+    return NextResponse.json({ success: true });
+  }
 
-  // 6. Update correct slot
+  const nextGameId = nextGame.game_id;
+
+  // 6. Update the correct slot in the next game
   const updateFields: any = {};
 
-  if (nextGame.source_game1 === currentGame.game_id) {
+  if (nextGame.source_game1 === gameId) {
     updateFields.team1 = teamId;
     updateFields.seed1 = null;
   }
 
-  if (nextGame.source_game2 === currentGame.game_id) {
+  if (nextGame.source_game2 === gameId) {
     updateFields.team2 = teamId;
     updateFields.seed2 = null;
   }
@@ -88,7 +88,7 @@ const userId = bracket.user_id!;
       .eq("game_id", nextGameId);
   }
 
-  // 7. Clear downstream
+  // 7. Clear downstream games recursively
   async function clearDownstream(id: number) {
     const { data: g } = await supabase
       .from("games")
@@ -98,6 +98,7 @@ const userId = bracket.user_id!;
 
     if (!g) return;
 
+    // Clear winner + picks
     await supabase.from("games").update({ winner: null }).eq("game_id", id);
 
     await supabase
@@ -106,8 +107,16 @@ const userId = bracket.user_id!;
       .eq("game_id", id)
       .eq("bracket_id", bracketId);
 
-    const nextId = g.source_game1 || g.source_game2 || null;
-    if (nextId) await clearDownstream(nextId);
+    // Find the next game that depends on THIS game
+    const { data: next } = await supabase
+      .from("games")
+      .select("*")
+      .or(`source_game1.eq.${id},source_game2.eq.${id}`)
+      .single();
+
+    if (next) {
+      await clearDownstream(next.game_id);
+    }
   }
 
   await clearDownstream(nextGameId);

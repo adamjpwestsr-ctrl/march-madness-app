@@ -8,69 +8,171 @@ export const runtime = "nodejs";
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-// ⭐ Set your lock date here
-const LOCK_DATE = new Date("2026-03-20T12:00:00Z"); // Example — adjust as needed
-
 export async function POST(req: Request) {
-  const { bracketId, tiebreaker } = await req.json();
+  const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
+    auth: { persistSession: false },
+  });
 
-  if (!bracketId || tiebreaker === undefined) {
-    return NextResponse.json({ error: "Missing fields" }, { status: 400 });
+  // -----------------------------
+  // AUTH: Read mm_session cookie
+  // -----------------------------
+  const cookieStore = await cookies();
+  const sessionCookie = cookieStore.get("mm_session");
+
+  if (!sessionCookie) {
+    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  // Check lock
-  const now = new Date();
-  if (now > LOCK_DATE) {
+  let session;
+  try {
+    session = JSON.parse(sessionCookie.value);
+  } catch {
+    return NextResponse.json({ error: "Invalid session" }, { status: 401 });
+  }
+
+  const userId = session.userId;
+  const isAdmin = session.isAdmin === true;
+
+  // -----------------------------
+  // Parse request body
+  // -----------------------------
+  const { bracketId, picks, tiebreaker } = await req.json();
+
+  if (!bracketId || !Array.isArray(picks)) {
+    return NextResponse.json(
+      { error: "Missing bracketId or picks" },
+      { status: 400 }
+    );
+  }
+
+  // -----------------------------
+  // FETCH LOCK DATE
+  // -----------------------------
+  const { data: settings } = await supabase
+    .from("settings")
+    .select("lock_date")
+    .eq("id", 1)
+    .single();
+
+  const lockDateUTC = settings?.lock_date
+    ? new Date(settings.lock_date)
+    : null;
+
+  const nowUTC = new Date();
+
+  // -----------------------------
+  // ENFORCE LOCK DATE (non-admin)
+  // -----------------------------
+  if (!isAdmin && lockDateUTC && nowUTC > lockDateUTC) {
     return NextResponse.json(
       { error: "Bracket submissions are locked" },
       { status: 403 }
     );
   }
 
-  // Read session cookie
-  const cookieStore = await cookies();
-  const session = cookieStore.get("mm_session");
-  if (!session) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
-  }
-
-  const { userId } = JSON.parse(session.value);
-
-  const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
-    auth: { persistSession: false },
-  });
-
-  // Validate bracket ownership
-  const { data: bracket } = await supabase
-    .from("brackets")
-    .select("user_id")
-    .eq("bracket_id", bracketId)
-    .single();
-
-  if (!bracket || bracket.user_id !== userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-  }
-
-  // Validate champion pick exists
-  const { data: champPick } = await supabase
-    .from("picks")
-    .select("*")
-    .eq("bracket_id", bracketId)
-    .eq("game_id", 63) // Championship game
-    .single();
-
-  if (!champPick) {
+  // -----------------------------
+  // VALIDATE CHAMPION PICK
+  // -----------------------------
+  const championshipPick = picks.find((p: any) => p.round === 6);
+  if (!championshipPick || !championshipPick.selected_team) {
     return NextResponse.json(
-      { error: "You must pick a champion before submitting" },
+      { error: "Champion pick is required" },
       { status: 400 }
     );
   }
 
-  // Save tiebreaker
-  await supabase
-    .from("brackets")
-    .update({ tiebreaker_score: tiebreaker })
-    .eq("bracket_id", bracketId);
+  // -----------------------------
+  // SAVE TIEBREAKER
+  // -----------------------------
+  if (typeof tiebreaker === "number") {
+    await supabase
+      .from("brackets")
+      .update({ tiebreaker })
+      .eq("bracket_id", bracketId);
+  }
 
+  // -----------------------------
+  // SAVE PICKS (UPSERT)
+  // -----------------------------
+  const formattedPicks = picks.map((p: any) => ({
+    bracket_id: bracketId,
+    game_id: p.game_id,
+    selected_team: p.selected_team,
+  }));
+
+  const { error: pickErr } = await supabase
+    .from("picks")
+    .upsert(formattedPicks, {
+      onConflict: "bracket_id,game_id",
+    });
+
+  if (pickErr) {
+    console.error("Pick save error:", pickErr);
+    return NextResponse.json(
+      { error: "Failed to save picks" },
+      { status: 500 }
+    );
+  }
+
+  // -----------------------------
+  // CLEAR DOWNSTREAM PICKS
+  // -----------------------------
+  const gameIds = picks.map((p: any) => p.game_id);
+
+  const { data: affectedGames } = await supabase
+    .from("games")
+    .select("*")
+    .in("game_id", gameIds);
+
+  if (affectedGames) {
+    const downstreamGameIds = affectedGames
+      .map((g) => g.next_game_id)
+      .filter(Boolean);
+
+    if (downstreamGameIds.length > 0) {
+      await supabase
+        .from("picks")
+        .delete()
+        .eq("bracket_id", bracketId)
+        .in("game_id", downstreamGameIds);
+    }
+  }
+
+  // -----------------------------
+  // PROPAGATE WINNERS TO NEXT ROUND
+  // -----------------------------
+  for (const p of picks) {
+    if (!p.selected_team) continue;
+
+    const { data: game } = await supabase
+      .from("games")
+      .select("*")
+      .eq("game_id", p.game_id)
+      .single();
+
+    if (!game?.next_game_id) continue;
+
+    const nextGameId = game.next_game_id;
+
+    const slot =
+      game.slot === 1 || game.slot === "1" ? "team1" : "team2";
+
+    await supabase
+      .from("picks")
+      .upsert(
+        [
+          {
+            bracket_id: bracketId,
+            game_id: nextGameId,
+            selected_team: p.selected_team,
+          },
+        ],
+        { onConflict: "bracket_id,game_id" }
+      );
+  }
+
+  // -----------------------------
+  // SUCCESS
+  // -----------------------------
   return NextResponse.json({ success: true });
 }

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { supabase } from "../../../lib/supabaseClient";
+import Link from "next/link";
 
 export default function ToolsClient() {
   const [loading, setLoading] = useState(false);
@@ -24,9 +25,7 @@ export default function ToolsClient() {
   // -----------------------------
 
   const generateChalkBracket = async () => {
-    // Highest seed always wins
     const { data: games } = await supabase.from("games").select("*");
-
     if (!games) return;
 
     const picks = games.map((g) => {
@@ -36,7 +35,7 @@ export default function ToolsClient() {
         (g.seed1 ?? 99) < (g.seed2 ?? 99) ? g.team1 : g.team2;
 
       return {
-        bracket_id: 999001, // admin chalk bracket
+        bracket_id: 999001,
         game_id: g.game_id,
         selected_team: winner,
       };
@@ -49,9 +48,7 @@ export default function ToolsClient() {
   };
 
   const generateUpsetBracket = async () => {
-    // Lower seed always wins
     const { data: games } = await supabase.from("games").select("*");
-
     if (!games) return;
 
     const picks = games.map((g) => {
@@ -61,7 +58,7 @@ export default function ToolsClient() {
         (g.seed1 ?? 99) > (g.seed2 ?? 99) ? g.team1 : g.team2;
 
       return {
-        bracket_id: 999002, // admin upset bracket
+        bracket_id: 999002,
         game_id: g.game_id,
         selected_team: winner,
       };
@@ -74,15 +71,13 @@ export default function ToolsClient() {
   };
 
   const generatePerfectBracket = async () => {
-    // Winner = actual game.winner
     const { data: games } = await supabase.from("games").select("*");
-
     if (!games) return;
 
     const picks = games
       .filter((g) => g.winner)
       .map((g) => ({
-        bracket_id: 999003, // admin perfect bracket
+        bracket_id: 999003,
         game_id: g.game_id,
         selected_team: g.winner,
       }));
@@ -275,6 +270,39 @@ export default function ToolsClient() {
           >
             Reset Tournament
           </button>
+        </div>
+
+        {/* ⭐ NEW: LOCK DATE SETTINGS */}
+        <div
+          style={{
+            background: "rgba(30,41,59,0.9)",
+            borderRadius: 12,
+            border: "1px solid rgba(148,163,184,0.35)",
+            padding: 16,
+            boxShadow: "0 10px 25px rgba(0,0,0,0.45)",
+          }}
+        >
+          <h2
+            style={{
+              fontSize: 18,
+              fontWeight: 700,
+              marginBottom: 12,
+            }}
+          >
+            Lock Date Settings
+          </h2>
+
+          <Link
+            href="/admin/tools/lock-date"
+            style={{
+              ...btn("#2563eb"),
+              display: "inline-block",
+              textDecoration: "none",
+              textAlign: "center",
+            }}
+          >
+            Open Lock Date Editor
+          </Link>
         </div>
       </div>
     </div>

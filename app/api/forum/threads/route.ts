@@ -8,7 +8,7 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 // ⭐ Correct typing: cookies() is synchronous in API routes
-function getServerClient(cookieStore: ReturnType<typeof cookies()>) {
+function getServerClient(cookieStore: ReturnType<typeof cookies>) {
   return createServerClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
     cookies: cookieStore,
   });

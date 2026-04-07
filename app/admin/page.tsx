@@ -5,7 +5,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createServerClient } from "@supabase/ssr";
 
-import AdminShell from "./AdminShell";
+import AdminClient from "./AdminClient";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -26,11 +26,15 @@ export default async function AdminPage() {
 
     if (!session.isAdmin) redirect("/bracket");
 
+    const email = session.email?.toLowerCase();
+    if (!email) redirect("/login");
+
+    // Create Edge-safe Supabase client
     const supabase = createServerClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
       cookies: () => cookieStore,
     });
 
-    // Load any admin data you need
+    // Example admin data load (optional)
     const { data: users, error } = await supabase
       .from("users")
       .select("user_id, email, is_admin, created_at")
@@ -38,7 +42,8 @@ export default async function AdminPage() {
 
     if (error) console.error("ADMIN LOAD ERROR:", error);
 
-    return <AdminShell users={users ?? []} />;
+    // Render the client component
+    return <AdminClient adminEmail={email} />;
   } catch (err) {
     console.error("ADMIN PAGE SSR ERROR:", err);
 

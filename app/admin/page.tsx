@@ -3,6 +3,8 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import AdminClient from "./AdminClient";
 
+export const runtime = "edge";
+
 export default async function AdminPage() {
   const cookieStore = await cookies();
   const sessionCookie = cookieStore.get("mm_session");

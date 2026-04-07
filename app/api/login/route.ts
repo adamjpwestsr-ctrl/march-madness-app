@@ -1,3 +1,12 @@
+console.log("LOGIN SET COOKIE:", {
+  userId: adminUser?.user_id || user?.user_id,
+  email: normalizedEmail,
+  isAdmin: adminUser ? true : !!user?.is_admin,
+});
+
+console.log("HEADERS SENT:", Array.from(cookieStore.getAll()));
+
+
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createClient } from "@supabase/supabase-js";

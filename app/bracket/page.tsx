@@ -44,11 +44,7 @@ export default async function BracketPage({
 
     // SUPABASE CLIENT (EDGE-SAFE)
 const supabase = createServerClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
-  cookies: {
-    get: (name: string) => cookieStore.get(name),
-    set: () => {},
-    remove: () => {}
-  }
+  cookies: cookieStore
 });
 
     // LOAD BRACKETS BY EMAIL

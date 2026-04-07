@@ -1,18 +1,21 @@
+export const runtime = "edge";
+
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { createClient } from "@supabase/supabase-js";
+import { createServerClient } from "@supabase/ssr";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-function getServerClient() {
-  return createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
-    auth: { persistSession: false },
+function getServerClient(cookieStore: ReturnType<typeof cookies>) {
+  return createServerClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
+    cookies: () => cookieStore,
   });
 }
 
 export async function GET() {
-  const supabase = getServerClient();
+  const cookieStore = await cookies();
+  const supabase = getServerClient(cookieStore);
 
   const { data, error } = await supabase
     .from("forum_threads")
@@ -21,16 +24,19 @@ export async function GET() {
 
   if (error) {
     console.error("Thread GET error:", error);
-    return NextResponse.json({ error: "Failed to load threads" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to load threads" },
+      { status: 500 }
+    );
   }
 
   return NextResponse.json({ threads: data ?? [] });
 }
 
 export async function POST(req: Request) {
-  const supabase = getServerClient();
-
   const cookieStore = await cookies();
+  const supabase = getServerClient(cookieStore);
+
   const sessionCookie = cookieStore.get("mm_session");
   if (!sessionCookie) {
     return NextResponse.json({ error: "Not logged in" }, { status: 401 });
@@ -49,7 +55,6 @@ export async function POST(req: Request) {
   }
 
   const { title } = await req.json();
-
   if (!title || title.trim().length < 3) {
     return NextResponse.json({ error: "Title too short" }, { status: 400 });
   }
@@ -65,7 +70,10 @@ export async function POST(req: Request) {
 
   if (error) {
     console.error("Thread POST error:", error);
-    return NextResponse.json({ error: "Failed to create thread" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to create thread" },
+      { status: 500 }
+    );
   }
 
   return NextResponse.json({ thread: data });

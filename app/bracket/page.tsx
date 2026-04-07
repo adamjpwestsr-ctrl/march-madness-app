@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { createClient } from "@supabase/supabase-js/edge";
+import { createServerClient } from "@supabase/ssr";
 
 import BracketShell from "./BracketShell";
 import BracketSelectorShell from "./BracketSelectorShell";
@@ -43,8 +43,8 @@ export default async function BracketPage({
     if (!email) redirect("/login");
 
     // SUPABASE CLIENT (EDGE-SAFE)
-    const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
-      auth: { persistSession: false },
+    const supabase = createServerClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
+      cookies: () => cookieStore,
     });
 
     // LOAD BRACKETS BY EMAIL

@@ -1,18 +1,22 @@
+export const runtime = "edge";
+
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { createClient } from "@supabase/supabase-js";
+import { createServerClient } from "@supabase/ssr";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-function getServerClient() {
-  return createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
-    auth: { persistSession: false },
+function getServerClient(cookieStore: ReturnType<typeof cookies>) {
+  return createServerClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
+    cookies: () => cookieStore,
   });
 }
 
 export async function GET(req: Request) {
-  const supabase = getServerClient();
+  const cookieStore = await cookies();
+  const supabase = getServerClient(cookieStore);
+
   const { searchParams } = new URL(req.url);
   const threadId = searchParams.get("threadId");
 
@@ -47,9 +51,9 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const supabase = getServerClient();
-
   const cookieStore = await cookies();
+  const supabase = getServerClient(cookieStore);
+
   const sessionCookie = cookieStore.get("mm_session");
   if (!sessionCookie) {
     return NextResponse.json({ error: "Not logged in" }, { status: 401 });

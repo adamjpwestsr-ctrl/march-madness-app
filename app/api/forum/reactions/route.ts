@@ -8,6 +8,7 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 export async function POST(req: Request) {
+  // ⭐ Correct: cookies() is synchronous in API routes
   const cookieStore = cookies();
 
   const sessionCookie = cookieStore.get("mm_session");
@@ -32,7 +33,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Missing fields" }, { status: 400 });
   }
 
-  // EDGE-SAFE SUPABASE CLIENT
+  // ⭐ Correct Supabase SSR client signature
   const supabase = createServerClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
     cookies: cookieStore,
   });

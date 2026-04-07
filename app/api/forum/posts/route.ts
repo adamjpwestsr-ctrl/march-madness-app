@@ -7,13 +7,15 @@ import { createServerClient } from "@supabase/ssr";
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-function getServerClient(cookieStore: ReturnType<typeof cookies>) {
+// ⭐ Correct typing: cookies() is synchronous in API routes
+function getServerClient(cookieStore: ReturnType<typeof cookies()>) {
   return createServerClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
-cookies: cookieStore,
+    cookies: cookieStore,
   });
 }
 
 export async function GET(req: Request) {
+  // ⭐ Correct: DO NOT use await here
   const cookieStore = cookies();
   const supabase = getServerClient(cookieStore);
 
@@ -51,6 +53,7 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
+  // ⭐ Correct: DO NOT use await here
   const cookieStore = cookies();
   const supabase = getServerClient(cookieStore);
 

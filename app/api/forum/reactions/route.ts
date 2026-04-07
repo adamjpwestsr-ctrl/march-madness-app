@@ -34,7 +34,7 @@ export async function POST(req: Request) {
 
   // EDGE-SAFE SUPABASE CLIENT
   const supabase = createServerClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
-    cookies: () => cookieStore,
+    cookies: cookieStore,
   });
 
   const { error } = await supabase.from("forum_reactions").insert({

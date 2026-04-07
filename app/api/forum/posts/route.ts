@@ -9,7 +9,7 @@ const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 function getServerClient(cookieStore: ReturnType<typeof cookies>) {
   return createServerClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
-    cookies: () => cookieStore,
+cookies: cookieStore,
   });
 }
 

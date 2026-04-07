@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from "@supabase/supabase-js/edge";
 
 import BracketShell from "./BracketShell";
 import BracketSelectorShell from "./BracketSelectorShell";
@@ -42,7 +42,7 @@ export default async function BracketPage({
 
     if (!email) redirect("/login");
 
-    // SUPABASE CLIENT (SERVER-SAFE)
+    // SUPABASE CLIENT (EDGE-SAFE)
     const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
       auth: { persistSession: false },
     });
@@ -188,10 +188,9 @@ export default async function BracketPage({
           />
 
           <BracketShell
-  bracketId={activeBracket.bracket_id}
-  bracketName={activeBracket.bracket_name ?? "My Bracket"}
-/>
-
+            bracketId={activeBracket.bracket_id}
+            bracketName={activeBracket.bracket_name ?? "My Bracket"}
+          />
         </main>
       </div>
     );

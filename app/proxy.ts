@@ -27,7 +27,7 @@ export function middleware(req: NextRequest) {
       }
     } catch {
       const res = NextResponse.redirect(new URL("/login", req.url));
-      res.cookies.delete("mm_session", { path: "/" });
+      res.cookies.delete("mm_session");
       return res;
     }
   }

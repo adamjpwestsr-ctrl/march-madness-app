@@ -1,12 +1,13 @@
-console.log("MIDDLEWARE HIT:", req.nextUrl.pathname);
-console.log("COOKIE RAW:", req.cookies.get("mm_session"));
-
 export const runtime = "edge";
 
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export function middleware(req: NextRequest) {
+  // ⭐ LOGGING BLOCK — must be inside the function
+  console.log("MIDDLEWARE HIT:", req.nextUrl.pathname);
+  console.log("COOKIE RAW:", req.cookies.get("mm_session"));
+
   const sessionCookie = req.cookies.get("mm_session");
   const pathname = req.nextUrl.pathname;
 

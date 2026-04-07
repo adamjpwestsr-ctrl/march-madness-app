@@ -26,7 +26,6 @@ export function middleware(req: NextRequest) {
         return NextResponse.redirect(new URL("/bracket", req.url));
       }
     } catch {
-      // Bad cookie → clear it and redirect
       const res = NextResponse.redirect(new URL("/login", req.url));
       res.cookies.delete("mm_session", { path: "/" });
       return res;

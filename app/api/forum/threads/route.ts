@@ -15,7 +15,7 @@ function getServerClient(cookieStore: ReadonlyRequestCookies) {
 }
 
 export async function GET() {
-  const cookieStore: ReadonlyRequestCookies = cookies();
+  const cookieStore: ReadonlyRequestCookies = await cookies(); // ⭐ async required
   const supabase = getServerClient(cookieStore);
 
   const { data, error } = await supabase
@@ -35,7 +35,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const cookieStore: ReadonlyRequestCookies = cookies();
+  const cookieStore: ReadonlyRequestCookies = await cookies(); // ⭐ async required
   const supabase = getServerClient(cookieStore);
 
   const sessionCookie = cookieStore.get("mm_session");

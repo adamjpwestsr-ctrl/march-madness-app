@@ -8,7 +8,6 @@ import type { ReadonlyRequestCookies } from "next/dist/server/web/spec-extension
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-// ⭐ Turbopack-safe, correct typing
 function getServerClient(cookieStore: ReadonlyRequestCookies) {
   return createServerClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
     cookies: cookieStore,
@@ -16,7 +15,7 @@ function getServerClient(cookieStore: ReadonlyRequestCookies) {
 }
 
 export async function GET(req: Request) {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();   // ⭐ REQUIRED IN YOUR ENVIRONMENT
   const supabase = getServerClient(cookieStore);
 
   const { searchParams } = new URL(req.url);
@@ -24,8 +23,7 @@ export async function GET(req: Request) {
 
   const query = supabase
     .from("forum_posts")
-    .select(
-      `
+    .select(`
       id,
       email,
       message,
@@ -35,8 +33,7 @@ export async function GET(req: Request) {
         emoji,
         email
       )
-    `
-    )
+    `)
     .order("created_at", { ascending: true })
     .limit(200);
 
@@ -53,7 +50,7 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();   // ⭐ REQUIRED IN YOUR ENVIRONMENT
   const supabase = getServerClient(cookieStore);
 
   const sessionCookie = cookieStore.get("mm_session");

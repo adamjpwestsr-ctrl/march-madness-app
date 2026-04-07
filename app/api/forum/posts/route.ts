@@ -14,7 +14,7 @@ cookies: cookieStore,
 }
 
 export async function GET(req: Request) {
-  const cookieStore = await cookies();
+  const cookieStore = cookies();
   const supabase = getServerClient(cookieStore);
 
   const { searchParams } = new URL(req.url);
@@ -51,7 +51,7 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const cookieStore = await cookies();
+  const cookieStore = cookies();
   const supabase = getServerClient(cookieStore);
 
   const sessionCookie = cookieStore.get("mm_session");

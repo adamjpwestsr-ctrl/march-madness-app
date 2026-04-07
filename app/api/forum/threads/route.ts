@@ -14,7 +14,7 @@ function getServerClient(cookieStore: ReturnType<typeof cookies>) {
 }
 
 export async function GET() {
-  const cookieStore = await cookies();
+  const cookieStore = cookies();
   const supabase = getServerClient(cookieStore);
 
   const { data, error } = await supabase
@@ -34,7 +34,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const cookieStore = await cookies();
+  const cookieStore = cookies();
   const supabase = getServerClient(cookieStore);
 
   const sessionCookie = cookieStore.get("mm_session");

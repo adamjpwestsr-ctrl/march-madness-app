@@ -58,13 +58,14 @@ export async function POST(req: Request) {
       isAdmin: true,
     };
 
-    // ⭐ Edge-safe cookie write
+    // ⭐ Edge-safe cookie write with Vercel preview domain
     const res = NextResponse.json({ status: "admin" });
     res.cookies.set("mm_session", JSON.stringify(adminSession), {
       httpOnly: true,
       sameSite: "none",
       secure: true,
       path: "/",
+      domain: ".vercel.app", // ⭐ REQUIRED FOR PREVIEW URL COOKIES
     });
 
     return res;
@@ -90,7 +91,7 @@ export async function POST(req: Request) {
     isAdmin: !!user.is_admin,
   };
 
-  // ⭐ Edge-safe cookie write
+  // ⭐ Edge-safe cookie write with Vercel preview domain
   const res = NextResponse.json({
     status: "ok",
     isAdmin: !!user.is_admin,
@@ -101,6 +102,7 @@ export async function POST(req: Request) {
     sameSite: "none",
     secure: true,
     path: "/",
+    domain: ".vercel.app", // ⭐ REQUIRED FOR PREVIEW URL COOKIES
   });
 
   return res;

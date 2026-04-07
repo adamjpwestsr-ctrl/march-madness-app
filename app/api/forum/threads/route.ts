@@ -3,19 +3,19 @@ export const runtime = "edge";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
+import type { ReadonlyRequestCookies } from "next/dist/server/web/spec-extension/adapters/request-cookies";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-// ⭐ Correct typing: cookies() is synchronous in API routes
-function getServerClient(cookieStore: ReturnType<typeof cookies>) {
+function getServerClient(cookieStore: ReadonlyRequestCookies) {
   return createServerClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
     cookies: cookieStore,
   });
 }
 
 export async function GET() {
-  const cookieStore = cookies();
+  const cookieStore: ReadonlyRequestCookies = cookies();
   const supabase = getServerClient(cookieStore);
 
   const { data, error } = await supabase
@@ -35,7 +35,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const cookieStore = cookies();
+  const cookieStore: ReadonlyRequestCookies = cookies();
   const supabase = getServerClient(cookieStore);
 
   const sessionCookie = cookieStore.get("mm_session");

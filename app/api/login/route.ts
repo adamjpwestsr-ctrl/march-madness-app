@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { createClient } from "@supabase/supabase-js";
 
-export const dynamic = "force-dynamic"; // Prevent caching
+export const dynamic = "force-dynamic";
 export const runtime = "edge";
 
 const ADMINS = ["adamjpwestsr@gmail.com", "lfahearn@gmail.com"];
@@ -10,10 +9,7 @@ const ADMINS = ["adamjpwestsr@gmail.com", "lfahearn@gmail.com"];
 export async function POST(req: Request) {
   const { email, adminCode } = await req.json();
 
-  console.log("LOGIN REQUEST RECEIVED:", { email, adminCode });
-
   if (!email || typeof email !== "string") {
-    console.log("LOGIN ERROR: Missing email");
     return NextResponse.json({ error: "Email is required" }, { status: 400 });
   }
 
@@ -29,15 +25,11 @@ export async function POST(req: Request) {
   // ADMIN LOGIN FLOW
   // -----------------------------
   if (ADMINS.includes(normalizedEmail)) {
-    console.log("ADMIN LOGIN ATTEMPT:", normalizedEmail);
-
     if (!adminCode) {
-      console.log("ADMIN CODE REQUIRED");
       return NextResponse.json({ status: "needsAdminCode" });
     }
 
     if (adminCode !== "1234") {
-      console.log("INVALID ADMIN CODE");
       return NextResponse.json({ status: "invalidAdminCode" });
     }
 
@@ -48,9 +40,7 @@ export async function POST(req: Request) {
       .single();
 
     if (!adminUser) {
-      console.log("ADMIN USER NOT FOUND — CREATING NEW ADMIN");
-
-      const { data: newAdmin, error: newAdminErr } = await supabase
+      const { data: newAdmin } = await supabase
         .from("users")
         .insert({
           email: normalizedEmail,
@@ -58,11 +48,6 @@ export async function POST(req: Request) {
         })
         .select()
         .single();
-
-      if (newAdminErr) {
-        console.error("Admin creation error:", newAdminErr);
-        return NextResponse.json({ status: "error" });
-      }
 
       adminUser = newAdmin;
     }
@@ -73,26 +58,21 @@ export async function POST(req: Request) {
       isAdmin: true,
     };
 
-    console.log("LOGIN SET COOKIE (ADMIN):", adminSession);
-
-    const cookieStore = await cookies();
-    cookieStore.set("mm_session", JSON.stringify(adminSession), {
+    // ⭐ Edge-safe cookie write
+    const res = NextResponse.json({ status: "admin" });
+    res.cookies.set("mm_session", JSON.stringify(adminSession), {
       httpOnly: true,
       sameSite: "none",
       secure: true,
       path: "/",
     });
 
-    console.log("HEADERS SENT (ADMIN):", cookieStore.getAll());
-
-    return NextResponse.json({ status: "admin" });
+    return res;
   }
 
   // -----------------------------
   // NORMAL USER LOGIN FLOW
   // -----------------------------
-  console.log("NORMAL LOGIN ATTEMPT:", normalizedEmail);
-
   const { data: user } = await supabase
     .from("users")
     .select("*")
@@ -100,7 +80,6 @@ export async function POST(req: Request) {
     .single();
 
   if (!user) {
-    console.log("USER NOT FOUND — REQUESTING ACCESS:", normalizedEmail);
     await supabase.from("access_requests").insert({ email: normalizedEmail });
     return NextResponse.json({ status: "requested" });
   }
@@ -111,20 +90,18 @@ export async function POST(req: Request) {
     isAdmin: !!user.is_admin,
   };
 
-  console.log("LOGIN SET COOKIE (USER):", userSession);
+  // ⭐ Edge-safe cookie write
+  const res = NextResponse.json({
+    status: "ok",
+    isAdmin: !!user.is_admin,
+  });
 
-  const cookieStore = await cookies();
-  cookieStore.set("mm_session", JSON.stringify(userSession), {
+  res.cookies.set("mm_session", JSON.stringify(userSession), {
     httpOnly: true,
     sameSite: "none",
     secure: true,
     path: "/",
   });
 
-  console.log("HEADERS SENT (USER):", cookieStore.getAll());
-
-  return NextResponse.json({
-    status: "ok",
-    isAdmin: !!user.is_admin,
-  });
+  return res;
 }

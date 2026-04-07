@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { createClient } from "@supabase/supabase-js";
 
 export const dynamic = "force-dynamic"; // Prevent caching
+export const runtime = "edge";
 
 const ADMINS = ["adamjpwestsr@gmail.com", "lfahearn@gmail.com"];
 

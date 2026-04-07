@@ -6,7 +6,6 @@ console.log("LOGIN SET COOKIE:", {
 
 console.log("HEADERS SENT:", Array.from(cookieStore.getAll()));
 
-
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createClient } from "@supabase/supabase-js";
@@ -19,7 +18,10 @@ const ADMINS = ["adamjpwestsr@gmail.com", "lfahearn@gmail.com"];
 export async function POST(req: Request) {
   const { email, adminCode } = await req.json();
 
+  console.log("LOGIN REQUEST RECEIVED:", { email, adminCode });
+
   if (!email || typeof email !== "string") {
+    console.log("LOGIN ERROR: Missing email");
     return NextResponse.json({ error: "Email is required" }, { status: 400 });
   }
 
@@ -35,11 +37,15 @@ export async function POST(req: Request) {
   // ADMIN LOGIN FLOW
   // -----------------------------
   if (ADMINS.includes(normalizedEmail)) {
+    console.log("ADMIN LOGIN ATTEMPT:", normalizedEmail);
+
     if (!adminCode) {
+      console.log("ADMIN CODE REQUIRED");
       return NextResponse.json({ status: "needsAdminCode" });
     }
 
     if (adminCode !== "1234") {
+      console.log("INVALID ADMIN CODE");
       return NextResponse.json({ status: "invalidAdminCode" });
     }
 
@@ -50,6 +56,8 @@ export async function POST(req: Request) {
       .single();
 
     if (!adminUser) {
+      console.log("ADMIN USER NOT FOUND — CREATING NEW ADMIN");
+
       const { data: newAdmin, error: newAdminErr } = await supabase
         .from("users")
         .insert({
@@ -67,22 +75,23 @@ export async function POST(req: Request) {
       adminUser = newAdmin;
     }
 
-    // ⭐ MOBILE‑SAFE COOKIE
+    const adminSession = {
+      userId: adminUser!.user_id,
+      email: normalizedEmail,
+      isAdmin: true,
+    };
+
+    console.log("LOGIN SET COOKIE (ADMIN):", adminSession);
+
     const cookieStore = await cookies();
-    cookieStore.set(
-      "mm_session",
-      JSON.stringify({
-        userId: adminUser!.user_id,
-        email: normalizedEmail,
-        isAdmin: true,
-      }),
-      {
-        httpOnly: true,
-        sameSite: "none", // ⭐ REQUIRED for mobile
-        secure: true,     // ⭐ REQUIRED for HTTPS (Vercel)
-        path: "/",
-      }
-    );
+    cookieStore.set("mm_session", JSON.stringify(adminSession), {
+      httpOnly: true,
+      sameSite: "none",
+      secure: true,
+      path: "/",
+    });
+
+    console.log("HEADERS SENT (ADMIN):", cookieStore.getAll());
 
     return NextResponse.json({ status: "admin" });
   }
@@ -90,6 +99,8 @@ export async function POST(req: Request) {
   // -----------------------------
   // NORMAL USER LOGIN FLOW
   // -----------------------------
+  console.log("NORMAL LOGIN ATTEMPT:", normalizedEmail);
+
   const { data: user } = await supabase
     .from("users")
     .select("*")
@@ -97,26 +108,28 @@ export async function POST(req: Request) {
     .single();
 
   if (!user) {
+    console.log("USER NOT FOUND — REQUESTING ACCESS:", normalizedEmail);
     await supabase.from("access_requests").insert({ email: normalizedEmail });
     return NextResponse.json({ status: "requested" });
   }
 
-  // ⭐ MOBILE‑SAFE COOKIE
+  const userSession = {
+    userId: user.user_id,
+    email: user.email,
+    isAdmin: !!user.is_admin,
+  };
+
+  console.log("LOGIN SET COOKIE (USER):", userSession);
+
   const cookieStore = await cookies();
-  cookieStore.set(
-    "mm_session",
-    JSON.stringify({
-      userId: user.user_id,
-      email: user.email,
-      isAdmin: !!user.is_admin,
-    }),
-    {
-      httpOnly: true,
-      sameSite: "none", // ⭐ REQUIRED
-      secure: true,     // ⭐ REQUIRED
-      path: "/",
-    }
-  );
+  cookieStore.set("mm_session", JSON.stringify(userSession), {
+    httpOnly: true,
+    sameSite: "none",
+    secure: true,
+    path: "/",
+  });
+
+  console.log("HEADERS SENT (USER):", cookieStore.getAll());
 
   return NextResponse.json({
     status: "ok",

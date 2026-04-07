@@ -38,5 +38,5 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/bracket/:path*"],
+  matcher: ["/((?!_next|static|favicon.ico).*)"],
 };

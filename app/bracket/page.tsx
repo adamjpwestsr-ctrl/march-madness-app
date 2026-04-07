@@ -43,9 +43,13 @@ export default async function BracketPage({
     if (!email) redirect("/login");
 
     // SUPABASE CLIENT (EDGE-SAFE)
-    const supabase = createServerClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
-      cookies: () => cookieStore,
-    });
+const supabase = createServerClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
+  cookies: {
+    get: (name: string) => cookieStore.get(name),
+    set: () => {},
+    remove: () => {}
+  }
+});
 
     // LOAD BRACKETS BY EMAIL
     const { data: brackets, error } = await supabase

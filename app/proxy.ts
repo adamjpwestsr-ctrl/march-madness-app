@@ -1,28 +1,34 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
-export function middlewareHandler(req: NextRequest) {
-  const sessionCookie = req.cookies.get('mm_session');
+export function middleware(req: NextRequest) {
+  const sessionCookie = req.cookies.get("mm_session");
   const pathname = req.nextUrl.pathname;
 
   const isLoggedIn = !!sessionCookie;
-  const isAdminRoute = pathname.startsWith('/admin');
+  const isAdminRoute = pathname.startsWith("/admin");
+
+  // Allow login route always
+  if (pathname === "/login" || pathname.startsWith("/api/login")) {
+    return NextResponse.next();
+  }
 
   // Not logged in → redirect to login
-  if (!isLoggedIn && pathname !== '/login') {
-    return NextResponse.redirect(new URL('/login', req.url));
+  if (!isLoggedIn) {
+    return NextResponse.redirect(new URL("/login", req.url));
   }
 
   // Logged in but accessing admin without admin rights
-  if (isAdminRoute && isLoggedIn) {
+  if (isAdminRoute) {
     try {
       const parsed = JSON.parse(sessionCookie!.value);
       if (!parsed.isAdmin) {
-        return NextResponse.redirect(new URL('/bracket', req.url));
+        return NextResponse.redirect(new URL("/bracket", req.url));
       }
     } catch {
-      const res = NextResponse.redirect(new URL('/login', req.url));
-      res.cookies.delete('mm_session');
+      // Bad cookie → clear it and redirect
+      const res = NextResponse.redirect(new URL("/login", req.url));
+      res.cookies.delete("mm_session", { path: "/" });
       return res;
     }
   }
@@ -30,12 +36,6 @@ export function middlewareHandler(req: NextRequest) {
   return NextResponse.next();
 }
 
-export const GET = middlewareHandler;
-export const POST = middlewareHandler;
-export const PUT = middlewareHandler;
-export const PATCH = middlewareHandler;
-export const DELETE = middlewareHandler;
-
 export const config = {
-  matcher: ['/admin/:path*', '/bracket/:path*'],
+  matcher: ["/admin/:path*", "/bracket/:path*"],
 };

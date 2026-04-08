@@ -7,37 +7,35 @@ import AdminClient from "./AdminClient";
 
 export default async function AdminPage() {
   try {
-    const supabase = createSupabaseServerClient();
+const supabase = await createSupabaseServerClient();
 
-    // 1) Get Supabase auth user (session-based, no cookies you manage)
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+const {
+  data: { user },
+} = await supabase.auth.getUser();
 
-    if (!user) {
-      redirect("/login");
-    }
+if (!user) {
+  redirect("/login");
+}
 
-    const email = user.email?.toLowerCase();
-    if (!email) {
-      redirect("/login");
-    }
+const email = user.email?.toLowerCase();
+if (!email) {
+  redirect("/login");
+}
 
-    // 2) Check your own users table for admin flag
-    const { data: dbUser, error: dbError } = await supabase
-      .from("users")
-      .select("is_admin")
-      .eq("email", email)
-      .maybeSingle();
+const { data: dbUser, error: dbError } = await supabase
+  .from("users")
+  .select("is_admin")
+  .eq("email", email)
+  .maybeSingle();
 
-    if (dbError) {
-      console.error("ADMIN DB ERROR:", dbError);
-      redirect("/login");
-    }
+if (dbError) {
+  console.error("ADMIN DB ERROR:", dbError);
+  redirect("/login");
+}
 
-    if (!dbUser?.is_admin) {
-      redirect("/bracket");
-    }
+if (!dbUser?.is_admin) {
+  redirect("/bracket");
+}
 
     // 3) Optional: load admin data
     const { data: users, error } = await supabase

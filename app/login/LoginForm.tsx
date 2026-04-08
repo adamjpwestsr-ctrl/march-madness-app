@@ -18,31 +18,30 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
     if (onStepChange) onStepChange(step);
   }, [step, onStepChange]);
 
+  // -----------------------------
+  // EMAIL SUBMIT
+  // -----------------------------
   const handleEmailSubmit = async () => {
     if (!email) return;
 
     const res = await fetch("/api/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      credentials: "include", // ⭐ REQUIRED for cookies
-      body: JSON.stringify({ email }),
+      credentials: "include",
+      body: JSON.stringify({ email }), // ⭐ ONLY email here
     });
 
     const data = await res.json();
 
-    if (data.status === "needsAdminCode") {
-      setIsAdmin(true);
-      setStep("admin");
-      return;
-    }
-
-    if (data.status === "invalidAdminCode") {
-      setStep("error");
-      return;
-    }
-
     if (data.status === "requested") {
       setStep("requested");
+      return;
+    }
+
+    if (data.status === "needsAdminCode") {
+      // ⭐ Admin detected — but DO NOT ask for admin code yet
+      setIsAdmin(true);
+      setStep("choice");
       return;
     }
 
@@ -55,12 +54,18 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
     setStep("error");
   };
 
+  // -----------------------------
+  // ADMIN CODE VERIFY
+  // -----------------------------
   const handleAdminVerify = async () => {
     const res = await fetch("/api/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify({ email, adminCode }),
+      body: JSON.stringify({
+        email,
+        adminCode, // ⭐ Only sent here
+      }),
     });
 
     const data = await res.json();
@@ -74,6 +79,8 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
       setStep("error");
       return;
     }
+
+    setStep("error");
   };
 
   return (

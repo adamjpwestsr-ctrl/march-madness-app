@@ -4,8 +4,7 @@ export const dynamic = "force-dynamic";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
-
-import { toggleActive, togglePaid } from "./actions";
+import UserRow from "./UserRow";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -56,46 +55,7 @@ export default async function UsersAdminPage() {
 
           <tbody>
             {users?.map((u) => (
-              <tr
-                key={u.user_id}
-                className="border-b border-slate-800 hover:bg-slate-800/50"
-              >
-                <td className="py-3">{u.email}</td>
-
-                {/* ACTIVE TOGGLE */}
-                <td className="py-3">
-                  <form action={toggleActive}>
-                    <input type="hidden" name="userId" value={u.user_id} />
-                    <button
-                      type="submit"
-                      className={`px-3 py-1 rounded ${
-                        u.is_active
-                          ? "bg-green-600"
-                          : "bg-slate-700 hover:bg-slate-600"
-                      }`}
-                    >
-                      {u.is_active ? "Active" : "Inactive"}
-                    </button>
-                  </form>
-                </td>
-
-                {/* PAID TOGGLE */}
-                <td className="py-3">
-                  <form action={togglePaid}>
-                    <input type="hidden" name="userId" value={u.user_id} />
-                    <button
-                      type="submit"
-                      className={`px-3 py-1 rounded ${
-                        u.has_paid
-                          ? "bg-blue-600"
-                          : "bg-slate-700 hover:bg-slate-600"
-                      }`}
-                    >
-                      {u.has_paid ? "Paid" : "Unpaid"}
-                    </button>
-                  </form>
-                </td>
-              </tr>
+              <UserRow key={u.user_id} user={u} />
             ))}
           </tbody>
         </table>

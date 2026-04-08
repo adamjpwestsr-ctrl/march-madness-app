@@ -7,47 +7,41 @@ import AdminClient from "./AdminClient";
 
 export default async function AdminPage() {
   try {
-const supabase = await createSupabaseServerClient();
+    const supabase = await createSupabaseServerClient();
 
-const {
-  data: { user },
-} = await supabase.auth.getUser();
+    // 1) Get logged-in user
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-if (!user) {
-  redirect("/login");
-}
-
-const email = user.email?.toLowerCase();
-if (!email) {
-  redirect("/login");
-}
-
-const { data: dbUser, error: dbError } = await supabase
-  .from("users")
-  .select("is_admin")
-  .eq("email", email)
-  .maybeSingle();
-
-if (dbError) {
-  console.error("ADMIN DB ERROR:", dbError);
-  redirect("/login");
-}
-
-if (!dbUser?.is_admin) {
-  redirect("/bracket");
-}
-
-    // 3) Optional: load admin data
-    const { data: users, error } = await supabase
-      .from("users")
-      .select("user_id, email, is_admin, created_at")
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      console.error("ADMIN LOAD ERROR:", error);
+    if (!user) {
+      redirect("/login");
     }
 
+    const email = user.email?.toLowerCase();
+    if (!email) {
+      redirect("/login");
+    }
+
+    // 2) Check admin status in DB
+    const { data: dbUser, error: dbError } = await supabase
+      .from("users")
+      .select("is_admin")
+      .eq("email", email)
+      .maybeSingle();
+
+    if (dbError) {
+      console.error("ADMIN DB ERROR:", dbError);
+      redirect("/login");
+    }
+
+    if (!dbUser?.is_admin) {
+      redirect("/bracket");
+    }
+
+    // 3) Render admin client
     return <AdminClient adminEmail={email} />;
+
   } catch (err) {
     console.error("ADMIN PAGE SSR ERROR:", err);
 

@@ -56,7 +56,7 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
       const res = await verifyAdminCode(formData);
 
       if (res.status === "success") {
-        window.location.href = "/admin";
+        window.location.href = "/login/admin-options";
         return;
       }
 

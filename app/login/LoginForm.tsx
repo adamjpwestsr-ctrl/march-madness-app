@@ -78,10 +78,17 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
     <div className="space-y-4">
       {!needsAdminCode ? (
         <form onSubmit={handleEmailSubmit} className="space-y-4">
+          {/* EMAIL INPUT */}
           <input
             type="email"
             placeholder="Email address"
-            className="w-full border rounded px-3 py-2"
+            className="
+              w-full px-3 py-2 rounded-lg 
+              bg-slate-800 text-white placeholder-slate-400 
+              border border-slate-600 shadow-sm
+              focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500
+              transition-all duration-200
+            "
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             disabled={isPending}
@@ -89,20 +96,33 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
 
           {error && <p className="text-red-600 text-sm">{error}</p>}
 
+          {/* CONTINUE BUTTON */}
           <button
             type="submit"
             disabled={isPending}
-            className="w-full bg-emerald-600 text-white py-2 rounded hover:bg-emerald-700"
+            className="
+              w-full bg-emerald-600 text-white py-2 rounded-lg
+              hover:bg-emerald-500 hover:shadow-lg
+              transition-all duration-200 disabled:opacity-50
+            "
           >
             {isPending ? "Loading..." : "Continue"}
           </button>
         </form>
       ) : (
         <form onSubmit={handleAdminCodeSubmit} className="space-y-4">
+          {/* ADMIN CODE INPUT */}
           <input
             type="text"
             placeholder="Enter admin code"
-            className="w-full border rounded px-3 py-2"
+            className={`
+              w-full px-3 py-2 rounded-lg 
+              bg-slate-800 text-white placeholder-slate-400 
+              border border-slate-600 shadow-sm
+              focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500
+              transition-all duration-200
+              ${error === "Invalid admin code." ? "animate-shake" : ""}
+            `}
             value={adminCode}
             onChange={(e) => setAdminCode(e.target.value)}
             disabled={isPending}
@@ -110,14 +130,20 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
 
           {error && <p className="text-red-600 text-sm">{error}</p>}
 
+          {/* VERIFY BUTTON */}
           <button
             type="submit"
             disabled={isPending}
-            className="w-full bg-emerald-600 text-white py-2 rounded hover:bg-emerald-700"
+            className="
+              w-full bg-emerald-600 text-white py-2 rounded-lg
+              hover:bg-emerald-500 hover:shadow-lg
+              transition-all duration-200 disabled:opacity-50
+            "
           >
             {isPending ? "Verifying..." : "Verify Code"}
           </button>
 
+          {/* BACK BUTTON */}
           <button
             type="button"
             className="w-full text-sm text-gray-400 underline"

@@ -1,14 +1,13 @@
 "use server";
 
-import { createServerClient } from "@/lib/supabaseServerClient";
+import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 
 export async function loginWithEmail(formData: FormData) {
   const email = formData.get("email")?.toString().trim().toLowerCase();
   if (!email) return { status: "missingEmail" };
 
-  const supabase = createServerClient();
+  const supabase = await createSupabaseServerClient();
 
-  // 1. Look up user in your app's users table
   const { data: dbUser, error: userError } = await supabase
     .from("users")
     .select("user_id, email, is_admin, admin_code")
@@ -20,12 +19,10 @@ export async function loginWithEmail(formData: FormData) {
     return { status: "error" };
   }
 
-  // 2. If user is admin → require admin code step
   if (dbUser?.is_admin) {
     return { status: "needsAdminCode", email };
   }
 
-  // 3. Non-admin → send magic link
   const { error: magicError } = await supabase.auth.signInWithOtp({
     email,
     options: {
@@ -47,9 +44,8 @@ export async function verifyAdminCode(formData: FormData) {
 
   if (!email || !adminCode) return { status: "missingFields" };
 
-  const supabase = createServerClient();
+  const supabase = await createSupabaseServerClient();
 
-  // 1. Fetch admin from DB
   const { data: dbUser, error: userError } = await supabase
     .from("users")
     .select("user_id, email, is_admin, admin_code")
@@ -60,12 +56,10 @@ export async function verifyAdminCode(formData: FormData) {
     return { status: "notAdmin" };
   }
 
-  // 2. Validate per-admin code
   if (adminCode !== dbUser.admin_code) {
     return { status: "invalidAdminCode" };
   }
 
-  // 3. Log in admin using Supabase Auth (password = admin_code)
   const { error: authError } = await supabase.auth.signInWithPassword({
     email,
     password: adminCode,

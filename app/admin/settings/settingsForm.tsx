@@ -3,7 +3,13 @@
 import { useState, useTransition } from "react";
 import { updateAdminCode } from "./settingsActions";
 
-export default function AdminSettingsForm({ admins }) {
+type Admin = {
+  user_id: number;
+  email: string;
+  admin_code: string | null;
+};
+
+export default function AdminSettingsForm({ admins }: { admins: Admin[] }) {
   const [codes, setCodes] = useState(
     Object.fromEntries(admins.map((a) => [a.email, a.admin_code || ""]))
   );
@@ -11,7 +17,7 @@ export default function AdminSettingsForm({ admins }) {
   const [message, setMessage] = useState("");
   const [isPending, startTransition] = useTransition();
 
-  const handleSave = (email) => {
+  const handleSave = (email: string) => {
     const newCode = codes[email];
 
     startTransition(async () => {

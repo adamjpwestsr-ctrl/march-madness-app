@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabaseClient";
 
 type LoginFormProps = {
   onStepChange?: (step: string) => void;
@@ -22,41 +21,58 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
   const handleEmailSubmit = async () => {
     if (!email) return;
 
-    const { data, error } = await supabase
-      .from("users")
-      .select("is_admin")
-      .eq("email", email.toLowerCase())
-      .maybeSingle();
+    const res = await fetch("/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include", // ⭐ REQUIRED for cookies
+      body: JSON.stringify({ email }),
+    });
 
-    if (error) {
-      console.error(error);
+    const data = await res.json();
+
+    if (data.status === "needsAdminCode") {
+      setIsAdmin(true);
+      setStep("admin");
+      return;
+    }
+
+    if (data.status === "invalidAdminCode") {
       setStep("error");
       return;
     }
 
-    // ⭐ UNKNOWN USER → ADD TO pending_users
-    if (!data) {
-      await supabase.from("pending_users").upsert({
-        email: email.toLowerCase(),
-        status: "pending",
-      });
-
+    if (data.status === "requested") {
       setStep("requested");
       return;
     }
 
-    // Save admin flag
-    setIsAdmin(data.is_admin);
+    if (data.status === "ok") {
+      setIsAdmin(data.isAdmin);
+      setStep("choice");
+      return;
+    }
 
-    // BOTH admins and regular users go to the choice screen
-    setStep("choice");
+    setStep("error");
   };
 
-  const handleAdminVerify = () => {
-    if (adminCode === process.env.NEXT_PUBLIC_ADMIN_CODE) {
+  const handleAdminVerify = async () => {
+    const res = await fetch("/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ email, adminCode }),
+    });
+
+    const data = await res.json();
+
+    if (data.status === "admin") {
       window.location.href = "/admin";
-    } else {
+      return;
+    }
+
+    if (data.status === "invalidAdminCode") {
       setStep("error");
+      return;
     }
   };
 

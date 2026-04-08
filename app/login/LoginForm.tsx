@@ -1,177 +1,131 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabaseClient";
+import { useState, useTransition } from "react";
+import { loginWithEmail, verifyAdminCode } from "./actions";
 
-type LoginFormProps = {
-  onStepChange?: (step: string) => void;
-};
-
-export default function LoginForm({ onStepChange }: LoginFormProps) {
+export default function LoginForm({ onStepChange }) {
   const [email, setEmail] = useState("");
   const [adminCode, setAdminCode] = useState("");
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [step, setStep] = useState<
-    "email" | "choice" | "admin" | "pending" | "magicSent" | "error"
-  >("email");
+  const [needsAdminCode, setNeedsAdminCode] = useState(false);
+  const [error, setError] = useState("");
+  const [isPending, startTransition] = useTransition();
 
-  useEffect(() => {
-    if (onStepChange) onStepChange(step);
-  }, [step, onStepChange]);
+  const handleEmailSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
 
-  const handleEmailSubmit = async () => {
-    if (!email) return;
+    startTransition(async () => {
+      const formData = new FormData();
+      formData.append("email", email);
 
-    try {
-      const res = await fetch("/api/request-access", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
+      const res = await loginWithEmail(formData);
 
-      const data = await res.json();
-
-      if (data.status === "pending") {
-        setStep("pending");
+      if (res.status === "needsAdminCode") {
+        setNeedsAdminCode(true);
+        onStepChange?.("admin");
         return;
       }
 
-      if (data.status === "magicLinkSent") {
-        setStep("magicSent");
+      if (res.status === "magicLinkSent") {
+        setError("Magic link sent! Check your email.");
         return;
       }
 
-      if (data.status === "admin") {
-        setIsAdmin(true);
-        setStep("admin");
+      if (res.status === "missingEmail") {
+        setError("Please enter your email.");
         return;
       }
 
-      setStep("error");
-    } catch (e) {
-      console.error(e);
-      setStep("error");
-    }
+      setError("Something went wrong.");
+    });
   };
 
-  // Admins: skip magic link, use admin code as password
-  const handleAdminVerify = async () => {
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password: adminCode,
-      });
+  const handleAdminCodeSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
 
-      if (error || !data.session) {
-        console.error(error);
-        setStep("error");
+    startTransition(async () => {
+      const formData = new FormData();
+      formData.append("email", email);
+      formData.append("adminCode", adminCode);
+
+      const res = await verifyAdminCode(formData);
+
+      if (res.status === "success") {
+        window.location.href = "/admin";
         return;
       }
 
-      // Supabase session is now active
-      window.location.href = "/admin";
-    } catch (e) {
-      console.error(e);
-      setStep("error");
-    }
+      if (res.status === "invalidAdminCode") {
+        setError("Invalid admin code.");
+        return;
+      }
+
+      if (res.status === "notAdmin") {
+        setError("This email is not an admin.");
+        return;
+      }
+
+      setError("Something went wrong.");
+    });
   };
 
   return (
-    <div className="w-full">
-      {/* EMAIL STEP */}
-      {step === "email" && (
-        <>
+    <div className="space-y-4">
+      {!needsAdminCode ? (
+        <form onSubmit={handleEmailSubmit} className="space-y-4">
           <input
             type="email"
+            placeholder="Email address"
+            className="w-full border rounded px-3 py-2"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
-            className="w-full p-3 rounded-lg bg-slate-800 text-white border border-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            disabled={isPending}
           />
 
-          <button
-            onClick={handleEmailSubmit}
-            className="mt-6 w-full bg-emerald-500 py-3 rounded-lg text-white font-bold hover:bg-emerald-400 transition"
-          >
-            Continue
-          </button>
-        </>
-      )}
-
-      {/* CHOICE SCREEN (you can reuse later if needed) */}
-      {step === "choice" && (
-        <div className="flex flex-col space-y-4 mt-4">
-          <button
-            onClick={() => (window.location.href = "/bracket")}
-            className="w-full bg-emerald-500 py-3 rounded-lg text-white font-bold hover:bg-emerald-400 transition"
-          >
-            Enter Brackets
-          </button>
+          {error && <p className="text-red-600 text-sm">{error}</p>}
 
           <button
-            onClick={() => (window.location.href = "/leaderboard")}
-            className="w-full bg-slate-700 py-3 rounded-lg text-white font-bold hover:bg-slate-600 transition"
+            type="submit"
+            disabled={isPending}
+            className="w-full bg-emerald-600 text-white py-2 rounded hover:bg-emerald-700"
           >
-            View Leaderboard
+            {isPending ? "Loading..." : "Continue"}
           </button>
-
-          {isAdmin && (
-            <button
-              onClick={() => setStep("admin")}
-              className="w-full bg-indigo-500 py-3 rounded-lg text-white font-bold hover:bg-indigo-400 transition"
-            >
-              Admin Portal
-            </button>
-          )}
-        </div>
-      )}
-
-      {/* ADMIN CODE STEP */}
-      {step === "admin" && (
-        <>
+        </form>
+      ) : (
+        <form onSubmit={handleAdminCodeSubmit} className="space-y-4">
           <input
-            type="password"
+            type="text"
+            placeholder="Enter admin code"
+            className="w-full border rounded px-3 py-2"
             value={adminCode}
             onChange={(e) => setAdminCode(e.target.value)}
-            placeholder="Enter admin code"
-            className="w-full p-3 rounded-lg bg-slate-800 text-white border border-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            disabled={isPending}
           />
 
+          {error && <p className="text-red-600 text-sm">{error}</p>}
+
           <button
-            onClick={handleAdminVerify}
-            className="mt-6 w-full bg-emerald-500 py-3 rounded-lg text-white font-bold hover:bg-emerald-400 transition"
+            type="submit"
+            disabled={isPending}
+            className="w-full bg-emerald-600 text-white py-2 rounded hover:bg-emerald-700"
           >
-            Verify
+            {isPending ? "Verifying..." : "Verify Code"}
           </button>
 
           <button
-            onClick={() => setStep("email")}
-            className="mt-3 w-full text-slate-400 underline hover:text-slate-300"
+            type="button"
+            className="w-full text-sm text-gray-400 underline"
+            onClick={() => {
+              setNeedsAdminCode(false);
+              setAdminCode("");
+              onStepChange?.("email");
+            }}
           >
             Back
           </button>
-        </>
-      )}
-
-      {/* PENDING APPROVAL */}
-      {step === "pending" && (
-        <p className="text-center text-slate-300 mt-4">
-          Your email has been sent to the commissioners for approval.
-        </p>
-      )}
-
-      {/* MAGIC LINK SENT */}
-      {step === "magicSent" && (
-        <p className="text-center text-emerald-300 mt-4">
-          Check your email for a magic link to sign in.
-        </p>
-      )}
-
-      {/* ERROR */}
-      {step === "error" && (
-        <p className="text-center text-red-400 mt-4">
-          Something went wrong. Try again.
-        </p>
+        </form>
       )}
     </div>
   );

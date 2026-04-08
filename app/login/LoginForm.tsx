@@ -3,7 +3,11 @@
 import { useState, useTransition } from "react";
 import { loginWithEmail, verifyAdminCode } from "./actions";
 
-export default function LoginForm({ onStepChange }) {
+type LoginFormProps = {
+  onStepChange?: (step: string) => void;
+};
+
+export default function LoginForm({ onStepChange }: LoginFormProps) {
   const [email, setEmail] = useState("");
   const [adminCode, setAdminCode] = useState("");
   const [needsAdminCode, setNeedsAdminCode] = useState(false);

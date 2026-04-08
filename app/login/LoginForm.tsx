@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabaseClient";
 
 type LoginFormProps = {
   onStepChange?: (step: string) => void;
@@ -11,76 +12,68 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
   const [adminCode, setAdminCode] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
   const [step, setStep] = useState<
-    "email" | "choice" | "admin" | "requested" | "error"
+    "email" | "choice" | "admin" | "pending" | "magicSent" | "error"
   >("email");
 
   useEffect(() => {
     if (onStepChange) onStepChange(step);
   }, [step, onStepChange]);
 
-  // -----------------------------
-  // EMAIL SUBMIT
-  // -----------------------------
   const handleEmailSubmit = async () => {
     if (!email) return;
 
-    const res = await fetch("/api/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ email }), // ⭐ ONLY email here
-    });
+    try {
+      const res = await fetch("/api/request-access", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    if (data.status === "requested") {
-      setStep("requested");
-      return;
+      if (data.status === "pending") {
+        setStep("pending");
+        return;
+      }
+
+      if (data.status === "magicLinkSent") {
+        setStep("magicSent");
+        return;
+      }
+
+      if (data.status === "admin") {
+        setIsAdmin(true);
+        setStep("admin");
+        return;
+      }
+
+      setStep("error");
+    } catch (e) {
+      console.error(e);
+      setStep("error");
     }
-
-    if (data.status === "needsAdminCode") {
-      // ⭐ Admin detected — but DO NOT ask for admin code yet
-      setIsAdmin(true);
-      setStep("choice");
-      return;
-    }
-
-    if (data.status === "ok") {
-      setIsAdmin(data.isAdmin);
-      setStep("choice");
-      return;
-    }
-
-    setStep("error");
   };
 
-  // -----------------------------
-  // ADMIN CODE VERIFY
-  // -----------------------------
+  // Admins: skip magic link, use admin code as password
   const handleAdminVerify = async () => {
-    const res = await fetch("/api/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
-        adminCode, // ⭐ Only sent here
-      }),
-    });
+        password: adminCode,
+      });
 
-    const data = await res.json();
+      if (error || !data.session) {
+        console.error(error);
+        setStep("error");
+        return;
+      }
 
-    if (data.status === "admin") {
+      // Supabase session is now active
       window.location.href = "/admin";
-      return;
-    }
-
-    if (data.status === "invalidAdminCode") {
+    } catch (e) {
+      console.error(e);
       setStep("error");
-      return;
     }
-
-    setStep("error");
   };
 
   return (
@@ -105,7 +98,7 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
         </>
       )}
 
-      {/* CHOICE SCREEN */}
+      {/* CHOICE SCREEN (you can reuse later if needed) */}
       {step === "choice" && (
         <div className="flex flex-col space-y-4 mt-4">
           <button
@@ -137,7 +130,7 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
       {step === "admin" && (
         <>
           <input
-            type="text"
+            type="password"
             value={adminCode}
             onChange={(e) => setAdminCode(e.target.value)}
             placeholder="Enter admin code"
@@ -152,7 +145,7 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
           </button>
 
           <button
-            onClick={() => setStep("choice")}
+            onClick={() => setStep("email")}
             className="mt-3 w-full text-slate-400 underline hover:text-slate-300"
           >
             Back
@@ -160,10 +153,17 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
         </>
       )}
 
-      {/* REQUESTED APPROVAL */}
-      {step === "requested" && (
+      {/* PENDING APPROVAL */}
+      {step === "pending" && (
         <p className="text-center text-slate-300 mt-4">
           Your email has been sent to the commissioners for approval.
+        </p>
+      )}
+
+      {/* MAGIC LINK SENT */}
+      {step === "magicSent" && (
+        <p className="text-center text-emerald-300 mt-4">
+          Check your email for a magic link to sign in.
         </p>
       )}
 

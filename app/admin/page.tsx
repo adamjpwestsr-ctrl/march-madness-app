@@ -1,46 +1,53 @@
 export const runtime = "edge";
 export const dynamic = "force-dynamic";
 
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { createServerClient } from "@supabase/ssr";
-
+import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 import AdminClient from "./AdminClient";
-
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 export default async function AdminPage() {
   try {
-    const cookieStore = await cookies();
-    const sessionCookie = cookieStore.get("mm_session");
+    const supabase = createSupabaseServerClient();
 
-    if (!sessionCookie) redirect("/login");
+    // 1) Get Supabase auth user (session-based, no cookies you manage)
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-    let session;
-    try {
-      session = JSON.parse(sessionCookie.value);
-    } catch {
+    if (!user) {
       redirect("/login");
     }
 
-    if (!session.isAdmin) redirect("/bracket");
+    const email = user.email?.toLowerCase();
+    if (!email) {
+      redirect("/login");
+    }
 
-    const email = session.email?.toLowerCase();
-    if (!email) redirect("/login");
+    // 2) Check your own users table for admin flag
+    const { data: dbUser, error: dbError } = await supabase
+      .from("users")
+      .select("is_admin")
+      .eq("email", email)
+      .maybeSingle();
 
-    // ⭐ Correct Supabase SSR client with proper cookie adapter
-const supabase = createServerClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
-  cookies: cookieStore
-});
+    if (dbError) {
+      console.error("ADMIN DB ERROR:", dbError);
+      redirect("/login");
+    }
 
-    // Optional: load admin data
+    if (!dbUser?.is_admin) {
+      redirect("/bracket");
+    }
+
+    // 3) Optional: load admin data
     const { data: users, error } = await supabase
       .from("users")
       .select("user_id, email, is_admin, created_at")
       .order("created_at", { ascending: false });
 
-    if (error) console.error("ADMIN LOAD ERROR:", error);
+    if (error) {
+      console.error("ADMIN LOAD ERROR:", error);
+    }
 
     return <AdminClient adminEmail={email} />;
   } catch (err) {
@@ -49,7 +56,7 @@ const supabase = createServerClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
     return (
       <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center">
         <p className="text-red-400 text-lg">
-          Something went wrong loading the admin panel.
+          You sure you have admin credentials? Something went wrong and I doubt it was on us!
         </p>
       </div>
     );

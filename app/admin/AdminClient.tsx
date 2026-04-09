@@ -54,7 +54,9 @@ export default function AdminClient({ adminEmail }: { adminEmail: string }) {
           { href: "/admin/tools", label: "Bracket Tools & Simulations" },
           { href: "/admin/leaderboard", label: "Leaderboard Tools" },
 
-          // ⭐ NEW ITEM ADDED HERE
+          // ⭐ NEW TOOL ADDED HERE
+          { href: "/admin/tournament-setup", label: "Tournament Setup" },
+
           { href: "/admin/pending-users", label: "Pending Users" },
         ].map((item) => (
           <Link

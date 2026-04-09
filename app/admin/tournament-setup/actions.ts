@@ -1,7 +1,7 @@
 // app/admin/tournament-setup/actions.ts
 "use server";
 
-import { createClient } from "../../../lib/supabaseServerClient";
+import { createSupabaseServerClient } from "../../../lib/supabaseServerClient";
 
 const REGIONS = ["East", "West", "South", "Midwest"] as const;
 type Region = (typeof REGIONS)[number];
@@ -12,7 +12,7 @@ type RegionTeam = {
 };
 
 export async function saveRegionTeams(region: Region, teams: RegionTeam[]) {
-  const supabase = createClient();
+  const supabase = createSupabaseServerClient();
 
   await supabase.from("tournament_teams").delete().eq("region", region);
 
@@ -26,12 +26,12 @@ export async function saveRegionTeams(region: Region, teams: RegionTeam[]) {
 }
 
 export async function clearRegion(region: Region) {
-  const supabase = createClient();
+  const supabase = createSupabaseServerClient();
   await supabase.from("tournament_teams").delete().eq("region", region);
 }
 
 export async function loadRegionTeams(region: Region) {
-  const supabase = createClient();
+  const supabase = createSupabaseServerClient();
 
   const { data } = await supabase
     .from("tournament_teams")
@@ -43,7 +43,7 @@ export async function loadRegionTeams(region: Region) {
 }
 
 export async function generateBracket() {
-  const supabase = createClient();
+  const supabase = createSupabaseServerClient();
 
   const { data: teams, error: teamErr } = await supabase
     .from("tournament_teams")
@@ -54,9 +54,7 @@ export async function generateBracket() {
   for (const region of REGIONS) {
     const regionTeams = teams.filter((t: any) => t.region === region);
     if (regionTeams.length !== 16) {
-      return {
-        message: `Region ${region} must have exactly 16 teams.`,
-      };
+      return { message: `Region ${region} must have exactly 16 teams.` };
     }
   }
 
@@ -74,16 +72,7 @@ export async function generateBracket() {
     seed2,
     source_game1,
     source_game2,
-  }: {
-    round: number;
-    region: string;
-    team1: string | null;
-    seed1: number | null;
-    team2: string | null;
-    seed2: number | null;
-    source_game1: number | null;
-    source_game2: number | null;
-  }) => {
+  }: any) => {
     gameRows.push({
       game_id: gameId++,
       round,
@@ -131,7 +120,7 @@ export async function generateBracket() {
     }
   }
 
-  // ROUND 2 — 16 games (games 33–48)
+  // ROUND 2 — 16 games
   const round2Start = 1;
   for (let i = 0; i < 16; i++) {
     addGame({
@@ -146,7 +135,7 @@ export async function generateBracket() {
     });
   }
 
-  // SWEET 16 — 8 games (49–56)
+  // SWEET 16 — 8 games
   const round3Start = 33;
   for (let i = 0; i < 8; i++) {
     addGame({
@@ -161,7 +150,7 @@ export async function generateBracket() {
     });
   }
 
-  // ELITE 8 — 4 games (57–60)
+  // ELITE 8 — 4 games
   const round4Start = 49;
   for (let i = 0; i < 4; i++) {
     addGame({
@@ -176,7 +165,7 @@ export async function generateBracket() {
     });
   }
 
-  // FINAL FOUR — 2 games (61–62)
+  // FINAL FOUR — 2 games
   addGame({
     round: 5,
     region: "Final Four",
@@ -199,7 +188,7 @@ export async function generateBracket() {
     source_game2: 60,
   });
 
-  // CHAMPIONSHIP — 1 game (63)
+  // CHAMPIONSHIP — 1 game
   addGame({
     round: 6,
     region: "Championship",
@@ -217,7 +206,7 @@ export async function generateBracket() {
 }
 
 export async function publishTournament() {
-  const supabase = createClient();
+  const supabase = createSupabaseServerClient();
 
   const { data: games } = await supabase
     .from("games")
@@ -261,7 +250,7 @@ export async function publishTournament() {
 }
 
 export async function updateLockTime(lockTime: string) {
-  const supabase = createClient();
+  const supabase = createSupabaseServerClient();
 
   await supabase
     .from("tournament_settings")

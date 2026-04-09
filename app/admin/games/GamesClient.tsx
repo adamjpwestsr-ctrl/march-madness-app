@@ -161,8 +161,200 @@ export default function GamesClient() {
           gap: 12,
         }}
       >
+       <button
+  onClick={handleReload}
+  disabled={loading}
+  style={{
+    padding: "8px 16px",
+    borderRadius: 999,
+    border: "none",
+    cursor: loading ? "default" : "pointer",
+    background: "#1D4ED8",
+    color: "white",
+    fontWeight: 600,
+    fontSize: 14,
+    opacity: loading ? 0.7 : 1,
+  }}
+>
+  {loading ? "Resetting..." : "Reload Games"}
+</button>
+
+"use client";
+
+import { useEffect, useState } from "react";
+import { supabase } from "../../../lib/supabaseClient";
+
+type Game = {
+  game_id: number;
+  round: number;
+  region: string;
+  team1: string | null;
+  team2: string | null;
+  seed1: number | null;
+  seed2: number | null;
+  source_game1: number | null;
+  source_game2: number | null;
+  winner: string | null;
+};
+
+export default function GamesClient() {
+  const [games, setGames] = useState<Game[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchGames();
+  }, []);
+
+  const fetchGames = async () => {
+    setLoading(true);
+    setError(null);
+
+    const { data, error } = await supabase
+      .from("games")
+      .select("*")
+      .order("round", { ascending: true })
+      .order("game_id", { ascending: true });
+
+    if (error) {
+      console.error("Error loading games:", error);
+      setError("Failed to load games.");
+      setGames([]);
+      setLoading(false);
+      return;
+    }
+
+    setGames((data as Game[]) ?? []);
+    setLoading(false);
+  };
+
+  // ✅ NEW: Full tournament reset
+  const handleReload = async () => {
+    setLoading(true);
+    setError(null);
+
+    await supabase.rpc("reset_tournament");
+
+    await fetchGames(); // refresh UI
+    setLoading(false);
+  };
+
+  const setWinner = (gameId: number, winner: string | null) => {
+    setGames((prev) =>
+      prev.map((g) =>
+        g.game_id === gameId
+          ? {
+              ...g,
+              winner,
+            }
+          : g
+      )
+    );
+  };
+
+  const propagateWinners = (updatedGames: Game[]) => {
+    const gameMap: Record<number, Game> = {};
+    updatedGames.forEach((g) => (gameMap[g.game_id] = { ...g }));
+
+    Object.values(gameMap).forEach((game) => {
+      const winner = game.winner;
+      if (!winner) return;
+
+      Object.values(gameMap).forEach((nextGame) => {
+        if (nextGame.source_game1 === game.game_id) {
+          nextGame.team1 = winner;
+        }
+        if (nextGame.source_game2 === game.game_id) {
+          nextGame.team2 = winner;
+        }
+      });
+    });
+
+    return Object.values(gameMap);
+  };
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      setError(null);
+
+      const { error } = await supabase.from("games").upsert(
+        games.map((g) => ({
+          game_id: g.game_id,
+          winner: g.winner,
+          team1: g.team1,
+          team2: g.team2,
+        })),
+        { onConflict: "game_id" }
+      );
+
+      if (error) {
+        console.error("Error saving games:", error);
+        setError("Failed to save game results.");
+        setSaving(false);
+        return;
+      }
+
+      alert("Game results saved.");
+      setSaving(false);
+    } catch (err) {
+      console.error("Unexpected error:", err);
+      setError("Unexpected error while saving.");
+      setSaving(false);
+    }
+  };
+
+  const handleSetWinnerAndPropagate = (gameId: number, winner: string) => {
+    const updated = games.map((g) =>
+      g.game_id === gameId ? { ...g, winner } : g
+    );
+    const propagated = propagateWinners(updated);
+    setGames(propagated);
+  };
+
+  const groupedByRound: Record<number, Game[]> = {};
+  games.forEach((g) => {
+    if (!groupedByRound[g.round]) groupedByRound[g.round] = [];
+    groupedByRound[g.round].push(g);
+  });
+
+  const roundKeys = Object.keys(groupedByRound)
+    .map((r) => parseInt(r))
+    .sort((a, b) => a - b);
+
+  return (
+    <div
+      style={{
+        padding: 30,
+        fontFamily:
+          'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+        background: "#0f172a",
+        minHeight: "100vh",
+        color: "#e5e7eb",
+      }}
+    >
+      <h1
+        style={{
+          fontSize: 28,
+          fontWeight: 700,
+          marginBottom: 20,
+          textAlign: "center",
+        }}
+      >
+        Admin · Game Results
+      </h1>
+
+      <div
+        style={{
+          marginBottom: 20,
+          display: "flex",
+          justifyContent: "center",
+          gap: 12,
+        }}
+      >
         <button
-          onClick={fetchGames}
+          onClick={handleReload}
           disabled={loading}
           style={{
             padding: "8px 16px",
@@ -176,7 +368,7 @@ export default function GamesClient() {
             opacity: loading ? 0.7 : 1,
           }}
         >
-          {loading ? "Loading..." : "Reload Games"}
+          {loading ? "Resetting..." : "Reload Games"}
         </button>
 
         <button

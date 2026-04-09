@@ -1,15 +1,21 @@
 import { NextResponse } from "next/server";
-import { createSupabaseServerClient } from "../../lib/supabaseServerClient";
-
+import { createSupabaseServerClient } from "@/lib/supabaseServerClient.ts";
 
 export async function GET() {
   const supabase = createSupabaseServerClient();
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("tournament_settings")
     .select("*")
     .limit(1)
     .single();
+
+  if (error) {
+    return NextResponse.json(
+      { error: "Failed to load tournament settings." },
+      { status: 500 }
+    );
+  }
 
   return NextResponse.json({
     lock_time: data?.lock_time ?? null,

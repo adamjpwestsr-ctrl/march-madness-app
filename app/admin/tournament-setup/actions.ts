@@ -1,7 +1,7 @@
-// app/admin/tournament-setup/actions.ts
+//app/admin/tournament-settings/actions.ts
 "use server";
 
-import { createSupabaseServerClient } from "../../../lib/supabaseServerClient";
+import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 
 const REGIONS = ["East", "West", "South", "Midwest"] as const;
 type Region = (typeof REGIONS)[number];
@@ -12,7 +12,7 @@ type RegionTeam = {
 };
 
 export async function saveRegionTeams(region: Region, teams: RegionTeam[]) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
 
   await supabase.from("tournament_teams").delete().eq("region", region);
 
@@ -26,12 +26,12 @@ export async function saveRegionTeams(region: Region, teams: RegionTeam[]) {
 }
 
 export async function clearRegion(region: Region) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   await supabase.from("tournament_teams").delete().eq("region", region);
 }
 
 export async function loadRegionTeams(region: Region) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
 
   const { data } = await supabase
     .from("tournament_teams")
@@ -43,7 +43,7 @@ export async function loadRegionTeams(region: Region) {
 }
 
 export async function generateBracket() {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
 
   const { data: teams, error: teamErr } = await supabase
     .from("tournament_teams")
@@ -206,7 +206,7 @@ export async function generateBracket() {
 }
 
 export async function publishTournament() {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
 
   const { data: games } = await supabase
     .from("games")
@@ -250,7 +250,7 @@ export async function publishTournament() {
 }
 
 export async function updateLockTime(lockTime: string) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
 
   await supabase
     .from("tournament_settings")

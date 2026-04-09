@@ -1,7 +1,7 @@
 // app/admin/tournament-setup/actions.ts
 "use server";
 
-import { createClient } from "@/lib/supabaseServer";
+import { createClient } from "../../../lib/supabaseServerClient";
 
 const REGIONS = ["East", "West", "South", "Midwest"] as const;
 type Region = (typeof REGIONS)[number];

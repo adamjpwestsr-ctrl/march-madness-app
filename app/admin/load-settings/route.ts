@@ -1,6 +1,6 @@
 // app/api/admin/load-settings/route.ts
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabaseServer";
+import { createClient } from "../../../../lib/supabaseServerClient";
 
 export async function GET() {
   const supabase = createClient();

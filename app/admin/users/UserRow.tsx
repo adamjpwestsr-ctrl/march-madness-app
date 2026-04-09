@@ -4,7 +4,16 @@ import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toggleActive, togglePaid } from "./actions";
 
-export default function UserRow({ user }) {
+interface UserRowProps {
+  user: {
+    user_id: number;
+    email: string;
+    is_active: boolean;
+    has_paid: boolean;
+  };
+}
+
+export default function UserRow({ user }: UserRowProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 

@@ -100,3 +100,20 @@ export async function updateBracketIcon(formData: FormData) {
     .eq("bracket_id", bracketId)
     .eq("email", email);
 }
+// ⭐ SUBMIT BRACKET
+export async function submitBracket(formData: FormData) {
+  const bracketId = formData.get("bracketId")?.toString();
+  const tiebreaker = Number(formData.get("tiebreaker") ?? 0);
+
+  if (!bracketId) throw new Error("Missing bracketId");
+
+  await supabase.from("bracket_submissions").upsert({
+    bracket_id: bracketId,
+    tiebreaker,
+    submitted_at: new Date().toISOString(),
+    mulligans_used: 0,
+  });
+
+  // Optional: redirect back to bracket page
+  redirect(`/bracket?bid=${bracketId}`);
+}

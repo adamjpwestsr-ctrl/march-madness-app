@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import BracketClient from "./BracketClient";
+import { submitBracket } from "./actions"; // ⭐ ADD THIS IMPORT
 
 // -----------------------------
 // Types matching your API shape
@@ -125,6 +126,33 @@ export default function BracketShell({
         onPick={handlePick}
         onReset={handleReset}
       />
+
+      {/* ----------------------------- */}
+      {/* ⭐ SUBMIT BRACKET SECTION     */}
+      {/* ----------------------------- */}
+      <form
+        action={submitBracket}
+        className="mt-8 flex items-center gap-4 bg-slate-800 p-4 rounded-lg border border-slate-700"
+      >
+        <input type="hidden" name="bracketId" value={bracketId} />
+
+        <div className="flex flex-col">
+          <label className="text-sm text-slate-300 mb-1">Tiebreaker</label>
+          <input
+            type="number"
+            name="tiebreaker"
+            placeholder="Total points in championship game"
+            className="bg-slate-900 border border-slate-700 rounded px-3 py-2 text-slate-100 w-64"
+          />
+        </div>
+
+        <button
+          type="submit"
+          className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-white font-semibold shadow-lg"
+        >
+          Submit Bracket
+        </button>
+      </form>
     </div>
   );
 }

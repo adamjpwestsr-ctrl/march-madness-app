@@ -231,7 +231,7 @@ return (
     >
       {rounds.map((round) => {
         const roundGames = regionGames.filter((g) => g.round === round);
-
+	};
         return (
           <div
             key={`${region}-round-${round}`}
@@ -393,4 +393,3 @@ return (
     </div>
   );
 }
-</div>

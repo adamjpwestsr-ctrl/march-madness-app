@@ -2,8 +2,36 @@
 
 import { getTeamLogo } from "../../lib/getTeamLogo";
 import { submitBracket } from "./actions";
-import { useRef } from "react";
 
+// -----------------------------
+// INLINE TYPES (Option A)
+// -----------------------------
+type Team = {
+  team_id: string;
+  name: string;
+  seed: number | null;
+};
+
+type Game = {
+  game_id: number;
+  round: number;
+  region: string;
+  team1: Team | null;
+  team2: Team | null;
+  winner: string | null;
+  source_game1: number | null;
+  source_game2: number | null;
+};
+
+type Pick = {
+  bracket_id: string;
+  game_id: number;
+  selected_team: string;
+};
+
+// -----------------------------
+// PROPS
+// -----------------------------
 type ChampionshipViewProps = {
   bracket: { bracket_id: string };
   games: Game[];
@@ -17,6 +45,9 @@ type ChampionshipViewProps = {
   setView: (view: any) => void;
 };
 
+// -----------------------------
+// COMPONENT
+// -----------------------------
 export default function ChampionshipView({
   bracket,
   games,
@@ -44,7 +75,7 @@ export default function ChampionshipView({
     picks.find((p) => p.game_id === championshipGame.game_id)?.selected_team ||
     null;
 
-  const renderTeamButton = (team: any) => {
+  const renderTeamButton = (team: Team | null) => {
     if (!team) {
       return (
         <div className="text-xs text-slate-500 italic px-2 py-1 border border-dashed border-slate-700 rounded h-9 flex items-center">

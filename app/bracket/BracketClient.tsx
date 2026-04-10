@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import { submitBracket } from "./actions";
 import { getTeamLogo } from "../../lib/getTeamLogo";
+import RegionGrid from "./RegionGrid";
+
 
 // -----------------------------
 // TYPES

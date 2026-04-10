@@ -1,6 +1,5 @@
 "use client";
 
-import { Game, Pick } from "./types"; // Remove if not using shared types
 import { getTeamLogo } from "../../lib/getTeamLogo";
 
 type FinalFourViewProps = {

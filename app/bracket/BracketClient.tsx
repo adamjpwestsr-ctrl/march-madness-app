@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { submitBracket } from "../actions"; // ⭐ server action
+import { submitBracket } from "./actions"; // ⭐ server action
 import { useFormStatus } from "react-dom";
 
 type Team = {

@@ -1,4 +1,3 @@
-//app/admin/tournament-setup/TournamentSetupClient.tsx
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
@@ -225,13 +224,14 @@ export default function TournamentSetupClient() {
           >
             {/* LEFT INPUT */}
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              {/* Logo */}
               <LogoCircle team={teams[s1]} />
 
               <div style={{ flex: 1 }}>
                 <label style={{ fontSize: 14, opacity: 0.8 }}>#{s1}</label>
                 <input
-                  ref={(el) => (inputRefs.current[row][0] = el)}
+                  ref={(el) => {
+                    inputRefs.current[row][0] = el;
+                  }}
                   type="text"
                   value={teams[s1] || ""}
                   onChange={(e) => updateTeam(s1, e.target.value)}
@@ -279,7 +279,9 @@ export default function TournamentSetupClient() {
               <div style={{ flex: 1 }}>
                 <label style={{ fontSize: 14, opacity: 0.8 }}>#{s2}</label>
                 <input
-                  ref={(el) => (inputRefs.current[row][1] = el)}
+                  ref={(el) => {
+                    inputRefs.current[row][1] = el;
+                  }}
                   type="text"
                   value={teams[s2] || ""}
                   onChange={(e) => updateTeam(s2, e.target.value)}

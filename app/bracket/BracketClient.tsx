@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { submitBracket } from "./actions";
-import { getTeamLogo } from "@/utils/getTeamLogo";
+import { getTeamLogo } from "../../lib/getTeamLogo";
 
 type Team = {
   team_id: string;

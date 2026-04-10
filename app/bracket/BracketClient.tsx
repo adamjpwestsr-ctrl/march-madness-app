@@ -143,7 +143,6 @@ export default function BracketClient({
     gamesByRegion[g.region].push(g);
   });
 
-  // ⭐ REGION RENDERER WITH DIRECTION + LOGOS + FIXED WIDTHS
   const renderRegion = (region: string, dir: "ltr" | "rtl" = "ltr") => {
     const regionGames = (gamesByRegion[region] || [])
       .slice()
@@ -155,7 +154,6 @@ export default function BracketClient({
       (a, b) => a - b
     );
 
-    // Reverse for RTL (ESPN inward flow)
     if (dir === "rtl") {
       rounds = rounds.slice().reverse();
     }
@@ -203,13 +201,11 @@ export default function BracketClient({
             ${isChampion ? "ring-2 ring-yellow-400 shadow-[0_0_12px_rgba(250,204,21,0.8)]" : ""}
           `}
         >
-          {/* Direction-aware layout */}
           <div
-            className={`flex items-center gap-2 ${
-              dir === "rtl" ? "flex-row-reverse w-full justify-end" : "w-full"
+            className={`flex items-center gap-2 w-full ${
+              dir === "rtl" ? "flex-row-reverse justify-end" : ""
             }`}
           >
-            {/* Logo */}
             {logo && (
               <img
                 src={logo}
@@ -218,7 +214,12 @@ export default function BracketClient({
               />
             )}
 
-            {/* Team name */}
+            {team.seed !== null && (
+              <span className="text-xs font-bold text-slate-100">
+                {team.seed}
+              </span>
+            )}
+
             <span
               className={`flex-1 ${
                 dir === "rtl" ? "text-right" : "text-left"
@@ -228,11 +229,6 @@ export default function BracketClient({
               {isUnderdog && <BulldogIcon />}
               {isChampion && <CrownIcon />}
             </span>
-
-            {/* Seed */}
-            {team.seed !== null && (
-              <span className="text-slate-300">{team.seed}.</span>
-            )}
           </div>
         </button>
       );
@@ -297,6 +293,7 @@ export default function BracketClient({
                               fd.set("bracketId", bracket.bracket_id);
 
                               submitBracket(fd);
+                              setSubmittedBanner("Bracket submitted successfully.");
                             }}
                             className={`px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs
                               ${isLocked ? "opacity-60 cursor-not-allowed" : ""}
@@ -351,7 +348,13 @@ export default function BracketClient({
       <button
         type="button"
         form="__none__"
-        onClick={onReset}
+        onClick={() => {
+          if (isLocked) return;
+          onReset();
+          setLocalPicks([]);
+          setTiebreaker("");
+          setSubmittedBanner("");
+        }}
         disabled={isLocked}
         className={`self-start px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm
           ${isLocked ? "opacity-60 cursor-not-allowed" : ""}
@@ -361,9 +364,9 @@ export default function BracketClient({
       </button>
 
       {/* MAIN BRACKET LAYOUT */}
-      <div className="flex gap-4 overflow-x-auto pb-10">
+      <div className="flex gap-4 pb-10 w-full max-w-full overflow-x-hidden flex-wrap">
         {/* LEFT SIDE */}
-        <div className="flex flex-col gap-6 min-w-[480px]">
+        <div className="flex flex-col gap-6 flex-1 min-w-0">
           <div>
             <h3 className="text-base font-bold text-slate-100 mb-2 pl-2 border-l-4 border-emerald-500">
               East
@@ -379,7 +382,7 @@ export default function BracketClient({
         </div>
 
         {/* CENTER */}
-        <div className="flex flex-col justify-center gap-6 min-w-[320px]">
+        <div className="flex flex-col justify-center gap-6 flex-[0.8] min-w-0">
           <div>
             <h3 className="text-base font-bold text-slate-100 mb-2 pl-2 border-l-4 border-emerald-500">
               Final Four
@@ -395,7 +398,7 @@ export default function BracketClient({
         </div>
 
         {/* RIGHT SIDE */}
-        <div className="flex flex-col gap-6 min-w-[480px]">
+        <div className="flex flex-col gap-6 flex-1 min-w-0">
           <div dir="rtl">
             <h3 className="text-base font-bold text-slate-100 mb-2 pl-2 border-l-4 border-emerald-500 text-left">
               West

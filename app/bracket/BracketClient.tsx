@@ -383,7 +383,7 @@ export default function BracketClient({
         </div>
 
 {/* CENTER — Final Four + Championship */}
-<div className="flex flex-col justify-center gap-6 w-[360px] relative -top-32 left-[200px] z-10">
+<div className="flex flex-col justify-center gap-6 w-[360px] relative -top-38 left-[190px] z-10">
   <div>
     <h3 className="text-base font-bold text-slate-100 mb-2 pl-2 border-l-4 border-emerald-500">
       Final Four

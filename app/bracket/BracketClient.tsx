@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { submitBracket } from "../actions"; // ⭐ server action
+import { useFormStatus } from "react-dom";
 
 type Team = {
   team_id: string;
@@ -14,7 +16,7 @@ type Game = {
   region: string;
   team1: Team | null;
   team2: Team | null;
-  winner_team_id: string | null;
+  winner: string | null;
   source_game1: number | null;
   source_game2: number | null;
 };
@@ -27,17 +29,10 @@ type Pick = {
 
 const CHAMPIONSHIP_GAME_ID = 63;
 
-// ⭐ Bulldog icon
-const BulldogIcon = () => (
-  <span className="ml-1 text-lg leading-none">🐶</span>
-);
+// Icons
+const BulldogIcon = () => <span className="ml-1 text-lg leading-none">🐶</span>;
+const CrownIcon = () => <span className="ml-1 text-base leading-none">👑</span>;
 
-// ⭐ Champion crown
-const CrownIcon = () => (
-  <span className="ml-1 text-base leading-none">👑</span>
-);
-
-// ⭐ Legend Component
 function BracketLegend() {
   return (
     <div className="flex flex-wrap gap-4 text-xs text-slate-300 bg-slate-800/60 border border-slate-700 rounded-md px-3 py-2">
@@ -74,17 +69,19 @@ export default function BracketClient({
 }) {
   const [localPicks, setLocalPicks] = useState(picks);
   const [tiebreaker, setTiebreaker] = useState("");
-  const [submitting, setSubmitting] = useState(false);
   const [submittedBanner, setSubmittedBanner] = useState("");
   const [lockDate, setLockDate] = useState<string | null>(null);
   const [isLocked, setIsLocked] = useState(false);
 
-  // Sync local picks when server refreshes
+  // Hidden form ref for server action submit
+  const formRef = useRef<HTMLFormElement | null>(null);
+
+  // Sync local picks
   useEffect(() => {
     setLocalPicks(picks);
   }, [picks]);
 
-  // Fetch lock date
+  // Load lock date
   useEffect(() => {
     async function loadLockDate() {
       try {
@@ -111,7 +108,6 @@ export default function BracketClient({
     return pick ? pick.selected_team : null;
   };
 
-  // ⭐ Instant UI update wrapper
   const handlePick = (gameId: number, teamId: string) => {
     if (isLocked) return;
 
@@ -141,7 +137,6 @@ export default function BracketClient({
 
     const isSelected = selectedTeamId === team.team_id;
 
-    // Determine underdog
     let isUnderdog = false;
     if (game.team1 && game.team2 && isSelected) {
       const opponent =
@@ -204,18 +199,30 @@ export default function BracketClient({
     gamesByRegion[g.region].push(g);
   });
 
-  const renderRegion = (region: string) => {
+  //
+  // ⭐ REGION RENDERER WITH DIRECTION SUPPORT
+  //
+  const renderRegion = (region: string, direction: "ltr" | "rtl" = "ltr") => {
     const regionGames = (gamesByRegion[region] || [])
       .slice()
       .sort((a, b) => a.round - b.round);
+
     if (!regionGames.length) return null;
 
-    const rounds = Array.from(new Set(regionGames.map((g) => g.round))).sort(
+    let rounds = Array.from(new Set(regionGames.map((g) => g.round))).sort(
       (a, b) => a - b
     );
 
+    if (direction === "rtl") {
+      rounds = rounds.slice().reverse();
+    }
+
     return (
-      <div className="flex gap-4">
+      <div
+        className={`flex gap-4 ${
+          direction === "rtl" ? "flex-row-reverse" : "flex-row"
+        }`}
+      >
         {rounds.map((round) => {
           const roundGames = regionGames.filter((g) => g.round === round);
           return (
@@ -226,8 +233,10 @@ export default function BracketClient({
               <div className="text-xs font-semibold text-slate-400 mb-1">
                 {roundLabel(round)}
               </div>
+
               {roundGames.map((game) => {
                 const selectedTeamId = getSelectedTeamId(game);
+
                 return (
                   <div
                     key={game.game_id}
@@ -236,7 +245,7 @@ export default function BracketClient({
                     {renderTeamButton(game, game.team1, selectedTeamId)}
                     {renderTeamButton(game, game.team2, selectedTeamId)}
 
-                    {/* ⭐ Tiebreaker + Submit under Championship */}
+                    {/* ⭐ Championship Submit */}
                     {game.game_id === CHAMPIONSHIP_GAME_ID && (
                       <div className="mt-2 flex flex-col gap-2">
                         <input
@@ -251,44 +260,28 @@ export default function BracketClient({
                         />
 
                         <button
-                          disabled={submitting || isLocked}
-                          onClick={async () => {
+                          disabled={isLocked}
+                          onClick={() => {
                             if (!tiebreaker) {
                               alert("Please enter a tiebreaker score.");
                               return;
                             }
 
-                            setSubmitting(true);
-                            setSubmittedBanner("");
+                            // Fill hidden form + submit
+                            const form = formRef.current;
+                            if (!form) return;
 
-                            const res = await fetch("/api/bracket/submit", {
-                              method: "POST",
-                              headers: { "Content-Type": "application/json" },
-                              body: JSON.stringify({
-                                bracketId: bracket.bracket_id,
-                                tiebreaker: Number(tiebreaker),
-                                picks: localPicks,
-                              }),
-                            });
+                            const fd = new FormData(form);
+                            fd.set("tiebreaker", tiebreaker);
+                            fd.set("bracketId", bracket.bracket_id);
 
-                            setSubmitting(false);
-
-                            if (res.ok) {
-                              setSubmittedBanner("Bracket submitted!");
-                              setTimeout(() => setSubmittedBanner(""), 4000);
-                            } else {
-                              const data = await res.json().catch(() => null);
-                              alert(
-                                data?.error ||
-                                  "Submission failed. Please try again."
-                              );
-                            }
+                            submitBracket(fd);
                           }}
                           className={`px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs
                             ${isLocked ? "opacity-60 cursor-not-allowed" : ""}
                           `}
                         >
-                          {submitting ? "Submitting..." : "Submit Bracket"}
+                          Submit Bracket
                         </button>
                       </div>
                     )}
@@ -304,7 +297,13 @@ export default function BracketClient({
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Top status bar */}
+      {/* Hidden form for server action */}
+      <form ref={formRef} action={submitBracket} className="hidden">
+        <input type="hidden" name="bracketId" value={bracket.bracket_id} />
+        <input type="hidden" name="tiebreaker" value={tiebreaker} />
+      </form>
+
+      {/* Status */}
       <div className="flex flex-col gap-2">
         {isLocked ? (
           <div className="px-3 py-2 rounded-md bg-red-900/60 border border-red-500/60 text-xs text-red-100">
@@ -327,10 +326,8 @@ export default function BracketClient({
         )}
       </div>
 
-      {/* ⭐ Legend */}
       <BracketLegend />
 
-      {/* Reset button */}
       <button
         type="button"
         form="__none__"
@@ -343,44 +340,47 @@ export default function BracketClient({
         Reset Bracket
       </button>
 
-      {/* Bracket layout */}
+      {/* Bracket Layout */}
       <div className="flex gap-4 overflow-x-auto">
+        {/* LEFT SIDE */}
         <div className="flex flex-col gap-6 min-w-[480px]">
           <div>
             <h3 className="text-sm font-semibold mb-2 text-slate-200">East</h3>
-            {renderRegion("East")}
+            {renderRegion("East", "ltr")}
           </div>
           <div>
             <h3 className="text-sm font-semibold mb-2 text-slate-200">South</h3>
-            {renderRegion("South")}
+            {renderRegion("South", "ltr")}
           </div>
         </div>
 
+        {/* CENTER */}
         <div className="flex flex-col justify-center gap-6 min-w-[320px]">
           <div>
             <h3 className="text-sm font-semibold mb-2 text-slate-200">
               Final Four
             </h3>
-            {renderRegion("Final Four")}
+            {renderRegion("Final Four", "ltr")}
           </div>
           <div>
             <h3 className="text-sm font-semibold mb-2 text-slate-200">
               Championship
             </h3>
-            {renderRegion("Championship")}
+            {renderRegion("Championship", "ltr")}
           </div>
         </div>
 
+        {/* RIGHT SIDE */}
         <div className="flex flex-col gap-6 min-w-[480px]">
           <div>
             <h3 className="text-sm font-semibold mb-2 text-slate-200">West</h3>
-            {renderRegion("West")}
+            {renderRegion("West", "rtl")}
           </div>
           <div>
             <h3 className="text-sm font-semibold mb-2 text-slate-200">
               Midwest
             </h3>
-            {renderRegion("Midwest")}
+            {renderRegion("Midwest", "rtl")}
           </div>
         </div>
       </div>

@@ -2,11 +2,7 @@
 
 import { useEffect, useState } from "react";
 import BracketClient from "./BracketClient";
-import { submitBracket } from "./actions"; // ⭐ ADD THIS IMPORT
 
-// -----------------------------
-// Types matching your API shape
-// -----------------------------
 type Pick = {
   bracket_id: string;
   game_id: number;
@@ -25,7 +21,7 @@ type Game = {
   region: string;
   team1: Team | null;
   team2: Team | null;
-  winner_team_id: string | null;
+  winner: string | null;
   source_game1: number | null;
   source_game2: number | null;
 };
@@ -36,9 +32,6 @@ type BracketData = {
   games: Game[];
 };
 
-// -----------------------------
-// Component
-// -----------------------------
 export default function BracketShell({
   bracketId,
   bracketName,
@@ -49,7 +42,6 @@ export default function BracketShell({
   const [bracketData, setBracketData] = useState<BracketData | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Load bracket from API
   const loadBracket = async () => {
     try {
       const res = await fetch(`/api/bracket?bracketId=${bracketId}`, {
@@ -67,9 +59,6 @@ export default function BracketShell({
     loadBracket();
   }, [bracketId]);
 
-  // -----------------------------
-  // Optimistic pick update (no flicker)
-  // -----------------------------
   const handlePick = (gameId: number, teamId: string) => {
     setBracketData((prev) => {
       if (!prev) return prev;
@@ -82,20 +71,15 @@ export default function BracketShell({
       return { ...prev, picks: newPicks };
     });
 
-    // Fire request (non-blocking)
     fetch("/api/pick", {
       method: "POST",
       body: JSON.stringify({ bracketId, gameId, teamId }),
       headers: { "Content-Type": "application/json" },
     });
 
-    // Background refresh (no flicker)
     setTimeout(loadBracket, 50);
   };
 
-  // -----------------------------
-  // Reset bracket
-  // -----------------------------
   const handleReset = async () => {
     await fetch("/api/bracket/reset", {
       method: "POST",
@@ -106,9 +90,6 @@ export default function BracketShell({
     loadBracket();
   };
 
-  // -----------------------------
-  // Render
-  // -----------------------------
   if (!bracketData) {
     return <div className="text-slate-300 text-lg">Loading bracket…</div>;
   }
@@ -126,33 +107,6 @@ export default function BracketShell({
         onPick={handlePick}
         onReset={handleReset}
       />
-
-      {/* ----------------------------- */}
-      {/* ⭐ SUBMIT BRACKET SECTION     */}
-      {/* ----------------------------- */}
-      <form
-        action={submitBracket}
-        className="mt-8 flex items-center gap-4 bg-slate-800 p-4 rounded-lg border border-slate-700"
-      >
-        <input type="hidden" name="bracketId" value={bracketId} />
-
-        <div className="flex flex-col">
-          <label className="text-sm text-slate-300 mb-1">Tiebreaker</label>
-          <input
-            type="number"
-            name="tiebreaker"
-            placeholder="Total points in championship game"
-            className="bg-slate-900 border border-slate-700 rounded px-3 py-2 text-slate-100 w-64"
-          />
-        </div>
-
-        <button
-          type="submit"
-          className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-white font-semibold shadow-lg"
-        >
-          Submit Bracket
-        </button>
-      </form>
     </div>
   );
 }

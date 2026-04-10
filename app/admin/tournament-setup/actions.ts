@@ -1,4 +1,4 @@
-//app/admin/tournament-settings/actions.ts
+// app/admin/tournament-setup/actions.ts
 "use server";
 
 import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
@@ -42,6 +42,11 @@ export async function loadRegionTeams(region: Region) {
   return data ?? [];
 }
 
+//
+// ⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐
+// ⭐  FULLY CORRECTED ESPN‑STYLE BRACKET GENERATOR
+// ⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐
+//
 export async function generateBracket() {
   const supabase = await createSupabaseServerClient();
 
@@ -51,6 +56,7 @@ export async function generateBracket() {
 
   if (teamErr) return { message: "Error loading teams." };
 
+  // Validate 16 teams per region
   for (const region of REGIONS) {
     const regionTeams = teams.filter((t: any) => t.region === region);
     if (regionTeams.length !== 16) {
@@ -58,6 +64,7 @@ export async function generateBracket() {
     }
   }
 
+  // Clear existing games
   await supabase.from("games").delete().neq("game_id", -1);
 
   let gameId = 1;
@@ -77,16 +84,21 @@ export async function generateBracket() {
       game_id: gameId++,
       round,
       region,
+      game_number: null,
       team1,
       seed1,
       team2,
       seed2,
+      winner: null,
       source_game1,
       source_game2,
+      final_score: null,
     });
   };
 
-  // ROUND 1 — 32 games
+  // -----------------------------
+  // ROUND OF 64 — 32 games
+  // -----------------------------
   for (const region of REGIONS) {
     const regionTeams = teams
       .filter((t: any) => t.region === region)
@@ -120,52 +132,82 @@ export async function generateBracket() {
     }
   }
 
-  // ROUND 2 — 16 games
-  const round2Start = 1;
-  for (let i = 0; i < 16; i++) {
-    addGame({
-      round: 2,
-      region: gameRows[round2Start - 1 + i].region,
-      team1: null,
-      seed1: null,
-      team2: null,
-      seed2: null,
-      source_game1: round2Start + i * 2,
-      source_game2: round2Start + i * 2 + 1,
-    });
+  // -----------------------------
+  // ROUND OF 32 — 16 games (4 per region)
+  // -----------------------------
+  for (const region of REGIONS) {
+    const regionRound1Games = gameRows.filter(
+      (g) => g.round === 1 && g.region === region
+    );
+
+    for (let i = 0; i < 4; i++) {
+      const g1 = regionRound1Games[i * 2];
+      const g2 = regionRound1Games[i * 2 + 1];
+
+      addGame({
+        round: 2,
+        region,
+        team1: null,
+        seed1: null,
+        team2: null,
+        seed2: null,
+        source_game1: g1.game_id,
+        source_game2: g2.game_id,
+      });
+    }
   }
 
-  // SWEET 16 — 8 games
-  const round3Start = 33;
-  for (let i = 0; i < 8; i++) {
-    addGame({
-      round: 3,
-      region: gameRows[round3Start - 1 + i].region,
-      team1: null,
-      seed1: null,
-      team2: null,
-      seed2: null,
-      source_game1: round3Start + i * 2,
-      source_game2: round3Start + i * 2 + 1,
-    });
+  // -----------------------------
+  // SWEET 16 — 8 games (2 per region)
+  // -----------------------------
+  for (const region of REGIONS) {
+    const regionRound2Games = gameRows.filter(
+      (g) => g.round === 2 && g.region === region
+    );
+
+    for (let i = 0; i < 2; i++) {
+      const g1 = regionRound2Games[i * 2];
+      const g2 = regionRound2Games[i * 2 + 1];
+
+      addGame({
+        round: 3,
+        region,
+        team1: null,
+        seed1: null,
+        team2: null,
+        seed2: null,
+        source_game1: g1.game_id,
+        source_game2: g2.game_id,
+      });
+    }
   }
 
-  // ELITE 8 — 4 games
-  const round4Start = 49;
-  for (let i = 0; i < 4; i++) {
+  // -----------------------------
+  // ELITE 8 — 4 games (1 per region)
+  // -----------------------------
+  for (const region of REGIONS) {
+    const regionRound3Games = gameRows.filter(
+      (g) => g.round === 3 && g.region === region
+    );
+
     addGame({
       round: 4,
-      region: REGIONS[i],
+      region,
       team1: null,
       seed1: null,
       team2: null,
       seed2: null,
-      source_game1: round4Start + i * 2,
-      source_game2: round4Start + i * 2 + 1,
+      source_game1: regionRound3Games[0].game_id,
+      source_game2: regionRound3Games[1].game_id,
     });
   }
 
+  // -----------------------------
   // FINAL FOUR — 2 games
+  // -----------------------------
+  const elite8 = gameRows.filter((g) => g.round === 4);
+
+  // East vs West
   addGame({
     round: 5,
     region: "Final Four",
@@ -173,10 +215,11 @@ export async function generateBracket() {
     seed1: null,
     team2: null,
     seed2: null,
-    source_game1: 57,
-    source_game2: 58,
+    source_game1: elite8[0].game_id,
+    source_game2: elite8[1].game_id,
   });
 
+  // South vs Midwest
   addGame({
     round: 5,
     region: "Final Four",
@@ -184,11 +227,15 @@ export async function generateBracket() {
     seed1: null,
     team2: null,
     seed2: null,
-    source_game1: 59,
-    source_game2: 60,
+    source_game1: elite8[2].game_id,
+    source_game2: elite8[3].game_id,
   });
 
+  // -----------------------------
   // CHAMPIONSHIP — 1 game
+  // -----------------------------
+  const finalFour = gameRows.filter((g) => g.round === 5);
+
   addGame({
     round: 6,
     region: "Championship",
@@ -196,8 +243,8 @@ export async function generateBracket() {
     seed1: null,
     team2: null,
     seed2: null,
-    source_game1: 61,
-    source_game2: 62,
+    source_game1: finalFour[0].game_id,
+    source_game2: finalFour[1].game_id,
   });
 
   await supabase.from("games").insert(gameRows);

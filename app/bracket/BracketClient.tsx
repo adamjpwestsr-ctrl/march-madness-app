@@ -365,6 +365,7 @@ export default function BracketClient({
 
       {/* MAIN BRACKET LAYOUT */}
       <div className="flex gap-4 pb-10 w-full max-w-full overflow-x-hidden flex-wrap">
+
         {/* LEFT SIDE */}
         <div className="flex flex-col gap-6 flex-1 min-w-0">
           <div>
@@ -381,8 +382,8 @@ export default function BracketClient({
           </div>
         </div>
 
-        {/* CENTER */}
-        <div className="flex flex-col justify-center gap-6 flex-[0.8] min-w-0">
+        {/* CENTER — Final Four + Championship */}
+        <div className="flex flex-col justify-center gap-6 w-[360px] mx-auto relative -top-8 z-10">
           <div>
             <h3 className="text-base font-bold text-slate-100 mb-2 pl-2 border-l-4 border-emerald-500">
               Final Four
@@ -413,6 +414,7 @@ export default function BracketClient({
             {renderRegion("Midwest", "rtl")}
           </div>
         </div>
+
       </div>
     </div>
   );

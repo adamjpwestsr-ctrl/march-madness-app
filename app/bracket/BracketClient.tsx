@@ -4,7 +4,9 @@ import { useState, useEffect, useRef } from "react";
 import { submitBracket } from "./actions";
 import { getTeamLogo } from "../../lib/getTeamLogo";
 import RegionGrid from "./RegionGrid";
-
+import RegionView from "./RegionView";
+import FinalFourView from "./FinalFourView";
+import ChampionshipView from "./ChampionshipView";
 
 // -----------------------------
 // TYPES
@@ -238,7 +240,7 @@ export default function BracketClient({
         >
           <div
             className={`flex items-center gap-2 w-full ${
-              dir === "rtl" ? "flex-row-reverse justify-end" : ""
+              dir === "rtl" ? "flex-row-reverse justify-end" : "flex-row"
             }`}
           >
             {logo && (
@@ -350,104 +352,97 @@ export default function BracketClient({
   };
 
   // -----------------------------
-  // VIEW SWITCH (v0.17.00 skeleton)
+  // VIEW ROUTER (v0.17.00)
   // -----------------------------
-//if (view === "grid") {
-  //return <RegionGrid setView={setView} />
-//}
+  if (view === "grid") {
+    return <RegionGrid setView={setView} />;
+  }
 
-// -----------------------------
-// VIEW ROUTER (v0.17.00)
-// -----------------------------
-if (view === "grid") {
-  return <RegionGrid setView={setView} />;
-}
+  if (view === "region-east") {
+    return (
+      <RegionView
+        region="East"
+        bracket={bracket}
+        games={games}
+        picks={localPicks}
+        isLocked={isLocked}
+        onPick={handlePick}
+        setView={setView}
+      />
+    );
+  }
 
-if (view === "region-east") {
-  return (
-    <RegionView
-      region="East"
-      bracket={bracket}
-      games={games}
-      picks={localPicks}
-      isLocked={isLocked}
-      onPick={handlePick}
-      setView={setView}
-    />
-  );
-}
+  if (view === "region-west") {
+    return (
+      <RegionView
+        region="West"
+        bracket={bracket}
+        games={games}
+        picks={localPicks}
+        isLocked={isLocked}
+        onPick={handlePick}
+        setView={setView}
+      />
+    );
+  }
 
-if (view === "region-west") {
-  return (
-    <RegionView
-      region="West"
-      bracket={bracket}
-      games={games}
-      picks={localPicks}
-      isLocked={isLocked}
-      onPick={handlePick}
-      setView={setView}
-    />
-  );
-}
+  if (view === "region-south") {
+    return (
+      <RegionView
+        region="South"
+        bracket={bracket}
+        games={games}
+        picks={localPicks}
+        isLocked={isLocked}
+        onPick={handlePick}
+        setView={setView}
+      />
+    );
+  }
 
-if (view === "region-south") {
-  return (
-    <RegionView
-      region="South"
-      bracket={bracket}
-      games={games}
-      picks={localPicks}
-      isLocked={isLocked}
-      onPick={handlePick}
-      setView={setView}
-    />
-  );
-}
+  if (view === "region-midwest") {
+    return (
+      <RegionView
+        region="Midwest"
+        bracket={bracket}
+        games={games}
+        picks={localPicks}
+        isLocked={isLocked}
+        onPick={handlePick}
+        setView={setView}
+      />
+    );
+  }
 
-if (view === "region-midwest") {
-  return (
-    <RegionView
-      region="Midwest"
-      bracket={bracket}
-      games={games}
-      picks={localPicks}
-      isLocked={isLocked}
-      onPick={handlePick}
-      setView={setView}
-    />
-  );
-}
+  if (view === "final-four") {
+    return (
+      <FinalFourView
+        bracket={bracket}
+        games={games}
+        picks={localPicks}
+        isLocked={isLocked}
+        onPick={handlePick}
+        setView={setView}
+      />
+    );
+  }
 
-if (view === "final-four") {
-  return (
-    <FinalFourView
-      bracket={bracket}
-      games={games}
-      picks={localPicks}
-      isLocked={isLocked}
-      onPick={handlePick}
-      setView={setView}
-    />
-  );
-}
-
-if (view === "championship") {
-  return (
-    <ChampionshipView
-      bracket={bracket}
-      games={games}
-      picks={localPicks}
-      isLocked={isLocked}
-      tiebreaker={tiebreaker}
-      setTiebreaker={setTiebreaker}
-      setSubmittedBanner={setSubmittedBanner}
-      formRef={formRef}
-      onPick={handlePick}
-      setView={setView}
-    />
-  );
-}
+  if (view === "championship") {
+    return (
+      <ChampionshipView
+        bracket={bracket}
+        games={games}
+        picks={localPicks}
+        isLocked={isLocked}
+        tiebreaker={tiebreaker}
+        setTiebreaker={setTiebreaker}
+        setSubmittedBanner={setSubmittedBanner}
+        formRef={formRef}
+        onPick={handlePick}
+        setView={setView}
+      />
+    );
+  }
 
   // -----------------------------
   // GRID VIEW (existing full bracket)
@@ -506,7 +501,6 @@ if (view === "championship") {
 
       {/* MAIN BRACKET LAYOUT */}
       <div className="flex gap-4 pb-10 w-full max-w-full overflow-x-hidden flex-wrap">
-
         {/* LEFT SIDE */}
         <div className="flex flex-col gap-6 flex-1 min-w-0">
           <div>
@@ -555,7 +549,6 @@ if (view === "championship") {
             {renderRegion("Midwest", "rtl")}
           </div>
         </div>
-
       </div>
     </div>
   );

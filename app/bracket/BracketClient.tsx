@@ -209,7 +209,7 @@ export default function BracketClient({
               dir === "rtl" ? "flex-row-reverse w-full justify-end" : "w-full"
             }`}
           >
-            {/* Logo (RTL: left, LTR: right) */}
+            {/* Logo */}
             {logo && (
               <img
                 src={logo}
@@ -229,7 +229,7 @@ export default function BracketClient({
               {isChampion && <CrownIcon />}
             </span>
 
-            {/* Seed (RTL: right side, LTR: left side) */}
+            {/* Seed */}
             {team.seed !== null && (
               <span className="text-slate-300">{team.seed}.</span>
             )}
@@ -239,12 +239,7 @@ export default function BracketClient({
     };
 
     return (
-      <div className="relative">
-        {/* DEBUG LABEL */}
-        <div className="absolute -top-5 left-0 text-[10px] text-yellow-400 opacity-80">
-          DEBUG → {region} ({dir})
-        </div>
-
+      <div>
         <div
           className={`flex gap-4 ${
             dir === "rtl" ? "flex-row-reverse" : "flex-row"
@@ -370,11 +365,15 @@ export default function BracketClient({
         {/* LEFT SIDE */}
         <div className="flex flex-col gap-6 min-w-[480px]">
           <div>
-            <h3 className="text-sm font-semibold mb-2 text-slate-200">East</h3>
+            <h3 className="text-base font-bold text-slate-100 mb-2 pl-2 border-l-4 border-emerald-500">
+              East
+            </h3>
             {renderRegion("East", "ltr")}
           </div>
           <div>
-            <h3 className="text-sm font-semibold mb-2 text-slate-200">South</h3>
+            <h3 className="text-base font-bold text-slate-100 mb-2 pl-2 border-l-4 border-emerald-500">
+              South
+            </h3>
             {renderRegion("South", "ltr")}
           </div>
         </div>
@@ -382,13 +381,13 @@ export default function BracketClient({
         {/* CENTER */}
         <div className="flex flex-col justify-center gap-6 min-w-[320px]">
           <div>
-            <h3 className="text-sm font-semibold mb-2 text-slate-200">
+            <h3 className="text-base font-bold text-slate-100 mb-2 pl-2 border-l-4 border-emerald-500">
               Final Four
             </h3>
             {renderRegion("Final Four", "ltr")}
           </div>
           <div>
-            <h3 className="text-sm font-semibold mb-2 text-slate-200">
+            <h3 className="text-base font-bold text-slate-100 mb-2 pl-2 border-l-4 border-emerald-500">
               Championship
             </h3>
             {renderRegion("Championship", "ltr")}
@@ -397,12 +396,15 @@ export default function BracketClient({
 
         {/* RIGHT SIDE */}
         <div className="flex flex-col gap-6 min-w-[480px]">
-          <div>
-            <h3 className="text-sm font-semibold mb-2 text-slate-200">West</h3>
+          <div dir="rtl">
+            <h3 className="text-base font-bold text-slate-100 mb-2 pl-2 border-l-4 border-emerald-500 text-left">
+              West
+            </h3>
             {renderRegion("West", "rtl")}
           </div>
-          <div>
-            <h3 className="text-sm font-semibold mb-2 text-slate-200">
+
+          <div dir="rtl">
+            <h3 className="text-base font-bold text-slate-100 mb-2 pl-2 border-l-4 border-emerald-500 text-left">
               Midwest
             </h3>
             {renderRegion("Midwest", "rtl")}

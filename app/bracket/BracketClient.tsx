@@ -217,7 +217,7 @@ export default function BracketClient({
       rounds = rounds.slice().reverse();
     }
 
-    return (
+return (
   <div className="relative">
     {/* ⭐ DEBUG LABEL */}
     <div className="absolute -top-5 left-0 text-[10px] text-yellow-400 opacity-80">
@@ -252,7 +252,7 @@ export default function BracketClient({
                   {renderTeamButton(game, game.team1, selectedTeamId)}
                   {renderTeamButton(game, game.team2, selectedTeamId)}
 
-                  {/* Championship submit stays untouched */}
+                  {/* ⭐ Championship Submit */}
                   {game.game_id === CHAMPIONSHIP_GAME_ID && (
                     <div className="mt-2 flex flex-col gap-2">
                       <input
@@ -300,7 +300,6 @@ export default function BracketClient({
     </div>
   </div>
 );
-
 
   return (
     <div className="flex flex-col gap-4">

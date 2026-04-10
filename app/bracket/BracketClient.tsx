@@ -352,8 +352,101 @@ export default function BracketClient({
   // -----------------------------
   // VIEW SWITCH (v0.17.00 skeleton)
   // -----------------------------
+//if (view === "grid") {
+  //return <RegionGrid setView={setView} />
+//}
+
+// -----------------------------
+// VIEW ROUTER (v0.17.00)
+// -----------------------------
 if (view === "grid") {
-  return <RegionGrid setView={setView} />
+  return <RegionGrid setView={setView} />;
+}
+
+if (view === "region-east") {
+  return (
+    <RegionView
+      region="East"
+      bracket={bracket}
+      games={games}
+      picks={localPicks}
+      isLocked={isLocked}
+      onPick={handlePick}
+      setView={setView}
+    />
+  );
+}
+
+if (view === "region-west") {
+  return (
+    <RegionView
+      region="West"
+      bracket={bracket}
+      games={games}
+      picks={localPicks}
+      isLocked={isLocked}
+      onPick={handlePick}
+      setView={setView}
+    />
+  );
+}
+
+if (view === "region-south") {
+  return (
+    <RegionView
+      region="South"
+      bracket={bracket}
+      games={games}
+      picks={localPicks}
+      isLocked={isLocked}
+      onPick={handlePick}
+      setView={setView}
+    />
+  );
+}
+
+if (view === "region-midwest") {
+  return (
+    <RegionView
+      region="Midwest"
+      bracket={bracket}
+      games={games}
+      picks={localPicks}
+      isLocked={isLocked}
+      onPick={handlePick}
+      setView={setView}
+    />
+  );
+}
+
+if (view === "final-four") {
+  return (
+    <FinalFourView
+      bracket={bracket}
+      games={games}
+      picks={localPicks}
+      isLocked={isLocked}
+      onPick={handlePick}
+      setView={setView}
+    />
+  );
+}
+
+if (view === "championship") {
+  return (
+    <ChampionshipView
+      bracket={bracket}
+      games={games}
+      picks={localPicks}
+      isLocked={isLocked}
+      tiebreaker={tiebreaker}
+      setTiebreaker={setTiebreaker}
+      setSubmittedBanner={setSubmittedBanner}
+      formRef={formRef}
+      onPick={handlePick}
+      setView={setView}
+    />
+  );
 }
 
   // -----------------------------

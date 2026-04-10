@@ -382,21 +382,21 @@ export default function BracketClient({
           </div>
         </div>
 
-        {/* CENTER — Final Four + Championship */}
-        <div className="flex flex-col justify-center gap-6 w-[360px] mx-auto relative -top-8 z-10">
-          <div>
-            <h3 className="text-base font-bold text-slate-100 mb-2 pl-2 border-l-4 border-emerald-500">
-              Final Four
-            </h3>
-            {renderRegion("Final Four", "ltr")}
-          </div>
-          <div>
-            <h3 className="text-base font-bold text-slate-100 mb-2 pl-2 border-l-4 border-emerald-500">
-              Championship
-            </h3>
-            {renderRegion("Championship", "ltr")}
-          </div>
-        </div>
+{/* CENTER — Final Four + Championship */}
+<div className="flex flex-col justify-center gap-6 w-[360px] relative -top-24 left-[270px] z-10">
+  <div>
+    <h3 className="text-base font-bold text-slate-100 mb-2 pl-2 border-l-4 border-emerald-500">
+      Final Four
+    </h3>
+    {renderRegion("Final Four", "ltr")}
+  </div>
+  <div>
+    <h3 className="text-base font-bold text-slate-100 mb-2 pl-2 border-l-4 border-emerald-500">
+      Championship
+    </h3>
+    {renderRegion("Championship", "ltr")}
+  </div>
+</div>
 
         {/* RIGHT SIDE */}
         <div className="flex flex-col gap-6 flex-1 min-w-0">

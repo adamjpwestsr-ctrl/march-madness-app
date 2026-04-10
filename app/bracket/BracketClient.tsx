@@ -229,77 +229,78 @@ export default function BracketClient({
         direction === "rtl" ? "flex-row-reverse" : "flex-row"
       }`}
     >
-        {rounds.map((round) => {
-          const roundGames = regionGames.filter((g) => g.round === round);
-          return (
-            <div
-              key={`${region}-round-${round}`}
-              className="flex flex-col gap-2"
-            >
-              <div className="text-xs font-semibold text-slate-400 mb-1">
-                {roundLabel(round)}
-              </div>
+      {rounds.map((round) => {
+        const roundGames = regionGames.filter((g) => g.round === round);
 
-              {roundGames.map((game) => {
-                const selectedTeamId = getSelectedTeamId(game);
-
-                return (
-                  <div
-                    key={game.game_id}
-                    className="flex flex-col gap-1 bg-slate-800/60 rounded-md p-2"
-                  >
-                    {renderTeamButton(game, game.team1, selectedTeamId)}
-                    {renderTeamButton(game, game.team2, selectedTeamId)}
-
-                    {/* ⭐ Championship Submit */}
-                    {game.game_id === CHAMPIONSHIP_GAME_ID && (
-                      <div className="mt-2 flex flex-col gap-2">
-                        <input
-                          type="number"
-                          placeholder="Championship total points tiebreaker"
-                          value={tiebreaker}
-                          onChange={(e) => setTiebreaker(e.target.value)}
-                          disabled={isLocked}
-                          className={`px-2 py-1 text-xs bg-slate-900/60 border border-slate-600 rounded text-slate-200
-                            ${isLocked ? "opacity-60 cursor-not-allowed" : ""}
-                          `}
-                        />
-
-                        <button
-                          disabled={isLocked}
-                          onClick={() => {
-                            if (!tiebreaker) {
-                              alert("Please enter a tiebreaker score.");
-                              return;
-                            }
-
-                            // Fill hidden form + submit
-                            const form = formRef.current;
-                            if (!form) return;
-
-                            const fd = new FormData(form);
-                            fd.set("tiebreaker", tiebreaker);
-                            fd.set("bracketId", bracket.bracket_id);
-
-                            submitBracket(fd);
-                          }}
-                          className={`px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs
-                            ${isLocked ? "opacity-60 cursor-not-allowed" : ""}
-                          `}
-                        >
-                          Submit Bracket
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+        return (
+          <div
+            key={`${region}-round-${round}`}
+            className="flex flex-col gap-2"
+          >
+            <div className="text-xs font-semibold text-slate-400 mb-1">
+              {roundLabel(round)}
             </div>
-          );
-        })}
-      </div>
-    );
-  };
+
+            {roundGames.map((game) => {
+              const selectedTeamId = getSelectedTeamId(game);
+
+              return (
+                <div
+                  key={game.game_id}
+                  className="flex flex-col gap-1 bg-slate-800/60 rounded-md p-2"
+                >
+                  {renderTeamButton(game, game.team1, selectedTeamId)}
+                  {renderTeamButton(game, game.team2, selectedTeamId)}
+
+                  {/* Championship submit stays untouched */}
+                  {game.game_id === CHAMPIONSHIP_GAME_ID && (
+                    <div className="mt-2 flex flex-col gap-2">
+                      <input
+                        type="number"
+                        placeholder="Championship total points tiebreaker"
+                        value={tiebreaker}
+                        onChange={(e) => setTiebreaker(e.target.value)}
+                        disabled={isLocked}
+                        className={`px-2 py-1 text-xs bg-slate-900/60 border border-slate-600 rounded text-slate-200
+                          ${isLocked ? "opacity-60 cursor-not-allowed" : ""}
+                        `}
+                      />
+
+                      <button
+                        disabled={isLocked}
+                        onClick={() => {
+                          if (!tiebreaker) {
+                            alert("Please enter a tiebreaker score.");
+                            return;
+                          }
+
+                          const form = formRef.current;
+                          if (!form) return;
+
+                          const fd = new FormData(form);
+                          fd.set("tiebreaker", tiebreaker);
+                          fd.set("bracketId", bracket.bracket_id);
+
+                          submitBracket(fd);
+                        }}
+                        className={`px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs
+                          ${isLocked ? "opacity-60 cursor-not-allowed" : ""}
+                        `}
+                      >
+                        Submit Bracket
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        );
+      })}
+    </div>
+  </div>
+);
+
 
   return (
     <div className="flex flex-col gap-4">

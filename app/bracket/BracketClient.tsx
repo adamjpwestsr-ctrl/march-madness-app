@@ -196,7 +196,7 @@ export default function BracketClient({
   });
 
   // ⭐ REGION RENDERER WITH DIRECTION SUPPORT
-  const renderRegion = (region: string, direction: "ltr" | "rtl" = "ltr") => {
+  const renderRegion = (region: string, dir: "ltr" | "rtl" = "ltr") => {
     const regionGames = (gamesByRegion[region] || [])
       .slice()
       .sort((a, b) => a.round - b.round);
@@ -207,7 +207,7 @@ export default function BracketClient({
       (a, b) => a - b
     );
 
-    if (direction === "rtl") {
+    if (dir === "rtl") {
       rounds = rounds.slice().reverse();
     }
 
@@ -215,12 +215,12 @@ export default function BracketClient({
       <div className="relative">
         {/* ⭐ DEBUG LABEL */}
         <div className="absolute -top-5 left-0 text-[10px] text-yellow-400 opacity-80">
-          DEBUG → {region} ({direction})
+          DEBUG → {region} ({dir})
         </div>
 
         <div
           className={`flex gap-4 ${
-            direction === "rtl" ? "flex-row-reverse" : "flex-row"
+            dir === "rtl" ? "flex-row-reverse" : "flex-row"
           }`}
         >
           {rounds.map((round) => {

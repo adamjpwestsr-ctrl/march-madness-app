@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { submitBracket } from "./actions";
-import { useFormStatus } from "react-dom";
+import { getTeamLogo } from "@/utils/getTeamLogo";
 
 type Team = {
   team_id: string;
@@ -118,58 +118,6 @@ export default function BracketClient({
     onPick(gameId, teamId);
   };
 
-  const renderTeamButton = (
-    game: Game,
-    team: Team | null,
-    selectedTeamId: string | null
-  ) => {
-    if (!team) {
-      return (
-        <div className="text-xs text-slate-500 italic px-2 py-1 border border-dashed border-slate-700 rounded">
-          TBD
-        </div>
-      );
-    }
-
-    const isSelected = selectedTeamId === team.team_id;
-
-    let isUnderdog = false;
-    if (game.team1 && game.team2 && isSelected) {
-      const opponent =
-        team.team_id === game.team1.team_id ? game.team2 : game.team1;
-      if (team.seed !== null && opponent?.seed !== null) {
-        isUnderdog = team.seed > opponent.seed;
-      }
-    }
-
-    const isChampion = game.game_id === CHAMPIONSHIP_GAME_ID && isSelected;
-
-    return (
-      <button
-        type="button"
-        form="__none__"
-        onClick={() => handlePick(game.game_id, team.team_id)}
-        disabled={isLocked}
-        className={`flex items-center justify-between px-2 py-1 rounded text-xs border transition
-          ${
-            isSelected
-              ? "bg-emerald-600/80 border-emerald-400 text-white"
-              : "bg-slate-900/60 border-slate-600 text-slate-100 hover:bg-slate-700/80"
-          }
-          ${isLocked ? "opacity-60 cursor-not-allowed" : ""}
-          ${isChampion ? "ring-2 ring-yellow-400 shadow-[0_0_12px_rgba(250,204,21,0.8)]" : ""}
-        `}
-      >
-        <span className="mr-2 text-slate-300 flex items-center">
-          {team.seed !== null ? `${team.seed}. ` : ""}
-          {team.name}
-          {isUnderdog && <BulldogIcon />}
-          {isChampion && <CrownIcon />}
-        </span>
-      </button>
-    );
-  };
-
   const roundLabel = (round: number) => {
     switch (round) {
       case 1:
@@ -195,7 +143,7 @@ export default function BracketClient({
     gamesByRegion[g.region].push(g);
   });
 
-  // ⭐ REGION RENDERER WITH DIRECTION SUPPORT
+  // ⭐ REGION RENDERER WITH DIRECTION + LOGOS + FIXED WIDTHS
   const renderRegion = (region: string, dir: "ltr" | "rtl" = "ltr") => {
     const regionGames = (gamesByRegion[region] || [])
       .slice()
@@ -207,13 +155,92 @@ export default function BracketClient({
       (a, b) => a - b
     );
 
+    // Reverse for RTL (ESPN inward flow)
     if (dir === "rtl") {
       rounds = rounds.slice().reverse();
     }
 
+    const renderTeamButton = (
+      game: Game,
+      team: Team | null,
+      selectedTeamId: string | null
+    ) => {
+      if (!team) {
+        return (
+          <div className="text-xs text-slate-500 italic px-2 py-1 border border-dashed border-slate-700 rounded h-9 flex items-center">
+            TBD
+          </div>
+        );
+      }
+
+      const isSelected = selectedTeamId === team.team_id;
+      const logo = getTeamLogo(team.name);
+
+      let isUnderdog = false;
+      if (game.team1 && game.team2 && isSelected) {
+        const opponent =
+          team.team_id === game.team1.team_id ? game.team2 : game.team1;
+        if (team.seed !== null && opponent?.seed !== null) {
+          isUnderdog = team.seed > opponent.seed;
+        }
+      }
+
+      const isChampion = game.game_id === CHAMPIONSHIP_GAME_ID && isSelected;
+
+      return (
+        <button
+          type="button"
+          form="__none__"
+          onClick={() => handlePick(game.game_id, team.team_id)}
+          disabled={isLocked}
+          className={`flex items-center justify-between px-2 h-9 rounded text-xs border transition
+            ${
+              isSelected
+                ? "bg-emerald-600/80 border-emerald-400 text-white"
+                : "bg-slate-900/60 border-slate-600 text-slate-100 hover:bg-slate-700/80"
+            }
+            ${isLocked ? "opacity-60 cursor-not-allowed" : ""}
+            ${isChampion ? "ring-2 ring-yellow-400 shadow-[0_0_12px_rgba(250,204,21,0.8)]" : ""}
+          `}
+        >
+          {/* Direction-aware layout */}
+          <div
+            className={`flex items-center gap-2 ${
+              dir === "rtl" ? "flex-row-reverse w-full justify-end" : "w-full"
+            }`}
+          >
+            {/* Logo (RTL: left, LTR: right) */}
+            {logo && (
+              <img
+                src={logo}
+                alt={team.name}
+                className="w-5 h-5 rounded-full object-cover"
+              />
+            )}
+
+            {/* Team name */}
+            <span
+              className={`flex-1 ${
+                dir === "rtl" ? "text-right" : "text-left"
+              }`}
+            >
+              {team.name}
+              {isUnderdog && <BulldogIcon />}
+              {isChampion && <CrownIcon />}
+            </span>
+
+            {/* Seed (RTL: right side, LTR: left side) */}
+            {team.seed !== null && (
+              <span className="text-slate-300">{team.seed}.</span>
+            )}
+          </div>
+        </button>
+      );
+    };
+
     return (
       <div className="relative">
-        {/* ⭐ DEBUG LABEL */}
+        {/* DEBUG LABEL */}
         <div className="absolute -top-5 left-0 text-[10px] text-yellow-400 opacity-80">
           DEBUG → {region} ({dir})
         </div>
@@ -229,9 +256,9 @@ export default function BracketClient({
             return (
               <div
                 key={`${region}-round-${round}`}
-                className="flex flex-col gap-2"
+                className="flex flex-col gap-2 min-w-[180px]"
               >
-                <div className="text-xs font-semibold text-slate-400 mb-1">
+                <div className="text-xs font-semibold text-slate-400 mb-1 text-center">
                   {roundLabel(round)}
                 </div>
 
@@ -293,7 +320,7 @@ export default function BracketClient({
         </div>
       </div>
     );
-  }; // <-- THIS WAS THE MISSING BRACE
+  };
 
   return (
     <div className="flex flex-col gap-4">
@@ -338,7 +365,9 @@ export default function BracketClient({
         Reset Bracket
       </button>
 
-      <div className="flex gap-4 overflow-x-auto">
+      {/* MAIN BRACKET LAYOUT */}
+      <div className="flex gap-4 overflow-x-auto pb-10">
+        {/* LEFT SIDE */}
         <div className="flex flex-col gap-6 min-w-[480px]">
           <div>
             <h3 className="text-sm font-semibold mb-2 text-slate-200">East</h3>
@@ -350,6 +379,7 @@ export default function BracketClient({
           </div>
         </div>
 
+        {/* CENTER */}
         <div className="flex flex-col justify-center gap-6 min-w-[320px]">
           <div>
             <h3 className="text-sm font-semibold mb-2 text-slate-200">
@@ -365,6 +395,7 @@ export default function BracketClient({
           </div>
         </div>
 
+        {/* RIGHT SIDE */}
         <div className="flex flex-col gap-6 min-w-[480px]">
           <div>
             <h3 className="text-sm font-semibold mb-2 text-slate-200">West</h3>

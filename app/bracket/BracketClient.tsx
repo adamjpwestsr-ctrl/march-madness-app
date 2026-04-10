@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { submitBracket } from "./actions"; // ⭐ server action
+import { submitBracket } from "./actions";
 import { useFormStatus } from "react-dom";
 
 type Team = {
@@ -29,7 +29,6 @@ type Pick = {
 
 const CHAMPIONSHIP_GAME_ID = 63;
 
-// Icons
 const BulldogIcon = () => <span className="ml-1 text-lg leading-none">🐶</span>;
 const CrownIcon = () => <span className="ml-1 text-base leading-none">👑</span>;
 
@@ -73,15 +72,12 @@ export default function BracketClient({
   const [lockDate, setLockDate] = useState<string | null>(null);
   const [isLocked, setIsLocked] = useState(false);
 
-  // Hidden form ref for server action submit
   const formRef = useRef<HTMLFormElement | null>(null);
 
-  // Sync local picks
   useEffect(() => {
     setLocalPicks(picks);
   }, [picks]);
 
-  // Load lock date
   useEffect(() => {
     async function loadLockDate() {
       try {
@@ -199,9 +195,7 @@ export default function BracketClient({
     gamesByRegion[g.region].push(g);
   });
 
-  //
   // ⭐ REGION RENDERER WITH DIRECTION SUPPORT
-  //
   const renderRegion = (region: string, direction: "ltr" | "rtl" = "ltr") => {
     const regionGames = (gamesByRegion[region] || [])
       .slice()
@@ -217,99 +211,97 @@ export default function BracketClient({
       rounds = rounds.slice().reverse();
     }
 
-return (
-  <div className="relative">
-    {/* ⭐ DEBUG LABEL */}
-    <div className="absolute -top-5 left-0 text-[10px] text-yellow-400 opacity-80">
-      DEBUG → {region} ({direction})
-    </div>
+    return (
+      <div className="relative">
+        {/* ⭐ DEBUG LABEL */}
+        <div className="absolute -top-5 left-0 text-[10px] text-yellow-400 opacity-80">
+          DEBUG → {region} ({direction})
+        </div>
 
-    <div
-      className={`flex gap-4 ${
-        direction === "rtl" ? "flex-row-reverse" : "flex-row"
-      }`}
-    >
-      {rounds.map((round) => {
-        const roundGames = regionGames.filter((g) => g.round === round);
-	};
-        return (
-          <div
-            key={`${region}-round-${round}`}
-            className="flex flex-col gap-2"
-          >
-            <div className="text-xs font-semibold text-slate-400 mb-1">
-              {roundLabel(round)}
-            </div>
+        <div
+          className={`flex gap-4 ${
+            direction === "rtl" ? "flex-row-reverse" : "flex-row"
+          }`}
+        >
+          {rounds.map((round) => {
+            const roundGames = regionGames.filter((g) => g.round === round);
 
-            {roundGames.map((game) => {
-              const selectedTeamId = getSelectedTeamId(game);
-
-              return (
-                <div
-                  key={game.game_id}
-                  className="flex flex-col gap-1 bg-slate-800/60 rounded-md p-2"
-                >
-                  {renderTeamButton(game, game.team1, selectedTeamId)}
-                  {renderTeamButton(game, game.team2, selectedTeamId)}
-
-                  {/* ⭐ Championship Submit */}
-                  {game.game_id === CHAMPIONSHIP_GAME_ID && (
-                    <div className="mt-2 flex flex-col gap-2">
-                      <input
-                        type="number"
-                        placeholder="Championship total points tiebreaker"
-                        value={tiebreaker}
-                        onChange={(e) => setTiebreaker(e.target.value)}
-                        disabled={isLocked}
-                        className={`px-2 py-1 text-xs bg-slate-900/60 border border-slate-600 rounded text-slate-200
-                          ${isLocked ? "opacity-60 cursor-not-allowed" : ""}
-                        `}
-                      />
-
-                      <button
-                        disabled={isLocked}
-                        onClick={() => {
-                          if (!tiebreaker) {
-                            alert("Please enter a tiebreaker score.");
-                            return;
-                          }
-
-                          const form = formRef.current;
-                          if (!form) return;
-
-                          const fd = new FormData(form);
-                          fd.set("tiebreaker", tiebreaker);
-                          fd.set("bracketId", bracket.bracket_id);
-
-                          submitBracket(fd);
-                        }}
-                        className={`px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs
-                          ${isLocked ? "opacity-60 cursor-not-allowed" : ""}
-                        `}
-                      >
-                        Submit Bracket
-                      </button>
-                    </div>
-                  )}
+            return (
+              <div
+                key={`${region}-round-${round}`}
+                className="flex flex-col gap-2"
+              >
+                <div className="text-xs font-semibold text-slate-400 mb-1">
+                  {roundLabel(round)}
                 </div>
-              );
-            })}
-          </div>
-        );
-      })}
-    </div>
-  </div>
-);
+
+                {roundGames.map((game) => {
+                  const selectedTeamId = getSelectedTeamId(game);
+
+                  return (
+                    <div
+                      key={game.game_id}
+                      className="flex flex-col gap-1 bg-slate-800/60 rounded-md p-2"
+                    >
+                      {renderTeamButton(game, game.team1, selectedTeamId)}
+                      {renderTeamButton(game, game.team2, selectedTeamId)}
+
+                      {game.game_id === CHAMPIONSHIP_GAME_ID && (
+                        <div className="mt-2 flex flex-col gap-2">
+                          <input
+                            type="number"
+                            placeholder="Championship total points tiebreaker"
+                            value={tiebreaker}
+                            onChange={(e) => setTiebreaker(e.target.value)}
+                            disabled={isLocked}
+                            className={`px-2 py-1 text-xs bg-slate-900/60 border border-slate-600 rounded text-slate-200
+                              ${isLocked ? "opacity-60 cursor-not-allowed" : ""}
+                            `}
+                          />
+
+                          <button
+                            disabled={isLocked}
+                            onClick={() => {
+                              if (!tiebreaker) {
+                                alert("Please enter a tiebreaker score.");
+                                return;
+                              }
+
+                              const form = formRef.current;
+                              if (!form) return;
+
+                              const fd = new FormData(form);
+                              fd.set("tiebreaker", tiebreaker);
+                              fd.set("bracketId", bracket.bracket_id);
+
+                              submitBracket(fd);
+                            }}
+                            className={`px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs
+                              ${isLocked ? "opacity-60 cursor-not-allowed" : ""}
+                            `}
+                          >
+                            Submit Bracket
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }; // <-- THIS WAS THE MISSING BRACE
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Hidden form for server action */}
       <form ref={formRef} action={submitBracket} className="hidden">
         <input type="hidden" name="bracketId" value={bracket.bracket_id} />
         <input type="hidden" name="tiebreaker" value={tiebreaker} />
       </form>
 
-      {/* Status */}
       <div className="flex flex-col gap-2">
         {isLocked ? (
           <div className="px-3 py-2 rounded-md bg-red-900/60 border border-red-500/60 text-xs text-red-100">
@@ -346,9 +338,7 @@ return (
         Reset Bracket
       </button>
 
-      {/* Bracket Layout */}
       <div className="flex gap-4 overflow-x-auto">
-        {/* LEFT SIDE */}
         <div className="flex flex-col gap-6 min-w-[480px]">
           <div>
             <h3 className="text-sm font-semibold mb-2 text-slate-200">East</h3>
@@ -360,7 +350,6 @@ return (
           </div>
         </div>
 
-        {/* CENTER */}
         <div className="flex flex-col justify-center gap-6 min-w-[320px]">
           <div>
             <h3 className="text-sm font-semibold mb-2 text-slate-200">
@@ -376,7 +365,6 @@ return (
           </div>
         </div>
 
-        {/* RIGHT SIDE */}
         <div className="flex flex-col gap-6 min-w-[480px]">
           <div>
             <h3 className="text-sm font-semibold mb-2 text-slate-200">West</h3>

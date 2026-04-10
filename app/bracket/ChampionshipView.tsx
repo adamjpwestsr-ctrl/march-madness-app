@@ -40,7 +40,7 @@ type ChampionshipViewProps = {
   tiebreaker: string;
   setTiebreaker: (v: string) => void;
   setSubmittedBanner: (v: string) => void;
-  formRef: React.RefObject<HTMLFormElement>;
+  formRef: React.RefObject<HTMLFormElement | null>;
   onPick: (gameId: number, teamId: string) => void;
   setView: (view: any) => void;
 };

@@ -1,8 +1,36 @@
 "use client";
 
-import { Game, Pick } from "./types"; // If you don’t have a shared types file, remove this line.
 import { getTeamLogo } from "../../lib/getTeamLogo";
 
+// -----------------------------
+// INLINE TYPES (Option A)
+// -----------------------------
+type Team = {
+  team_id: string;
+  name: string;
+  seed: number | null;
+};
+
+type Game = {
+  game_id: number;
+  round: number;
+  region: string;
+  team1: Team | null;
+  team2: Team | null;
+  winner: string | null;
+  source_game1: number | null;
+  source_game2: number | null;
+};
+
+type Pick = {
+  bracket_id: string;
+  game_id: number;
+  selected_team: string;
+};
+
+// -----------------------------
+// PROPS
+// -----------------------------
 type RegionViewProps = {
   region: string;
   bracket: { bracket_id: string };
@@ -13,6 +41,9 @@ type RegionViewProps = {
   setView: (view: any) => void;
 };
 
+// -----------------------------
+// COMPONENT
+// -----------------------------
 export default function RegionView({
   region,
   bracket,
@@ -37,7 +68,7 @@ export default function RegionView({
     return pick ? pick.selected_team : null;
   };
 
-  const renderTeamButton = (game: Game, team: any, selectedTeamId: string | null) => {
+  const renderTeamButton = (game: Game, team: Team | null, selectedTeamId: string | null) => {
     if (!team) {
       return (
         <div className="text-xs text-slate-500 italic px-2 py-1 border border-dashed border-slate-700 rounded h-9 flex items-center">

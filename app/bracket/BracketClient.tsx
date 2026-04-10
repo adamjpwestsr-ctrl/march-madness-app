@@ -218,11 +218,17 @@ export default function BracketClient({
     }
 
     return (
-      <div
-        className={`flex gap-4 ${
-          direction === "rtl" ? "flex-row-reverse" : "flex-row"
-        }`}
-      >
+  <div className="relative">
+    {/* ⭐ DEBUG LABEL */}
+    <div className="absolute -top-5 left-0 text-[10px] text-yellow-400 opacity-80">
+      DEBUG → {region} ({direction})
+    </div>
+
+    <div
+      className={`flex gap-4 ${
+        direction === "rtl" ? "flex-row-reverse" : "flex-row"
+      }`}
+    >
         {rounds.map((round) => {
           const roundGames = regionGames.filter((g) => g.round === round);
           return (

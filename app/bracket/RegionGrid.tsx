@@ -1,5 +1,7 @@
 "use client";
 
+import { RegionButton } from "./components/RegionButton";
+
 type RegionGridProps = {
   setView: (
     view:
@@ -17,57 +19,70 @@ export default function RegionGrid({ setView }: RegionGridProps) {
     {
       key: "region-east",
       label: "East",
-      color: "from-emerald-500 to-emerald-700",
+      icon: "🧭",
+      gradient: "from-emerald-400 to-teal-600",
     },
     {
       key: "region-west",
       label: "West",
-      color: "from-blue-500 to-blue-700",
+      icon: "🌄",
+      gradient: "from-blue-500 to-indigo-700",
     },
     {
       key: "region-south",
       label: "South",
-      color: "from-red-500 to-red-700",
+      icon: "☀️",
+      gradient: "from-rose-400 to-red-600",
     },
     {
       key: "region-midwest",
       label: "Midwest",
-      color: "from-yellow-500 to-yellow-700",
+      icon: "⭐",
+      gradient: "from-amber-400 to-orange-600",
     },
     {
       key: "final-four",
       label: "Final Four",
-      color: "from-purple-500 to-purple-700",
+      icon: "🏀",
+      gradient: "from-violet-500 to-purple-700",
     },
     {
       key: "championship",
       label: "Championship",
-      color: "from-indigo-500 to-indigo-700",
+      icon: "🏆",
+      gradient: "from-yellow-400 to-yellow-600",
     },
   ] as const;
 
   return (
-    <div className="flex flex-col gap-6 w-full">
-      <h2 className="text-xl font-bold text-slate-100 text-center">
-        Select a Region
-      </h2>
+    <div className="flex flex-col gap-8 w-full items-center">
+      {/* Header */}
+      <div className="text-center">
+        <h2 className="text-2xl font-bold text-slate-100 tracking-wide">
+          Select a Region
+        </h2>
+        <p className="text-slate-400 text-sm mt-1">
+          Choose a region to begin your bracket
+        </p>
+      </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        {regions.map((r) => (
-          <button
-            key={r.key}
-            onClick={() => setView(r.key)}
-            className={`
-              rounded-xl p-8 text-center text-white font-semibold text-lg
-              bg-gradient-to-br ${r.color}
-              shadow-lg shadow-black/40
-              hover:scale-[1.03] hover:shadow-xl hover:shadow-black/50
-              transition-all duration-200
-            `}
-          >
-            {r.label}
-          </button>
-        ))}
+      {/* Container Card */}
+      <div className="relative w-full max-w-3xl rounded-3xl p-8 bg-slate-900/40 border border-slate-800/60 shadow-2xl">
+        {/* Spotlight */}
+        <div className="absolute inset-0 bg-gradient-radial from-white/5 to-transparent pointer-events-none rounded-3xl" />
+
+        {/* Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 relative z-10">
+          {regions.map((r) => (
+            <RegionButton
+              key={r.key}
+              label={r.label}
+              icon={r.icon}
+              gradient={r.gradient}
+              onClick={() => setView(r.key)}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );

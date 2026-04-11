@@ -86,12 +86,12 @@ export default function ChampionshipView({
     null;
 
   // -----------------------------
-  // TEAM BUTTON
+  // UPGRADED TEAM BUTTON
   // -----------------------------
   const renderTeamButton = (team: Team | null) => {
     if (!team) {
       return (
-        <div className="text-xs text-slate-500 italic px-2 py-1 border border-dashed border-slate-700 rounded h-9 flex items-center">
+        <div className="text-xs text-slate-500 italic px-3 py-2 border border-dashed border-slate-700 rounded-md h-10 flex items-center">
           TBD
         </div>
       );
@@ -105,11 +105,24 @@ export default function ChampionshipView({
         type="button"
         onClick={() => onPick(CHAMPIONSHIP_GAME_ID, team.team_id)}
         disabled={isLocked}
-        className={`flex items-center gap-2 px-2 h-9 rounded text-xs border transition w-full
+        className={`
+          relative flex items-center gap-3 px-3 h-10 rounded-md text-xs
+          border transition-all w-full
           ${
             isSelected
-              ? "bg-emerald-600/80 border-emerald-400 text-white"
-              : "bg-slate-900/60 border-slate-600 text-slate-100 hover:bg-slate-700/80"
+              ? `
+                bg-emerald-600/30 
+                border-emerald-400 
+                text-white 
+                shadow-[0_0_12px_rgba(16,185,129,0.5)]
+                `
+              : `
+                bg-white/5 
+                border-white/10 
+                text-slate-100 
+                hover:bg-white/10 
+                hover:scale-[1.02]
+                `
           }
           ${isLocked ? "opacity-60 cursor-not-allowed" : ""}
         `}
@@ -118,15 +131,28 @@ export default function ChampionshipView({
           <img
             src={logo}
             alt={team.name}
-            className="w-5 h-5 rounded-full object-cover"
+            className="w-6 h-6 rounded-full object-cover shadow-sm"
           />
         )}
 
         {team.seed !== null && (
-          <span className="text-xs font-bold text-slate-100">{team.seed}</span>
+          <span
+            className={`
+              text-[10px] font-bold px-1.5 py-0.5 rounded 
+              ${
+                isSelected
+                  ? "bg-emerald-500 text-white"
+                  : "bg-slate-700 text-slate-200"
+              }
+            `}
+          >
+            {team.seed}
+          </span>
         )}
 
-        <span className="flex-1 text-left">{team.name}</span>
+        <span className="flex-1 text-left text-sm tracking-wide">
+          {team.name}
+        </span>
       </button>
     );
   };
@@ -135,40 +161,87 @@ export default function ChampionshipView({
   // RENDER
   // -----------------------------
   return (
-    <div className="flex flex-col gap-6 w-full">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-slate-100">Championship</h2>
+    <div className="flex flex-col gap-8 w-full">
+      {/* ----------------------------- */}
+      {/* PREMIUM HEADER */}
+      {/* ----------------------------- */}
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex flex-col">
+          <div className="flex items-center gap-2">
+            <span className="text-3xl">🏆</span>
+
+            <h2 className="text-2xl font-semibold tracking-wide text-slate-100">
+              Championship
+            </h2>
+          </div>
+
+          <div className="h-[3px] w-28 mt-1 rounded-full bg-yellow-400" />
+        </div>
 
         <button
           onClick={() => setView("final-four")}
-          className="px-3 py-1 bg-slate-700 hover:bg-slate-600 text-white rounded text-xs"
+          className="
+            flex items-center gap-2 px-3 py-1.5
+            bg-white/5 border border-white/10 backdrop-blur-md
+            text-slate-200 text-xs rounded-lg
+            shadow-md shadow-black/40
+            hover:ring-2 hover:ring-white/20 hover:scale-[1.03]
+            transition-all duration-200
+          "
         >
-          ← Back to Final Four
+          <span className="text-sm">←</span>
+          Back
         </button>
       </div>
 
-      {/* Matchup */}
-      <div className="flex flex-col gap-2 bg-slate-800/60 rounded-md p-4 border border-slate-700">
-        <div className="text-xs font-semibold text-slate-400 mb-1">
-          National Championship
-        </div>
+      {/* ----------------------------- */}
+      {/* FINAL MATCHUP CARD */}
+      {/* ----------------------------- */}
+      <div
+        className="
+          flex flex-col gap-3 p-5 rounded-xl
+          bg-white/5 border border-white/10 backdrop-blur-sm
+          shadow-lg shadow-black/40
+          relative overflow-hidden
+        "
+      >
+        <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none rounded-xl" />
 
-        {renderTeamButton(team1)}
-        {renderTeamButton(team2)}
+        <div className="relative z-10">
+          <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-300 mb-2">
+            National Championship
+          </div>
+
+          <div className="flex flex-col gap-2">
+            {renderTeamButton(team1)}
+            {renderTeamButton(team2)}
+          </div>
+        </div>
       </div>
 
-      {/* Tiebreaker */}
-      <div className="flex flex-col gap-2">
+      {/* ----------------------------- */}
+      {/* PREMIUM TIEBREAKER INPUT */}
+      {/* ----------------------------- */}
+      <div className="flex flex-col gap-3">
         <input
           type="number"
           placeholder="Championship total points tiebreaker"
           value={tiebreaker}
           onChange={(e) => setTiebreaker(e.target.value)}
           disabled={isLocked}
-          className="px-2 py-1 text-xs bg-slate-900/60 border border-slate-600 rounded text-slate-200"
+          className="
+            px-3 py-2 text-sm rounded-lg
+            bg-white/5 border border-white/10 backdrop-blur-sm
+            text-slate-200 placeholder-slate-400
+            shadow-inner shadow-black/20
+            focus:outline-none focus:ring-2 focus:ring-yellow-300/40
+            transition-all
+          "
         />
 
+        {/* ----------------------------- */}
+        {/* PREMIUM SUBMIT BUTTON */}
+        {/* ----------------------------- */}
         <button
           disabled={isLocked}
           onClick={() => {
@@ -187,9 +260,21 @@ export default function ChampionshipView({
             form.requestSubmit();
             setSubmittedBanner("Bracket submitted successfully.");
           }}
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm"
+          className="
+            px-6 py-3 rounded-xl text-white font-semibold tracking-wide
+            bg-gradient-to-br from-yellow-400 to-yellow-600
+            shadow-lg shadow-yellow-900/40
+            border border-white/10 backdrop-blur-md
+            transition-all duration-300
+            hover:scale-[1.04] hover:shadow-yellow-500/40 hover:ring-2 hover:ring-yellow-300/40
+            active:scale-[0.97]
+            flex items-center gap-2
+          "
         >
-          Submit Bracket →
+          Submit Bracket
+          <span className="transition-transform duration-300 group-hover:translate-x-1">
+            →
+          </span>
         </button>
       </div>
     </div>

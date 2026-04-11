@@ -90,23 +90,81 @@ export default function BracketShell({
     loadBracket();
   };
 
-  if (!bracketData) {
-    return <div className="text-slate-300 text-lg">Loading bracket…</div>;
+  // -----------------------------
+  // PREMIUM LOADING STATE
+  // -----------------------------
+  if (!bracketData && !error) {
+    return (
+      <div
+        className="
+          w-full max-w-3xl mx-auto mt-6
+          p-8 rounded-2xl
+          bg-white/5 border border-white/10 backdrop-blur-md
+          shadow-xl shadow-black/40
+          animate-pulse
+          text-center text-slate-300
+        "
+      >
+        Loading bracket…
+      </div>
+    );
   }
 
-  const { bracket, picks, games } = bracketData;
+  // -----------------------------
+  // PREMIUM ERROR STATE
+  // -----------------------------
+  if (error) {
+    return (
+      <div
+        className="
+          w-full max-w-3xl mx-auto mt-6
+          p-6 rounded-xl
+          bg-red-900/40 border border-red-700/40 backdrop-blur-md
+          shadow-lg shadow-black/40
+          text-red-200 text-center
+        "
+      >
+        {error}
+      </div>
+    );
+  }
 
+  const { bracket, picks, games } = bracketData!;
+
+  // -----------------------------
+  // PREMIUM BRACKET CONTAINER
+  // -----------------------------
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-lg p-6 shadow-xl">
-      <h2 className="text-xl font-bold mb-4">{bracketName}</h2>
+    <div
+      className="
+        w-full max-w-4xl mx-auto mt-6
+        p-8 rounded-3xl
+        bg-white/5 border border-white/10 backdrop-blur-xl
+        shadow-2xl shadow-black/50
+        relative overflow-hidden
+      "
+    >
+      {/* Spotlight */}
+      <div className="absolute inset-0 bg-gradient-radial from-white/10 to-transparent pointer-events-none" />
 
-      <BracketClient
-        bracket={bracket}
-        picks={picks}
-        games={games}
-        onPick={handlePick}
-        onReset={handleReset}
-      />
+      {/* Header */}
+      <div className="relative z-10 mb-6">
+        <h2 className="text-2xl font-semibold tracking-wide text-slate-100">
+          {bracketName}
+        </h2>
+        <div className="h-[3px] w-24 mt-2 rounded-full bg-emerald-500" />
+      </div>
+
+      {/* Bracket Client */}
+      <div className="relative z-10">
+        <BracketClient
+          bracket={bracket}
+          picks={picks}
+          games={games}
+          onPick={handlePick}
+          onReset={handleReset}
+        />
+      </div>
     </div>
   );
 }

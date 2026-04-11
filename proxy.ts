@@ -1,36 +1,38 @@
-// middleware.ts
+// proxy.ts (Next.js 16 replacement for middleware.ts)
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
-export async function middleware(req: NextRequest) {
-  const res = NextResponse.next();
+export async function proxy(request: NextRequest) {
+  const response = NextResponse.next();
 
+  // Create Supabase client that can read/write cookies
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
         get(name: string) {
-          return req.cookies.get(name)?.value;
+          return request.cookies.get(name)?.value;
         },
         set(name: string, value: string, options: any) {
-          res.cookies.set(name, value, options);
+          response.cookies.set(name, value, options);
         },
         remove(name: string) {
-          res.cookies.delete(name); // <-- FIXED
+          response.cookies.delete(name);
         },
       },
     }
   );
 
-  // Refresh session if needed
+  // Refresh session so mobile browsers keep cookies alive
   await supabase.auth.getUser();
 
-  return res;
+  return response;
 }
 
 export const config = {
+  // SAME MATCHER YOU CONFIRMED
   matcher: [
     "/((?!api|_next/static|_next/image|favicon.ico|auth).*)",
   ],

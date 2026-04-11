@@ -4,6 +4,9 @@ import type { NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
 export async function proxy(request: NextRequest) {
+console.log("🔥 PROXY RAN", request.nextUrl.pathname);
+console.log("🍪 REQUEST COOKIES", request.cookies.getAll());
+
   const response = NextResponse.next();
 
   // Create Supabase client that can read/write cookies
@@ -27,6 +30,10 @@ export async function proxy(request: NextRequest) {
 
   // Refresh session so mobile browsers keep cookies alive
   await supabase.auth.getUser();
+const { data, error } = await supabase.auth.getUser();
+console.log("👤 USER", data, "❌ ERROR", error);
+
+console.log("🍪 RESPONSE COOKIES", response.cookies.getAll());
 
   return response;
 }

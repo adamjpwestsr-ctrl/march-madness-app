@@ -1,5 +1,6 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 
 export async function loginWithEmail(formData: FormData) {
@@ -19,10 +20,12 @@ export async function loginWithEmail(formData: FormData) {
     return { status: "error" };
   }
 
+  // Admins must enter admin code
   if (dbUser?.is_admin) {
     return { status: "needsAdminCode", email };
   }
 
+  // Send magic link
   const { error: magicError } = await supabase.auth.signInWithOtp({
     email,
     options: {
@@ -46,7 +49,7 @@ export async function verifyAdminCode(formData: FormData) {
 
   const supabase = await createSupabaseServerClient();
 
-  // 1. Validate admin user
+  // Validate admin
   const { data: dbUser, error: userError } = await supabase
     .from("users")
     .select("user_id, email, is_admin, admin_code")
@@ -61,7 +64,7 @@ export async function verifyAdminCode(formData: FormData) {
     return { status: "invalidAdminCode" };
   }
 
-  // 2. Perform login AND set the session cookie
+  // Login using admin code as password
   const { data, error: authError } = await supabase.auth.signInWithPassword({
     email,
     password: adminCode,
@@ -72,6 +75,22 @@ export async function verifyAdminCode(formData: FormData) {
     return { status: "invalidCredentials" };
   }
 
-  // 3. IMPORTANT: Return success AFTER cookie is written
+  // SET APP SESSION COOKIE
+  const cookieStore = await cookies();
+  cookieStore.set(
+    "mm_session",
+    JSON.stringify({
+      userId: dbUser.user_id,
+      email: dbUser.email,
+      isAdmin: true,
+    }),
+    {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+    }
+  );
+
   return { status: "success" };
 }

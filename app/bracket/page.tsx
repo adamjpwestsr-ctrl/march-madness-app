@@ -43,9 +43,9 @@ export default async function BracketPage({
     if (!email) redirect("/login");
 
     // SUPABASE CLIENT (EDGE-SAFE)
-const supabase = createServerClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
-  cookies: cookieStore
-});
+    const supabase = createServerClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
+      cookies: cookieStore,
+    });
 
     // LOAD BRACKETS BY EMAIL
     const { data: brackets, error } = await supabase
@@ -53,6 +53,11 @@ const supabase = createServerClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
       .select("bracket_id, bracket_name, icon, created_at, updated_at")
       .eq("email", email)
       .order("created_at", { ascending: true });
+
+    // 🔍 DIAGNOSTIC LOGS
+    console.log("📌 BRACKET PAGE EMAIL:", email);
+    console.log("📌 BRACKET QUERY RESULT:", brackets);
+    console.log("📌 BRACKET QUERY ERROR:", error);
 
     if (error) console.error("Bracket load error:", error);
 

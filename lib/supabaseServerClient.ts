@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 
 export async function createSupabaseServerClient() {
-  const cookieStore = await cookies(); // MUST await in Edge runtime
+  const cookieStore = cookies();
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -14,18 +14,26 @@ export async function createSupabaseServerClient() {
           return cookieStore.get(name)?.value;
         },
         set(name: string, value: string, options: any) {
-          try {
-            cookieStore.set({ name, value, ...options });
-          } catch {
-            // Edge runtime sometimes blocks writes — safe to ignore
-          }
+          // Edge runtime: MUST return a Set-Cookie header manually
+          cookieStore.set({
+            name,
+            value,
+            ...options,
+            httpOnly: true,
+            secure: true,
+            sameSite: "none",
+          });
         },
         remove(name: string, options: any) {
-          try {
-            cookieStore.set({ name, value: "", ...options });
-          } catch {
-            // safe to ignore
-          }
+          cookieStore.set({
+            name,
+            value: "",
+            ...options,
+            httpOnly: true,
+            secure: true,
+            sameSite: "none",
+            maxAge: 0,
+          });
         },
       },
     }

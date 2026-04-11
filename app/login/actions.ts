@@ -46,6 +46,7 @@ export async function verifyAdminCode(formData: FormData) {
 
   const supabase = await createSupabaseServerClient();
 
+  // 1. Validate admin user
   const { data: dbUser, error: userError } = await supabase
     .from("users")
     .select("user_id, email, is_admin, admin_code")
@@ -60,7 +61,8 @@ export async function verifyAdminCode(formData: FormData) {
     return { status: "invalidAdminCode" };
   }
 
-  const { error: authError } = await supabase.auth.signInWithPassword({
+  // 2. Perform login AND set the session cookie
+  const { data, error: authError } = await supabase.auth.signInWithPassword({
     email,
     password: adminCode,
   });
@@ -70,5 +72,6 @@ export async function verifyAdminCode(formData: FormData) {
     return { status: "invalidCredentials" };
   }
 
+  // 3. IMPORTANT: Return success AFTER cookie is written
   return { status: "success" };
 }

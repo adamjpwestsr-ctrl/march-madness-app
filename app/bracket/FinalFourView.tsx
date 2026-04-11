@@ -3,7 +3,7 @@
 import { getTeamLogo } from "../../lib/getTeamLogo";
 
 // -----------------------------
-// INLINE TYPES (Option A)
+// INLINE TYPES
 // -----------------------------
 type Team = {
   team_id: string;
@@ -51,17 +51,47 @@ export default function FinalFourView({
   onPick,
   setView,
 }: FinalFourViewProps) {
-  // Final Four = round 5
-  const finalFourGames = games
-    .filter((g) => g.round === 5)
-    .sort((a, b) => a.game_id - b.game_id);
+  // -----------------------------
+  // REGION → WINNER LOOKUP
+  // -----------------------------
+  function getRegionWinner(regionName: string): Team | null {
+    const regionGames = games.filter((g) => g.region === regionName);
+    const elite8Game = regionGames.find((g) => g.round === 4); // Elite 8 winner
+
+    if (!elite8Game) return null;
+
+    const pick = picks.find((p) => p.game_id === elite8Game.game_id);
+    if (!pick) return null;
+
+    const team =
+      elite8Game.team1?.team_id === pick.selected_team
+        ? elite8Game.team1
+        : elite8Game.team2;
+
+    return team || null;
+  }
+
+  // -----------------------------
+  // CORRECT NCAA PAIRINGS
+  // -----------------------------
+  const semifinalMatchups = [
+    { left: "East", right: "South", gameId: 61 },
+    { left: "Midwest", right: "West", gameId: 62 },
+  ];
 
   const getSelectedTeamId = (gameId: number) => {
     const pick = picks.find((p) => p.game_id === gameId);
     return pick ? pick.selected_team : null;
   };
 
-  const renderTeamButton = (game: Game, team: Team | null, selectedTeamId: string | null) => {
+  // -----------------------------
+  // TEAM BUTTON
+  // -----------------------------
+  const renderTeamButton = (
+    gameId: number,
+    team: Team | null,
+    selectedTeamId: string | null
+  ) => {
     if (!team) {
       return (
         <div className="text-xs text-slate-500 italic px-2 py-1 border border-dashed border-slate-700 rounded h-9 flex items-center">
@@ -76,7 +106,7 @@ export default function FinalFourView({
     return (
       <button
         type="button"
-        onClick={() => onPick(game.game_id, team.team_id)}
+        onClick={() => onPick(gameId, team.team_id)}
         disabled={isLocked}
         className={`flex items-center gap-2 px-2 h-9 rounded text-xs border transition w-full
           ${
@@ -104,6 +134,9 @@ export default function FinalFourView({
     );
   };
 
+  // -----------------------------
+  // RENDER
+  // -----------------------------
   return (
     <div className="flex flex-col gap-6 w-full">
       {/* Header */}
@@ -118,22 +151,24 @@ export default function FinalFourView({
         </button>
       </div>
 
-      {/* Final Four Matchups */}
+      {/* Semifinals */}
       <div className="flex flex-col gap-6">
-        {finalFourGames.map((game) => {
-          const selectedTeamId = getSelectedTeamId(game.game_id);
+        {semifinalMatchups.map((m, index) => {
+          const leftTeam = getRegionWinner(m.left);
+          const rightTeam = getRegionWinner(m.right);
+          const selectedTeamId = getSelectedTeamId(m.gameId);
 
           return (
             <div
-              key={game.game_id}
+              key={m.gameId}
               className="flex flex-col gap-2 bg-slate-800/60 rounded-md p-4 border border-slate-700"
             >
               <div className="text-xs font-semibold text-slate-400 mb-1">
-                Semifinal {game.game_id === 61 ? "1" : "2"}
+                Semifinal {index + 1} — {m.left} vs {m.right}
               </div>
 
-              {renderTeamButton(game, game.team1, selectedTeamId)}
-              {renderTeamButton(game, game.team2, selectedTeamId)}
+              {renderTeamButton(m.gameId, leftTeam, selectedTeamId)}
+              {renderTeamButton(m.gameId, rightTeam, selectedTeamId)}
             </div>
           );
         })}

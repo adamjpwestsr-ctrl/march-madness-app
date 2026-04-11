@@ -1,20 +1,49 @@
 "use client";
 
 type RegionGridProps = {
-  setView: (view:
-    | "region-east"
-    | "region-west"
-    | "region-south"
-    | "region-midwest"
+  setView: (
+    view:
+      | "region-east"
+      | "region-west"
+      | "region-south"
+      | "region-midwest"
+      | "final-four"
+      | "championship"
   ) => void;
 };
 
 export default function RegionGrid({ setView }: RegionGridProps) {
   const regions = [
-    { key: "region-east", label: "East", color: "from-emerald-500 to-emerald-700" },
-    { key: "region-west", label: "West", color: "from-blue-500 to-blue-700" },
-    { key: "region-south", label: "South", color: "from-red-500 to-red-700" },
-    { key: "region-midwest", label: "Midwest", color: "from-yellow-500 to-yellow-700" },
+    {
+      key: "region-east",
+      label: "East",
+      color: "from-emerald-500 to-emerald-700",
+    },
+    {
+      key: "region-west",
+      label: "West",
+      color: "from-blue-500 to-blue-700",
+    },
+    {
+      key: "region-south",
+      label: "South",
+      color: "from-red-500 to-red-700",
+    },
+    {
+      key: "region-midwest",
+      label: "Midwest",
+      color: "from-yellow-500 to-yellow-700",
+    },
+    {
+      key: "final-four",
+      label: "Final Four",
+      color: "from-purple-500 to-purple-700",
+    },
+    {
+      key: "championship",
+      label: "Championship",
+      color: "from-indigo-500 to-indigo-700",
+    },
   ] as const;
 
   return (

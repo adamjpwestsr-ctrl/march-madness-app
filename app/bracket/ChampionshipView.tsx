@@ -1,10 +1,9 @@
 "use client";
 
 import { getTeamLogo } from "../../lib/getTeamLogo";
-import { submitBracket } from "./actions";
 
 // -----------------------------
-// INLINE TYPES (Option A)
+// INLINE TYPES
 // -----------------------------
 type Team = {
   team_id: string;
@@ -40,7 +39,7 @@ type ChampionshipViewProps = {
   tiebreaker: string;
   setTiebreaker: (v: string) => void;
   setSubmittedBanner: (v: string) => void;
-  formRef: React.RefObject<HTMLFormElement | null>;
+  formRef: any;
   onPick: (gameId: number, teamId: string) => void;
   setView: (view: any) => void;
 };
@@ -60,21 +59,35 @@ export default function ChampionshipView({
   onPick,
   setView,
 }: ChampionshipViewProps) {
-  // Championship game is round 6
-  const championshipGame = games.find((g) => g.round === 6);
+  const CHAMPIONSHIP_GAME_ID = 63;
 
-  if (!championshipGame) {
-    return (
-      <div className="text-slate-200 text-center py-10">
-        Championship game not found.
-      </div>
-    );
-  }
+  // -----------------------------
+  // GET SEMIFINAL WINNERS
+  // -----------------------------
+  const semifinal1 = games.find((g) => g.game_id === 61);
+  const semifinal2 = games.find((g) => g.game_id === 62);
+
+  const getWinner = (game: Game | undefined): Team | null => {
+    if (!game) return null;
+
+    const pick = picks.find((p) => p.game_id === game.game_id);
+    if (!pick) return null;
+
+    return game.team1?.team_id === pick.selected_team
+      ? game.team1
+      : game.team2;
+  };
+
+  const team1 = getWinner(semifinal1);
+  const team2 = getWinner(semifinal2);
 
   const selectedTeamId =
-    picks.find((p) => p.game_id === championshipGame.game_id)?.selected_team ||
+    picks.find((p) => p.game_id === CHAMPIONSHIP_GAME_ID)?.selected_team ||
     null;
 
+  // -----------------------------
+  // TEAM BUTTON
+  // -----------------------------
   const renderTeamButton = (team: Team | null) => {
     if (!team) {
       return (
@@ -90,9 +103,9 @@ export default function ChampionshipView({
     return (
       <button
         type="button"
-        onClick={() => onPick(championshipGame.game_id, team.team_id)}
+        onClick={() => onPick(CHAMPIONSHIP_GAME_ID, team.team_id)}
         disabled={isLocked}
-        className={`flex items-center gap-2 px-2 h-10 rounded text-sm border transition w-full
+        className={`flex items-center gap-2 px-2 h-9 rounded text-xs border transition w-full
           ${
             isSelected
               ? "bg-emerald-600/80 border-emerald-400 text-white"
@@ -105,7 +118,7 @@ export default function ChampionshipView({
           <img
             src={logo}
             alt={team.name}
-            className="w-6 h-6 rounded-full object-cover"
+            className="w-5 h-5 rounded-full object-cover"
           />
         )}
 
@@ -118,23 +131,9 @@ export default function ChampionshipView({
     );
   };
 
-  const handleSubmit = () => {
-    if (!tiebreaker) {
-      alert("Please enter a tiebreaker score.");
-      return;
-    }
-
-    const form = formRef.current;
-    if (!form) return;
-
-    const fd = new FormData(form);
-    fd.set("tiebreaker", tiebreaker);
-    fd.set("bracketId", bracket.bracket_id);
-
-    submitBracket(fd);
-    setSubmittedBanner("Bracket submitted successfully.");
-  };
-
+  // -----------------------------
+  // RENDER
+  // -----------------------------
   return (
     <div className="flex flex-col gap-6 w-full">
       {/* Header */}
@@ -149,43 +148,50 @@ export default function ChampionshipView({
         </button>
       </div>
 
-      {/* Championship Matchup */}
-      <div className="flex flex-col gap-4 bg-slate-800/60 rounded-md p-4 border border-slate-700">
+      {/* Matchup */}
+      <div className="flex flex-col gap-2 bg-slate-800/60 rounded-md p-4 border border-slate-700">
         <div className="text-xs font-semibold text-slate-400 mb-1">
           National Championship
         </div>
 
-        {renderTeamButton(championshipGame.team1)}
-        {renderTeamButton(championshipGame.team2)}
+        {renderTeamButton(team1)}
+        {renderTeamButton(team2)}
       </div>
 
       {/* Tiebreaker */}
-      <div className="flex flex-col gap-2 max-w-xs">
-        <label className="text-xs text-slate-300">
-          Championship Total Points (Tiebreaker)
-        </label>
-
+      <div className="flex flex-col gap-2">
         <input
           type="number"
+          placeholder="Championship total points tiebreaker"
           value={tiebreaker}
           onChange={(e) => setTiebreaker(e.target.value)}
           disabled={isLocked}
-          className={`px-2 py-2 text-sm bg-slate-900/60 border border-slate-600 rounded text-slate-200
-            ${isLocked ? "opacity-60 cursor-not-allowed" : ""}
-          `}
+          className="px-2 py-1 text-xs bg-slate-900/60 border border-slate-600 rounded text-slate-200"
         />
-      </div>
 
-      {/* Submit */}
-      <button
-        onClick={handleSubmit}
-        disabled={isLocked}
-        className={`self-start px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm
-          ${isLocked ? "opacity-60 cursor-not-allowed" : ""}
-        `}
-      >
-        Submit Bracket
-      </button>
+        <button
+          disabled={isLocked}
+          onClick={() => {
+            if (!tiebreaker) {
+              alert("Please enter a tiebreaker score.");
+              return;
+            }
+
+            const form = formRef.current;
+            if (!form) return;
+
+            const fd = new FormData(form);
+            fd.set("tiebreaker", tiebreaker);
+            fd.set("bracketId", bracket.bracket_id);
+
+            form.requestSubmit();
+            setSubmittedBanner("Bracket submitted successfully.");
+          }}
+          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm"
+        >
+          Submit Bracket →
+        </button>
+      </div>
     </div>
   );
 }

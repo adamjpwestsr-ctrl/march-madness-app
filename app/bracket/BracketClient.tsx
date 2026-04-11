@@ -7,6 +7,7 @@ import RegionGrid from "./RegionGrid";
 import RegionView from "./RegionView";
 import FinalFourView from "./FinalFourView";
 import ChampionshipView from "./ChampionshipView";
+import { AnimatePresence, motion } from "framer-motion";
 
 // -----------------------------
 // TYPES
@@ -41,7 +42,8 @@ type BracketView =
   | "region-south"
   | "region-midwest"
   | "final-four"
-  | "championship";
+  | "championship"
+  | "legacy";
 
 const CHAMPIONSHIP_GAME_ID = 63;
 
@@ -91,14 +93,12 @@ export default function BracketClient({
   onPick: (gameId: number, teamId: string) => void;
   onReset: () => void;
 }) {
-  // Existing state
   const [localPicks, setLocalPicks] = useState(picks);
   const [tiebreaker, setTiebreaker] = useState("");
   const [submittedBanner, setSubmittedBanner] = useState("");
   const [lockDate, setLockDate] = useState<string | null>(null);
   const [isLocked, setIsLocked] = useState(false);
 
-  // NEW: view state for v0.17.00
   const [view, setView] = useState<BracketView>("grid");
 
   const formRef = useRef<HTMLFormElement | null>(null);
@@ -115,7 +115,7 @@ export default function BracketClient({
       try {
         const res = await fetch("/api/settings/lock-date/get");
         const data = await res.json();
-        if (data.lock_date) {
+      if (data.lock_date) {
           setLockDate(data.lock_date);
           const lock = new Date(data.lock_date);
           const now = new Date();
@@ -352,204 +352,213 @@ export default function BracketClient({
   };
 
   // -----------------------------
-  // VIEW ROUTER (v0.17.00)
+  // ANIMATION CONFIG
   // -----------------------------
-  if (view === "grid") {
-    return <RegionGrid setView={setView} />;
-  }
-
-  if (view === "region-east") {
-    return (
-      <RegionView
-        region="East"
-        bracket={bracket}
-        games={games}
-        picks={localPicks}
-        isLocked={isLocked}
-        onPick={handlePick}
-        setView={setView}
-      />
-    );
-  }
-
-  if (view === "region-west") {
-    return (
-      <RegionView
-        region="West"
-        bracket={bracket}
-        games={games}
-        picks={localPicks}
-        isLocked={isLocked}
-        onPick={handlePick}
-        setView={setView}
-      />
-    );
-  }
-
-  if (view === "region-south") {
-    return (
-      <RegionView
-        region="South"
-        bracket={bracket}
-        games={games}
-        picks={localPicks}
-        isLocked={isLocked}
-        onPick={handlePick}
-        setView={setView}
-      />
-    );
-  }
-
-  if (view === "region-midwest") {
-    return (
-      <RegionView
-        region="Midwest"
-        bracket={bracket}
-        games={games}
-        picks={localPicks}
-        isLocked={isLocked}
-        onPick={handlePick}
-        setView={setView}
-      />
-    );
-  }
-
-  if (view === "final-four") {
-    return (
-      <FinalFourView
-        bracket={bracket}
-        games={games}
-        picks={localPicks}
-        isLocked={isLocked}
-        onPick={handlePick}
-        setView={setView}
-      />
-    );
-  }
-
-  if (view === "championship") {
-    return (
-      <ChampionshipView
-        bracket={bracket}
-        games={games}
-        picks={localPicks}
-        isLocked={isLocked}
-        tiebreaker={tiebreaker}
-        setTiebreaker={setTiebreaker}
-        setSubmittedBanner={setSubmittedBanner}
-        formRef={formRef}
-        onPick={handlePick}
-        setView={setView}
-      />
-    );
-  }
+  const viewKey = view;
+  const transitionVariants = {
+    initial: { opacity: 0, x: 40 },
+    animate: { opacity: 1, x: 0 },
+    exit: { opacity: 0, x: -40 },
+  };
 
   // -----------------------------
-  // GRID VIEW (existing full bracket)
+  // MAIN RENDER WITH ANIMATED ROUTER
   // -----------------------------
   return (
-    <div className="flex flex-col gap-4">
-      {/* Hidden form */}
-      <form ref={formRef} action={submitBracket} className="hidden">
-        <input type="hidden" name="bracketId" value={bracket.bracket_id} />
-        <input type="hidden" name="tiebreaker" value={tiebreaker} />
-      </form>
-
-      {/* Banner */}
-      <div className="flex flex-col gap-2">
-        {isLocked ? (
-          <div className="px-3 py-2 rounded-md bg-red-900/60 border border-red-500/60 text-xs text-red-100">
-            Bracket Locked — submissions are closed.
-          </div>
-        ) : lockDate ? (
-          <div className="px-3 py-2 rounded-md bg-emerald-900/40 border border-emerald-500/60 text-xs text-emerald-100">
-            Bracket Open — changes allowed until lock date.
-          </div>
-        ) : (
-          <div className="px-3 py-2 rounded-md bg-slate-800/60 border border-slate-600 text-xs text-slate-200">
-            No lock date set — brackets are currently open.
-          </div>
-        )}
-
-        {submittedBanner && (
-          <div className="px-3 py-2 rounded-md bg-blue-900/60 border border-blue-500/60 text-xs text-blue-100">
-            {submittedBanner}
-          </div>
-        )}
-      </div>
-
-      <BracketLegend />
-
-      {/* Reset */}
-      <button
-        type="button"
-        form="__none__"
-        onClick={() => {
-          if (isLocked) return;
-          onReset();
-          setLocalPicks([]);
-          setTiebreaker("");
-          setSubmittedBanner("");
-        }}
-        disabled={isLocked}
-        className={`self-start px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm
-          ${isLocked ? "opacity-60 cursor-not-allowed" : ""}
-        `}
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={viewKey}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+        variants={transitionVariants}
+        transition={{ duration: 0.25, ease: "easeOut" }}
+        className="w-full"
       >
-        Reset Bracket
-      </button>
+        {view === "grid" && (
+          <RegionGrid setView={setView} />
+        )}
 
-      {/* MAIN BRACKET LAYOUT */}
-      <div className="flex gap-4 pb-10 w-full max-w-full overflow-x-hidden flex-wrap">
-        {/* LEFT SIDE */}
-        <div className="flex flex-col gap-6 flex-1 min-w-0">
-          <div>
-            <h3 className="text-base font-bold text-slate-100 mb-2 pl-2 border-l-4 border-emerald-500">
-              East
-            </h3>
-            {renderRegion("East", "ltr")}
-          </div>
-          <div>
-            <h3 className="text-base font-bold text-slate-100 mb-2 pl-2 border-l-4 border-emerald-500">
-              South
-            </h3>
-            {renderRegion("South", "ltr")}
-          </div>
-        </div>
+        {view === "region-east" && (
+          <RegionView
+            region="East"
+            bracket={bracket}
+            games={games}
+            picks={localPicks}
+            isLocked={isLocked}
+            onPick={handlePick}
+            setView={setView}
+          />
+        )}
 
-        {/* CENTER — Final Four + Championship */}
-        <div className="flex flex-col justify-center gap-6 w-[360px] relative -top-50 left-[160px] z-10">
-          <div>
-            <h3 className="text-base font-bold text-slate-100 mb-2 pl-2 border-l-4 border-emerald-500">
-              Final Four
-            </h3>
-            {renderRegion("Final Four", "ltr")}
-          </div>
-          <div>
-            <h3 className="text-base font-bold text-slate-100 mb-2 pl-2 border-l-4 border-emerald-500">
-              Championship
-            </h3>
-            {renderRegion("Championship", "ltr")}
-          </div>
-        </div>
+        {view === "region-west" && (
+          <RegionView
+            region="West"
+            bracket={bracket}
+            games={games}
+            picks={localPicks}
+            isLocked={isLocked}
+            onPick={handlePick}
+            setView={setView}
+          />
+        )}
 
-        {/* RIGHT SIDE */}
-        <div className="flex flex-col gap-6 flex-1 min-w-0">
-          <div dir="rtl">
-            <h3 className="text-base font-bold text-slate-100 mb-2 pl-2 border-l-4 border-emerald-500 text-left">
-              West
-            </h3>
-            {renderRegion("West", "rtl")}
-          </div>
+        {view === "region-south" && (
+          <RegionView
+            region="South"
+            bracket={bracket}
+            games={games}
+            picks={localPicks}
+            isLocked={isLocked}
+            onPick={handlePick}
+            setView={setView}
+          />
+        )}
 
-          <div dir="rtl">
-            <h3 className="text-base font-bold text-slate-100 mb-2 pl-2 border-l-4 border-emerald-500 text-left">
-              Midwest
-            </h3>
-            {renderRegion("Midwest", "rtl")}
+        {view === "region-midwest" && (
+          <RegionView
+            region="Midwest"
+            bracket={bracket}
+            games={games}
+            picks={localPicks}
+            isLocked={isLocked}
+            onPick={handlePick}
+            setView={setView}
+          />
+        )}
+
+        {view === "final-four" && (
+          <FinalFourView
+            bracket={bracket}
+            games={games}
+            picks={localPicks}
+            isLocked={isLocked}
+            onPick={handlePick}
+            setView={setView}
+          />
+        )}
+
+        {view === "championship" && (
+          <ChampionshipView
+            bracket={bracket}
+            games={games}
+            picks={localPicks}
+            isLocked={isLocked}
+            tiebreaker={tiebreaker}
+            setTiebreaker={setTiebreaker}
+            setSubmittedBanner={setSubmittedBanner}
+            formRef={formRef}
+            onPick={handlePick}
+            setView={setView}
+          />
+        )}
+
+        {view === "legacy" && (
+          <div className="flex flex-col gap-4">
+            {/* Hidden form */}
+            <form ref={formRef} action={submitBracket} className="hidden">
+              <input type="hidden" name="bracketId" value={bracket.bracket_id} />
+              <input type="hidden" name="tiebreaker" value={tiebreaker} />
+            </form>
+
+            {/* Banner */}
+            <div className="flex flex-col gap-2">
+              {isLocked ? (
+                <div className="px-3 py-2 rounded-md bg-red-900/60 border border-red-500/60 text-xs text-red-100">
+                  Bracket Locked — submissions are closed.
+                </div>
+              ) : lockDate ? (
+                <div className="px-3 py-2 rounded-md bg-emerald-900/40 border border-emerald-500/60 text-xs text-emerald-100">
+                  Bracket Open — changes allowed until lock date.
+                </div>
+              ) : (
+                <div className="px-3 py-2 rounded-md bg-slate-800/60 border border-slate-600 text-xs text-slate-200">
+                  No lock date set — brackets are currently open.
+                </div>
+              )}
+
+              {submittedBanner && (
+                <div className="px-3 py-2 rounded-md bg-blue-900/60 border border-blue-500/60 text-xs text-blue-100">
+                  {submittedBanner}
+                </div>
+              )}
+            </div>
+
+            <BracketLegend />
+
+            {/* Reset */}
+            <button
+              type="button"
+              form="__none__"
+              onClick={() => {
+                if (isLocked) return;
+                onReset();
+                setLocalPicks([]);
+                setTiebreaker("");
+                setSubmittedBanner("");
+              }}
+              disabled={isLocked}
+              className={`self-start px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm
+                ${isLocked ? "opacity-60 cursor-not-allowed" : ""}
+              `}
+            >
+              Reset Bracket
+            </button>
+
+            {/* MAIN BRACKET LAYOUT */}
+            <div className="flex gap-4 pb-10 w-full max-w-full overflow-x-hidden flex-wrap">
+              {/* LEFT SIDE */}
+              <div className="flex flex-col gap-6 flex-1 min-w-0">
+                <div>
+                  <h3 className="text-base font-bold text-slate-100 mb-2 pl-2 border-l-4 border-emerald-500">
+                    East
+                  </h3>
+                  {renderRegion("East", "ltr")}
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-100 mb-2 pl-2 border-l-4 border-emerald-500">
+                    South
+                  </h3>
+                  {renderRegion("South", "ltr")}
+                </div>
+              </div>
+
+              {/* CENTER — Final Four + Championship */}
+              <div className="flex flex-col justify-center gap-6 w-[360px] relative -top-50 left-[160px] z-10">
+                <div>
+                  <h3 className="text-base font-bold text-slate-100 mb-2 pl-2 border-l-4 border-emerald-500">
+                    Final Four
+                  </h3>
+                  {renderRegion("Final Four", "ltr")}
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-100 mb-2 pl-2 border-l-4 border-emerald-500">
+                    Championship
+                  </h3>
+                  {renderRegion("Championship", "ltr")}
+                </div>
+              </div>
+
+              {/* RIGHT SIDE */}
+              <div className="flex flex-col gap-6 flex-1 min-w-0">
+                <div dir="rtl">
+                  <h3 className="text-base font-bold text-slate-100 mb-2 pl-2 border-l-4 border-emerald-500 text-left">
+                    West
+                  </h3>
+                  {renderRegion("West", "rtl")}
+                </div>
+
+                <div dir="rtl">
+                  <h3 className="text-base font-bold text-slate-100 mb-2 pl-2 border-l-4 border-emerald-500 text-left">
+                    Midwest
+                  </h3>
+                  {renderRegion("Midwest", "rtl")}
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
-    </div>
+        )}
+      </motion.div>
+    </AnimatePresence>
   );
 }

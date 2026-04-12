@@ -39,6 +39,11 @@ type ChampionshipViewProps = {
   isLocked: boolean;
   onPick: (gameId: number, teamId: string) => void;
   setView: (view: any) => void;
+
+  tiebreaker: string;
+  setTiebreaker: React.Dispatch<React.SetStateAction<string>>;
+  setSubmittedBanner: React.Dispatch<React.SetStateAction<string>>;
+  formRef: React.RefObject<HTMLFormElement | null>;
 };
 
 // -----------------------------

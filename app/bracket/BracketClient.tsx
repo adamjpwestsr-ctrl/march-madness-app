@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from "react";
 import { submitBracket } from "./actions";
-import { getTeamLogo } from "../../lib/getTeamLogo";
 import RegionGrid from "./RegionGrid";
 import RegionView from "./RegionView";
 import FinalFourView from "./FinalFourView";
@@ -42,40 +41,7 @@ type BracketView =
   | "region-south"
   | "region-midwest"
   | "final-four"
-  | "championship"
-  | "legacy";
-
-const CHAMPIONSHIP_GAME_ID = 63;
-
-// -----------------------------
-// ICONS
-// -----------------------------
-const BulldogIcon = () => <span className="ml-1 text-lg leading-none">🐶</span>;
-const CrownIcon = () => <span className="ml-1 text-base leading-none">👑</span>;
-
-// -----------------------------
-// LEGEND
-// -----------------------------
-function BracketLegend() {
-  return (
-    <div className="flex flex-wrap gap-4 text-xs text-slate-300 bg-slate-800/60 border border-slate-700 rounded-md px-3 py-2">
-      <div className="flex items-center gap-1">
-        <span className="text-base">👑</span>
-        <span>Champion Pick</span>
-      </div>
-
-      <div className="flex items-center gap-1">
-        <span className="text-base">🐶</span>
-        <span>Underdog (higher seed beats lower seed)</span>
-      </div>
-
-      <div className="flex items-center gap-1 opacity-70">
-        <span className="text-base">🍀</span>
-        <span>Mulligan (coming soon)</span>
-      </div>
-    </div>
-  );
-}
+  | "championship";
 
 // -----------------------------
 // MAIN COMPONENT
@@ -87,7 +53,7 @@ export default function BracketClient({
   onPick,
   onReset,
 }: {
-  bracket: { bracket_id: string };
+  bracket: { bracket_id: string; bracket_name: string };
   games: Game[];
   picks: Pick[];
   onPick: (gameId: number, teamId: string) => void;
@@ -100,7 +66,6 @@ export default function BracketClient({
   const [isLocked, setIsLocked] = useState(false);
 
   const [view, setView] = useState<BracketView>("grid");
-
   const formRef = useRef<HTMLFormElement | null>(null);
 
   // -----------------------------
@@ -132,13 +97,8 @@ export default function BracketClient({
   }, []);
 
   // -----------------------------
-  // HELPERS
+  // PICK HANDLER
   // -----------------------------
-  const getSelectedTeamId = (game: Game): string | null => {
-    const pick = localPicks.find((p) => p.game_id === game.game_id);
-    return pick ? pick.selected_team : null;
-  };
-
   const handlePick = (gameId: number, teamId: string) => {
     if (isLocked) return;
 
@@ -153,133 +113,8 @@ export default function BracketClient({
     onPick(gameId, teamId);
   };
 
-  const roundLabel = (round: number) => {
-    switch (round) {
-      case 1:
-        return "Round of 64";
-      case 2:
-        return "Round of 32";
-      case 3:
-        return "Sweet 16";
-      case 4:
-        return "Elite 8";
-      case 5:
-        return "Final Four";
-      case 6:
-        return "Championship";
-      default:
-        return `Round ${round}`;
-    }
-  };
-
-  // Group games by region
-  const gamesByRegion: Record<string, Game[]> = {};
-  games.forEach((g) => {
-    if (!gamesByRegion[g.region]) gamesByRegion[g.region] = [];
-    gamesByRegion[g.region].push(g);
-  });
-
   // -----------------------------
-  // RENDER REGION (legacy layout)
-  // -----------------------------
-  const renderRegion = (region: string, dir: "ltr" | "rtl" = "ltr") => {
-    const regionGames = (gamesByRegion[region] || [])
-      .slice()
-      .sort((a, b) => a.round - b.round);
-
-    if (!regionGames.length) return null;
-
-    let rounds = Array.from(new Set(regionGames.map((g) => g.round))).sort(
-      (a, b) => a - b
-    );
-
-    if (dir === "rtl") rounds = rounds.slice().reverse();
-
-    const renderTeamButton = (
-      game: Game,
-      team: Team | null,
-      selectedTeamId: string | null
-    ) => {
-      if (!team) {
-        return (
-          <div className="text-xs text-slate-500 italic px-2 py-1 border border-dashed border-slate-700 rounded h-9 flex items-center">
-            TBD
-          </div>
-        );
-      }
-
-      const isSelected = selectedTeamId === team.team_id;
-      const logo = getTeamLogo(team.name);
-
-      let isUnderdog = false;
-      if (game.team1 && game.team2 && isSelected) {
-        const opponent =
-          team.team_id === game.team1.team_id ? game.team2 : game.team1;
-        if (team.seed !== null && opponent?.seed !== null) {
-          isUnderdog = team.seed > opponent.seed;
-        }
-      }
-
-      const isChampion = game.game_id === CHAMPIONSHIP_GAME_ID && isSelected;
-
-      return (
-        <button
-          type="button"
-          form="__none__"
-          onClick={() => handlePick(game.game_id, team.team_id)}
-          disabled={isLocked}
-          className={`flex items-center justify-between px-2 h-9 rounded text-xs border transition
-            ${
-              isSelected
-                ? "bg-emerald-600/80 border-emerald-400 text-white"
-                : "bg-slate-900/60 border-slate-600 text-slate-100 hover:bg-slate-700/80"
-            }
-            ${isLocked ? "opacity-60 cursor-not-allowed" : ""}
-            ${
-              isChampion
-                ? "ring-2 ring-yellow-400 shadow-[0_0_12px_rgba(250,204,21,0.8)]"
-                : ""
-            }
-          `}
-        >
-          <div
-            className={`flex items-center gap-2 w-full ${
-              dir === "rtl" ? "flex-row-reverse justify-end" : "flex-row"
-            }`}
-          >
-            {logo && (
-              <img
-                src={logo}
-                alt={team.name}
-                className="w-5 h-5 rounded-full object-cover"
-              />
-            )}
-
-            {team.seed !== null && (
-              <span className="text-xs font-bold text-slate-100">
-                {team.seed}
-              </span>
-            )}
-
-            <span
-              className={`flex-1 ${
-                dir === "rtl" ? "text-right" : "text-left"
-              }`}
-            >
-              {team.name}
-              {isUnderdog && <BulldogIcon />}
-              {isChampion && <CrownIcon />}
-            </span>
-          </div>
-        </button>
-      );
-    };
-
-    // END OF renderRegion
-  };
-
-  // -----------------------------
-  // SIDEBAR NAV ITEMS
+  // NAV ITEMS
   // -----------------------------
   const navItems = [
     { key: "grid", label: "Region Grid", icon: "🏠" },
@@ -307,9 +142,7 @@ export default function BracketClient({
   return (
     <div className="flex w-full relative">
 
-      {/* ----------------------------- */}
-      {/* FROSTED GLASS SIDEBAR */}
-      {/* ----------------------------- */}
+      {/* SIDEBAR */}
       <aside
         className="
           fixed left-0 top-0 bottom-0
@@ -324,7 +157,7 @@ export default function BracketClient({
         {/* Bracket Name */}
         <div className="mb-6">
           <h2 className="text-xl font-semibold text-white tracking-wide">
-            {bracket.bracket_id}
+            {bracket.bracket_name}
           </h2>
           <div className="h-[3px] w-20 mt-2 rounded-full bg-emerald-400" />
         </div>
@@ -391,11 +224,20 @@ export default function BracketClient({
         </button>
       </aside>
 
-      {/* ----------------------------- */}
-      {/* MAIN CONTENT AREA */}
-      {/* ----------------------------- */}
-      <main className="ml-[260px] w-full p-6">
-        {/* Hidden form for Championship submission */}
+      {/* MAIN CONTENT */}
+      <main
+        className="
+          ml-[260px]
+          w-full
+          p-6
+          overflow-x-hidden
+          overflow-y-auto
+          scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent
+          hover:scrollbar-thumb-slate-600
+          backdrop-blur-md bg-slate-900/20
+        "
+      >
+        {/* Hidden form */}
         <form ref={formRef} action={submitBracket} className="hidden">
           <input type="hidden" name="bracketId" value={bracket.bracket_id} />
           <input type="hidden" name="tiebreaker" value={tiebreaker} />
@@ -425,7 +267,14 @@ export default function BracketClient({
             transition={{ duration: 0.25, ease: "easeOut" }}
             className="w-full"
           >
-            {view === "grid" && <RegionGrid setView={setView} />}
+            {view === "grid" && (
+              <RegionGrid
+                setView={setView}
+                picks={localPicks}
+                games={games}
+                isLocked={isLocked}
+              />
+            )}
 
             {view === "region-east" && (
               <RegionView

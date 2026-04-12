@@ -14,9 +14,20 @@ export default function BracketSelectorShell({
   activeId: string;
 }) {
   return (
-    <div className="mb-6 flex items-center gap-4">
-      <h1 className="text-2xl font-bold">Your Bracket</h1>
+    <div
+      className="
+        w-full
+        flex items-center justify-between
+        mb-8
+        px-1
+      "
+    >
+      {/* Title */}
+      <h1 className="text-2xl font-bold tracking-wide text-slate-100">
+        Your Bracket
+      </h1>
 
+      {/* Selector */}
       <BracketSelectorClient brackets={brackets} activeId={activeId} />
     </div>
   );

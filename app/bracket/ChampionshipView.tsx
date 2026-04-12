@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { getTeamLogo } from "../../lib/getTeamLogo";
 
 // -----------------------------
@@ -36,13 +37,14 @@ type ChampionshipViewProps = {
   games: Game[];
   picks: Pick[];
   isLocked: boolean;
-  tiebreaker: string;
-  setTiebreaker: (v: string) => void;
-  setSubmittedBanner: (v: string) => void;
-  formRef: any;
   onPick: (gameId: number, teamId: string) => void;
   setView: (view: any) => void;
 };
+
+// -----------------------------
+// CONSTANTS
+// -----------------------------
+const ROUND_LABEL = "National Championship";
 
 // -----------------------------
 // COMPONENT
@@ -52,77 +54,67 @@ export default function ChampionshipView({
   games,
   picks,
   isLocked,
-  tiebreaker,
-  setTiebreaker,
-  setSubmittedBanner,
-  formRef,
   onPick,
   setView,
 }: ChampionshipViewProps) {
-  const CHAMPIONSHIP_GAME_ID = 63;
+  const [mounted, setMounted] = useState(false);
+  const [lastAnimatedRound, setLastAnimatedRound] = useState<number | null>(null);
+  const [hoveredTeamId, setHoveredTeamId] = useState<string | null>(null);
 
-  // -----------------------------
-  // GET SEMIFINAL WINNERS
-  // -----------------------------
-  const semifinal1 = games.find((g) => g.game_id === 61);
-  const semifinal2 = games.find((g) => g.game_id === 62);
+  useEffect(() => {
+    const t = setTimeout(() => setMounted(true), 10);
+    return () => clearTimeout(t);
+  }, []);
 
-  const getWinner = (game: Game | undefined): Team | null => {
-    if (!game) return null;
+  const championshipGame = games.find((g) => g.round === 6) || null;
 
-    const pick = picks.find((p) => p.game_id === game.game_id);
-    if (!pick) return null;
-
-    return game.team1?.team_id === pick.selected_team
-      ? game.team1
-      : game.team2;
+  const getSelectedTeamId = (gameId: number) => {
+    const pick = picks.find((p) => p.game_id === gameId);
+    return pick ? pick.selected_team : null;
   };
 
-  const team1 = getWinner(semifinal1);
-  const team2 = getWinner(semifinal2);
-
-  const selectedTeamId =
-    picks.find((p) => p.game_id === CHAMPIONSHIP_GAME_ID)?.selected_team ||
-    null;
+  const handlePick = (game: Game, teamId: string) => {
+    if (isLocked) return;
+    setLastAnimatedRound(game.round);
+    onPick(game.game_id, teamId);
+  };
 
   // -----------------------------
-  // UPGRADED TEAM BUTTON
+  // TEAM BUTTON
   // -----------------------------
-  const renderTeamButton = (team: Team | null) => {
+  const renderTeamButton = (
+    game: Game,
+    team: Team | null,
+    selectedTeamId: string | null
+  ) => {
     if (!team) {
       return (
-        <div className="text-xs text-slate-500 italic px-3 py-2 border border-dashed border-slate-700 rounded-md h-10 flex items-center">
+        <div className="text-xs text-slate-500 italic px-3 py-2 border border-dashed border-slate-700 rounded-md h-9 flex items-center">
           TBD
         </div>
       );
     }
 
     const isSelected = selectedTeamId === team.team_id;
+    const isHovered = hoveredTeamId === team.team_id;
     const logo = getTeamLogo(team.name);
 
     return (
       <button
         type="button"
-        onClick={() => onPick(CHAMPIONSHIP_GAME_ID, team.team_id)}
+        onClick={() => handlePick(game, team.team_id)}
+        onMouseEnter={() => setHoveredTeamId(team.team_id)}
+        onMouseLeave={() =>
+          setHoveredTeamId((prev) => (prev === team.team_id ? null : prev))
+        }
         disabled={isLocked}
         className={`
-          relative flex items-center gap-3 px-3 h-10 rounded-md text-xs
+          relative flex items-center gap-2 px-3 h-9 rounded-md text-xs
           border transition-all w-full
           ${
-            isSelected
-              ? `
-                bg-emerald-600/30 
-                border-emerald-400 
-                text-white 
-                shadow-[0_0_12px_rgba(16,185,129,0.5)]
-                `
-              : `
-                bg-white/5 
-                border-white/10 
-                text-slate-100 
-                hover:bg-white/10 
-                hover:scale-[1.02]
-                `
+            isSelected || isHovered
+              ? "bg-emerald-600/30 border-emerald-400 text-white shadow-[0_0_12px_rgba(16,185,129,0.5)]"
+              : "bg-white/5 border-white/10 text-slate-100 hover:bg-white/10 hover:scale-[1.02]"
           }
           ${isLocked ? "opacity-60 cursor-not-allowed" : ""}
         `}
@@ -131,7 +123,7 @@ export default function ChampionshipView({
           <img
             src={logo}
             alt={team.name}
-            className="w-6 h-6 rounded-full object-cover shadow-sm"
+            className="w-5 h-5 rounded-full object-cover shadow-sm"
           />
         )}
 
@@ -140,7 +132,7 @@ export default function ChampionshipView({
             className={`
               text-[10px] font-bold px-1.5 py-0.5 rounded 
               ${
-                isSelected
+                isSelected || isHovered
                   ? "bg-emerald-500 text-white"
                   : "bg-slate-700 text-slate-200"
               }
@@ -150,7 +142,7 @@ export default function ChampionshipView({
           </span>
         )}
 
-        <span className="flex-1 text-left text-sm tracking-wide">
+        <span className="flex-1 text-left text-[11px] tracking-wide truncate">
           {team.name}
         </span>
       </button>
@@ -161,22 +153,12 @@ export default function ChampionshipView({
   // RENDER
   // -----------------------------
   return (
-    <div className="flex flex-col gap-8 w-full">
-      {/* ----------------------------- */}
-      {/* PREMIUM HEADER */}
-      {/* ----------------------------- */}
+    <div className="flex flex-col gap-6 w-full">
+      {/* HEADER */}
       <div className="flex items-center justify-between mb-2">
-        <div className="flex flex-col">
-          <div className="flex items-center gap-2">
-            <span className="text-3xl">🏆</span>
-
-            <h2 className="text-2xl font-semibold tracking-wide text-slate-100">
-              Championship
-            </h2>
-          </div>
-
-          <div className="h-[3px] w-28 mt-1 rounded-full bg-yellow-400" />
-        </div>
+        <h2 className="text-2xl font-semibold tracking-wide text-slate-100 flex items-center gap-2">
+          🏆 Championship
+        </h2>
 
         <button
           onClick={() => setView("final-four")}
@@ -194,89 +176,71 @@ export default function ChampionshipView({
         </button>
       </div>
 
-      {/* ----------------------------- */}
-      {/* FINAL MATCHUP CARD */}
-      {/* ----------------------------- */}
-      <div
-        className="
-          flex flex-col gap-3 p-5 rounded-xl
-          bg-white/5 border border-white/10 backdrop-blur-sm
-          shadow-lg shadow-black/40
-          relative overflow-hidden
-        "
-      >
-        <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none rounded-xl" />
-
-        <div className="relative z-10">
-          <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-300 mb-2">
-            National Championship
+      {/* BRACKET LAYOUT */}
+      <div className="overflow-y-auto overflow-x-hidden pb-6">
+        <div className="grid grid-cols-[minmax(180px,1fr)] gap-6">
+          {/* STICKY HEADER */}
+          <div
+            className="
+              sticky top-0 z-20
+              h-12 flex items-center justify-center
+              text-[10px] font-semibold uppercase tracking-wide
+              px-3 rounded-md mb-1
+              backdrop-blur-md bg-slate-900/40
+              border border-white/10
+              shadow-md shadow-black/40
+              text-slate-200
+            "
+          >
+            {ROUND_LABEL}
           </div>
 
-          <div className="flex flex-col gap-2">
-            {renderTeamButton(team1)}
-            {renderTeamButton(team2)}
-          </div>
+          {/* GAME CARD */}
+          {championshipGame && (
+            <div
+              className="
+                flex flex-col items-stretch
+                rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm
+                shadow-lg shadow-black/40
+                px-3 py-2
+              "
+            >
+              <div className="flex flex-col gap-1">
+                {renderTeamButton(
+                  championshipGame,
+                  championshipGame.team1,
+                  getSelectedTeamId(championshipGame.game_id)
+                )}
+                {renderTeamButton(
+                  championshipGame,
+                  championshipGame.team2,
+                  getSelectedTeamId(championshipGame.game_id)
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* ----------------------------- */}
-      {/* PREMIUM TIEBREAKER INPUT */}
-      {/* ----------------------------- */}
-      <div className="flex flex-col gap-3">
-        <input
-          type="number"
-          placeholder="Championship total points tiebreaker"
-          value={tiebreaker}
-          onChange={(e) => setTiebreaker(e.target.value)}
-          disabled={isLocked}
-          className="
-            px-3 py-2 text-sm rounded-lg
-            bg-white/5 border border-white/10 backdrop-blur-sm
-            text-slate-200 placeholder-slate-400
-            shadow-inner shadow-black/20
-            focus:outline-none focus:ring-2 focus:ring-yellow-300/40
-            transition-all
-          "
-        />
-
-        {/* ----------------------------- */}
-        {/* PREMIUM SUBMIT BUTTON */}
-        {/* ----------------------------- */}
-        <button
-          disabled={isLocked}
-          onClick={() => {
-            if (!tiebreaker) {
-              alert("Please enter a tiebreaker score.");
-              return;
-            }
-
-            const form = formRef.current;
-            if (!form) return;
-
-            const fd = new FormData(form);
-            fd.set("tiebreaker", tiebreaker);
-            fd.set("bracketId", bracket.bracket_id);
-
-            form.requestSubmit();
-            setSubmittedBanner("Bracket submitted successfully.");
-          }}
-          className="
-            px-6 py-3 rounded-xl text-white font-semibold tracking-wide
-            bg-gradient-to-br from-yellow-400 to-yellow-600
-            shadow-lg shadow-yellow-900/40
-            border border-white/10 backdrop-blur-md
-            transition-all duration-300
-            hover:scale-[1.04] hover:shadow-yellow-500/40 hover:ring-2 hover:ring-yellow-300/40
-            active:scale-[0.97]
-            flex items-center gap-2
-          "
-        >
-          Submit Bracket
-          <span className="transition-transform duration-300 group-hover:translate-x-1">
-            →
-          </span>
-        </button>
-      </div>
+      {/* SUBMIT BUTTON */}
+      <button
+        onClick={() => setView("summary")}
+        className="
+          self-center px-6 py-3 rounded-xl text-white font-semibold tracking-wide
+          bg-gradient-to-br from-emerald-400 to-emerald-600
+          shadow-lg shadow-emerald-900/40
+          border border-white/10 backdrop-blur-md
+          transition-all duration-300
+          hover:scale-[1.04] hover:shadow-emerald-500/40 hover:ring-2 hover:ring-emerald-300/40
+          active:scale-[0.97]
+          flex items-center gap-2
+        "
+      >
+        Submit Bracket
+        <span className="transition-transform duration-300 group-hover:translate-x-1">
+          →
+        </span>
+      </button>
     </div>
   );
 }

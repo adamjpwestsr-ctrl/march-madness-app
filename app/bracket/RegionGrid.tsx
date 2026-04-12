@@ -12,6 +12,9 @@ type RegionGridProps = {
       | "final-four"
       | "championship"
   ) => void;
+  picks?: any;
+  games?: any;
+  isLocked?: boolean;
 };
 
 export default function RegionGrid({ setView }: RegionGridProps) {
@@ -55,9 +58,9 @@ export default function RegionGrid({ setView }: RegionGridProps) {
   ] as const;
 
   return (
-    <div className="flex flex-col gap-8 w-full items-center">
+    <div className="w-full flex flex-col gap-8">
       {/* Header */}
-      <div className="text-center">
+      <div>
         <h2 className="text-2xl font-bold text-slate-100 tracking-wide">
           Select a Region
         </h2>
@@ -66,13 +69,19 @@ export default function RegionGrid({ setView }: RegionGridProps) {
         </p>
       </div>
 
-      {/* Container Card */}
-      <div className="relative w-full max-w-3xl rounded-3xl p-8 bg-slate-900/40 border border-slate-800/60 shadow-2xl">
-        {/* Spotlight */}
+      {/* RESPONSIVE GRID — NO HORIZONTAL SCROLL */}
+      <div className="relative w-full pb-4">
+        {/* Spotlight background */}
         <div className="absolute inset-0 bg-gradient-radial from-white/5 to-transparent pointer-events-none rounded-3xl" />
 
-        {/* Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 relative z-10">
+        {/* Responsive grid */}
+        <div
+          className="
+            relative z-10
+            grid gap-4
+            grid-cols-[repeat(auto-fit,minmax(180px,1fr))]
+          "
+        >
           {regions.map((r) => (
             <RegionButton
               key={r.key}

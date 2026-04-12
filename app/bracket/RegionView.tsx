@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { getTeamLogo } from "../../lib/getTeamLogo";
 
 // -----------------------------
@@ -42,6 +43,16 @@ type RegionViewProps = {
 };
 
 // -----------------------------
+// CONSTANTS
+// -----------------------------
+const ROUND_LABELS: Record<number, string> = {
+  1: "Round of 64",
+  2: "Round of 32",
+  3: "Sweet 16",
+  4: "Elite 8",
+};
+
+// -----------------------------
 // COMPONENT
 // -----------------------------
 export default function RegionView({
@@ -53,21 +64,39 @@ export default function RegionView({
   onPick,
   setView,
 }: RegionViewProps) {
+  const [mounted, setMounted] = useState(false);
+  const [lastAnimatedRound, setLastAnimatedRound] = useState<number | null>(null);
+  const [hoveredTeamId, setHoveredTeamId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const t = setTimeout(() => setMounted(true), 10);
+    return () => clearTimeout(t);
+  }, []);
+
   const regionGames = games
     .filter((g) => g.region === region)
-    .sort((a, b) => a.round - b.round);
+    .sort((a, b) => a.round - b.round || a.game_id - b.game_id);
 
-  const rounds = Array.from(new Set(regionGames.map((g) => g.round))).sort(
-    (a, b) => a - b
-  );
+  const rounds = [1, 2, 3, 4];
+
+  const gamesByRound: Record<number, Game[]> = {};
+  rounds.forEach((r) => {
+    gamesByRound[r] = regionGames.filter((g) => g.round === r);
+  });
 
   const getSelectedTeamId = (gameId: number) => {
     const pick = picks.find((p) => p.game_id === gameId);
     return pick ? pick.selected_team : null;
   };
 
+  const handlePick = (game: Game, teamId: string) => {
+    if (isLocked) return;
+    setLastAnimatedRound(game.round);
+    onPick(game.game_id, teamId);
+  };
+
   // -----------------------------
-  // UPGRADED TEAM BUTTON
+  // TEAM BUTTON
   // -----------------------------
   const renderTeamButton = (
     game: Game,
@@ -76,38 +105,32 @@ export default function RegionView({
   ) => {
     if (!team) {
       return (
-        <div className="text-xs text-slate-500 italic px-3 py-2 border border-dashed border-slate-700 rounded-md h-10 flex items-center">
+        <div className="text-xs text-slate-500 italic px-3 py-2 border border-dashed border-slate-700 rounded-md h-9 flex items-center">
           TBD
         </div>
       );
     }
 
     const isSelected = selectedTeamId === team.team_id;
+    const isHovered = hoveredTeamId === team.team_id;
     const logo = getTeamLogo(team.name);
 
     return (
       <button
         type="button"
-        onClick={() => onPick(game.game_id, team.team_id)}
+        onClick={() => handlePick(game, team.team_id)}
+        onMouseEnter={() => setHoveredTeamId(team.team_id)}
+        onMouseLeave={() =>
+          setHoveredTeamId((prev) => (prev === team.team_id ? null : prev))
+        }
         disabled={isLocked}
         className={`
-          relative flex items-center gap-3 px-3 h-10 rounded-md text-xs
+          relative flex items-center gap-2 px-3 h-9 rounded-md text-xs
           border transition-all w-full
           ${
-            isSelected
-              ? `
-                bg-emerald-600/30 
-                border-emerald-400 
-                text-white 
-                shadow-[0_0_12px_rgba(16,185,129,0.5)]
-                `
-              : `
-                bg-white/5 
-                border-white/10 
-                text-slate-100 
-                hover:bg-white/10 
-                hover:scale-[1.02]
-                `
+            isSelected || isHovered
+              ? "bg-emerald-600/30 border-emerald-400 text-white shadow-[0_0_12px_rgba(16,185,129,0.5)]"
+              : "bg-white/5 border-white/10 text-slate-100 hover:bg-white/10 hover:scale-[1.02]"
           }
           ${isLocked ? "opacity-60 cursor-not-allowed" : ""}
         `}
@@ -116,7 +139,7 @@ export default function RegionView({
           <img
             src={logo}
             alt={team.name}
-            className="w-6 h-6 rounded-full object-cover shadow-sm"
+            className="w-5 h-5 rounded-full object-cover shadow-sm"
           />
         )}
 
@@ -125,7 +148,7 @@ export default function RegionView({
             className={`
               text-[10px] font-bold px-1.5 py-0.5 rounded 
               ${
-                isSelected
+                isSelected || isHovered
                   ? "bg-emerald-500 text-white"
                   : "bg-slate-700 text-slate-200"
               }
@@ -135,18 +158,70 @@ export default function RegionView({
           </span>
         )}
 
-        <span className="flex-1 text-left text-sm tracking-wide">
+        <span className="flex-1 text-left text-[11px] tracking-wide truncate">
           {team.name}
         </span>
       </button>
     );
   };
 
+  // -----------------------------
+  // CONNECTOR
+  // -----------------------------
+  const Connector = ({ isActive }: { isActive: boolean }) => {
+    return (
+      <div className="flex items-center justify-center h-6">
+        <div
+          className={`
+            flex items-center justify-center
+            transition-all duration-200
+            ${isActive ? "opacity-80" : "opacity-40"}
+          `}
+        >
+          <div
+            className={`
+              h-[2px] w-6 rounded-full
+              ${isActive ? "bg-emerald-400" : "bg-slate-600/60"}
+            `}
+          />
+          <div
+            className={`
+              h-8 w-[2px] rounded-full ml-3
+              ${isActive ? "bg-emerald-400" : "bg-slate-600/60"}
+            `}
+          />
+        </div>
+      </div>
+    );
+  };
+
+  const shouldAnimateRound = (round: number) => {
+    if (!mounted) return true;
+    if (lastAnimatedRound == null) return false;
+    return round === lastAnimatedRound || round === lastAnimatedRound + 1;
+  };
+
+  // -----------------------------
+  // NEW RESPONSIVE COLUMN WRAPPER
+  // -----------------------------
+  const roundWrapperClasses = (round: number) =>
+    `
+      flex flex-col gap-4
+      transition-all duration-300
+      ${
+        mounted
+          ? "opacity-100 translate-y-0"
+          : "opacity-0 translate-y-3"
+      }
+      ${shouldAnimateRound(round) ? "animate-pulse" : ""}
+    `;
+
+  // -----------------------------
+  // RENDER
+  // -----------------------------
   return (
     <div className="flex flex-col gap-6 w-full">
-      {/* ----------------------------- */}
       {/* HEADER */}
-      {/* ----------------------------- */}
       <div className="flex items-center justify-between mb-2">
         <div className="flex flex-col">
           <div className="flex items-center gap-2">
@@ -200,60 +275,75 @@ export default function RegionView({
         </button>
       </div>
 
-      {/* ----------------------------- */}
-      {/* ROUND LABELS + GAME CARDS */}
-      {/* ----------------------------- */}
-      <div className="flex gap-6 overflow-x-auto pb-6">
-        {rounds.map((round) => {
-          const roundGames = regionGames.filter((g) => g.round === round);
+      {/* BRACKET LAYOUT */}
+      <div className="overflow-y-auto overflow-x-hidden pb-6">
+        <div
+          className="
+            grid gap-6
+            grid-cols-[repeat(4,minmax(180px,1fr))]
+          "
+        >
+          {rounds.map((round) => {
+            const roundGames = gamesByRound[round] || [];
+            if (!roundGames.length) return null;
 
-          return (
-            <div key={round} className="flex flex-col gap-3 min-w-[220px]">
-              <div
-                className="
-                  text-[10px] font-semibold uppercase tracking-wide
-                  px-3 py-1 rounded-full mx-auto mb-1
-                  bg-white/5 border border-white/10 backdrop-blur-md
-                  shadow-[0_0_10px_rgba(0,0,0,0.3)]
-                  text-slate-200
-                "
-              >
-                {round === 1 && "Round of 64"}
-                {round === 2 && "Round of 32"}
-                {round === 3 && "Sweet 16"}
-                {round === 4 && "Elite 8"}
-              </div>
+            return (
+              <div key={round} className={roundWrapperClasses(round)}>
+                {/* STICKY ROUND HEADER */}
+                <div
+                  className="
+                    sticky top-0 z-20
+                    h-12 flex items-center justify-center
+                    text-[10px] font-semibold uppercase tracking-wide
+                    px-3 rounded-md mb-1
+                    backdrop-blur-md bg-slate-900/40
+                    border border-white/10
+                    shadow-md shadow-black/40
+                    text-slate-200
+                  "
+                >
+                  {ROUND_LABELS[round] ?? `Round ${round}`}
+                </div>
 
-              {roundGames.map((game) => {
-                const selectedTeamId = getSelectedTeamId(game.game_id);
+                {/* GAMES */}
+                {roundGames.map((game) => {
+                  const selectedTeamId = getSelectedTeamId(game.game_id);
 
-                return (
-                  <div
-                    key={game.game_id}
-                    className="
-                      flex flex-col gap-2 p-3 rounded-xl
-                      bg-white/5 border border-white/10 backdrop-blur-sm
-                      shadow-lg shadow-black/40
-                      relative overflow-hidden
-                    "
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none rounded-xl" />
+                  const isPathActive =
+                    hoveredTeamId &&
+                    ((game.team1 && game.team1.team_id === hoveredTeamId) ||
+                      (game.team2 && game.team2.team_id === hoveredTeamId));
 
-                    <div className="relative z-10 flex flex-col gap-2">
-                      {renderTeamButton(game, game.team1, selectedTeamId)}
-                      {renderTeamButton(game, game.team2, selectedTeamId)}
+                  return (
+                    <div
+                      key={game.game_id}
+                      className="
+                        flex flex-col items-stretch
+                        rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm
+                        shadow-lg shadow-black/40
+                        px-3 py-2
+                      "
+                    >
+                      <div className="flex flex-col gap-1">
+                        {renderTeamButton(game, game.team1, selectedTeamId)}
+                        {renderTeamButton(game, game.team2, selectedTeamId)}
+                      </div>
+
+                      {round < 4 && (
+                        <div className="mt-1">
+                          <Connector isActive={!!isPathActive} />
+                        </div>
+                      )}
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          );
-        })}
+                  );
+                })}
+              </div>
+            );
+          })}
+        </div>
       </div>
 
-      {/* ----------------------------- */}
-      {/* UPGRADED CONTINUE BUTTON */}
-      {/* ----------------------------- */}
+      {/* CONTINUE BUTTON */}
       <button
         onClick={() => setView("final-four")}
         className="

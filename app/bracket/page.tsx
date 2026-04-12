@@ -22,10 +22,12 @@ const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 export default async function BracketPage({
   searchParams,
 }: {
-  searchParams?: { bid?: string };
+  searchParams: Promise<{ bid?: string }> | { bid?: string };
 }) {
   try {
+    // -----------------------------
     // SESSION CHECK
+    // -----------------------------
     const cookieStore = await cookies();
     const sessionCookie = cookieStore.get("mm_session");
     if (!sessionCookie) redirect("/login");
@@ -42,19 +44,22 @@ export default async function BracketPage({
 
     if (!email) redirect("/login");
 
+    // -----------------------------
     // SUPABASE CLIENT (EDGE-SAFE)
+    // -----------------------------
     const supabase = createServerClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
       cookies: cookieStore,
     });
 
+    // -----------------------------
     // LOAD BRACKETS BY EMAIL
+    // -----------------------------
     const { data: brackets, error } = await supabase
       .from("brackets")
       .select("bracket_id, bracket_name, icon, created_at, updated_at")
       .eq("email", email)
       .order("created_at", { ascending: true });
 
-    // 🔍 DIAGNOSTIC LOGS
     console.log("📌 BRACKET PAGE EMAIL:", email);
     console.log("📌 BRACKET QUERY RESULT:", brackets);
     console.log("📌 BRACKET QUERY ERROR:", error);
@@ -63,7 +68,9 @@ export default async function BracketPage({
 
     const safeBrackets = Array.isArray(brackets) ? brackets : [];
 
+    // -----------------------------
     // NO BRACKETS → SHOW CREATE BUTTON
+    // -----------------------------
     if (safeBrackets.length === 0) {
       return (
         <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center gap-6">
@@ -82,14 +89,27 @@ export default async function BracketPage({
       );
     }
 
-    // DETERMINE ACTIVE BRACKET
-    const selectedId =
-      typeof searchParams?.bid === "string" ? searchParams.bid : undefined;
+    // -----------------------------
+    // UNWRAP SEARCH PARAMS (Next.js 14)
+    // -----------------------------
+    const params =
+      typeof searchParams === "object" && "then" in searchParams
+        ? await searchParams
+        : searchParams ?? {};
 
+    const selectedId =
+      typeof params?.bid === "string" ? params.bid : undefined;
+
+    // -----------------------------
+    // DETERMINE ACTIVE BRACKET
+    // -----------------------------
     const activeBracket =
       safeBrackets.find((b) => String(b.bracket_id) === selectedId) ??
       safeBrackets[0];
 
+    // -----------------------------
+    // RENDER PAGE
+    // -----------------------------
     return (
       <div className="min-h-screen bg-slate-950 text-slate-100 flex">
         {/* SIDEBAR */}

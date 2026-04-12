@@ -46,7 +46,6 @@ type FinalFourViewProps = {
 // -----------------------------
 const ROUND_LABELS: Record<number, string> = {
   5: "Final Four",
-  6: "National Championship",
 };
 
 // -----------------------------
@@ -69,26 +68,26 @@ export default function FinalFourView({
     return () => clearTimeout(t);
   }, []);
 
-  const finalFourGames = games
-    .filter((g) => g.round === 5)
-    .sort((a, b) => a.game_id - b.game_id);
-
-  const rounds = [5];
-
-  const gamesByRound: Record<number, Game[]> = {
-    5: finalFourGames,
-  };
-
+  // -----------------------------
+  // HELPERS
+  // -----------------------------
   const getSelectedTeamId = (gameId: number) => {
     const pick = picks.find((p) => p.game_id === gameId);
     return pick ? pick.selected_team : null;
   };
 
-  const handlePick = (game: Game, teamId: string) => {
+  const handlePick = (gameId: number, teamId: string) => {
     if (isLocked) return;
-    setLastAnimatedRound(game.round);
-    onPick(game.game_id, teamId);
+    setLastAnimatedRound(5);
+    onPick(gameId, teamId);
   };
+
+  // -----------------------------
+  // GET FINAL FOUR GAMES (REAL DB GAMES)
+  // -----------------------------
+  const finalFourGames = games
+    .filter((g) => g.round === 5)
+    .sort((a, b) => a.game_id - b.game_id); // 61 then 62
 
   // -----------------------------
   // TEAM BUTTON
@@ -113,7 +112,7 @@ export default function FinalFourView({
     return (
       <button
         type="button"
-        onClick={() => handlePick(game, team.team_id)}
+        onClick={() => handlePick(game.game_id, team.team_id)}
         onMouseEnter={() => setHoveredTeamId(team.team_id)}
         onMouseLeave={() =>
           setHoveredTeamId((prev) => (prev === team.team_id ? null : prev))
@@ -243,61 +242,54 @@ export default function FinalFourView({
             grid-cols-[repeat(2,minmax(180px,1fr))]
           "
         >
-          {rounds.map((round) => {
-            const roundGames = gamesByRound[round] || [];
-            if (!roundGames.length) return null;
+          <div className={roundWrapperClasses(5)}>
+            {/* STICKY ROUND HEADER */}
+            <div
+              className="
+                sticky top-0 z-20
+                h-12 flex items-center justify-center
+                text-[10px] font-semibold uppercase tracking-wide
+                px-3 rounded-md mb-1
+                backdrop-blur-md bg-slate-900/40
+                border border-white/10
+                shadow-md shadow-black/40
+                text-slate-200
+              "
+            >
+              {ROUND_LABELS[5]}
+            </div>
 
-            return (
-              <div key={round} className={roundWrapperClasses(round)}>
-                {/* STICKY ROUND HEADER */}
+            {/* FINAL FOUR GAMES */}
+            {finalFourGames.map((game) => {
+              const selectedTeamId = getSelectedTeamId(game.game_id);
+
+              const isPathActive =
+                hoveredTeamId &&
+                ((game.team1 && game.team1.team_id === hoveredTeamId) ||
+                  (game.team2 && game.team2.team_id === hoveredTeamId));
+
+              return (
                 <div
+                  key={game.game_id}
                   className="
-                    sticky top-0 z-20
-                    h-12 flex items-center justify-center
-                    text-[10px] font-semibold uppercase tracking-wide
-                    px-3 rounded-md mb-1
-                    backdrop-blur-md bg-slate-900/40
-                    border border-white/10
-                    shadow-md shadow-black/40
-                    text-slate-200
+                    flex flex-col items-stretch
+                    rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm
+                    shadow-lg shadow-black/40
+                    px-3 py-2
                   "
                 >
-                  {ROUND_LABELS[round]}
+                  <div className="flex flex-col gap-1">
+                    {renderTeamButton(game, game.team1, selectedTeamId)}
+                    {renderTeamButton(game, game.team2, selectedTeamId)}
+                  </div>
+
+                  <div className="mt-1">
+                    <Connector isActive={!!isPathActive} />
+                  </div>
                 </div>
-
-                {/* GAMES */}
-                {roundGames.map((game) => {
-                  const selectedTeamId = getSelectedTeamId(game.game_id);
-
-                  const isPathActive =
-                    hoveredTeamId &&
-                    ((game.team1 && game.team1.team_id === hoveredTeamId) ||
-                      (game.team2 && game.team2.team_id === hoveredTeamId));
-
-                  return (
-                    <div
-                      key={game.game_id}
-                      className="
-                        flex flex-col items-stretch
-                        rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm
-                        shadow-lg shadow-black/40
-                        px-3 py-2
-                      "
-                    >
-                      <div className="flex flex-col gap-1">
-                        {renderTeamButton(game, game.team1, selectedTeamId)}
-                        {renderTeamButton(game, game.team2, selectedTeamId)}
-                      </div>
-
-                      <div className="mt-1">
-                        <Connector isActive={!!isPathActive} />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </div>
 
@@ -315,10 +307,7 @@ export default function FinalFourView({
           flex items-center gap-2
         "
       >
-        Continue to Championship
-        <span className="transition-transform duration-300 group-hover:translate-x-1">
-          →
-        </span>
+        Continue to Championship →
       </button>
     </div>
   );

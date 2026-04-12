@@ -37,8 +37,8 @@ export async function createBracket(formData: FormData) {
   const { data, error } = await supabase
     .from("brackets")
     .insert({
-      user_id: user.user_id, // ✅ keep DB happy
-      email,                 // ✅ new world
+      user_id: user.user_id,
+      email,
       bracket_name: "My Bracket",
       icon: "🏀",
     })
@@ -100,20 +100,26 @@ export async function updateBracketIcon(formData: FormData) {
     .eq("bracket_id", bracketId)
     .eq("email", email);
 }
-// ⭐ SUBMIT BRACKET
-export async function submitBracket(formData: FormData) {
-  const bracketId = formData.get("bracketId")?.toString();
-  const tiebreaker = Number(formData.get("tiebreaker") ?? 0);
 
+// ⭐ SUBMIT BRACKET — DIRECT ARGUMENT VERSION (FINAL)
+export async function submitBracket(bracketId: string, tiebreaker: number) {
   if (!bracketId) throw new Error("Missing bracketId");
 
-  await supabase.from("bracket_submissions").upsert({
-    bracket_id: bracketId,
-    tiebreaker,
-    submitted_at: new Date().toISOString(),
-    mulligans_used: 0,
-  });
+  const { data, error } = await supabase
+    .from("bracket_submissions")
+    .upsert({
+      bracket_id: bracketId, // UUID string is valid
+      tiebreaker,
+      submitted_at: new Date().toISOString(),
+      mulligans_used: 0,
+    })
+    .select()
+    .single();
 
-  // Optional: redirect back to bracket page
-  redirect(`/bracket?bid=${bracketId}`);
+  if (error) {
+    console.error("🔥 SUBMIT BRACKET ERROR:", error);
+    return { success: false, error };
+  }
+
+  return { success: true };
 }

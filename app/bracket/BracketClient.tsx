@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { submitBracket } from "./actions";
 import RegionGrid from "./RegionGrid";
 import RegionView from "./RegionView";
 import FinalFourView from "./FinalFourView";
 import ChampionshipView from "./ChampionshipView";
 import { AnimatePresence, motion } from "framer-motion";
+import confetti from "canvas-confetti";
 
 // -----------------------------
 // TYPES
@@ -60,13 +61,11 @@ export default function BracketClient({
   onReset: () => void;
 }) {
   const [localPicks, setLocalPicks] = useState(picks);
-  const [tiebreaker, setTiebreaker] = useState("");
   const [submittedBanner, setSubmittedBanner] = useState("");
   const [lockDate, setLockDate] = useState<string | null>(null);
   const [isLocked, setIsLocked] = useState(false);
 
   const [view, setView] = useState<BracketView>("grid");
-  const formRef = useRef<HTMLFormElement | null>(null);
 
   // -----------------------------
   // EFFECTS
@@ -114,6 +113,37 @@ export default function BracketClient({
   };
 
   // -----------------------------
+  // SUBMIT HANDLER (DIRECT ARGUMENTS + CONFETTI)
+// -----------------------------
+  const handleSubmitBracket = async (tiebreaker: number) => {
+    if (isLocked) return;
+
+    const result = await submitBracket(bracket.bracket_id, tiebreaker);
+
+    if (result?.success) {
+      setSubmittedBanner("Bracket Submitted!");
+
+      // 🎉 CONFETTI BURST
+      confetti({
+        particleCount: 180,
+        spread: 70,
+        origin: { y: 0.6 },
+        scalar: 1.1,
+      });
+
+      // 🎉 SECONDARY BURST FOR EXTRA PIZZAZZ
+      setTimeout(() => {
+        confetti({
+          particleCount: 120,
+          spread: 100,
+          origin: { y: 0.4 },
+          scalar: 0.9,
+        });
+      }, 350);
+    }
+  };
+
+  // -----------------------------
   // NAV ITEMS
   // -----------------------------
   const navItems = [
@@ -141,7 +171,6 @@ export default function BracketClient({
   // -----------------------------
   return (
     <div className="flex w-full relative">
-
       {/* SIDEBAR */}
       <aside
         className="
@@ -176,7 +205,7 @@ export default function BracketClient({
                   ${
                     active
                       ? "bg-emerald-500/30 text-white border border-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.4)]"
-                      : "bg-white/5 text-slate-200 border border-white/10 hover:bg-white/10 hover:scale-[1.02]"
+                      : "bg-white/5 text-slate-200 border-white/10 hover:bg-white/10 hover:scale-[1.02]"
                   }
                 `}
               >
@@ -210,7 +239,6 @@ export default function BracketClient({
             if (isLocked) return;
             onReset();
             setLocalPicks([]);
-            setTiebreaker("");
             setSubmittedBanner("");
           }}
           disabled={isLocked}
@@ -237,12 +265,6 @@ export default function BracketClient({
           backdrop-blur-md bg-slate-900/20
         "
       >
-        {/* Hidden form */}
-        <form ref={formRef} action={submitBracket} className="hidden">
-          <input type="hidden" name="bracketId" value={bracket.bracket_id} />
-          <input type="hidden" name="tiebreaker" value={tiebreaker} />
-        </form>
-
         {/* Legend */}
         <div className="mb-6 flex gap-6 text-sm text-slate-300">
           <div className="flex items-center gap-2">
@@ -255,6 +277,18 @@ export default function BracketClient({
             <span className="text-lg">🍀</span> Mulligan (coming soon)
           </div>
         </div>
+
+        {/* Submitted Banner */}
+        {submittedBanner && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35 }}
+            className="mb-6 p-4 rounded-lg bg-emerald-600 text-white text-center shadow-xl"
+          >
+            {submittedBanner}
+          </motion.div>
+        )}
 
         {/* Animated Router */}
         <AnimatePresence mode="wait">
@@ -341,12 +375,10 @@ export default function BracketClient({
                 games={games}
                 picks={localPicks}
                 isLocked={isLocked}
-                tiebreaker={tiebreaker}
-                setTiebreaker={setTiebreaker}
-                setSubmittedBanner={setSubmittedBanner}
-                formRef={formRef}
                 onPick={handlePick}
+                onSubmit={handleSubmitBracket}
                 setView={setView}
+                submitted={submittedBanner !== ""}
               />
             )}
           </motion.div>

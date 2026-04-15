@@ -64,9 +64,16 @@ export default function ForumPanel() {
     const params = threadId ? `?threadId=${threadId}` : "";
     const res = await fetch(`/api/forum/posts${params}`, { cache: "no-store" });
     const json = await res.json();
+
     if (json.posts) {
+      const isUserSending = message.trim().length > 0;
+
       setPosts(json.posts);
-      scrollToBottom();
+
+      // Only auto-scroll when *you* send a message
+      if (isUserSending) {
+        scrollToBottom();
+      }
     }
   };
 
@@ -107,6 +114,7 @@ export default function ForumPanel() {
       if (res.ok) {
         setMessage("");
         await loadPosts(activeThreadId);
+        scrollToBottom();
       }
     } finally {
       setLoading(false);
@@ -151,7 +159,7 @@ export default function ForumPanel() {
   // RENDER
   // -----------------------------
   return (
-    <div className="flex h-screen w-full bg-slate-950 text-slate-100 overflow-hidden">
+    <div className="flex w-full min-h-screen bg-slate-950 text-slate-100 overflow-hidden">
 
       {/* -------------------------------- */}
       {/* FIXED FROSTED SIDEBAR */}
@@ -218,10 +226,17 @@ export default function ForumPanel() {
       {/* -------------------------------- */}
       {/* MAIN FEED AREA */}
       {/* -------------------------------- */}
-      <main className="ml-[260px] flex flex-col h-full w-full bg-slate-950">
+      <main className="ml-[260px] flex flex-col w-full bg-slate-950">
 
         {/* POSTS */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-4">
+        <div
+          className="
+            max-h-[320px]
+            overflow-y-auto
+            p-6 space-y-4
+            scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent
+          "
+        >
           {posts.map((p) => {
             const name = p.email.split("@")[0];
             const initials = name

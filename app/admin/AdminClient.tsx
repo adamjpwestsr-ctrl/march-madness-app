@@ -55,6 +55,8 @@ export default function AdminClient({ adminEmail }: { adminEmail: string }) {
           { href: "/admin/leaderboard", label: "Leaderboard Tools" },
 
           // ⭐ NEW TOOL ADDED HERE
+	  { href: "/admin/forum", label: "Forum Moderation" },
+
           { href: "/admin/tournament-setup", label: "Tournament Setup" },
 
           { href: "/admin/pending-users", label: "Pending Users" },

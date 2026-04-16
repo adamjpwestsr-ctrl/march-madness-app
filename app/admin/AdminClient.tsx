@@ -53,13 +53,12 @@ export default function AdminClient({ adminEmail }: { adminEmail: string }) {
           { href: "/admin/users", label: "User Management" },
           { href: "/admin/tools", label: "Bracket Tools & Simulations" },
           { href: "/admin/leaderboard", label: "Leaderboard Tools" },
-
-          // ⭐ NEW TOOL ADDED HERE
-	  { href: "/admin/forum", label: "Forum Moderation" },
-
+          { href: "/admin/forum", label: "Forum Moderation" },
           { href: "/admin/tournament-setup", label: "Tournament Setup" },
-
           { href: "/admin/pending-users", label: "Pending Users" },
+
+          // ⭐ NEW — Other Sports (Admin View)
+          { href: "/sports", label: "Other Sports" },
         ].map((item) => (
           <Link
             key={item.href}

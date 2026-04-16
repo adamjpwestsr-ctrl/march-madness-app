@@ -1,70 +1,75 @@
-export const runtime = "edge";
-export const dynamic = "force-dynamic";
-
-import Link from "next/link";
+"use client";
 
 export default function AdminOptionsPage() {
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center px-6">
-      <div className="w-full max-w-md bg-slate-900 border border-slate-700 rounded-2xl p-8 shadow-xl">
+    <div
+      className="
+        relative min-h-screen w-full bg-cover bg-center bg-no-repeat 
+        flex items-center justify-center
+      "
+      style={{ backgroundImage: "url('/background-bracket.png')" }}
+    >
+      {/* Dark overlay */}
+      <div className="absolute inset-0 bg-black bg-opacity-50"></div>
 
-        {/* Title */}
-        <h1 className="text-3xl font-bold text-white text-center mb-2">
-          Welcome, Admin
+      {/* Card */}
+      <div className="
+        relative z-10 bg-slate-900 bg-opacity-90 
+        p-10 rounded-2xl shadow-2xl w-full max-w-md 
+        border border-slate-700
+      ">
+        <h1 className="text-white text-3xl font-extrabold text-center drop-shadow-lg mb-4">
+          Admin Options
         </h1>
 
-        <p className="text-slate-300 text-center mb-8">
-          Choose where you want to go.
+        <p className="text-slate-300 text-center mb-8 text-sm">
+          Choose where you want to go.  
+          <span className="text-emerald-400 font-semibold">You’re in control.</span>
         </p>
 
-        {/* Buttons */}
         <div className="space-y-4">
 
-          <Link
-            href="/bracket"
+          {/* Brackets */}
+          <button
+            onClick={() => (window.location.href = "/bracket")}
             className="
-              block w-full text-center py-3 rounded-lg
-              bg-emerald-600 text-white font-semibold
+              w-full bg-emerald-600 text-white py-2 rounded-lg
               hover:bg-emerald-500 hover:shadow-lg
               transition-all duration-200
             "
           >
-            Enter Brackets
-          </Link>
+            Brackets (March Madness)
+          </button>
 
-          <Link
-            href="/leaderboard"
+          {/* Leaderboard */}
+          <button
+            onClick={() => (window.location.href = "/leaderboard")}
             className="
-              block w-full text-center py-3 rounded-lg
-              bg-slate-800 text-white font-semibold border border-slate-600
-              hover:bg-slate-700 hover:shadow-lg
-              transition-all duration-200
+              w-full bg-white/10 border border-white/20 text-white py-2 rounded-lg
+              hover:bg-white/20 transition-all duration-200
             "
           >
             Leaderboard
-          </Link>
+          </button>
 
-          <Link
-            href="/admin"
+          {/* Other Sports */}
+          <button
+            onClick={() => (window.location.href = "/sports")}
             className="
-              block w-full text-center py-3 rounded-lg
-              bg-slate-800 text-white font-semibold border border-slate-600
-              hover:bg-slate-700 hover:shadow-lg
-              transition-all duration-200
+              w-full bg-white/10 border border-white/20 text-white py-2 rounded-lg
+              hover:bg-white/20 transition-all duration-200
             "
           >
-            Admin Tools
-          </Link>
-        </div>
+            Other Sports
+          </button>
 
-        {/* Back link */}
-        <div className="mt-8 text-center">
-          <Link
-            href="/login"
-            className="text-sm text-gray-400 underline hover:text-gray-300 transition"
+          {/* Back to Login */}
+          <button
+            onClick={() => (window.location.href = "/login")}
+            className="w-full text-sm text-gray-400 underline mt-2"
           >
             Back to Login
-          </Link>
+          </button>
         </div>
       </div>
     </div>

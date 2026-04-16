@@ -10,10 +10,13 @@ type LoginFormProps = {
 export default function LoginForm({ onStepChange }: LoginFormProps) {
   const [email, setEmail] = useState("");
   const [adminCode, setAdminCode] = useState("");
-  const [needsAdminCode, setNeedsAdminCode] = useState(false);
+  const [step, setStep] = useState<"email" | "admin" | "options">("email");
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
 
+  // -----------------------------
+  // STEP 1 — EMAIL SUBMIT
+  // -----------------------------
   const handleEmailSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -25,13 +28,15 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
       const res = await loginWithEmail(formData);
 
       if (res.status === "needsAdminCode") {
-        setNeedsAdminCode(true);
+        setStep("admin");
         onStepChange?.("admin");
         return;
       }
 
       if (res.status === "magicLinkSent") {
-        setError("Magic link sent! Check your email.");
+        // Instead of showing "magic link sent", we now move to the options screen
+        setStep("options");
+        onStepChange?.("options");
         return;
       }
 
@@ -44,6 +49,9 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
     });
   };
 
+  // -----------------------------
+  // STEP 2 — ADMIN CODE SUBMIT
+  // -----------------------------
   const handleAdminCodeSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -74,11 +82,15 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
     });
   };
 
+  // -----------------------------
+  // RENDER
+  // -----------------------------
   return (
     <div className="space-y-4">
-      {!needsAdminCode ? (
+
+      {/* STEP 1 — EMAIL */}
+      {step === "email" && (
         <form onSubmit={handleEmailSubmit} className="space-y-4">
-          {/* EMAIL INPUT */}
           <input
             type="email"
             placeholder="Email address"
@@ -96,7 +108,6 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
 
           {error && <p className="text-red-600 text-sm">{error}</p>}
 
-          {/* CONTINUE BUTTON */}
           <button
             type="submit"
             disabled={isPending}
@@ -109,9 +120,11 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
             {isPending ? "Loading..." : "Continue"}
           </button>
         </form>
-      ) : (
+      )}
+
+      {/* STEP 2 — ADMIN CODE */}
+      {step === "admin" && (
         <form onSubmit={handleAdminCodeSubmit} className="space-y-4">
-          {/* ADMIN CODE INPUT */}
           <input
             type="text"
             placeholder="Enter admin code"
@@ -130,7 +143,6 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
 
           {error && <p className="text-red-600 text-sm">{error}</p>}
 
-          {/* VERIFY BUTTON */}
           <button
             type="submit"
             disabled={isPending}
@@ -143,12 +155,11 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
             {isPending ? "Verifying..." : "Verify Code"}
           </button>
 
-          {/* BACK BUTTON */}
           <button
             type="button"
             className="w-full text-sm text-gray-400 underline"
             onClick={() => {
-              setNeedsAdminCode(false);
+              setStep("email");
               setAdminCode("");
               onStepChange?.("email");
             }}
@@ -156,6 +167,53 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
             Back
           </button>
         </form>
+      )}
+
+      {/* STEP 3 — OPTIONS */}
+      {step === "options" && (
+        <div className="space-y-4 mt-6">
+
+          <button
+            onClick={() => (window.location.href = "/bracket")}
+            className="
+              w-full bg-emerald-600 text-white py-2 rounded-lg
+              hover:bg-emerald-500 hover:shadow-lg
+              transition-all duration-200
+            "
+          >
+            Brackets (March Madness)
+          </button>
+
+          <button
+            onClick={() => (window.location.href = "/leaderboard")}
+            className="
+              w-full bg-white/10 border border-white/20 text-white py-2 rounded-lg
+              hover:bg-white/20 transition-all duration-200
+            "
+          >
+            Leaderboard
+          </button>
+
+          <button
+            onClick={() => (window.location.href = "/sports")}
+            className="
+              w-full bg-white/10 border border-white/20 text-white py-2 rounded-lg
+              hover:bg-white/20 transition-all duration-200
+            "
+          >
+            Other Sports
+          </button>
+
+          <button
+            onClick={() => {
+              setStep("email");
+              onStepChange?.("email");
+            }}
+            className="w-full text-sm text-gray-400 underline"
+          >
+            Back
+          </button>
+        </div>
       )}
     </div>
   );

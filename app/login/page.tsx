@@ -54,6 +54,7 @@ export default function LoginPage() {
           </button>
         </div>
 
+        {/* Updated LoginForm with new 3‑button step */}
         <LoginForm onStepChange={setCurrentStep} />
 
         {/* Email Commissioners */}
@@ -78,7 +79,7 @@ export default function LoginPage() {
               <li><strong>Leaderboard:</strong> After submitting, visit the leaderboard anytime to see how you stack up.</li>
               <li><strong>Sign‑In:</strong> Your email is your key — no password needed. If you're new, the admin approves your entry.</li>
               <li><strong>Mulligans:</strong> Each player gets two mulligans — you can “undo” your pick if your pick loses in the first 2 rounds.</li>
-              <li><strong>Prizes:</strong> Top finishers win bragging rights and money, because some times money is better than bragging rights.</li>
+              <li><strong>Prizes:</strong> Top finishers win bragging rights and money, because sometimes money is better than bragging rights.</li>
             </ul>
 
             <button

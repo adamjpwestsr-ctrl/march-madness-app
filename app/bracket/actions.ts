@@ -34,7 +34,8 @@ export async function createBracket(formData: FormData) {
     throw new Error("User not found for bracket creation");
   }
 
-  const { data, error } = await supabase
+  // ⭐ 1. Create the bracket
+  const { data: newBracket, error: bracketError } = await supabase
     .from("brackets")
     .insert({
       user_id: user.user_id,
@@ -45,12 +46,85 @@ export async function createBracket(formData: FormData) {
     .select()
     .single();
 
-  if (error) {
-    console.error("Create bracket error:", error);
+  if (bracketError) {
+    console.error("Create bracket error:", bracketError);
     throw new Error("Failed to create bracket");
   }
 
-  redirect(`/bracket?bid=${data.bracket_id}`);
+  const bracketId = newBracket.bracket_id;
+
+  // ⭐ 2. Load Round of 64 games to generate initial bracket_rounds
+  const { data: games, error: gameError } = await supabase
+    .from("games")
+    .select("*")
+    .eq("round", 1)
+    .order("game_id", { ascending: true });
+
+  if (gameError) {
+    console.error("Load games error:", gameError);
+    throw new Error("Failed to load initial games");
+  }
+
+  // ⭐ 3. Insert bracket_rounds for Round of 64
+  const initialRounds = games.map((g) => ({
+    bracket_id: bracketId,
+    round: g.round,
+    game_id: g.game_id,
+    region: g.region,
+    team1: g.team1,
+    team2: g.team2,
+    seed1: g.seed1,
+    seed2: g.seed2,
+    winner: null,
+  }));
+
+  const { error: insertRoundsError } = await supabase
+    .from("bracket_rounds")
+    .insert(initialRounds);
+
+  if (insertRoundsError) {
+    console.error("Insert initial rounds error:", insertRoundsError);
+    throw new Error("Failed to initialize bracket rounds");
+  }
+
+  // ⭐ 4. Load ALL rounds for cleanup (Rounds > 1)
+  const { data: allRounds, error: loadRoundsError } = await supabase
+    .from("bracket_rounds")
+    .select("*")
+    .eq("bracket_id", bracketId);
+
+  if (loadRoundsError) {
+    console.error("Error loading rounds for cleanup:", loadRoundsError);
+    throw new Error("Failed to load rounds for cleanup");
+  }
+
+  // ⭐ 5. Clean rounds: only Round 1 should have teams
+  const cleanedRounds = allRounds.map((r) => {
+    if (r.round > 1) {
+      return {
+        ...r,
+        team1: null,
+        team2: null,
+        seed1: null,
+        seed2: null,
+        winner: null,
+      };
+    }
+    return r;
+  });
+
+  // ⭐ 6. Write cleaned rounds back to DB
+  const { error: updateError } = await supabase
+    .from("bracket_rounds")
+    .upsert(cleanedRounds);
+
+  if (updateError) {
+    console.error("Error cleaning bracket rounds:", updateError);
+    throw new Error("Failed to clean bracket rounds");
+  }
+
+  // ⭐ 7. Redirect to the new bracket
+  redirect(`/bracket?bid=${bracketId}`);
 }
 
 // ⭐ DELETE BRACKET
@@ -108,7 +182,7 @@ export async function submitBracket(bracketId: string, tiebreaker: number) {
   const { data, error } = await supabase
     .from("bracket_submissions")
     .upsert({
-      bracket_id: bracketId, // UUID string is valid
+      bracket_id: bracketId,
       tiebreaker,
       submitted_at: new Date().toISOString(),
       mulligans_used: 0,

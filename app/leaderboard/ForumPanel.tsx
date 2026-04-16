@@ -231,7 +231,7 @@ export default function ForumPanel() {
         {/* POSTS */}
         <div
           className="
-            max-h-[320px]
+            max-h-[480px]
             overflow-y-auto
             p-6 space-y-4
             scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent

@@ -241,8 +241,7 @@ export default function BracketClient({
     const confirmed = confirm("Are you sure you want to reset your bracket?");
     if (!confirmed) return;
 
-    // Call BracketShell → handleReset()
-    await onReset();
+    await onReset(); // BracketShell → handleReset()
 
     // Clear UI state
     setLocalPicks([]);

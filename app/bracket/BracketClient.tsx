@@ -259,24 +259,6 @@ export default function BracketClient({
 >
   Reset Bracket
 </button>
-
-  // Clear UI state
-  setLocalPicks([]);
-  setSubmittedBanner("");
-
-  // Reload bracket from server
-  window.location.reload();
-}}
-
-          disabled={isLocked}
-          className={`
-            mt-auto px-4 py-2 rounded-lg text-sm text-white
-            bg-red-600 hover:bg-red-700 transition
-            ${isLocked ? "opacity-60 cursor-not-allowed" : ""}
-          `}
-        >
-          Reset Bracket
-        </button>
       </aside>
 
       {/* MAIN CONTENT */}

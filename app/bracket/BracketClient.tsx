@@ -233,24 +233,33 @@ export default function BracketClient({
           )}
         </div>
 
-        {/* Reset Button */}
-        <button
- onClick={async () => {
-  if (isLocked) return;
+{/* Reset Button */}
+<button
+  onClick={async () => {
+    if (isLocked) return;
 
-  const confirmed = confirm("Are you sure you want to reset your bracket?");
-  if (!confirmed) return;
+    const confirmed = confirm("Are you sure you want to reset your bracket?");
+    if (!confirmed) return;
 
-  const res = await fetch("/api/bracket/reset", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ bracketId: bracket.bracket_id }),
-  });
+    // Call BracketShell → handleReset()
+    await onReset();
 
-  if (!res.ok) {
-    alert("Failed to reset bracket.");
-    return;
-  }
+    // Clear UI state
+    setLocalPicks([]);
+    setSubmittedBanner("");
+
+    // Reload bracket from server
+    window.location.reload();
+  }}
+  disabled={isLocked}
+  className={`
+    mt-auto px-4 py-2 rounded-lg text-sm text-white
+    bg-red-600 hover:bg-red-700 transition
+    ${isLocked ? "opacity-60 cursor-not-allowed" : ""}
+  `}
+>
+  Reset Bracket
+</button>
 
   // Clear UI state
   setLocalPicks([]);

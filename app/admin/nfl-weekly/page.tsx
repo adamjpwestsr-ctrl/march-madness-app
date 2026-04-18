@@ -2,7 +2,7 @@ import { createSupabaseServerClient as createClient } from "@/lib/supabaseServer
 import AdminWeeklyClient from "./AdminWeeklyClient";
 
 export default async function AdminNFLWeeklyPage() {
-const supabase = await createClient();
+  const supabase = await createClient();
 
   // Load teams server-side
   const { data: teams } = await supabase
@@ -10,5 +10,16 @@ const supabase = await createClient();
     .select("*")
     .order("name");
 
-  return <AdminWeeklyClient teams={teams || []} />;
+  // Load weekly settings (lock time, etc.)
+  const { data: settings } = await supabase
+    .from("nfl_weekly_settings")
+    .select("*")
+    .single();
+
+  return (
+    <AdminWeeklyClient
+      teams={teams || []}
+      settings={settings || {}}
+    />
+  );
 }

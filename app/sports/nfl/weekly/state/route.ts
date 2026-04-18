@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 
 export async function GET() {
-  const supabase = createClient();
+  // ⭐ MUST await the Supabase client
+  const supabase = await createClient();
 
   // Auth
   const {
@@ -25,7 +26,9 @@ export async function GET() {
   const usedTeams = picks?.map((p) => p.team_id) || [];
 
   // Determine current week (simple version)
-  const currentWeek = picks?.length ? Math.max(...picks.map((p) => p.week)) + 1 : 1;
+  const currentWeek = picks?.length
+    ? Math.max(...picks.map((p) => p.week)) + 1
+    : 1;
 
   return NextResponse.json({
     teams,

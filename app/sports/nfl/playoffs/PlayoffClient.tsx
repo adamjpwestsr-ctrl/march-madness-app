@@ -1,19 +1,45 @@
-		"use client";
+"use client";
 
 import { useState } from "react";
 import Image from "next/image";
 
-export default function PlayoffClient({ teams, initialBracket, onSave }) {
-  const [bracket, setBracket] = useState(initialBracket);
+/* ---------------- TYPES ---------------- */
 
-  const handleSelect = (slot, teamId) => {
+interface Team {
+  id: number;
+  name: string;
+  logo: string;
+  [key: string]: any;
+}
+
+interface PlayoffBracket {
+  [key: string]: number | null;
+}
+
+interface PlayoffClientProps {
+  teams: Team[];
+  initialBracket: PlayoffBracket;
+  onSave: (bracket: PlayoffBracket) => void;
+}
+
+/* ---------------- MAIN COMPONENT ---------------- */
+
+export default function PlayoffClient({
+  teams,
+  initialBracket,
+  onSave,
+}: PlayoffClientProps) {
+  const [bracket, setBracket] = useState<PlayoffBracket>(initialBracket);
+
+  const handleSelect = (slot: string, teamId: number) => {
     setBracket((prev) => ({
       ...prev,
       [slot]: teamId,
     }));
   };
 
-  const getTeam = (id) => teams.find((t) => t.id === id);
+  const getTeam = (id: number | null) =>
+    teams.find((t) => t.id === id) || null;
 
   return (
     <div className="w-full min-h-screen bg-slate-950 text-white p-6 flex flex-col gap-10">
@@ -143,7 +169,15 @@ export default function PlayoffClient({ teams, initialBracket, onSave }) {
 
 /* ---------------- MATCHUP COMPONENT ---------------- */
 
-function Matchup({ slot, teamA, teamB, onSelect, color }) {
+interface MatchupProps {
+  slot: string;
+  teamA: Team | null;
+  teamB: Team | null;
+  onSelect: (slot: string, teamId: number) => void;
+  color: string;
+}
+
+function Matchup({ slot, teamA, teamB, onSelect, color }: MatchupProps) {
   const glow =
     color === "emerald"
       ? "shadow-[0_0_12px_rgba(16,185,129,0.5)]"
@@ -186,7 +220,23 @@ function Matchup({ slot, teamA, teamB, onSelect, color }) {
 
 /* ---------------- ROUND COLUMN (DESKTOP) ---------------- */
 
-function RoundColumn({ title, matchups, bracket, getTeam, onSelect, color }) {
+interface RoundColumnProps {
+  title: string;
+  matchups: (string | null)[][];
+  bracket: PlayoffBracket;
+  getTeam: (id: number | null) => Team | null;
+  onSelect: (slot: string, teamId: number) => void;
+  color: string;
+}
+
+function RoundColumn({
+  title,
+  matchups,
+  bracket,
+  getTeam,
+  onSelect,
+  color,
+}: RoundColumnProps) {
   return (
     <div className="flex flex-col items-center gap-6">
       <div className={`text-lg font-semibold text-${color}-400`}>{title}</div>
@@ -194,8 +244,8 @@ function RoundColumn({ title, matchups, bracket, getTeam, onSelect, color }) {
       {matchups.map(([slotA, slotB], idx) => (
         <Matchup
           key={idx}
-          slot={slotA}
-          teamA={getTeam(bracket[slotA])}
+          slot={slotA as string}
+          teamA={getTeam(bracket[slotA as string])}
           teamB={slotB ? getTeam(bracket[slotB]) : null}
           onSelect={onSelect}
           color={color}
@@ -207,7 +257,23 @@ function RoundColumn({ title, matchups, bracket, getTeam, onSelect, color }) {
 
 /* ---------------- MOBILE ROUND ---------------- */
 
-function MobileRound({ title, slots, bracket, getTeam, onSelect, color }) {
+interface MobileRoundProps {
+  title: string;
+  slots: string[];
+  bracket: PlayoffBracket;
+  getTeam: (id: number | null) => Team | null;
+  onSelect: (slot: string, teamId: number) => void;
+  color: string;
+}
+
+function MobileRound({
+  title,
+  slots,
+  bracket,
+  getTeam,
+  onSelect,
+  color,
+}: MobileRoundProps) {
   return (
     <div className="flex flex-col gap-4">
       <div className={`text-xl font-semibold text-${color}-400`}>{title}</div>

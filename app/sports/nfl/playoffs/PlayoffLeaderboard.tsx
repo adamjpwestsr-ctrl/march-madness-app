@@ -2,8 +2,15 @@
 
 import { useEffect, useState } from "react";
 
+interface LeaderboardRow {
+  user_id: number;
+  name: string;
+  email: string;
+  points: number;
+}
+
 export default function PlayoffLeaderboard() {
-  const [leaderboard, setLeaderboard] = useState([]);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardRow[]>([]);
 
   useEffect(() => {
     fetch("/sports/nfl/playoffs/leaderboard")

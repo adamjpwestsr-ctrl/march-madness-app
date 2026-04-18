@@ -2,14 +2,35 @@
 
 import { useState } from "react";
 
-// ⭐ Add props interface
+// ⭐ Props interface
 interface PlayoffClientProps {
-  teams: any[]; // You can refine this later with a Team type
+  teams: any[];
 }
+
+// ⭐ Bracket type with index signature so bracket[slot] is allowed
+type BracketState = {
+  [key: string]: string | null;
+  wc_afc_1: string | null;
+  wc_afc_2: string | null;
+  wc_afc_3: string | null;
+  wc_nfc_1: string | null;
+  wc_nfc_2: string | null;
+  wc_nfc_3: string | null;
+
+  div_afc_1: string | null;
+  div_afc_2: string | null;
+  div_nfc_1: string | null;
+  div_nfc_2: string | null;
+
+  conf_afc: string | null;
+  conf_nfc: string | null;
+
+  super_bowl: string | null;
+};
 
 export default function PlayoffClient({ teams }: PlayoffClientProps) {
   // Bracket structure
-  const [bracket, setBracket] = useState({
+  const [bracket, setBracket] = useState<BracketState>({
     wc_afc_1: null,
     wc_afc_2: null,
     wc_afc_3: null,

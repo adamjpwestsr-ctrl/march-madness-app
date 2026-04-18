@@ -46,20 +46,23 @@ export default function AdminClient({ adminEmail }: { adminEmail: string }) {
           margin: "0 auto",
         }}
       >
-        {[
-          { href: "/admin/games", label: "Game Results" },
-          { href: "/admin/brackets", label: "Bracket Management" },
-          { href: "/admin/mulligans", label: "Mulligan Approvals" },
-          { href: "/admin/users", label: "User Management" },
-          { href: "/admin/tools", label: "Bracket Tools & Simulations" },
-          { href: "/admin/leaderboard", label: "Leaderboard Tools" },
-          { href: "/admin/forum", label: "Forum Moderation" },
-          { href: "/admin/tournament-setup", label: "Tournament Setup" },
-          { href: "/admin/pending-users", label: "Pending Users" },
+{[
+  { href: "/admin/games", label: "Game Results" },
+  { href: "/admin/brackets", label: "Bracket Management" },
+  { href: "/admin/mulligans", label: "Mulligan Approvals" },
+  { href: "/admin/users", label: "User Management" },
+  { href: "/admin/tools", label: "Bracket Tools & Simulations" },
+  { href: "/admin/leaderboard", label: "Leaderboard Tools" },
 
-          // ⭐ NEW — Other Sports (Admin View)
-          { href: "/sports", label: "Other Sports" },
-        ].map((item) => (
+  // ⭐ NEW — Payout Snapshots
+  { href: "/admin/snapshots", label: "Payout Snapshots" },
+
+  { href: "/admin/forum", label: "Forum Moderation" },
+  { href: "/admin/tournament-setup", label: "Tournament Setup" },
+  { href: "/admin/pending-users", label: "Pending Users" },
+  { href: "/sports", label: "Other Sports" },
+].map((item) => (
+
           <Link
             key={item.href}
             href={item.href}

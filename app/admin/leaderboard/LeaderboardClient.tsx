@@ -23,21 +23,18 @@ export default function LeaderboardClient() {
   // 1. RECALCULATE SCORES
   // -------------------------------------------------------
   const recalcScores = async () => {
-    // Load all games with winners
     const { data: games } = await supabase
       .from("games")
       .select("game_id, round, winner");
 
     if (!games) return;
 
-    // Load all picks
     const { data: picks } = await supabase
       .from("picks")
       .select("bracket_id, game_id, selected_team");
 
     if (!picks) return;
 
-    // Scoring system
     const roundPoints: Record<number, number> = {
       1: 1,
       2: 2,
@@ -59,7 +56,6 @@ export default function LeaderboardClient() {
       }
     });
 
-    // Save scores
     const rows = Object.entries(scoreMap).map(([bracketId, score]) => ({
       bracket_id: Number(bracketId),
       score,
@@ -150,6 +146,16 @@ export default function LeaderboardClient() {
     await recalcRankChanges();
   };
 
+  // -------------------------------------------------------
+  // 6. SAVE PAYOUT SNAPSHOT
+  // -------------------------------------------------------
+  const saveSnapshot = async (round: number) => {
+    const { error } = await supabase.rpc("snapshot_payouts", {
+      snapshot_round: round,
+    });
+    if (error) throw error;
+  };
+
   return (
     <div
       style={{
@@ -235,6 +241,48 @@ export default function LeaderboardClient() {
             style={btn("#dc2626")}
           >
             Rebuild Leaderboard
+          </button>
+        </Section>
+
+        {/* SNAPSHOT TOOLS */}
+        <Section title="Payout Snapshot Tools">
+          <div style={{ marginBottom: 12 }}>
+            <label style={{ display: "block", marginBottom: 6, fontSize: 14 }}>
+              Select Round to Snapshot
+            </label>
+
+            <select
+              id="snapshot-round"
+              style={{
+                padding: "8px 10px",
+                borderRadius: 6,
+                background: "#1e293b",
+                color: "white",
+                border: "1px solid rgba(148,163,184,0.35)",
+              }}
+            >
+              <option value="1">Round of 64</option>
+              <option value="2">Round of 32</option>
+              <option value="3">Sweet 16</option>
+              <option value="4">Elite 8</option>
+              <option value="5">Final Four</option>
+              <option value="6">Championship</option>
+            </select>
+          </div>
+
+          <button
+            onClick={() => {
+              const round = Number(
+                (document.getElementById("snapshot-round") as HTMLSelectElement)
+                  .value
+              );
+              run(`Save Snapshot (Round ${round})`, () =>
+                saveSnapshot(round)
+              );
+            }}
+            style={btn("#0ea5e9")}
+          >
+            Save Snapshot
           </button>
         </Section>
       </div>

@@ -1,5 +1,6 @@
 'use client'
 
+import type React from 'react'
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabaseClient'
 import { getTeamLogo } from '../../lib/getTeamLogo'
@@ -7,6 +8,7 @@ import HistoryOverlay from '@/app/leaderboard/HistoryOverlay'
 import TeamHoverCard from '../../components/TeamHoverCard'
 import BadgeStrip from '@/components/BadgeStrip'
 import ForumPanel from './ForumPanel'
+import PrizePoolCard from './PrizePoolCard'
 
 /* -----------------------------
    TABLE CELL STYLES (Dark Mode)
@@ -139,6 +141,9 @@ export default function LeaderboardPage() {
   const [historyRows, setHistoryRows] = useState<any[]>([])
   const [hoveredTeam, setHoveredTeam] = useState<string | null>(null)
 
+  // ⭐ Correct placement of prizePool hook
+  const [prizePool, setPrizePool] = useState<any>(null)
+
   /* -----------------------------
      FETCH LEADERBOARD (FULL VIEW)
   ------------------------------ */
@@ -156,8 +161,27 @@ export default function LeaderboardPage() {
     setRows(data ?? [])
   }
 
+  /* -----------------------------
+     FETCH PRIZE POOL
+  ------------------------------ */
+  const fetchPrizePool = async () => {
+    const { data, error } = await supabase
+      .from('contest_prize_pool')
+      .select('*')
+      .eq('sport', 'march_madness')
+      .single()
+
+    if (error) {
+      console.error('Prize pool error:', error)
+      return
+    }
+
+    setPrizePool(data)
+  }
+
   useEffect(() => {
     fetchLeaderboard()
+    fetchPrizePool()
   }, [])
 
   /* -----------------------------
@@ -193,7 +217,6 @@ export default function LeaderboardPage() {
         color: '#e5e7eb'
       }}
     >
-
       {/* ⭐ TWO-COLUMN LAYOUT */}
       <div
         style={{
@@ -202,12 +225,17 @@ export default function LeaderboardPage() {
           gap: '30px'
         }}
       >
-
         {/* LEFT: FORUM */}
         <ForumPanel />
 
         {/* RIGHT: LEADERBOARD */}
         <div>
+          {/* ⭐ PRIZE POOL CARD ABOVE HEADER */}
+          {prizePool && (
+            <div style={{ marginBottom: 20 }}>
+              <PrizePoolCard pool={prizePool} />
+            </div>
+          )}
 
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
             <h1
@@ -293,8 +321,8 @@ export default function LeaderboardPage() {
                   <th style={{ ...th, width: 60 }}>Rank</th>
                   <th style={{ ...th, textAlign: 'left' }}>Name</th>
                   <th style={{ ...th, width: 120 }}>Points</th>
-                  <th style={{ ...th, width: 140 }}>Champion</th>
-                  <th style={{ ...th, width: 120 }}>Trend</th>
+                  <th style={{ ...th, width: 120 }}>Champion</th>
+                  <th style={{ ...th, width: 140 }}>Trend</th>
                   <th style={{ ...th, width: 180 }}>Potential</th>
                   <th style={{ ...th, width: 140 }}>Mulligans Used</th>
                 </tr>
@@ -384,7 +412,10 @@ export default function LeaderboardPage() {
                       <td style={td}>
                         {championLogo ? (
                           <div
-                            style={{ position: 'relative', display: 'inline-block' }}
+                            style={{
+                              position: 'relative',
+                              display: 'inline-block'
+                            }}
                             onMouseEnter={() => setHoveredTeam(champion)}
                             onMouseLeave={() => setHoveredTeam(null)}
                           >
@@ -430,7 +461,8 @@ export default function LeaderboardPage() {
                       {/* POTENTIAL POINTS */}
                       <td style={{ ...td, textAlign: 'left' }}>
                         <div style={{ marginBottom: 4, fontSize: 13 }}>
-                          Max: <span style={{ fontWeight: 600 }}>{maxScore}</span>
+                          Max:{' '}
+                          <span style={{ fontWeight: 600 }}>{maxScore}</span>
                         </div>
 
                         <div
@@ -526,6 +558,8 @@ export default function LeaderboardPage() {
               animation: confettiBurst 1.2s ease-out forwards;
             }
 
+            @keyframes confettiBurst {
+              0% { opacity: 1; transform: translateX(-50%) translateY(0); }
             @keyframes confettiBurst {
               0% { opacity: 1; transform: translateX(-50%) translateY(0); }
               100% { opacity: 0; transform: translateX(-50%) translateY(-40px); }

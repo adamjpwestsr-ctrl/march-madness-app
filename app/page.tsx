@@ -21,19 +21,19 @@ export default function LandingPage() {
         <p className="text-slate-200 text-3xl font-extrabold tracking-wide drop-shadow-[0_0_18px_rgba(16,185,129,0.8)]">
           Sponsored by{" "}
           <a
-            href="https://lawnhacker.com"
+            href="https://march-madness-app-theta.vercel.app/"
             target="_blank"
             rel="noopener noreferrer"
             className="text-emerald-400 drop-shadow-[0_0_25px_rgba(16,185,129,1)] hover:text-emerald-300 transition"
           >
-            Lawn Hacker
+            BracketBoss
           </a>
         </p>
       </div>
 
       {/* Moving Sponsor Logo */}
       <a
-        href="https://lawnhacker.com"
+        href="https://march-madness-app-theta.vercel.app/"
         target="_blank"
         rel="noopener noreferrer"
         className="moving-logo absolute"

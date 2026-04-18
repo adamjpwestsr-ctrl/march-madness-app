@@ -4,7 +4,13 @@ import { useEffect, useState } from "react";
 
 const WEEKS = Array.from({ length: 17 }, (_, i) => i + 1);
 
-export default function AdminWeeklyClient({ teams, settings }) {
+// ⭐ Added props interface (fixes Vercel TS error)
+interface AdminWeeklyProps {
+  teams: any[];
+  settings: any;
+}
+
+export default function AdminWeeklyClient({ teams, settings }: AdminWeeklyProps) {
   const [currentWeek, setCurrentWeek] = useState(1);
   const [winningTeams, setWinningTeams] = useState<string[]>([]);
   const [leaderboard, setLeaderboard] = useState([]);

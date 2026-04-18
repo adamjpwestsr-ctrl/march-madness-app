@@ -1,15 +1,32 @@
 import { createClient } from "@/utils/supabase/server";
 import PlayoffClient from "./PlayoffClient";
+import PlayoffLeaderboard from "./PlayoffLeaderboard";
 
 export default async function PlayoffPage() {
-  // ⭐ MUST await the Supabase client
   const supabase = await createClient();
 
-  // Load teams server-side
+  // Load teams
   const { data: teams } = await supabase
     .from("nfl_teams")
     .select("*")
     .order("name");
 
-  return <PlayoffClient teams={teams || []} />;
+  // Load saved playoff bracket
+  const { data: bracketRow } = await supabase
+    .from("playoff_brackets")
+    .select("bracket")
+    .eq("season", 2024)
+    .single();
+
+  const initialBracket = bracketRow?.bracket || {};
+
+  return (
+    <div className="flex flex-col gap-12 p-6">
+      {/* Bracket UI */}
+      <PlayoffClient teams={teams || []} initialBracket={initialBracket} />
+
+      {/* Leaderboard UI */}
+      <PlayoffLeaderboard />
+    </div>
+  );
 }

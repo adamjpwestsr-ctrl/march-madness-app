@@ -1,4 +1,19 @@
-export default function PrizePoolCard({ pool }) {
+// ⭐ Add props interface
+interface PrizePoolCardProps {
+  pool: {
+    total_entries: number;
+    total_mulligans: number;
+    gross_pot_cents: number;
+    rake_percent: number;
+    rake_cents: number;
+    prize_pool_cents: number;
+    third_place_cents: number;
+    second_place_cents: number;
+    first_place_cents: number;
+  };
+}
+
+export default function PrizePoolCard({ pool }: PrizePoolCardProps) {
   const fmt = (cents: number) => `$${(cents / 100).toFixed(2)}`;
 
   return (

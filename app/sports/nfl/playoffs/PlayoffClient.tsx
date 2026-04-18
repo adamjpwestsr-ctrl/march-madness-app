@@ -2,7 +2,12 @@
 
 import { useState } from "react";
 
-export default function PlayoffClient({ teams }) {
+// ⭐ Add props interface
+interface PlayoffClientProps {
+  teams: any[]; // You can refine this later with a Team type
+}
+
+export default function PlayoffClient({ teams }: PlayoffClientProps) {
   // Bracket structure
   const [bracket, setBracket] = useState({
     wc_afc_1: null,
@@ -23,11 +28,11 @@ export default function PlayoffClient({ teams }) {
     super_bowl: null,
   });
 
-  const handlePick = (slot, teamId) => {
+  const handlePick = (slot: string, teamId: string) => {
     setBracket({ ...bracket, [slot]: teamId });
   };
 
-  const renderTeamButton = (slot, team) => {
+  const renderTeamButton = (slot: string, team: any) => {
     const selected = bracket[slot] === team.id;
 
     return (

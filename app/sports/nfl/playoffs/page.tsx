@@ -20,10 +20,27 @@ export default async function PlayoffPage() {
 
   const initialBracket = bracketRow?.bracket || {};
 
+  // This function will be passed into PlayoffClient
+  async function onSave(bracket: any) {
+    "use server";
+
+    const supabase = await createClient();
+
+    await supabase.from("playoff_brackets").upsert({
+      season: 2024,
+      bracket,
+      updated_at: new Date().toISOString(),
+    });
+  }
+
   return (
     <div className="flex flex-col gap-12 p-6">
       {/* Bracket UI */}
-      <PlayoffClient teams={teams || []} initialBracket={initialBracket} />
+      <PlayoffClient
+        teams={teams || []}
+        initialBracket={initialBracket}
+        onSave={onSave}
+      />
 
       {/* Leaderboard UI */}
       <PlayoffLeaderboard />

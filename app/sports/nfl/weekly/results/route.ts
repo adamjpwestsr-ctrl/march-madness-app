@@ -2,7 +2,9 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 
 export async function POST(req: Request) {
-  const supabase = createClient();
+  // ⭐ MUST await the Supabase client
+  const supabase = await createClient();
+
   const { week, winningTeams } = await req.json();
 
   // Auth

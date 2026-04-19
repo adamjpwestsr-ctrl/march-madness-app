@@ -1,5 +1,22 @@
 export const runtime = "edge";
 
+const LIVE_SPORTS = [
+  {
+    key: "nfl-weekly",
+    icon: "🏈",
+    name: "NFL Weekly Picks",
+    description: "Pick one team per week. Survive the season. One pick per team.",
+    href: "/sports/nfl/weekly",
+  },
+  {
+    key: "golf-weekly",
+    icon: "⛳",
+    name: "Golf Weekly Picks",
+    description: "Pick one golfer per tournament. Majors, Signature, FedEx — full season.",
+    href: "/sports/golf/weekly",
+  },
+];
+
 const SPORTS = [
   {
     key: "nhl",
@@ -57,8 +74,50 @@ export default function SportsPage() {
         </div>
       </header>
 
-      {/* Sports Grid */}
+      {/* LIVE SPORTS GRID */}
       <main className="flex-1 w-full px-6 sm:px-10 pb-12">
+        <div className="max-w-5xl mx-auto grid gap-6 sm:gap-7 md:grid-cols-2 mb-10">
+          {LIVE_SPORTS.map((sport) => (
+            <a
+              key={sport.key}
+              href={sport.href}
+              className="
+                group relative overflow-hidden
+                rounded-2xl bg-white/5 border border-white/10
+                shadow-xl shadow-black/40 backdrop-blur-xl
+                px-5 py-5 sm:px-6 sm:py-6
+                flex flex-col gap-3
+                transition-transform transition-shadow duration-200
+                hover:shadow-[0_0_24px_rgba(16,185,129,0.45)]
+                hover:border-emerald-400/60
+                hover:-translate-y-[2px]
+              "
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-slate-900/70 flex items-center justify-center text-2xl">
+                    {sport.icon}
+                  </div>
+                  <div>
+                    <h2 className="text-base sm:text-lg font-semibold text-white">
+                      {sport.name}
+                    </h2>
+                    <span className="inline-flex items-center gap-1 mt-1 text-[11px] px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-400/40 text-emerald-200 uppercase tracking-[0.16em]">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      Live
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-xs sm:text-sm text-slate-200/85 mt-2">
+                {sport.description}
+              </p>
+            </a>
+          ))}
+        </div>
+
+        {/* COMING SOON GRID */}
         <div className="max-w-5xl mx-auto grid gap-6 sm:gap-7 md:grid-cols-2">
           {SPORTS.map((sport) => (
             <article

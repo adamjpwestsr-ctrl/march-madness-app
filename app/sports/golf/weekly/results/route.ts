@@ -22,7 +22,7 @@ export async function GET(req: Request) {
     awarded:
       awarded?.map((r) => ({
         user_id: r.user_id,
-        name: r.users?.name,
+        name: r.users?.[0]?.name ?? "Unknown",
         points_awarded: r.points_awarded,
       })) || [],
   });

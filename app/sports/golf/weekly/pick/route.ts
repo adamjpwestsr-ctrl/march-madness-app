@@ -1,41 +1,64 @@
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+export const fetchCache = "force-no-store";
+export const runtime = "nodejs";
+
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { createClient } from "@/utils/supabase/server";
 
 export async function POST(req: Request) {
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // -----------------------------
+  // 1. Parse mm_session cookie
+  // -----------------------------
+  const cookieStore = await cookies();
+  const sessionCookie = cookieStore.get("mm_session");
 
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  let userId: number | null = null;
+
+  if (sessionCookie?.value) {
+    try {
+      const parsed = JSON.parse(sessionCookie.value);
+      userId = parsed.userId ?? null;
+    } catch {
+      userId = null;
+    }
   }
 
+  if (!userId) {
+    return NextResponse.json(
+      { error: "Not authenticated" },
+      { status: 401 }
+    );
+  }
+
+  // -----------------------------
+  // 2. Parse request body
+  // -----------------------------
   const { tournament_id, player_id } = await req.json();
 
-  // Enforce pick-once-per-player per season
-  const { data: existing } = await supabase
-    .from("golf_weekly_picks")
-    .select("tournament_id")
-    .eq("user_id", user.user_metadata.user_id)
-    .eq("player_id", player_id);
-
-  if (existing && existing.length > 0) {
+  if (!tournament_id || !player_id) {
     return NextResponse.json(
-      { error: "You have already picked this player this season." },
+      { error: "Missing tournament_id or player_id" },
       { status: 400 }
     );
   }
 
-  const { error } = await supabase.from("golf_weekly_picks").upsert({
-    user_id: user.user_metadata.user_id,
-    tournament_id,
-    player_id,
-  });
+  // -----------------------------
+  // 3. Insert or update pick
+  // -----------------------------
+  const { error } = await supabase
+    .from("golf_weekly_picks")
+    .upsert({
+      user_id: userId,
+      tournament_id,
+      player_id,
+    });
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message }, { status: 400 });
   }
 
   return NextResponse.json({ success: true });

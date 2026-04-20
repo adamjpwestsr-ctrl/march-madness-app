@@ -620,8 +620,6 @@ export default function GolfWeeklyClient({
           </div>
         </div>
 
-      </section>
-
       {/* ---- ACHIEVEMENTS SECTION ---- */}
       <section className="w-full animate-fadeIn">
         <div className="rounded-xl bg-slate-900/80 border border-white/10 p-5 shadow-xl flex flex-col gap-4">

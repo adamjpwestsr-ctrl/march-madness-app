@@ -883,7 +883,8 @@ export default function GolfWeeklyClient({
           </div>
         </div>
       )}
+
+      {/* end main wrapper */}
     </div>
-    {/* end main wrapper */}
   );
 }

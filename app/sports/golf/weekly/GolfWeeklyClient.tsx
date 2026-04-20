@@ -3,13 +3,9 @@
 import { useEffect, useState } from "react";
 import confetti from "canvas-confetti";
 
-useEffect(() => {
-  if (!newBadge) return;
-  const t = setTimeout(() => setNewBadge(null), 3000);
-  return () => clearTimeout(t);
-}, [newBadge]);
-
-
+// ----------------------
+// Types (safe to be here)
+// ----------------------
 interface Tournament {
   id: number;
   name: string;
@@ -36,11 +32,7 @@ interface LeaderboardRow {
   points: number;
 }
 
-interface GolfWeeklyClientProps {
-  tournaments: Tournament[];
-  players: Player[];
-}
-
+// ---- DROP 3 TYPES (THESE ARE SAFE HERE) ----
 interface Streaks {
   current_streak: number;
   longest_streak: number;
@@ -66,22 +58,24 @@ interface Achievement {
   completed: boolean;
 }
 
+// ----------------------
+// COMPONENT STARTS HERE
+// ----------------------
+export default function GolfWeeklyClient({ tournaments, players }) {
 
-export default function GolfWeeklyClient({
-  tournaments,
-  players,
-}: GolfWeeklyClientProps) {
+  // ----------------------
+  // ALL HOOKS MUST BE HERE
+  // ----------------------
+
+  // Phase 1 + 2 state
   const [selectedTournamentId, setSelectedTournamentId] = useState<number | null>(
     tournaments[0]?.id ?? null
   );
   const [pickedPlayerId, setPickedPlayerId] = useState<number | null>(null);
   const [userPicks, setUserPicks] = useState<UserPick[]>([]);
   const [loadingPick, setLoadingPick] = useState(false);
-
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
-
-  // Phase 3 Drop 1
   const [historyOpen, setHistoryOpen] = useState(false);
   const [leaderboard, setLeaderboard] = useState<LeaderboardRow[]>([]);
 
@@ -91,16 +85,16 @@ export default function GolfWeeklyClient({
     sleeper: "Sahith Theegala",
     trending: "Ludvig Åberg",
     watch: "Xander Schauffele",
-
-//Phase 3 Drop3
-const [streaks, setStreaks] = useState<Streaks | null>(null);
-const [badges, setBadges] = useState<Badge[]>([]);
-const [achievements, setAchievements] = useState<Achievement[]>([]);
-const [badgeModalOpen, setBadgeModalOpen] = useState(false);
-const [newBadge, setNewBadge] = useState<Badge | null>(null);
-
-
   });
+
+  // ---- DROP 3 STATE (MUST BE INSIDE COMPONENT) ----
+  const [streaks, setStreaks] = useState<Streaks | null>(null);
+  const [badges, setBadges] = useState<Badge[]>([]);
+  const [achievements, setAchievements] = useState<Achievement[]>([]);
+  const [badgeModalOpen, setBadgeModalOpen] = useState(false);
+  const [newBadge, setNewBadge] = useState<Badge | null>(null);
+
+  // ...rest of your component continues here
 
   useEffect(() => {
     fetch("/sports/golf/weekly/state")

@@ -23,7 +23,7 @@ export async function GET() {
     .select("*")
     .order("name");
 
-  let picks = [];
+let picks: { tournament_id: number; player_id: number }[] = [];
 
   if (user) {
     const { data: userPicks } = await supabase

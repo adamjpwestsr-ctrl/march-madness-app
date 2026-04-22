@@ -3,7 +3,12 @@
 import { useState, useTransition } from "react";
 import { addUserToContest } from "./actions";
 
-export default function AddUserToContest({ users, contests }) {
+interface AddUserToContestProps {
+  users: { user_id: number; email: string }[];
+  contests: { id: string; name: string }[];
+}
+
+export default function AddUserToContest({ users, contests }: AddUserToContestProps) {
   const [userId, setUserId] = useState("");
   const [contestId, setContestId] = useState("");
   const [isPending, startTransition] = useTransition();

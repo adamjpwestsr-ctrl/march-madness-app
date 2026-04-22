@@ -1,98 +1,82 @@
-"use client";
+import { redirect } from "next/navigation";
+import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
+import PlayersPageClient from "./PlayersPageClient";
 
-import { useState } from "react";
-import PlayerRow from "./PlayerRow";
-import AddUserToContest from "./AddUserToContest";
-import ContestFilter from "./ContestFilter";
+export const runtime = "edge";
+export const dynamic = "force-dynamic";
 
-export default function PlayersPage({ initialData }) {
-  const { users, contests, statuses } = initialData;
+export default async function PlayersPage() {
+  const supabase = await createSupabaseServerClient();
 
-  const [selectedContest, setSelectedContest] = useState("all");
-  const [search, setSearch] = useState("");
+  // 1) Auth
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  const filtered = statuses.filter((row) => {
-    const matchesContest =
-      selectedContest === "all" || row.contest_id === selectedContest;
+  if (!user) redirect("/login");
 
-    const matchesSearch =
-      search.trim() === "" ||
-      row.email.toLowerCase().includes(search.toLowerCase());
+  const email = user.email?.toLowerCase();
+  if (!email) redirect("/login");
 
-    return matchesContest && matchesSearch;
-  });
+  // 2) Admin check
+  const { data: dbUser } = await supabase
+    .from("users")
+    .select("is_admin")
+    .eq("email", email)
+    .maybeSingle();
+
+  if (!dbUser?.is_admin) redirect("/bracket");
+
+  // 3) Active contests
+  const { data: contests } = await supabase
+    .from("contests")
+    .select("id, name, sport")
+    .eq("is_active", true)
+    .order("name", { ascending: true });
+
+  // 4) All users
+  const { data: users } = await supabase
+    .from("users")
+    .select("user_id, email")
+    .order("email", { ascending: true });
+
+  // 5) Participation rows
+  const { data: statuses } = await supabase
+    .from("user_challenge_status")
+    .select(
+      `
+      id,
+      user_id,
+      contest_id,
+      is_active,
+      has_paid,
+      paid_at,
+      users:user_id ( email ),
+      contests:contest_id ( name, sport )
+    `
+    )
+    .order("id", { ascending: true });
+
+  // 6) Normalize for client
+  const normalized = (statuses || []).map((row) => ({
+    id: row.id,
+    user_id: row.user_id,
+    contest_id: row.contest_id,
+    is_active: row.is_active,
+    has_paid: row.has_paid,
+    paid_at: row.paid_at,
+    email: row.users?.email || "",
+    contest_name: row.contests?.name || "",
+    sport: row.contests?.sport || "",
+  }));
 
   return (
-    <div
-      style={{
-        padding: 30,
-        background: "#0f172a",
-        minHeight: "100vh",
-        color: "#e5e7eb",
-        fontFamily:
-          'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+    <PlayersPageClient
+      initialData={{
+        users: users || [],
+        contests: contests || [],
+        statuses: normalized,
       }}
-    >
-      <h1
-        style={{
-          fontSize: 32,
-          fontWeight: 700,
-          marginBottom: 20,
-          textAlign: "center",
-        }}
-      >
-        Player Management
-      </h1>
-
-      <div style={{ maxWidth: 1000, margin: "0 auto" }}>
-        <ContestFilter
-          contests={contests}
-          selected={selectedContest}
-          onChange={setSelectedContest}
-        />
-
-        <input
-          placeholder="Search by email..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          style={{
-            width: "100%",
-            padding: 12,
-            marginTop: 20,
-            marginBottom: 20,
-            borderRadius: 8,
-            background: "rgba(30,41,59,0.9)",
-            border: "1px solid rgba(148,163,184,0.35)",
-            color: "#e5e7eb",
-          }}
-        />
-
-        <AddUserToContest users={users} contests={contests} />
-
-        <table
-          style={{
-            width: "100%",
-            marginTop: 30,
-            borderCollapse: "collapse",
-          }}
-        >
-          <thead>
-            <tr style={{ borderBottom: "1px solid #334155" }}>
-              <th style={{ padding: "10px 0", textAlign: "left" }}>Email</th>
-              <th style={{ padding: "10px 0", textAlign: "left" }}>Contest</th>
-              <th style={{ padding: "10px 0" }}>Active</th>
-              <th style={{ padding: "10px 0" }}>Paid</th>
-              <th style={{ padding: "10px 0" }}>Actions</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {filtered.map((row) => (
-              <PlayerRow key={row.id} row={row} />
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+    />
   );
 }

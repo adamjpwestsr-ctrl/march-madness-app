@@ -64,7 +64,8 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
       const res = await verifyAdminCode(formData);
 
       if (res.status === "success") {
-        window.location.href = "/login/admin-options";
+        // UPDATED REDIRECT
+        window.location.href = "/sports";
         return;
       }
 
@@ -173,35 +174,16 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
       {step === "options" && (
         <div className="space-y-4 mt-6">
 
+          {/* UPDATED: All options now redirect to /sports */}
           <button
-            onClick={() => (window.location.href = "/bracket")}
+            onClick={() => (window.location.href = "/sports")}
             className="
               w-full bg-emerald-600 text-white py-2 rounded-lg
               hover:bg-emerald-500 hover:shadow-lg
               transition-all duration-200
             "
           >
-            Brackets (March Madness)
-          </button>
-
-          <button
-            onClick={() => (window.location.href = "/leaderboard")}
-            className="
-              w-full bg-white/10 border border-white/20 text-white py-2 rounded-lg
-              hover:bg-white/20 transition-all duration-200
-            "
-          >
-            Leaderboard
-          </button>
-
-          <button
-            onClick={() => (window.location.href = "/sports")}
-            className="
-              w-full bg-white/10 border border-white/20 text-white py-2 rounded-lg
-              hover:bg-white/20 transition-all duration-200
-            "
-          >
-            Other Sports
+            Continue to Sports Hub
           </button>
 
           <button

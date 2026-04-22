@@ -1,6 +1,16 @@
 "use client";
 
-export default function ContestFilter({ contests, selected, onChange }) {
+interface ContestFilterProps {
+  contests: { id: string; name: string }[];
+  selected: string;
+  onChange: (value: string) => void;
+}
+
+export default function ContestFilter({
+  contests,
+  selected,
+  onChange,
+}: ContestFilterProps) {
   return (
     <select
       value={selected}

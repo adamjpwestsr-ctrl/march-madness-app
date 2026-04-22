@@ -58,17 +58,17 @@ export default async function PlayersPage() {
     .order("id", { ascending: true });
 
   // 6) Normalize for client
-  const normalized = (statuses || []).map((row) => ({
-    id: row.id,
-    user_id: row.user_id,
-    contest_id: row.contest_id,
-    is_active: row.is_active,
-    has_paid: row.has_paid,
-    paid_at: row.paid_at,
-    email: row.users?.email || "",
-    contest_name: row.contests?.name || "",
-    sport: row.contests?.sport || "",
-  }));
+const normalized = (statuses || []).map((row) => ({
+  id: row.id,
+  user_id: row.user_id,
+  contest_id: row.contest_id,
+  is_active: row.is_active,
+  has_paid: row.has_paid,
+  paid_at: row.paid_at,
+  email: row.users?.[0]?.email || "",
+  contest_name: row.contests?.[0]?.name || "",
+  sport: row.contests?.[0]?.sport || "",
+}));
 
   return (
     <PlayersPageClient

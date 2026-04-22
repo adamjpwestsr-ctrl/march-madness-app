@@ -5,7 +5,27 @@ import PlayerRow from "./PlayerRow";
 import AddUserToContest from "./AddUserToContest";
 import ContestFilter from "./ContestFilter";
 
-export default function PlayersPage({ initialData }) {
+interface PlayersPageClientInnerProps {
+  initialData: {
+    users: { user_id: number; email: string }[];
+    contests: { id: string; name: string; sport: string }[];
+    statuses: {
+      id: number;
+      user_id: number;
+      contest_id: string;
+      is_active: boolean;
+      has_paid: boolean;
+      paid_at: string | null;
+      email: string;
+      contest_name: string;
+      sport: string;
+    }[];
+  };
+}
+
+export default function PlayersPageClientInner({
+  initialData,
+}: PlayersPageClientInnerProps) {
   const { users, contests, statuses } = initialData;
 
   const [selectedContest, setSelectedContest] = useState("all");

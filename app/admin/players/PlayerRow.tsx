@@ -3,7 +3,21 @@
 import { useTransition } from "react";
 import { toggleActive, togglePaid } from "./actions";
 
-export default function PlayerRow({ row }) {
+interface PlayerRowProps {
+  row: {
+    id: number;
+    user_id: number;
+    contest_id: string;
+    is_active: boolean;
+    has_paid: boolean;
+    paid_at: string | null;
+    email: string;
+    contest_name: string;
+    sport: string;
+  };
+}
+
+export default function PlayerRow({ row }: PlayerRowProps) {
   const [isPending, startTransition] = useTransition();
 
   const onToggleActive = () => {

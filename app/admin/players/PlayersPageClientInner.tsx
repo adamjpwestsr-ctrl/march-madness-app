@@ -30,23 +30,31 @@ export default function PlayersPageClientInner({
 
   const [selectedContest, setSelectedContest] = useState("all");
   const [search, setSearch] = useState("");
+  const [searchApplied, setSearchApplied] = useState(false);
 
-  const trimmedSearch = search.trim().toLowerCase();
-  const hasSearch = trimmedSearch.length > 0;
+  const onSearch = () => {
+    if (search.trim().length === 0) return;
+    setSearchApplied(true);
+  };
+
+  const onClear = () => {
+    setSearch("");
+    setSearchApplied(false);
+  };
 
   const filtered = statuses.filter((row) => {
-    const matchesSearch =
-      !hasSearch || row.email.toLowerCase().includes(trimmedSearch);
-
-    // If searching by email, ignore contest filter and show ALL contests for that user
-    if (hasSearch) {
-      return matchesSearch;
-    }
-
     const matchesContest =
       selectedContest === "all" || row.contest_id === selectedContest;
 
-    return matchesContest && matchesSearch;
+    if (!searchApplied) {
+      return matchesContest;
+    }
+
+    const matchesEmail = row.email
+      .toLowerCase()
+      .includes(search.toLowerCase());
+
+    return matchesContest && matchesEmail;
   });
 
   return (
@@ -75,24 +83,64 @@ export default function PlayersPageClientInner({
         <ContestFilter
           contests={contests}
           selected={selectedContest}
-          onChange={setSelectedContest}
-        />
-
-        <input
-          placeholder="Search by email..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          style={{
-            width: "100%",
-            padding: 12,
-            marginTop: 20,
-            marginBottom: 20,
-            borderRadius: 8,
-            background: "rgba(30,41,59,0.9)",
-            border: "1px solid rgba(148,163,184,0.35)",
-            color: "#e5e7eb",
+          onChange={(value) => {
+            setSelectedContest(value);
+            setSearchApplied(false);
           }}
         />
+
+        <div
+          style={{
+            display: "flex",
+            gap: 10,
+            marginTop: 20,
+            marginBottom: 20,
+          }}
+        >
+          <input
+            placeholder="Search by email..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{
+              flex: 1,
+              padding: 12,
+              borderRadius: 8,
+              background: "rgba(30,41,59,0.9)",
+              border: "1px solid rgba(148,163,184,0.35)",
+              color: "#e5e7eb",
+            }}
+          />
+
+          <button
+            onClick={onSearch}
+            style={{
+              padding: "10px 16px",
+              borderRadius: 8,
+              background: "#2563eb",
+              color: "white",
+              border: "none",
+              cursor: "pointer",
+            }}
+          >
+            Search
+          </button>
+
+          {searchApplied && (
+            <button
+              onClick={onClear}
+              style={{
+                padding: "10px 16px",
+                borderRadius: 8,
+                background: "#475569",
+                color: "white",
+                border: "none",
+                cursor: "pointer",
+              }}
+            >
+              Clear
+            </button>
+          )}
+        </div>
 
         <AddUserToContest users={users} contests={contests} />
 

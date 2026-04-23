@@ -47,14 +47,45 @@ export async function togglePaid(id: number) {
     .eq("id", id);
 }
 
-// Add user to contest
-export async function addUserToContest(userId: string, contestId: string) {
+// Add user to one or many contests
+export async function addUserToContest(
+  userId: string,
+  contestIds: string[]
+) {
   const supabase = await createSupabaseServerClient();
 
-  await supabase.from("user_challenge_status").insert({
-    user_id: Number(userId),
-    contest_id: contestId,
-    is_active: true,
-    has_paid: false,
-  });
+  const numericUserId = Number(userId);
+  if (!numericUserId || contestIds.length === 0) return;
+
+  // Fetch existing rows to avoid duplicates
+  const { data: existing, error } = await supabase
+    .from("user_challenge_status")
+    .select("contest_id")
+    .eq("user_id", numericUserId)
+    .in("contest_id", contestIds);
+
+  if (error) {
+    console.error("addUserToContest: fetch existing error", error);
+  }
+
+  const existingIds = new Set((existing || []).map((r) => r.contest_id));
+
+  const toInsert = contestIds
+    .filter((id) => !existingIds.has(id))
+    .map((contestId) => ({
+      user_id: numericUserId,
+      contest_id: contestId,
+      is_active: true,
+      has_paid: false,
+    }));
+
+  if (toInsert.length === 0) return;
+
+  const { error: insertError } = await supabase
+    .from("user_challenge_status")
+    .insert(toInsert);
+
+  if (insertError) {
+    console.error("addUserToContest: insert error", insertError);
+  }
 }

@@ -2,6 +2,7 @@
 
 import { useTransition } from "react";
 import { toggleActive, togglePaid } from "./actions";
+import { useToast } from "./Toast";
 
 interface PlayerRowProps {
   row: {
@@ -19,13 +20,20 @@ interface PlayerRowProps {
 
 export default function PlayerRow({ row }: PlayerRowProps) {
   const [isPending, startTransition] = useTransition();
+  const { addToast } = useToast();
 
   const onToggleActive = () => {
-    startTransition(() => toggleActive(row.id));
+    startTransition(async () => {
+      await toggleActive(row.id);
+      addToast(`Active status updated for ${row.email}`);
+    });
   };
 
   const onTogglePaid = () => {
-    startTransition(() => togglePaid(row.id));
+    startTransition(async () => {
+      await togglePaid(row.id);
+      addToast(`Payment status updated for ${row.email}`);
+    });
   };
 
   const viewUrl =

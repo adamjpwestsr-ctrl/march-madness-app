@@ -1,6 +1,7 @@
 "use client";
 
 import PlayersPageClientInner from "./PlayersPageClientInner";
+import { ToastProvider } from "./Toast";
 
 interface PlayersPageClientProps {
   initialData: {
@@ -18,6 +19,14 @@ interface PlayersPageClientProps {
       sport: string;
     }[];
   };
+}
+
+export default function PlayersPageClient({ initialData }: PlayersPageClientProps) {
+  return (
+    <ToastProvider>
+      <PlayersPageClientInner initialData={initialData} />
+    </ToastProvider>
+  );
 }
 
 export default function PlayersPageClient({

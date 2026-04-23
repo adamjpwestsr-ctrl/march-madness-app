@@ -31,13 +31,20 @@ export default function PlayersPageClientInner({
   const [selectedContest, setSelectedContest] = useState("all");
   const [search, setSearch] = useState("");
 
+  const trimmedSearch = search.trim().toLowerCase();
+  const hasSearch = trimmedSearch.length > 0;
+
   const filtered = statuses.filter((row) => {
+    const matchesSearch =
+      !hasSearch || row.email.toLowerCase().includes(trimmedSearch);
+
+    // If searching by email, ignore contest filter and show ALL contests for that user
+    if (hasSearch) {
+      return matchesSearch;
+    }
+
     const matchesContest =
       selectedContest === "all" || row.contest_id === selectedContest;
-
-    const matchesSearch =
-      search.trim() === "" ||
-      row.email.toLowerCase().includes(search.toLowerCase());
 
     return matchesContest && matchesSearch;
   });

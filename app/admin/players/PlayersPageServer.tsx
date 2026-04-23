@@ -5,14 +5,14 @@ import PlayersPageClient from "./PlayersPageClient";
 export default async function PlayersPageServer() {
   const supabase = await createSupabaseServerClient();
 
-  // 1) Fetch contests
+  // 1) Fetch active contests
   const { data: contests } = await supabase
     .from("contests")
     .select("id, name, sport")
     .eq("is_active", true)
     .order("name", { ascending: true });
 
-  // 2) Fetch users
+  // 2) Fetch all users
   const { data: users } = await supabase
     .from("users")
     .select("user_id, email")
@@ -33,6 +33,7 @@ export default async function PlayersPageServer() {
     `)
     .order("id", { ascending: true });
 
+  // 4) Normalize for client
   const normalized = (statuses || []).map((row) => ({
     id: row.id,
     user_id: row.user_id,

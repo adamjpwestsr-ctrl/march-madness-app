@@ -18,7 +18,14 @@ export async function createSupabaseServerClient() {
           cookieStore.set(name, value, options);
         },
         remove(name: string) {
-          cookieStore.delete(name); // <-- FIXED: no options allowed
+          cookieStore.delete(name);
+        },
+      },
+
+      // Fix Admin Save Issue
+      global: {
+        fetch: {
+          cache: "no-store",   // <-- Forces Supabase to bypass Next.js caching
         },
       },
     }

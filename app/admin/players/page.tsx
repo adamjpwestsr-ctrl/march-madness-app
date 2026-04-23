@@ -2,8 +2,10 @@ import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 import PlayersPageClient from "./PlayersPageClient";
 
-export const runtime = "edge";
+export const fetchCache = "force-no-store";
+export const revalidate = 0;
 export const dynamic = "force-dynamic";
+export const runtime = "edge";
 
 export default async function PlayersPage() {
   const supabase = await createSupabaseServerClient();

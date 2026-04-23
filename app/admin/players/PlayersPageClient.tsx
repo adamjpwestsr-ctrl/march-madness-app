@@ -28,9 +28,3 @@ export default function PlayersPageClient({ initialData }: PlayersPageClientProp
     </ToastProvider>
   );
 }
-
-export default function PlayersPageClient({
-  initialData,
-}: PlayersPageClientProps) {
-  return <PlayersPageClientInner initialData={initialData} />;
-}

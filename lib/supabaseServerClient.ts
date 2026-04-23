@@ -21,13 +21,6 @@ export async function createSupabaseServerClient() {
           cookieStore.delete(name);
         },
       },
-
-      // Fix Admin Save Issue
-      global: {
-        fetch: {
-          cache: "no-store",   // <-- Forces Supabase to bypass Next.js caching
-        },
-      },
     }
   );
 }

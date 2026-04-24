@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import LoginForm from "./LoginForm";
 
 export default function LoginPage() {
   const [showAbout, setShowAbout] = useState(false);
   const [currentStep, setCurrentStep] = useState("email");
+  const [highlightIndex, setHighlightIndex] = useState(0);
 
   const labelText =
     currentStep === "email"
@@ -14,13 +15,30 @@ export default function LoginPage() {
       ? "Admin Code"
       : "Choose an option";
 
+  const highlights = [
+    "🏆 Build your March Madness Bracket",
+    "🏈 Make Weekly NFL Picks",
+    "⛳ Compete in Golf Weekly",
+    "🧠 Play Sports Trivia Blitz",
+    "📊 Track your leaderboard climb",
+  ];
+
+  // Rotate highlight text
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setHighlightIndex((i) => (i + 1) % highlights.length);
+    }, 2200);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
-    <div
-      className="relative min-h-screen w-full bg-cover bg-center bg-no-repeat flex items-center justify-center"
-      style={{ backgroundImage: "url('/background-bracket.png')" }}
-    >
-      {/* Dark overlay */}
-      <div className="absolute inset-0 bg-black bg-opacity-50"></div>
+    <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-black">
+
+      {/* Animated gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-black to-slate-950 animate-pulse-slow opacity-90" />
+
+      {/* Light sweep effect */}
+      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_30%_20%,rgba(16,185,129,0.15),transparent_60%)] animate-slow-pan" />
 
       {/* Leaderboard link */}
       <a
@@ -31,16 +49,30 @@ export default function LoginPage() {
       </a>
 
       {/* Login Card */}
-      <div className="relative z-10 bg-slate-900 bg-opacity-90 p-10 rounded-2xl shadow-2xl w-full max-w-md border border-slate-700">
-        <h1 className="text-white text-4xl font-extrabold text-center drop-shadow-lg mb-4">
-          Welcome Back
+      <div className="
+        relative z-10 w-full max-w-md
+        bg-slate-900/80 backdrop-blur-xl
+        border border-slate-700/60
+        rounded-2xl shadow-[0_0_40px_rgba(0,0,0,0.6)]
+        p-10
+        animate-fade-in
+      ">
+        {/* Title */}
+        <h1 className="text-white text-4xl font-extrabold text-center drop-shadow-lg mb-3">
+          Welcome to BracketBoss
         </h1>
 
-        <p className="text-slate-300 text-center mb-8 text-sm">
-          Enter your email. Build your brackets.{" "}
-          <span className="text-emerald-400 font-semibold">Chase the glory.</span>
+        {/* Rotating highlight reel */}
+        <p className="text-center text-emerald-300 text-sm font-semibold h-5 mb-6 transition-opacity duration-500">
+          {highlights[highlightIndex]}
         </p>
 
+        {/* Tagline */}
+        <p className="text-slate-300 text-center mb-8 text-sm">
+          Your sports. Your picks. Your glory.
+        </p>
+
+        {/* Label + About */}
         <div className="flex justify-between items-center w-full mb-2">
           <label className="text-white text-lg font-semibold">
             {labelText}
@@ -50,11 +82,11 @@ export default function LoginPage() {
             onClick={() => setShowAbout(true)}
             className="text-emerald-400 text-sm hover:text-emerald-300 underline"
           >
-            About Our Bracket Challenge
+            About BracketBoss
           </button>
         </div>
 
-        {/* Updated LoginForm with new 3‑button step */}
+        {/* Login Form */}
         <LoginForm onStepChange={setCurrentStep} />
 
         {/* Email Commissioners */}
@@ -70,16 +102,16 @@ export default function LoginPage() {
 
       {/* ABOUT MODAL */}
       {showAbout && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 animate-fade-in">
           <div className="bg-slate-800 p-6 rounded-xl max-w-lg w-full text-white shadow-xl border border-slate-700">
-            <h2 className="text-2xl font-bold mb-4">About Our Bracket Challenge</h2>
+            <h2 className="text-2xl font-bold mb-4">About BracketBoss</h2>
 
             <ul className="space-y-3 text-sm leading-relaxed">
-              <li><strong>Multiple Brackets:</strong> You can create up to 5 brackets and all you need is your email!</li>
-              <li><strong>Leaderboard:</strong> After submitting, visit the leaderboard anytime to see how you stack up.</li>
-              <li><strong>Sign‑In:</strong> Your email is your key — no password needed. If you're new, the admin approves your entry.</li>
-              <li><strong>Mulligans:</strong> Each player gets two mulligans — you can “undo” your pick if your pick loses in the first 2 rounds.</li>
-              <li><strong>Prizes:</strong> Top finishers win bragging rights and money, because sometimes money is better than bragging rights.</li>
+              <li><strong>Multiple Brackets:</strong> Create up to 5 brackets — all you need is your email.</li>
+              <li><strong>Leaderboard:</strong> Track your rank in real time.</li>
+              <li><strong>Password‑Free Login:</strong> Your email is your key — simple and secure.</li>
+              <li><strong>Mulligans:</strong> Undo your pick if your team loses early.</li>
+              <li><strong>Prizes:</strong> Win bragging rights… and sometimes cash.</li>
             </ul>
 
             <button
@@ -91,6 +123,34 @@ export default function LoginPage() {
           </div>
         </div>
       )}
+
+      {/* Animations */}
+      <style jsx>{`
+        .animate-pulse-slow {
+          animation: pulseSlow 8s ease-in-out infinite;
+        }
+        @keyframes pulseSlow {
+          0%, 100% { opacity: 0.9; }
+          50% { opacity: 1; }
+        }
+
+        .animate-slow-pan {
+          animation: slowPan 18s linear infinite;
+        }
+        @keyframes slowPan {
+          0% { transform: translate(0%, 0%); }
+          50% { transform: translate(3%, 3%); }
+          100% { transform: translate(0%, 0%); }
+        }
+
+        .animate-fade-in {
+          animation: fadeIn 0.6s ease-out;
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   );
 }

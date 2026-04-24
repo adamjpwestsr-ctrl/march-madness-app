@@ -97,3 +97,29 @@
     100% { opacity: 1; transform: translateY(0); }
   }
 }
+@layer utilities {
+  /* Fade-in animation */
+  .animate-fade-in {
+    animation: fadeIn 0.6s ease-out;
+  }
+  @keyframes fadeIn {
+    0% { opacity: 0; transform: translateY(10px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+  /* HERO SPOTLIGHT EFFECT */
+  .hero-spotlight {
+    background: radial-gradient(
+      circle at 30% 20%,
+      rgba(255, 255, 255, 0.12),
+      transparent 60%
+    );
+    animation: spotlightMove 14s ease-in-out infinite;
+  }
+
+  @keyframes spotlightMove {
+    0% { transform: translate(-10%, -10%); }
+    50% { transform: translate(10%, 10%); }
+    100% { transform: translate(-10%, -10%); }
+  }
+}

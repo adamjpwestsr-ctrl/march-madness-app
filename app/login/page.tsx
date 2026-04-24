@@ -23,7 +23,6 @@ export default function LoginPage() {
     "📊 Track your leaderboard climb",
   ];
 
-  // Rotate highlight text
   useEffect(() => {
     const interval = setInterval(() => {
       setHighlightIndex((i) => (i + 1) % highlights.length);
@@ -34,11 +33,11 @@ export default function LoginPage() {
   return (
     <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-black">
 
-      {/* Animated gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-black to-slate-950 animate-pulse-slow opacity-90" />
+      {/* HERO SPOTLIGHT BACKGROUND */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-black to-slate-950" />
 
-      {/* Light sweep effect */}
-      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_30%_20%,rgba(16,185,129,0.15),transparent_60%)] animate-slow-pan" />
+      {/* Moving spotlight */}
+      <div className="absolute inset-0 pointer-events-none hero-spotlight opacity-40" />
 
       {/* Leaderboard link */}
       <a
@@ -48,16 +47,14 @@ export default function LoginPage() {
         Leaderboard
       </a>
 
-      {/* Login Card */}
+      {/* LOGIN CARD */}
       <div className="
         relative z-10 w-full max-w-md
         bg-slate-900/80 backdrop-blur-xl
         border border-slate-700/60
         rounded-2xl shadow-[0_0_40px_rgba(0,0,0,0.6)]
-        p-10
-        animate-fade-in
+        p-10 animate-fade-in
       ">
-        {/* Title */}
         <h1 className="text-white text-4xl font-extrabold text-center drop-shadow-lg mb-3">
           Welcome to BracketBoss
         </h1>
@@ -67,12 +64,10 @@ export default function LoginPage() {
           {highlights[highlightIndex]}
         </p>
 
-        {/* Tagline */}
         <p className="text-slate-300 text-center mb-8 text-sm">
           Your sports. Your picks. Your glory.
         </p>
 
-        {/* Label + About */}
         <div className="flex justify-between items-center w-full mb-2">
           <label className="text-white text-lg font-semibold">
             {labelText}
@@ -86,10 +81,8 @@ export default function LoginPage() {
           </button>
         </div>
 
-        {/* Login Form */}
         <LoginForm onStepChange={setCurrentStep} />
 
-        {/* Email Commissioners */}
         <div className="text-center mt-6">
           <a
             href="mailto:commissioners@yourdomain.com"

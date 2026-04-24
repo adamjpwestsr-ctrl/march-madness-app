@@ -71,4 +71,29 @@
 
 .parallax-hover:hover {
   transform: translateY(-3px) scale(1.01);
+}@layer utilities {
+  .animate-pulse-slow {
+    animation: pulseSlow 8s ease-in-out infinite;
+  }
+  @keyframes pulseSlow {
+    0%, 100% { opacity: 0.9; }
+    50% { opacity: 1; }
+  }
+
+  .animate-slow-pan {
+    animation: slowPan 18s linear infinite;
+  }
+  @keyframes slowPan {
+    0% { transform: translate(0%, 0%); }
+    50% { transform: translate(3%, 3%); }
+    100% { transform: translate(0%, 0%); }
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.6s ease-out;
+  }
+  @keyframes fadeIn {
+    0% { opacity: 0; transform: translateY(10px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
 }

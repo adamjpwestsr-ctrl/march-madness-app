@@ -23,7 +23,7 @@ export default function AdminClient({ adminEmail }: { adminEmail: string }) {
 
     { href: "/admin/tournament-setup", label: "Tournament Setup" },
     { href: "/admin/users", label: "User Management" },
-    { href: "/admin/players", label: "Trivia Management" },
+    { href: "/admin/trivia", label: "Trivia Management" },
   ];
 
   // Alphabetize by label

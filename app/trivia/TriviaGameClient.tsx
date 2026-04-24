@@ -99,13 +99,21 @@ export default function TriviaGameClient({ initialLeaderboard }: Props) {
 
     if (!normalizedAnswer) return;
 
-    if (normalizedAnswer === normalizedCorrect) {
+    // --- SMART TOKENIZED MATCHING ---
+    const userWords = normalizedAnswer.split(" ").filter(Boolean);
+    const correctWords = normalizedCorrect.split(" ").filter(Boolean);
+
+    // User must match ALL their words somewhere in the correct answer
+    const isMatch = userWords.every((w) => correctWords.includes(w));
+
+    if (isMatch) {
       setScore((s) => s + current.points);
       setCorrectCount((c) => c + 1);
     } else {
       setScore((s) => s - 1);
       setWrongCount((w) => w + 1);
     }
+    // --------------------------------
 
     setAnswer("");
     setCurrentIndex((i) => i + 1);

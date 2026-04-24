@@ -33,8 +33,13 @@ export default function LoginPage() {
   return (
     <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-black">
 
-      {/* HERO SPOTLIGHT BACKGROUND */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-black to-slate-950" />
+      {/* STATIC FADED TEAM LOGO COLLAGE */}
+      <div
+        className="absolute inset-0 bg-cover bg-center opacity-10 grayscale"
+        style={{ backgroundImage: "url('/sports-logos.png')" }}
+      />
+
+      {/* STATIONARY HERO SPOTLIGHT */}
       <div className="absolute inset-0 pointer-events-none hero-spotlight opacity-40" />
 
       {/* Leaderboard link */}

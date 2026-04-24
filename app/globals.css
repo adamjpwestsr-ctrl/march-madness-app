@@ -163,3 +163,37 @@
       0 0 48px rgba(16, 185, 129, 0.4);
   }
 }
+@layer utilities {
+  /* Fade-in animation */
+  .animate-fade-in {
+    animation: fadeIn 0.6s ease-out;
+  }
+  @keyframes fadeIn {
+    0% { opacity: 0; transform: translateY(10px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Stationary hero spotlight */
+  .hero-spotlight {
+    background: radial-gradient(
+      circle at 30% 20%,
+      rgba(255, 255, 255, 0.12),
+      transparent 60%
+    );
+  }
+
+  /* Neon Glow Outline */
+  .neon-glow {
+    box-shadow:
+      0 0 12px rgba(16, 185, 129, 0.6),
+      0 0 24px rgba(16, 185, 129, 0.4),
+      0 0 36px rgba(16, 185, 129, 0.2);
+    transition: box-shadow 0.3s ease;
+  }
+  .neon-glow:hover {
+    box-shadow:
+      0 0 16px rgba(16, 185, 129, 0.8),
+      0 0 32px rgba(16, 185, 129, 0.6),
+      0 0 48px rgba(16, 185, 129, 0.4);
+  }
+}

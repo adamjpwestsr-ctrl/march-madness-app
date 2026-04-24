@@ -34,6 +34,24 @@ function FootballIcon({ className = "w-6 h-6" }) {
   );
 }
 
+function TriviaIcon({ className = "w-6 h-6" }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      className={className}
+    >
+      <path
+        d="M9 18h6m-5 2h4M12 2a6 6 0 00-3 11c.5.3 1 1 1 2v1h4v-1c0-1 .5-1.7 1-2a6 6 0 00-3-11z"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 function GolfIcon({ className = "w-6 h-6" }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className}>
@@ -151,75 +169,111 @@ export default function SportsPage() {
           </a>
 
           {/* LIVE SPORTS GRID */}
-          <div className="grid gap-6 sm:gap-7 md:grid-cols-2">
-            {/* NFL Weekly */}
-            <a
-              href="/sports/nfl/weekly"
-              className="
-                fade-in-soft parallax-hover
-                group relative overflow-hidden
-                rounded-2xl bg-white/5 border border-white/10
-                shadow-xl shadow-black/40 backdrop-blur-xl
-                px-5 py-5 sm:px-6 sm:py-6
-                flex flex-col gap-3
-                transition-all duration-200
-                hover:shadow-[0_0_24px_rgba(16,185,129,0.45)]
-                hover:border-emerald-400/60
-              "
-            >
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-xl bg-slate-900/70 flex items-center justify-center text-emerald-200">
-                  <FootballIcon className="w-6 h-6" />
-                </div>
-                <div>
-                  <h2 className="text-base sm:text-lg font-semibold text-white">
-                    NFL Weekly Picks
-                  </h2>
-                  <span className="inline-flex items-center gap-1 mt-1 text-[11px] px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-400/40 text-emerald-200 uppercase tracking-[0.16em]">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    Live
-                  </span>
-                </div>
-              </div>
-              <p className="text-xs sm:text-sm text-slate-200/85 mt-2">
-                Pick one team per week. Survive the season. One pick per team.
-              </p>
-            </a>
+{/* LIVE SPORTS GRID */}
+<div className="grid gap-6 sm:gap-7 md:grid-cols-2">
 
-            {/* Golf Weekly */}
-            <a
-              href="/sports/golf/weekly"
-              className="
-                fade-in-soft parallax-hover
-                group relative overflow-hidden
-                rounded-2xl bg-white/5 border border-white/10
-                shadow-xl shadow-black/40 backdrop-blur-xl
-                px-5 py-5 sm:px-6 sm:py-6
-                flex flex-col gap-3
-                transition-all duration-200
-                hover:shadow-[0_0_24px_rgba(16,185,129,0.45)]
-                hover:border-emerald-400/60
-              "
-            >
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-xl bg-slate-900/70 flex items-center justify-center text-emerald-200">
-                  <GolfIcon className="w-6 h-6" />
-                </div>
-                <div>
-                  <h2 className="text-base sm:text-lg font-semibold text-white">
-                    Golf Weekly Picks
-                  </h2>
-                  <span className="inline-flex items-center gap-1 mt-1 text-[11px] px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-400/40 text-emerald-200 uppercase tracking-[0.16em]">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    Live
-                  </span>
-                </div>
-              </div>
-              <p className="text-xs sm:text-sm text-slate-200/85 mt-2">
-                Pick one golfer per tournament. Majors, Signature, FedEx — full season.
-              </p>
-            </a>
-          </div>
+  {/* Trivia Game */}
+  <a
+    href="/trivia"
+    className="
+      fade-in-soft parallax-hover
+      group relative overflow-hidden
+      rounded-2xl bg-white/5 border border-white/10
+      shadow-xl shadow-black/40 backdrop-blur-xl
+      px-5 py-5 sm:px-6 sm:py-6
+      flex flex-col gap-3
+      transition-all duration-200
+      hover:shadow-[0_0_24px_rgba(16,185,129,0.45)]
+      hover:border-emerald-400/60
+    "
+  >
+    <div className="flex items-center gap-3">
+      <div className="h-10 w-10 rounded-xl bg-slate-900/70 flex items-center justify-center text-emerald-200">
+        <TriviaIcon className="w-6 h-6" />
+      </div>
+      <div>
+        <h2 className="text-base sm:text-lg font-semibold text-white">
+          Sports Trivia Blitz
+        </h2>
+        <span className="inline-flex items-center gap-1 mt-1 text-[11px] px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-400/40 text-emerald-200 uppercase tracking-[0.16em]">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          Live
+        </span>
+      </div>
+    </div>
+    <p className="text-xs sm:text-sm text-slate-200/85 mt-2">
+      60‑second rapid‑fire trivia. Earn points. Climb the leaderboard. Play anytime.
+    </p>
+  </a>
+
+  {/* NFL Weekly */}
+  <a
+    href="/sports/nfl/weekly"
+    className="
+      fade-in-soft parallax-hover
+      group relative overflow-hidden
+      rounded-2xl bg-white/5 border border-white/10
+      shadow-xl shadow-black/40 backdrop-blur-xl
+      px-5 py-5 sm:px-6 sm:py-6
+      flex flex-col gap-3
+      transition-all duration-200
+      hover:shadow-[0_0_24px_rgba(16,185,129,0.45)]
+      hover:border-emerald-400/60
+    "
+  >
+    <div className="flex items-center gap-3">
+      <div className="h-10 w-10 rounded-xl bg-slate-900/70 flex items-center justify-center text-emerald-200">
+        <FootballIcon className="w-6 h-6" />
+      </div>
+      <div>
+        <h2 className="text-base sm:text-lg font-semibold text-white">
+          NFL Weekly Picks
+        </h2>
+        <span className="inline-flex items-center gap-1 mt-1 text-[11px] px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-400/40 text-emerald-200 uppercase tracking-[0.16em]">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          Live
+        </span>
+      </div>
+    </div>
+    <p className="text-xs sm:text-sm text-slate-200/85 mt-2">
+      Pick one team per week. Survive the season. One pick per team.
+    </p>
+  </a>
+
+  {/* Golf Weekly */}
+  <a
+    href="/sports/golf/weekly"
+    className="
+      fade-in-soft parallax-hover
+      group relative overflow-hidden
+      rounded-2xl bg-white/5 border border-white/10
+      shadow-xl shadow-black/40 backdrop-blur-xl
+      px-5 py-5 sm:px-6 sm:py-6
+      flex flex-col gap-3
+      transition-all duration-200
+      hover:shadow-[0_0_24px_rgba(16,185,129,0.45)]
+      hover:border-emerald-400/60
+    "
+  >
+    <div className="flex items-center gap-3">
+      <div className="h-10 w-10 rounded-xl bg-slate-900/70 flex items-center justify-center text-emerald-200">
+        <GolfIcon className="w-6 h-6" />
+      </div>
+      <div>
+        <h2 className="text-base sm:text-lg font-semibold text-white">
+          Golf Weekly Picks
+        </h2>
+        <span className="inline-flex items-center gap-1 mt-1 text-[11px] px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-400/40 text-emerald-200 uppercase tracking-[0.16em]">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          Live
+        </span>
+      </div>
+    </div>
+    <p className="text-xs sm:text-sm text-slate-200/85 mt-2">
+      Pick one golfer per tournament. Majors, Signature, FedEx — full season.
+    </p>
+  </a>
+</div>
 
           {/* COMING SOON + ADMIN GRID */}
           <div className="grid gap-6 sm:gap-7 md:grid-cols-2">

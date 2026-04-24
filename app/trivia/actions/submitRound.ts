@@ -37,9 +37,11 @@ export async function submitRound(input: SubmitRoundInput) {
     duration_sec: durationSec,
   });
 
-  if (insertError) {
-    console.error("Insert error:", insertError);
-  }
+if (insertError) {
+  console.error("Insert error:", insertError);
+  throw insertError; // ⭐ TEMPORARY
+}
+
 
   // Fetch updated leaderboard
   const { data: leaderboard, error: leaderboardError } = await supabase
@@ -49,10 +51,10 @@ export async function submitRound(input: SubmitRoundInput) {
     .order("created_at", { ascending: true })
     .limit(10);
 
-  if (leaderboardError) {
-    console.error("Leaderboard fetch error:", leaderboardError);
-    return [];
-  }
+if (leaderboardError) {
+  console.error("Leaderboard fetch error:", leaderboardError);
+  throw leaderboardError; // ⭐ TEMPORARY
+}
 
   return leaderboard || [];
 }

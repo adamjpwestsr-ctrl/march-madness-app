@@ -138,8 +138,8 @@ export default function TriviaGameClient({ initialLeaderboard }: Props) {
           Sports Trivia Blitz
         </h1>
         <p style={{ marginBottom: 16, color: "#9ca3af" }}>
-          60 seconds. Answer as many as you can. Correct = points, wrong = -1, pass = 0.
-        </p>
+  60 seconds. Answer as many as you can. Correct answers = 1–3 points, wrong answers = -1 point, pass = 0 points.
+</p>
 
         <div style={{ marginBottom: 16 }}>
           <label style={{ fontSize: 14, display: "block", marginBottom: 4 }}>

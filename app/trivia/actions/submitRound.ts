@@ -23,13 +23,11 @@ export async function submitRound(input: SubmitRoundInput) {
     durationSec,
   } = input;
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // No auth required — trivia is public
+  const userId = null;
 
-  const userId = user?.user_metadata?.user_id ?? null;
-
-  const { error } = await supabase.from("trivia_rounds").insert({
+  // Insert the round result
+  const { error: insertError } = await supabase.from("trivia_rounds").insert({
     user_id: userId,
     display_name: displayName,
     score,
@@ -39,16 +37,22 @@ export async function submitRound(input: SubmitRoundInput) {
     duration_sec: durationSec,
   });
 
-  if (error) {
-    // Fail silently for now; you can add logging later
+  if (insertError) {
+    console.error("Insert error:", insertError);
   }
 
-  const { data: leaderboard } = await supabase
+  // Fetch updated leaderboard
+  const { data: leaderboard, error: leaderboardError } = await supabase
     .from("trivia_rounds")
     .select("id, display_name, score, created_at")
     .order("score", { ascending: false })
     .order("created_at", { ascending: true })
     .limit(10);
+
+  if (leaderboardError) {
+    console.error("Leaderboard fetch error:", leaderboardError);
+    return [];
+  }
 
   return leaderboard || [];
 }

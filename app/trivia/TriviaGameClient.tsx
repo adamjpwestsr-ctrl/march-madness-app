@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { getRandomQuestions } from "./actions/getRandomQuestions";
-import { submitRound } from "./actions/submitRound";
+import { submitRoundProxy } from "./actions/submitRoundProxy";
 import QuestionCard from "./components/QuestionCard";
 import Timer from "./components/Timer";
 import Leaderboard from "./components/Leaderboard";
@@ -54,7 +54,6 @@ export default function TriviaGameClient({ initialLeaderboard }: Props) {
     return () => {
       if (timer) clearTimeout(timer);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isRunning, timeLeft]);
 
   const startRound = async () => {
@@ -79,7 +78,7 @@ export default function TriviaGameClient({ initialLeaderboard }: Props) {
     if (!displayName.trim()) return;
 
     startTransition(async () => {
-      const updatedLeaderboard = await submitRound({
+      const updatedLeaderboard = await submitRoundProxy({
         displayName: displayName.trim(),
         score,
         correctCount,
@@ -138,8 +137,8 @@ export default function TriviaGameClient({ initialLeaderboard }: Props) {
           Sports Trivia Blitz
         </h1>
         <p style={{ marginBottom: 16, color: "#9ca3af" }}>
-  60 seconds. Answer as many as you can. Correct answers = 1–3 points, wrong answers = -1 point, pass = 0 points.
-</p>
+          60 seconds. Answer as many as you can. Correct answers = 1–3 points, wrong answers = -1 point, pass = 0 points.
+        </p>
 
         <div style={{ marginBottom: 16 }}>
           <label style={{ fontSize: 14, display: "block", marginBottom: 4 }}>

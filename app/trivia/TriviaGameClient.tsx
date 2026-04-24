@@ -40,7 +40,10 @@ export default function TriviaGameClient({ initialLeaderboard }: Props) {
   const [isRunning, setIsRunning] = useState(false);
   const [timeLeft, setTimeLeft] = useState(60);
   const [roundFinished, setRoundFinished] = useState(false);
+
+  // ⭐ FIX: Prevent leaderboard from resetting on re-render
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>(() => initialLeaderboard);
+
   const [displayName, setDisplayName] = useState("");
   const [isPending, startTransition] = useTransition();
 
@@ -99,11 +102,10 @@ export default function TriviaGameClient({ initialLeaderboard }: Props) {
 
     if (!normalizedAnswer) return;
 
-    // --- SMART TOKENIZED MATCHING ---
+    // ⭐ SMART TOKENIZED MATCHING
     const userWords = normalizedAnswer.split(" ").filter(Boolean);
     const correctWords = normalizedCorrect.split(" ").filter(Boolean);
 
-    // User must match ALL their words somewhere in the correct answer
     const isMatch = userWords.every((w) => correctWords.includes(w));
 
     if (isMatch) {
@@ -113,7 +115,6 @@ export default function TriviaGameClient({ initialLeaderboard }: Props) {
       setScore((s) => s - 1);
       setWrongCount((w) => w + 1);
     }
-    // --------------------------------
 
     setAnswer("");
     setCurrentIndex((i) => i + 1);

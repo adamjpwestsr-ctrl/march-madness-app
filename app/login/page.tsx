@@ -35,8 +35,6 @@ export default function LoginPage() {
 
       {/* HERO SPOTLIGHT BACKGROUND */}
       <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-black to-slate-950" />
-
-      {/* Moving spotlight */}
       <div className="absolute inset-0 pointer-events-none hero-spotlight opacity-40" />
 
       {/* Leaderboard link */}
@@ -54,12 +52,18 @@ export default function LoginPage() {
         border border-slate-700/60
         rounded-2xl shadow-[0_0_40px_rgba(0,0,0,0.6)]
         p-10 animate-fade-in
+        neon-glow
       ">
+
+        {/* NEW BADGE */}
+        <div className="absolute -top-3 left-4 bg-emerald-500 text-black text-xs font-bold px-3 py-1 rounded-full shadow-md tracking-wide">
+          🔥 NEW: Trivia Blitz
+        </div>
+
         <h1 className="text-white text-4xl font-extrabold text-center drop-shadow-lg mb-3">
           Welcome to BracketBoss
         </h1>
 
-        {/* Rotating highlight reel */}
         <p className="text-center text-emerald-300 text-sm font-semibold h-5 mb-6 transition-opacity duration-500">
           {highlights[highlightIndex]}
         </p>

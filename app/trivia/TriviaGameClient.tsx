@@ -40,7 +40,7 @@ export default function TriviaGameClient({ initialLeaderboard }: Props) {
   const [isRunning, setIsRunning] = useState(false);
   const [timeLeft, setTimeLeft] = useState(60);
   const [roundFinished, setRoundFinished] = useState(false);
-  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>(initialLeaderboard);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>(() => initialLeaderboard);
   const [displayName, setDisplayName] = useState("");
   const [isPending, startTransition] = useTransition();
 

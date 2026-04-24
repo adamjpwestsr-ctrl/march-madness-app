@@ -5,13 +5,13 @@ import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 export async function getRandomQuestions() {
   const supabase = await createSupabaseServerClient();
 
-  const { data, error } = await supabase
-    .from("trivia_questions")
-    .select("id, sport, question, answer, difficulty, points, category_tag")
-    .order("random()")
-    .limit(50);
+  const { data, error } = await supabase.rpc(
+    "get_random_trivia_questions",
+    { count: 50 }
+  );
 
   if (error || !data) {
+    console.error("Trivia fetch error:", error);
     return [];
   }
 

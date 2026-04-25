@@ -20,6 +20,14 @@ export async function GET() {
       .limit(1)
       .single();
 
+    // ✅ FIX: handle null
+    if (!randomQ) {
+      return NextResponse.json(
+        { error: "No trivia questions available for daily challenge" },
+        { status: 400 }
+      );
+    }
+
     const { data: newChallenge } = await supabase
       .from("daily_challenge")
       .insert({

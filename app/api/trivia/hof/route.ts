@@ -20,15 +20,14 @@ export async function GET() {
 
   const { data: longestStreak } = await supabase
     .from("trivia_rounds")
-    .select("*, (correct_count - wrong_count) as streak")
+    .select("*, streak:correct_count - wrong_count")
     .order("streak", { ascending: false })
     .limit(1)
     .single();
 
   const { data: mostRuns } = await supabase
     .from("trivia_rounds")
-    .select("display_name, count(*)")
-    .group("display_name")
+    .select("display_name, count:count(*)")
     .order("count", { ascending: false })
     .limit(1)
     .single();

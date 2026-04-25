@@ -74,6 +74,16 @@ export default function TriviaGameClient({ initialLeaderboard }: Props) {
   // Weekly Challenge weekStart state
   const [weekStart, setWeekStart] = useState<string | null>(null);
 
+  // Load weekStart from API
+  useEffect(() => {
+    async function loadWeekStart() {
+      const res = await fetch("/api/trivia/weekly");
+      const data = await res.json();
+      setWeekStart(data.weekStart);
+    }
+    loadWeekStart();
+  }, []);
+
   useEffect(() => {
     let timer: NodeJS.Timeout | null = null;
     if (isRunning && timeLeft > 0) {
@@ -240,37 +250,14 @@ export default function TriviaGameClient({ initialLeaderboard }: Props) {
           60 seconds. Answer as many as you can. Correct answers = 1–3 points, wrong answers = -1 point, pass = 0 points.
         </p>
 
-        <div style={{ marginBottom: 16, display: "flex", gap: 16, alignItems: "flex-end" }}>
-          <div style={{ flex: 1 }}>
-            <label style={{ fontSize: 14, display: "block", marginBottom: 4 }}>
-              Display Name (for leaderboard)
-            </label>
-            <input
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-              placeholder="Enter a name"
-              style={{
-                width: "100%",
-                padding: 8,
-                borderRadius: 6,
-                border: "1px solid #4b5563",
-                background: "#020617",
-                color: "#e5e7eb",
-              }}
-            />
+        {/* WEEKLY CHALLENGE SECTION */}
+        {weekStart && (
+          <div style={{ marginBottom: 32 }}>
+            <WeeklyThemeBanner weekStart={weekStart} />
+            <WeeklyChallenge displayName={displayName} />
+            <WeeklyLeaderboard />
           </div>
-          <div style={{ textAlign: "right", fontSize: 12, color: "#6b7280" }}>
-            <div>
-              Best streak: <span style={{ color: "#fbbf24" }}>{bestStreak}</span>
-            </div>
-            {personalBest && (
-              <div>
-                Personal best:{" "}
-                <span style={{ color: "#22c55e" }}>{personalBest.score} pts</span>
-              </div>
-            )}
-          </div>
-        </div>
+        )}
 
         <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 16 }}>
           <Timer timeLeft={timeLeft} />
@@ -340,10 +327,6 @@ export default function TriviaGameClient({ initialLeaderboard }: Props) {
           </div>
         )}
 
-        {weekStart && (
-          <WeeklyThemeBanner weekStart={weekStart} />
-        )}
-
         {roundFinished && (
           <div style={{ marginTop: 24 }}>
             <ScoreSummary
@@ -360,13 +343,6 @@ export default function TriviaGameClient({ initialLeaderboard }: Props) {
                 {feedbackMessage}
               </p>
             )}
-
-            <WeeklyChallenge
-              displayName={displayName}
-              onWeekStart={(ws) => setWeekStart(ws)}
-            />
-
-            <WeeklyLeaderboard />
 
             <button
               onClick={startRound}

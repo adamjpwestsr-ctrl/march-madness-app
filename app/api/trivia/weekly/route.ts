@@ -27,6 +27,14 @@ export async function GET() {
       .order("random()")
       .limit(10);
 
+    // ✅ FIX: handle null or empty result
+    if (!randomQs || randomQs.length === 0) {
+      return NextResponse.json(
+        { error: "No trivia questions available for weekly challenge" },
+        { status: 400 }
+      );
+    }
+
     const { data: newChallenge } = await supabase
       .from("weekly_challenges")
       .insert({

@@ -21,11 +21,9 @@ export async function GET() {
     .single();
 
   if (!challenge) {
-    const { data: randomQs } = await supabase
-      .from("trivia_questions")
-      .select("id")
-      .order("random()")
-      .limit(10);
+    const { data: randomQs } = await supabase.rpc("get_random_trivia_ids", {
+  limit_count: 10
+});
 
     // ✅ FIX: handle null or empty result
     if (!randomQs || randomQs.length === 0) {

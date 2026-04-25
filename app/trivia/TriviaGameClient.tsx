@@ -250,15 +250,40 @@ export default function TriviaGameClient({ initialLeaderboard }: Props) {
           60 seconds. Answer as many as you can. Correct answers = 1–3 points, wrong answers = -1 point, pass = 0 points.
         </p>
 
-        {/* WEEKLY CHALLENGE SECTION */}
-        {weekStart && (
-          <div style={{ marginBottom: 32 }}>
-            <WeeklyThemeBanner weekStart={weekStart} />
-            <WeeklyChallenge displayName={displayName} />
-            <WeeklyLeaderboard />
+        {/* DISPLAY NAME INPUT */}
+        <div style={{ marginBottom: 16, display: "flex", gap: 16, alignItems: "flex-end" }}>
+          <div style={{ flex: 1 }}>
+            <label style={{ fontSize: 14, display: "block", marginBottom: 4 }}>
+              Display Name (for leaderboard)
+            </label>
+            <input
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              placeholder="Enter a name"
+              style={{
+                width: "100%",
+                padding: 8,
+                borderRadius: 6,
+                border: "1px solid #4b5563",
+                background: "#020617",
+                color: "#e5e7eb",
+              }}
+            />
           </div>
-        )}
+          <div style={{ textAlign: "right", fontSize: 12, color: "#6b7280" }}>
+            <div>
+              Best streak: <span style={{ color: "#fbbf24" }}>{bestStreak}</span>
+            </div>
+            {personalBest && (
+              <div>
+                Personal best:{" "}
+                <span style={{ color: "#22c55e" }}>{personalBest.score} pts</span>
+              </div>
+            )}
+          </div>
+        </div>
 
+        {/* BLITZ UI */}
         <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 16 }}>
           <Timer timeLeft={timeLeft} />
           <div>Score: {score}</div>
@@ -288,7 +313,7 @@ export default function TriviaGameClient({ initialLeaderboard }: Props) {
               padding: 8,
               borderRadius: 6,
               background: "#111827",
-              border: "1px solid #4b5563",
+              border: "1px solid "#4b5563",
               fontSize: 13,
               color: "#e5e7eb",
             }}
@@ -327,6 +352,16 @@ export default function TriviaGameClient({ initialLeaderboard }: Props) {
           </div>
         )}
 
+        {/* WEEKLY CHALLENGE SECTION — AFTER BLITZ UI */}
+        {weekStart && (
+          <div style={{ marginTop: 32, marginBottom: 32 }}>
+            <WeeklyThemeBanner weekStart={weekStart} />
+            <WeeklyChallenge displayName={displayName} />
+            <WeeklyLeaderboard />
+          </div>
+        )}
+
+        {/* BLITZ RESULTS */}
         {roundFinished && (
           <div style={{ marginTop: 24 }}>
             <ScoreSummary
@@ -362,6 +397,7 @@ export default function TriviaGameClient({ initialLeaderboard }: Props) {
           </div>
         )}
 
+        {/* RECENT RUNS */}
         {runHistory.length > 0 && (
           <div
             style={{
@@ -407,6 +443,7 @@ export default function TriviaGameClient({ initialLeaderboard }: Props) {
         <div id="trivia-ad-banner" style={{ marginTop: 32, height: 80 }} />
       </div>
 
+      {/* RIGHT SIDE LEADERBOARD PANEL */}
       <div>
         <div
           style={{

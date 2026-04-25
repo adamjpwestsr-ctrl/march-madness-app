@@ -7,6 +7,12 @@ import QuestionCard from "./components/QuestionCard";
 import Timer from "./components/Timer";
 import Leaderboard from "./components/Leaderboard";
 import ScoreSummary from "./components/ScoreSummary";
+import ShareCard from "./components/ShareCard";
+
+// Weekly Challenge system imports
+import WeeklyChallenge from "@/app/trivia/components/WeeklyChallenge";
+import WeeklyLeaderboard from "@/app/trivia/components/WeeklyLeaderboard";
+import WeeklyThemeBanner from "@/app/trivia/weekly/WeeklyThemeBanner";
 
 type TriviaQuestion = {
   id: number;
@@ -64,6 +70,9 @@ export default function TriviaGameClient({ initialLeaderboard }: Props) {
   const [runHistory, setRunHistory] = useState<RunHistoryEntry[]>([]);
   const [lastSubmitAt, setLastSubmitAt] = useState<number | null>(null);
   const [systemMessage, setSystemMessage] = useState<string | null>(null);
+
+  // Weekly Challenge weekStart state
+  const [weekStart, setWeekStart] = useState<string | null>(null);
 
   useEffect(() => {
     let timer: NodeJS.Timeout | null = null;
@@ -251,7 +260,9 @@ export default function TriviaGameClient({ initialLeaderboard }: Props) {
             />
           </div>
           <div style={{ textAlign: "right", fontSize: 12, color: "#6b7280" }}>
-            <div>Best streak: <span style={{ color: "#fbbf24" }}>{bestStreak}</span></div>
+            <div>
+              Best streak: <span style={{ color: "#fbbf24" }}>{bestStreak}</span>
+            </div>
             {personalBest && (
               <div>
                 Personal best:{" "}
@@ -329,6 +340,10 @@ export default function TriviaGameClient({ initialLeaderboard }: Props) {
           </div>
         )}
 
+        {weekStart && (
+          <WeeklyThemeBanner weekStart={weekStart} />
+        )}
+
         {roundFinished && (
           <div style={{ marginTop: 24 }}>
             <ScoreSummary
@@ -337,11 +352,22 @@ export default function TriviaGameClient({ initialLeaderboard }: Props) {
               wrong={wrongCount}
               passed={passedCount}
             />
+
+            <ShareCard score={score} displayName={displayName} />
+
             {feedbackMessage && (
               <p style={{ marginTop: 8, color: "#9ca3af", fontStyle: "italic" }}>
                 {feedbackMessage}
               </p>
             )}
+
+            <WeeklyChallenge
+              displayName={displayName}
+              onWeekStart={(ws) => setWeekStart(ws)}
+            />
+
+            <WeeklyLeaderboard />
+
             <button
               onClick={startRound}
               style={{

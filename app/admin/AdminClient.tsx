@@ -3,28 +3,31 @@
 import Link from "next/link";
 
 export default function AdminClient({ adminEmail }: { adminEmail: string }) {
-  const tools = [
-    { href: "/admin/brackets", label: "Bracket Management" },
-    { href: "/admin/tools", label: "Bracket Tools & Simulations" },
-    { href: "/admin/forum", label: "Forum Moderation" },
-    { href: "/admin/games", label: "Game Results" },
-    { href: "/sports/golf/weekly/admin", label: "Golf Weekly — Score Entry" },
-    { href: "/sports/golf/weekly/admin/metadata", label: "Golf Weekly — Tournament Metadata" },
-    { href: "/admin/leaderboard", label: "Leaderboard Tools" },
-    { href: "/admin/mulligans", label: "Mulligan Approvals" },
-    { href: "/sports", label: "Other Sports" },
-    { href: "/admin/snapshots", label: "Payout Snapshots" },
-    { href: "/admin/pending-users", label: "Pending Users" },
+const tools = [
+  { href: "/admin/brackets", label: "Bracket Management" },
+  { href: "/admin/tools", label: "Bracket Tools & Simulations" },
+  { href: "/admin/forum", label: "Forum Moderation" },
+  { href: "/admin/games", label: "Game Results" },
+  { href: "/sports/golf/weekly/admin", label: "Golf Weekly — Score Entry" },
+  { href: "/sports/golf/weekly/admin/metadata", label: "Golf Weekly — Tournament Metadata" },
+  { href: "/admin/leaderboard", label: "Leaderboard Tools" },
+  { href: "/admin/mulligans", label: "Mulligan Approvals" },
+  { href: "/sports", label: "Other Sports" },
+  { href: "/admin/snapshots", label: "Payout Snapshots" },
+  { href: "/admin/pending-users", label: "Pending Users" },
 
-    // ⭐ NEW — Admin Tools Suite
-    { href: "/admin/players", label: "Player Management" },
-    { href: "/admin/scoring-audit", label: "Scoring Audit Log" },
-    { href: "/admin/tournaments/create", label: "Tournament Creator" },
+  // ⭐ NEW — Admin Tools Suite
+  { href: "/admin/players", label: "Player Management" },
+  { href: "/admin/scoring-audit", label: "Scoring Audit Log" },
+  { href: "/admin/tournaments/create", label: "Tournament Creator" },
 
-    { href: "/admin/tournament-setup", label: "Tournament Setup" },
-    { href: "/admin/users", label: "User Management" },
-    { href: "/admin/trivia", label: "Trivia Management" },
-  ];
+  { href: "/admin/tournament-setup", label: "Tournament Setup" },
+  { href: "/admin/users", label: "User Management" },
+  { href: "/admin/trivia", label: "Trivia Management" },
+
+  // ⭐ NEW — WEEKLY CHALLENGE ADMIN
+  { href: "/admin/weekly-challenge", label: "Weekly Challenge Admin" },
+];
 
   // Alphabetize by label
   const sortedTools = tools.sort((a, b) =>

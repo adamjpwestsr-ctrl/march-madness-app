@@ -21,11 +21,14 @@ export async function GET() {
     .single();
 
   if (!challenge) {
-    const { data: randomQs } = await supabase.rpc("get_random_trivia_ids", {
-  limit_count: 10
-});
 
-    // ✅ FIX: handle null or empty result
+    // ⭐ Add this type
+    type TriviaIdRow = { id: number };
+
+    const { data: randomQs } = await supabase.rpc("get_random_trivia_ids", {
+      limit_count: 10
+    }) as { data: TriviaIdRow[] | null };
+
     if (!randomQs || randomQs.length === 0) {
       return NextResponse.json(
         { error: "No trivia questions available for weekly challenge" },

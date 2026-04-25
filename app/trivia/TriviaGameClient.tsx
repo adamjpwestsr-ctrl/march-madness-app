@@ -313,7 +313,7 @@ export default function TriviaGameClient({ initialLeaderboard }: Props) {
               padding: 8,
               borderRadius: 6,
               background: "#111827",
-              border: "1px solid #4b5563",
+              border: "1px solid #4b5563", 
               fontSize: 13,
               color: "#e5e7eb",
             }}

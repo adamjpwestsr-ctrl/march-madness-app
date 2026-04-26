@@ -71,17 +71,27 @@ export default function TriviaGameClient({ initialLeaderboard }: Props) {
   const [lastSubmitAt, setLastSubmitAt] = useState<number | null>(null);
   const [systemMessage, setSystemMessage] = useState<string | null>(null);
 
-  // Weekly Challenge weekStart state
+  // Weekly Challenge state
   const [weekStart, setWeekStart] = useState<string | null>(null);
+  const [weeklyQuestions, setWeeklyQuestions] = useState<any[] | null>(null);
 
-  // Load weekStart from API
+  // Load Weekly Challenge data (correct version)
   useEffect(() => {
-    async function loadWeekStart() {
-      const res = await fetch("/api/trivia/weekly");
-      const data = await res.json();
-      setWeekStart(data.weekStart);
+    async function loadWeekly() {
+      try {
+        const res = await fetch("/api/trivia/weekly");
+        const data = await res.json();
+
+        if (data.weekStart) {
+          setWeekStart(data.weekStart);
+          setWeeklyQuestions(data.questions);
+        }
+      } catch (err) {
+        console.error("Failed to load weekly challenge:", err);
+      }
     }
-    loadWeekStart();
+
+    loadWeekly();
   }, []);
 
   useEffect(() => {
@@ -112,6 +122,7 @@ export default function TriviaGameClient({ initialLeaderboard }: Props) {
     setQuestions(qs);
     setIsRunning(true);
   };
+
 
   const endRound = () => {
     setIsRunning(false);

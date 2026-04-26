@@ -18,7 +18,8 @@ type TriviaQuestion = {
   id: number;
   sport: string;
   question: string;
-  answer: string;
+  correct_answer: string;
+  choices: string[];
   difficulty: string;
   points: number;
   category_tag: string | null;
@@ -49,11 +50,12 @@ type LeaderboardScope = "daily" | "weekly" | "allTime";
 export default function TriviaGameClient({ initialLeaderboard }: Props) {
   const [questions, setQuestions] = useState<TriviaQuestion[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [answer, setAnswer] = useState("");
+
   const [score, setScore] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
   const [wrongCount, setWrongCount] = useState(0);
   const [passedCount, setPassedCount] = useState(0);
+
   const [isRunning, setIsRunning] = useState(false);
   const [timeLeft, setTimeLeft] = useState(60);
   const [roundFinished, setRoundFinished] = useState(false);
@@ -75,7 +77,7 @@ export default function TriviaGameClient({ initialLeaderboard }: Props) {
   const [weekStart, setWeekStart] = useState<string | null>(null);
   const [weeklyQuestions, setWeeklyQuestions] = useState<any[] | null>(null);
 
-  // Load Weekly Challenge data (correct version)
+  // Load Weekly Challenge data
   useEffect(() => {
     async function loadWeekly() {
       try {
@@ -94,6 +96,7 @@ export default function TriviaGameClient({ initialLeaderboard }: Props) {
     loadWeekly();
   }, []);
 
+  // Timer
   useEffect(() => {
     let timer: NodeJS.Timeout | null = null;
     if (isRunning && timeLeft > 0) {
@@ -114,7 +117,6 @@ export default function TriviaGameClient({ initialLeaderboard }: Props) {
     setTimeLeft(60);
     setRoundFinished(false);
     setCurrentIndex(0);
-    setAnswer("");
     setStreak(0);
     setSystemMessage(null);
 
@@ -122,7 +124,6 @@ export default function TriviaGameClient({ initialLeaderboard }: Props) {
     setQuestions(qs);
     setIsRunning(true);
   };
-
 
   const endRound = () => {
     setIsRunning(false);
@@ -163,47 +164,38 @@ export default function TriviaGameClient({ initialLeaderboard }: Props) {
     });
   };
 
-  const handleSubmit = () => {
+  // MULTIPLE-CHOICE HANDLER
+  const handleChoice = (selected: string) => {
     if (!isRunning || !questions[currentIndex]) return;
 
     const current = questions[currentIndex];
-    const normalizedAnswer = answer.trim().toLowerCase();
-    const normalizedCorrect = current.answer.trim().toLowerCase();
+    const isCorrect = selected === current.correct_answer;
 
-    if (!normalizedAnswer) return;
-
-    const userWords = normalizedAnswer.split(" ").filter(Boolean);
-    const correctWords = normalizedCorrect.split(" ").filter(Boolean);
-    const isMatch = userWords.every((w) => correctWords.includes(w));
-
-    if (isMatch) {
-      let newScore = 0;
-      setScore((s) => {
-        newScore = s + current.points;
-        return newScore;
-      });
+    if (isCorrect) {
+      setScore((s) => s + current.points);
       setCorrectCount((c) => c + 1);
       setStreak((st) => {
         const next = st + 1;
         setBestStreak((bs) => (next > bs ? next : bs));
         return next;
       });
+      setSystemMessage("Correct!");
     } else {
       setScore((s) => s - 1);
       setWrongCount((w) => w + 1);
       setStreak(0);
+      setSystemMessage(`Wrong! Correct answer: ${current.correct_answer}`);
     }
 
-    setAnswer("");
     setCurrentIndex((i) => i + 1);
   };
 
   const handlePass = () => {
     if (!isRunning || !questions[currentIndex]) return;
     setPassedCount((p) => p + 1);
-    setAnswer("");
-    setCurrentIndex((i) => i + 1);
     setStreak(0);
+    setSystemMessage("Passed");
+    setCurrentIndex((i) => i + 1);
   };
 
   const currentQuestion = questions[currentIndex];
@@ -324,7 +316,7 @@ export default function TriviaGameClient({ initialLeaderboard }: Props) {
               padding: 8,
               borderRadius: 6,
               background: "#111827",
-              border: "1px solid #4b5563", 
+              border: "1px solid "#4b5563",
               fontSize: 13,
               color: "#e5e7eb",
             }}
@@ -336,9 +328,7 @@ export default function TriviaGameClient({ initialLeaderboard }: Props) {
         {isRunning && currentQuestion && (
           <QuestionCard
             question={currentQuestion}
-            answer={answer}
-            onAnswerChange={setAnswer}
-            onSubmit={handleSubmit}
+            onSelectChoice={handleChoice}
             onPass={handlePass}
           />
         )}
@@ -363,7 +353,7 @@ export default function TriviaGameClient({ initialLeaderboard }: Props) {
           </div>
         )}
 
-        {/* WEEKLY CHALLENGE SECTION — AFTER BLITZ UI */}
+        {/* WEEKLY CHALLENGE SECTION */}
         {weekStart && (
           <div style={{ marginTop: 32, marginBottom: 32 }}>
             <WeeklyThemeBanner weekStart={weekStart} />

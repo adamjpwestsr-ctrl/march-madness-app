@@ -4,10 +4,12 @@ import { useState } from "react";
 
 export default function WeeklyChallenge({
   displayName,
+  weekStart,
   weeklyQuestions,
   onStartWeekly,
 }: {
   displayName: string;
+  weekStart: string | null;
   weeklyQuestions: any[] | null;
   onStartWeekly?: () => void;
 }) {
@@ -20,7 +22,6 @@ export default function WeeklyChallenge({
   const [passed, setPassed] = useState(0);
   const [finished, setFinished] = useState(false);
 
-  // ⭐ FIX: define startChallenge BEFORE using it
   const startChallenge = () => {
     setStarted(true);
     setIndex(0);
@@ -34,7 +35,7 @@ export default function WeeklyChallenge({
     if (onStartWeekly) onStartWeekly();
   };
 
-  // If no questions yet, show a loading or placeholder state
+  // ⭐ If no questions yet, show loading
   if (!weeklyQuestions || weeklyQuestions.length === 0) {
     return (
       <div style={{ marginTop: 24, textAlign: "center" }}>
@@ -45,8 +46,6 @@ export default function WeeklyChallenge({
       </div>
     );
   }
-
-  const weekStart = weeklyQuestions[0]?.week_start ?? "";
 
   // ⭐ BEFORE STARTING — show Play button
   if (!started) {

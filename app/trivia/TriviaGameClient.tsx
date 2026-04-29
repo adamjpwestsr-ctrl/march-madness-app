@@ -369,6 +369,7 @@ export default function TriviaGameClient({ initialLeaderboard }: Props) {
       <>
         <WeeklyChallenge
           displayName={displayName}
+          weekStart={weekStart}
           weeklyQuestions={weeklyQuestions}
           onStartWeekly={() => {
             if (!weeklyQuestions || weeklyQuestions.length === 0) {

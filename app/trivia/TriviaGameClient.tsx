@@ -395,7 +395,6 @@ export default function TriviaGameClient({ initialLeaderboard }: Props) {
   </div>
 )}
 
-
         {/* BLITZ RESULTS */}
         {roundFinished && (
           <div style={{ marginTop: 24 }}>

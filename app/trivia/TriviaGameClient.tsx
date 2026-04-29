@@ -353,14 +353,34 @@ export default function TriviaGameClient({ initialLeaderboard }: Props) {
           </div>
         )}
 
-        {/* WEEKLY CHALLENGE SECTION */}
-        {weekStart && (
-          <div style={{ marginTop: 32, marginBottom: 32 }}>
-            <WeeklyThemeBanner weekStart={weekStart} />
-            <WeeklyChallenge displayName={displayName} />
-            <WeeklyLeaderboard />
-          </div>
-        )}
+       {weekStart && (
+  <div style={{ marginBottom: 24 }}>
+    <WeeklyThemeBanner weekStart={weekStart} />
+    <WeeklyChallenge
+      displayName={displayName}
+      weeklyQuestions={weeklyQuestions}
+      onStartWeekly={() => {
+        if (!weeklyQuestions || weeklyQuestions.length === 0) {
+          setSystemMessage("Weekly challenge not ready yet.");
+          return;
+        }
+        setQuestions(weeklyQuestions);
+        setIsRunning(true);
+        setTimeLeft(60);
+        setRoundFinished(false);
+        setCurrentIndex(0);
+        setScore(0);
+        setCorrectCount(0);
+        setWrongCount(0);
+        setPassedCount(0);
+        setStreak(0);
+        setSystemMessage(null);
+      }}
+    />
+    <WeeklyLeaderboard />
+  </div>
+)}
+
 
         {/* BLITZ RESULTS */}
         {roundFinished && (

@@ -18,6 +18,7 @@ export default function WeeklyChallenge({
   const [wrong, setWrong] = useState(0);
   const [passed, setPassed] = useState(0);
   const [finished, setFinished] = useState(false);
+  const [started, setStarted] = useState(false); // ⭐ NEW: track whether the challenge has started
 
   useEffect(() => {
     async function load() {
@@ -35,6 +36,17 @@ export default function WeeklyChallenge({
 
     load();
   }, [onWeekStart]);
+
+  const startChallenge = () => {
+    setStarted(true);
+    setIndex(0);
+    setScore(0);
+    setCorrect(0);
+    setWrong(0);
+    setPassed(0);
+    setFinished(false);
+    setAnswer("");
+  };
 
   const submitAnswer = () => {
     const q = questions[index];
@@ -73,6 +85,33 @@ export default function WeeklyChallenge({
       }),
     });
   };
+
+  // ⭐ Show "Play Weekly Challenge" button before starting
+  if (!started && questions.length > 0) {
+    return (
+      <div style={{ marginTop: 24, textAlign: "center" }}>
+        <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 12 }}>
+          Weekly Challenge — {weekStart}
+        </h2>
+        <p style={{ color: "#9ca3af", marginBottom: 16 }}>
+          Ready to test your knowledge in this week’s themed round?
+        </p>
+        <button
+          onClick={startChallenge}
+          style={{
+            padding: "10px 20px",
+            borderRadius: 999,
+            background: "#22c55e",
+            color: "#020617",
+            fontWeight: 700,
+            cursor: "pointer",
+          }}
+        >
+          Play Weekly Challenge
+        </button>
+      </div>
+    );
+  }
 
   if (questions.length === 0) return null;
 
@@ -119,7 +158,7 @@ export default function WeeklyChallenge({
       }}
     >
       <h2 style={{ fontSize: 20, fontWeight: 700 }}>
-        Weekly Challenge — Question {index + 1} / 10
+        Weekly Challenge — Question {index + 1} / {questions.length}
       </h2>
 
       <p style={{ marginTop: 12 }}>{q.question}</p>

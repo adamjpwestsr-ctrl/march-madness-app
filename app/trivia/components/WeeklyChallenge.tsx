@@ -20,11 +20,7 @@ export default function WeeklyChallenge({
   const [passed, setPassed] = useState(0);
   const [finished, setFinished] = useState(false);
 
-  // No questions yet → don't render anything
-  if (!weeklyQuestions || weeklyQuestions.length === 0) return null;
-
-  const weekStart = weeklyQuestions[0]?.week_start ?? "";
-
+  // ⭐ FIX: define startChallenge BEFORE using it
   const startChallenge = () => {
     setStarted(true);
     setIndex(0);
@@ -37,6 +33,47 @@ export default function WeeklyChallenge({
 
     if (onStartWeekly) onStartWeekly();
   };
+
+  // If no questions yet, show a loading or placeholder state
+  if (!weeklyQuestions || weeklyQuestions.length === 0) {
+    return (
+      <div style={{ marginTop: 24, textAlign: "center" }}>
+        <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 12 }}>
+          Weekly Challenge
+        </h2>
+        <p style={{ color: "#9ca3af" }}>Loading weekly challenge...</p>
+      </div>
+    );
+  }
+
+  const weekStart = weeklyQuestions[0]?.week_start ?? "";
+
+  // ⭐ BEFORE STARTING — show Play button
+  if (!started) {
+    return (
+      <div style={{ marginTop: 24, textAlign: "center" }}>
+        <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 12 }}>
+          Weekly Challenge — {weekStart}
+        </h2>
+        <p style={{ color: "#9ca3af", marginBottom: 16 }}>
+          Ready to test your knowledge in this week’s themed round?
+        </p>
+        <button
+          onClick={startChallenge}
+          style={{
+            padding: "10px 20px",
+            borderRadius: 999,
+            background: "#22c55e",
+            color: "#020617",
+            fontWeight: 700,
+            cursor: "pointer",
+          }}
+        >
+          Play Weekly Challenge
+        </button>
+      </div>
+    );
+  }
 
   const submitAnswer = () => {
     const q = weeklyQuestions[index];
@@ -75,33 +112,6 @@ export default function WeeklyChallenge({
       }),
     });
   };
-
-  // ⭐ BEFORE STARTING — show Play button
-  if (!started) {
-    return (
-      <div style={{ marginTop: 24, textAlign: "center" }}>
-        <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 12 }}>
-          Weekly Challenge — {weekStart}
-        </h2>
-        <p style={{ color: "#9ca3af", marginBottom: 16 }}>
-          Ready to test your knowledge in this week’s themed round?
-        </p>
-        <button
-          onClick={startChallenge}
-          style={{
-            padding: "10px 20px",
-            borderRadius: 999,
-            background: "#22c55e",
-            color: "#020617",
-            fontWeight: 700,
-            cursor: "pointer",
-          }}
-        >
-          Play Weekly Challenge
-        </button>
-      </div>
-    );
-  }
 
   // ⭐ After finishing
   if (finished) {

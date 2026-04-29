@@ -74,6 +74,7 @@ export default function TriviaGameClient({ initialLeaderboard }: Props) {
   const [systemMessage, setSystemMessage] = useState<string | null>(null);
 
   // Weekly Challenge state
+  const [showWeekly, setShowWeekly] = useState(false);
   const [weekStart, setWeekStart] = useState<string | null>(null);
   const [weeklyQuestions, setWeeklyQuestions] = useState<any[] | null>(null);
 
@@ -352,35 +353,41 @@ export default function TriviaGameClient({ initialLeaderboard }: Props) {
             </button>
           </div>
         )}
-
-       {weekStart && (
+{weekStart && (
   <div style={{ marginBottom: 24 }}>
-    <WeeklyThemeBanner weekStart={weekStart} />
-    <WeeklyChallenge
-      displayName={displayName}
-      weeklyQuestions={weeklyQuestions}
-      onStartWeekly={() => {
-        if (!weeklyQuestions || weeklyQuestions.length === 0) {
-          setSystemMessage("Weekly challenge not ready yet.");
-          return;
-        }
-        setQuestions(weeklyQuestions);
-        setIsRunning(true);
-        setTimeLeft(60);
-        setRoundFinished(false);
-        setCurrentIndex(0);
-        setScore(0);
-        setCorrectCount(0);
-        setWrongCount(0);
-        setPassedCount(0);
-        setStreak(0);
-        setSystemMessage(null);
-      }}
-    />
-    <WeeklyLeaderboard />
-  </div>
+    <div
+      onClick={() => setShowWeekly((prev) => !prev)}
+      style={{ cursor: "pointer" }}
+    >
+      <WeeklyThemeBanner weekStart={weekStart} />
+    </div>
+
+   {showWeekly && (
+  <WeeklyChallenge
+    displayName={displayName}
+    weeklyQuestions={weeklyQuestions}
+    onStartWeekly={() => {
+      setQuestions(weeklyQuestions);
+      setIsRunning(true);
+      setTimeLeft(60);
+      setRoundFinished(false);
+      setCurrentIndex(0);
+      setScore(0);
+      setCorrectCount(0);
+      setWrongCount(0);
+      setPassedCount(0);
+      setStreak(0);
+      setSystemMessage(null);
+    }}
+  />
 )}
 
+
+        <WeeklyLeaderboard />
+      </>
+    )}
+  </div>
+)}
 
         {/* BLITZ RESULTS */}
         {roundFinished && (

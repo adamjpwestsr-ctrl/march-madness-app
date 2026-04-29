@@ -353,6 +353,9 @@ export default function TriviaGameClient({ initialLeaderboard }: Props) {
             </button>
           </div>
         )}
+
+
+
 {weekStart && (
   <div style={{ marginBottom: 24 }}>
     <div
@@ -362,24 +365,34 @@ export default function TriviaGameClient({ initialLeaderboard }: Props) {
       <WeeklyThemeBanner weekStart={weekStart} />
     </div>
 
-   {showWeekly && (
-  <WeeklyChallenge
-    displayName={displayName}
-    weeklyQuestions={weeklyQuestions}
-    onStartWeekly={() => {
-      setQuestions(weeklyQuestions);
-      setIsRunning(true);
-      setTimeLeft(60);
-      setRoundFinished(false);
-      setCurrentIndex(0);
-      setScore(0);
-      setCorrectCount(0);
-      setWrongCount(0);
-      setPassedCount(0);
-      setStreak(0);
-      setSystemMessage(null);
-    }}
-  />
+    {showWeekly && (
+      <>
+        <WeeklyChallenge
+          displayName={displayName}
+          weeklyQuestions={weeklyQuestions}
+          onStartWeekly={() => {
+            if (!weeklyQuestions || weeklyQuestions.length === 0) {
+              setSystemMessage("Weekly challenge not ready yet.");
+              return;
+            }
+            setQuestions(weeklyQuestions);
+            setIsRunning(true);
+            setTimeLeft(60);
+            setRoundFinished(false);
+            setCurrentIndex(0);
+            setScore(0);
+            setCorrectCount(0);
+            setWrongCount(0);
+            setPassedCount(0);
+            setStreak(0);
+            setSystemMessage(null);
+          }}
+        />
+
+        <WeeklyLeaderboard />
+      </>
+    )}
+  </div>
 )}
 
 

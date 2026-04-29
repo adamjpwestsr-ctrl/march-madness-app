@@ -1,3 +1,5 @@
+export const revalidate = 60; // or 3600, or 86400
+
 import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 import TriviaGameClient from "./TriviaGameClient";
 

@@ -14,47 +14,93 @@ export async function GET() {
   const supabase = await createSupabaseServerClient();
   const weekStart = getWeekStart();
 
-  let { data: challenge } = await supabase
-    .from("weekly_challenges")
-    .select("*")
-    .eq("week_start", weekStart)
-    .single();
+  try {
+    // ------------------------------------------------------------
+    // 1. Fetch existing weekly challenge
+    // ------------------------------------------------------------
+    let { data: challenge, error: challengeError } = await supabase
+      .from("weekly_challenges")
+      .select("*")
+      .eq("week_start", weekStart)
+      .single();
 
-  if (!challenge) {
+    if (challengeError) {
+      console.error("Weekly challenge fetch error:", challengeError.message);
+    }
 
-    // ⭐ Add this type
-    type TriviaIdRow = { id: number };
+    // ------------------------------------------------------------
+    // 2. If no challenge exists, create one
+    // ------------------------------------------------------------
+    if (!challenge) {
+      type TriviaIdRow = { id: number };
 
-    const { data: randomQs } = await supabase.rpc("get_random_trivia_ids", {
-      limit_count: 10
-    }) as { data: TriviaIdRow[] | null };
+      const { data: randomQs, error: randomError } = await supabase.rpc(
+        "get_random_trivia_ids",
+        { limit_count: 10 }
+      ) as { data: TriviaIdRow[] | null; error?: any };
 
-    if (!randomQs || randomQs.length === 0) {
+      if (randomError) {
+        console.error("RPC get_random_trivia_ids error:", randomError.message);
+      }
+
+      if (!randomQs || randomQs.length === 0) {
+        console.warn("No trivia questions returned from RPC.");
+        return NextResponse.json(
+          { weekStart, questions: [], error: "No trivia available" },
+          { status: 200 }
+        );
+      }
+
+      const { data: newChallenge, error: insertError } = await supabase
+        .from("weekly_challenges")
+        .insert({
+          week_start: weekStart,
+          question_ids: randomQs.map((q) => q.id),
+        })
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error("Insert weekly challenge error:", insertError.message);
+      }
+
+      challenge = newChallenge;
+    }
+
+    // ------------------------------------------------------------
+    // 3. Fetch questions for the challenge
+    // ------------------------------------------------------------
+    const ids = Array.isArray(challenge?.question_ids)
+      ? challenge.question_ids
+      : [];
+
+    if (ids.length === 0) {
+      console.warn("Weekly challenge has no question_ids.");
       return NextResponse.json(
-        { error: "No trivia questions available for weekly challenge" },
-        { status: 400 }
+        { weekStart, questions: [] },
+        { status: 200 }
       );
     }
 
-    const { data: newChallenge } = await supabase
-      .from("weekly_challenges")
-      .insert({
-        week_start: weekStart,
-        question_ids: randomQs.map((q) => q.id),
-      })
-      .select()
-      .single();
+    const { data: questions, error: questionError } = await supabase
+      .from("trivia_questions")
+      .select("*")
+      .in("id", ids);
 
-    challenge = newChallenge;
+    if (questionError) {
+      console.error("Trivia question fetch error:", questionError.message);
+    }
+
+    return NextResponse.json({
+      weekStart,
+      questions: questions || [],
+    });
+
+  } catch (err) {
+    console.error("Weekly challenge route crashed:", err);
+    return NextResponse.json(
+      { weekStart: null, questions: [], error: "Server error" },
+      { status: 200 }
+    );
   }
-
-  const { data: questions } = await supabase
-    .from("trivia_questions")
-    .select("*")
-    .in("id", challenge.question_ids);
-
-  return NextResponse.json({
-    weekStart,
-    questions,
-  });
 }

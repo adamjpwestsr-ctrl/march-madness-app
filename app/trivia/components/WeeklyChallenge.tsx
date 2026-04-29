@@ -1,16 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 export default function WeeklyChallenge({
   displayName,
-  onWeekStart,
+  weeklyQuestions,
+  onStartWeekly,
 }: {
   displayName: string;
-  onWeekStart?: (weekStart: string) => void;
+  weeklyQuestions: any[] | null;
+  onStartWeekly?: () => void;
 }) {
-  const [questions, setQuestions] = useState<any[]>([]);
-  const [weekStart, setWeekStart] = useState("");
+  const [started, setStarted] = useState(false);
   const [index, setIndex] = useState(0);
   const [answer, setAnswer] = useState("");
   const [score, setScore] = useState(0);
@@ -18,24 +19,11 @@ export default function WeeklyChallenge({
   const [wrong, setWrong] = useState(0);
   const [passed, setPassed] = useState(0);
   const [finished, setFinished] = useState(false);
-  const [started, setStarted] = useState(false); // ⭐ NEW: track whether the challenge has started
 
-  useEffect(() => {
-    async function load() {
-      const res = await fetch("/api/trivia/weekly");
-      const data = await res.json();
+  // No questions yet → don't render anything
+  if (!weeklyQuestions || weeklyQuestions.length === 0) return null;
 
-      setQuestions(data.questions);
-      setWeekStart(data.weekStart);
-
-      // ⭐ Notify parent component
-      if (onWeekStart) {
-        onWeekStart(data.weekStart);
-      }
-    }
-
-    load();
-  }, [onWeekStart]);
+  const weekStart = weeklyQuestions[0]?.week_start ?? "";
 
   const startChallenge = () => {
     setStarted(true);
@@ -46,12 +34,14 @@ export default function WeeklyChallenge({
     setPassed(0);
     setFinished(false);
     setAnswer("");
+
+    if (onStartWeekly) onStartWeekly();
   };
 
   const submitAnswer = () => {
-    const q = questions[index];
+    const q = weeklyQuestions[index];
     const normalized = answer.trim().toLowerCase();
-    const correctAns = q.answer.trim().toLowerCase();
+    const correctAns = q.correct_answer.trim().toLowerCase();
 
     if (normalized === correctAns) {
       setScore((s) => s + q.points);
@@ -86,8 +76,8 @@ export default function WeeklyChallenge({
     });
   };
 
-  // ⭐ Show "Play Weekly Challenge" button before starting
-  if (!started && questions.length > 0) {
+  // ⭐ BEFORE STARTING — show Play button
+  if (!started) {
     return (
       <div style={{ marginTop: 24, textAlign: "center" }}>
         <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 12 }}>
@@ -113,8 +103,7 @@ export default function WeeklyChallenge({
     );
   }
 
-  if (questions.length === 0) return null;
-
+  // ⭐ After finishing
   if (finished) {
     return (
       <div style={{ marginTop: 24 }}>
@@ -127,7 +116,8 @@ export default function WeeklyChallenge({
     );
   }
 
-  if (index >= questions.length) {
+  // ⭐ After answering all questions
+  if (index >= weeklyQuestions.length) {
     return (
       <button
         onClick={finish}
@@ -145,7 +135,8 @@ export default function WeeklyChallenge({
     );
   }
 
-  const q = questions[index];
+  // ⭐ Active question
+  const q = weeklyQuestions[index];
 
   return (
     <div
@@ -158,7 +149,7 @@ export default function WeeklyChallenge({
       }}
     >
       <h2 style={{ fontSize: 20, fontWeight: 700 }}>
-        Weekly Challenge — Question {index + 1} / {questions.length}
+        Weekly Challenge — Question {index + 1} / {weeklyQuestions.length}
       </h2>
 
       <p style={{ marginTop: 12 }}>{q.question}</p>

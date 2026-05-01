@@ -1,10 +1,12 @@
 "use client";
+console.log("🔥 LOGIN PAGE LOADED");
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import LoginForm from "./LoginForm";
+import LoginForm from "@/app/login/LoginForm";
 
 export default function LoginPage() {
   const [showAbout, setShowAbout] = useState(false);

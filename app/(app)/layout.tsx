@@ -1,8 +1,12 @@
 // app/(app)/layout.tsx
+
+export const runtime = "nodejs";
+
 import Header from "@/app/components/Header";
 import MobileNav from "@/app/components/MobileNav";
 import SidebarNav from "@/app/components/SidebarNav";
 import type { ReactNode } from "react";
+
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   return (

@@ -27,7 +27,7 @@ const challenges = [
     difficulty: "Medium",
     status: "Coming Soon",
   },
-];
+] as const;
 
 export default function ChallengesPage() {
   return (

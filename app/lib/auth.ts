@@ -9,8 +9,11 @@ export interface Session {
   };
 }
 
-export function getSession(): Session | null {
-  const raw = cookies().get("mm_session")?.value;
+export async function getSession(): Promise<Session | null> {
+  // Next.js 16: cookies() is async
+  const cookieStore = await cookies();
+
+  const raw = cookieStore.get("mm_session")?.value;
   if (!raw) return null;
 
   try {

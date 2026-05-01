@@ -1,12 +1,16 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import LoginForm from "./LoginForm";
 
 export default function LoginPage() {
   const [showAbout, setShowAbout] = useState(false);
   const [currentStep, setCurrentStep] = useState("email");
   const [highlightIndex, setHighlightIndex] = useState(0);
+
+  const router = useRouter();
+  const params = useSearchParams();
 
   const labelText =
     currentStep === "email"
@@ -29,6 +33,27 @@ export default function LoginPage() {
     }, 2200);
     return () => clearInterval(interval);
   }, []);
+
+  // ⭐ FINAL AUTH STEP: Called by LoginForm after successful validation
+  function handleAuthenticatedLogin(email: string, name: string, role: string) {
+    const session = {
+      user: {
+        id: crypto.randomUUID(),
+        email,
+        name,
+        role,
+      },
+    };
+
+    // Set session cookie (7 days)
+    document.cookie = `mm_session=${JSON.stringify(
+      session
+    )}; path=/; max-age=604800; SameSite=Lax`;
+
+    // Redirect to intended page or home
+    const redirectTo = params.get("redirect") || "/home";
+    router.push(redirectTo);
+  }
 
   return (
     <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-black">
@@ -90,7 +115,11 @@ export default function LoginPage() {
           </button>
         </div>
 
-        <LoginForm onStepChange={setCurrentStep} />
+        {/* ⭐ Pass the new callback to LoginForm */}
+        <LoginForm
+          onStepChange={setCurrentStep}
+          onAuthenticatedLogin={handleAuthenticatedLogin}
+        />
 
         <div className="text-center mt-6">
           <a

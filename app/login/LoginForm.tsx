@@ -5,9 +5,10 @@ import { loginWithEmail, verifyAdminCode } from "./actions";
 
 type LoginFormProps = {
   onStepChange?: (step: string) => void;
+  onAuthenticatedLogin?: (email: string, name: string, role: string) => void;
 };
 
-export default function LoginForm({ onStepChange }: LoginFormProps) {
+export default function LoginForm({ onStepChange, onAuthenticatedLogin }: LoginFormProps) {
   const [email, setEmail] = useState("");
   const [adminCode, setAdminCode] = useState("");
   const [step, setStep] = useState<"email" | "admin" | "options">("email");
@@ -34,7 +35,7 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
       }
 
       if (res.status === "magicLinkSent") {
-        // Instead of showing "magic link sent", we now move to the options screen
+        // Move to options screen
         setStep("options");
         onStepChange?.("options");
         return;
@@ -64,8 +65,8 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
       const res = await verifyAdminCode(formData);
 
       if (res.status === "success") {
-        // UPDATED REDIRECT
-        window.location.href = "/sports";
+        // ⭐ FINAL AUTH: Admin login
+        onAuthenticatedLogin?.(email, "Admin User", "admin");
         return;
       }
 
@@ -81,6 +82,14 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
 
       setError("Something went wrong.");
     });
+  };
+
+  // -----------------------------
+  // STEP 3 — OPTIONS (Normal User)
+  // -----------------------------
+  const handleNormalUserContinue = () => {
+    // ⭐ FINAL AUTH: Normal user login
+    onAuthenticatedLogin?.(email, "User", "user");
   };
 
   // -----------------------------
@@ -174,9 +183,9 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
       {step === "options" && (
         <div className="space-y-4 mt-6">
 
-          {/* UPDATED: All options now redirect to /sports */}
+          {/* ⭐ FINAL AUTH: Normal user login */}
           <button
-            onClick={() => (window.location.href = "/sports")}
+            onClick={handleNormalUserContinue}
             className="
               w-full bg-emerald-600 text-white py-2 rounded-lg
               hover:bg-emerald-500 hover:shadow-lg

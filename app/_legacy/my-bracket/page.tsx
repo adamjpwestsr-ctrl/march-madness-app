@@ -13,6 +13,8 @@ export default function MyBracket() {
   }, [])
 
   const checkLock = async () => {
+    if (!supabase) return
+
     // Get tournament lock time
     const { data: settings } = await supabase
       .from('tournament_settings')
@@ -33,6 +35,8 @@ export default function MyBracket() {
   }
 
   const loadPicks = async () => {
+    if (!supabase) return
+
     const { data } = await supabase
       .from('picks')
       .select('game_id, selected_team, points_awarded')
@@ -49,7 +53,7 @@ export default function MyBracket() {
     <div style={{ padding: '20px' }}>
       <h1>My Bracket</h1>
 
-      {picks.map(p => (
+      {picks.map((p) => (
         <div key={p.game_id} style={{ marginBottom: '10px' }}>
           Game {p.game_id}: {p.selected_team} ({p.points_awarded} pts)
         </div>

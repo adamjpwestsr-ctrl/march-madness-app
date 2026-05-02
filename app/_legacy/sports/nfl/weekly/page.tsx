@@ -25,7 +25,6 @@ export default async function NFLWeeklyPage() {
 
   // Load leaderboard
   if (!supabase) return;
-    if (!supabase) return;
 const {  data: leaderboard  } = await supabase.rpc
     await supabase.rpc("nfl_weekly_leaderboard");
 

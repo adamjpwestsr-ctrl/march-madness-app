@@ -432,7 +432,7 @@ export default function LeaderboardPage() {
                         >
                           {favorite_team && (
                             <img
-                              src={getTeamLogo(favorite_team)}
+                              src={getTeamLogo(favorite_team) ?? ""}
                               alt={favorite_team}
                               style={{
                                 width: 26,

@@ -35,9 +35,8 @@ export default function ChallengesHub() {
 
         <Link href="/sports/golf/weekly" className="block">
           <ChallengeCard
-            title="Golf Weekly"
-            icon="⛳"
             sport="Golf"
+            title="Golf Weekly"
             difficulty="Medium"
             status="Open"
           />
@@ -45,9 +44,8 @@ export default function ChallengesHub() {
 
         <Link href="/sports/nfl/weekly" className="block">
           <ChallengeCard
-            title="NFL Weekly"
-            icon="🏈"
             sport="NFL"
+            title="NFL Weekly"
             difficulty="Medium"
             status="Open"
           />

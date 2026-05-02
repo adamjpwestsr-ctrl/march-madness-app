@@ -268,7 +268,7 @@ export default function LeaderboardPage() {
 
             {/* BADGE STRIP */}
             <div style={{ minWidth: 260 }}>
-              <BadgeStrip />
+		<BadgeStrip badges={[]} />
             </div>
           </div>
 

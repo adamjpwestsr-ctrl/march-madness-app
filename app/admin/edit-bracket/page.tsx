@@ -57,11 +57,13 @@ export default function AdminEditBracketPage() {
     fetchGames()
   }, [])
 
-  const fetchUsers = async () => {
-    const { data, error } = await supabase
-      .from('users')
-      .select('user_id, name')
-      .order('name', { ascending: true })
+const fetchUsers = async () => {
+  if (!supabase) return;
+
+  const { data, error } = await supabase
+    .from('users')
+    .select('user_id, name')
+    .order('name', { ascending: true });
 
     if (error) {
       console.error('Error fetching users:', error)

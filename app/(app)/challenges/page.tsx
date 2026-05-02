@@ -25,7 +25,13 @@ export default function ChallengesHub() {
       {/* Challenge Grid */}
       <section className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <Link href="/trivia" className="block">
-          <TriviaModeCard />
+          <TriviaModeCard
+  title="Trivia"
+  description="Daily & weekly trivia challenges"
+  color="blue"
+  status="active"
+/>
+
         </Link>
 
         <Link href="/sports/golf/weekly" className="block">

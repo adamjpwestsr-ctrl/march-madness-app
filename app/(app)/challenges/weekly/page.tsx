@@ -21,7 +21,12 @@ export default function WeeklyChallengeDetail() {
 
   return (
     <div className="space-y-10">
-      <WeeklyThemeBanner />
+      {/* FIX: WeeklyThemeBanner now receives the required weekStart prop */}
+      {weekStart ? (
+        <WeeklyThemeBanner weekStart={weekStart} />
+      ) : (
+        <div className="text-slate-400">Loading weekly theme…</div>
+      )}
 
       <section>
         <h1 className="text-3xl font-semibold mb-2">Weekly Trivia Challenge</h1>

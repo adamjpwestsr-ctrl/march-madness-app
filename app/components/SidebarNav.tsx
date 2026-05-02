@@ -2,60 +2,52 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import {
-  HomeIcon,
-  TrophyIcon,
-  SparklesIcon,
-  ChartBarIcon,
-  UserCircleIcon,
-} from "@heroicons/react/24/outline";
-
-const navItems = [
-  { href: "/home", label: "Home", icon: HomeIcon },
-  { href: "/challenges", label: "Challenges", icon: TrophyIcon },
-  { href: "/trivia", label: "Trivia", icon: SparklesIcon },
-  { href: "/leaderboards", label: "Leaderboards", icon: ChartBarIcon },
-  { href: "/settings", label: "Settings", icon: UserCircleIcon },
-];
+  Home,
+  Trophy,
+  Brain,
+  ListChecks,
+  Settings,
+  LogOut,
+} from "lucide-react";
 
 export default function SidebarNav() {
   const pathname = usePathname();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await fetch("/logout", { method: "POST" });
+    router.push("/login");
+  };
+
+  const link = (href: string, label: string, Icon: any) => (
+    <Link
+      href={href}
+      className={`flex items-center gap-3 px-4 py-2 rounded-md hover:bg-slate-800 ${
+        pathname === href ? "bg-slate-800 text-white" : "text-slate-300"
+      }`}
+    >
+      <Icon size={18} />
+      {label}
+    </Link>
+  );
 
   return (
-    <nav className="h-full flex flex-col justify-between p-4">
-      <div className="space-y-1">
-        {navItems.map((item) => {
-          const active = pathname === item.href;
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition
-                ${
-                  active
-                    ? "bg-emerald-500/15 text-emerald-300 border border-emerald-500/40"
-                    : "text-slate-300 hover:bg-slate-800/70 hover:text-slate-50"
-                }`}
-            >
-              <Icon className="w-5 h-5" />
-              <span>{item.label}</span>
-            </Link>
-          );
-        })}
-      </div>
+    <nav className="flex flex-col gap-2 p-4">
+      {link("/home", "Home", Home)}
+      {link("/challenges", "Challenges", ListChecks)}
+      {link("/trivia", "Trivia", Brain)}
+      {link("/leaderboard", "Leaderboard", Trophy)}
+      {link("/settings", "Settings", Settings)}
 
-      {/* Sponsor / footer area */}
-      <div className="mt-6 pt-4 border-t border-slate-800">
-        <div className="text-xs text-slate-500 mb-2">Sponsored by</div>
-        <div className="rounded-xl border border-slate-800 bg-slate-900/70 px-3 py-2 text-xs text-slate-300">
-          <span className="font-semibold text-emerald-300">Your Brand Here</span>
-          <span className="block text-slate-500">
-            Non-intrusive sponsor placement.
-          </span>
-        </div>
-      </div>
+      <button
+        onClick={handleLogout}
+        className="flex items-center gap-3 px-4 py-2 rounded-md text-red-400 hover:bg-slate-800 hover:text-red-300"
+      >
+        <LogOut size={18} />
+        Logout
+      </button>
     </nav>
   );
 }

@@ -1,48 +1,66 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import DailyChallenge from "@/app/trivia/components/DailyChallenge";
+import WeeklyChallenge from "@/app/trivia/components/WeeklyChallenge";
 import TriviaModeCard from "@/app/components/TriviaModeCard";
+import HallOfFame from "@/app/trivia/components/HallOfFame";
 
-const modes = [
-  {
-    title: "Blitz Mode",
-    description: "Rapid-fire trivia. 60 seconds. How many can you get right?",
-    color: "from-emerald-500 to-emerald-700",
-    status: "Play",
-  },
-  {
-    title: "Weekly Challenge",
-    description: "A curated set of questions updated every week.",
-    color: "from-blue-600 to-blue-800",
-    status: "Start",
-  },
-  {
-    title: "Categories",
-    description: "Pick a sport or topic and test your knowledge.",
-    color: "from-purple-500 to-purple-700",
-    status: "Explore",
-  },
-  {
-    title: "Head-to-Head",
-    description: "Challenge a friend and see who knows more.",
-    color: "from-orange-500 to-red-600",
-    status: "Coming Soon",
-  },
-];
+export default function TriviaHub() {
+  const [daily, setDaily] = useState<any>(null);
+  const [weekly, setWeekly] = useState<any>(null);
 
-export default function TriviaPage() {
+  useEffect(() => {
+    async function load() {
+      const d = await fetch("/api/trivia/daily").then((r) => r.json());
+      const w = await fetch("/api/trivia/weekly").then((r) => r.json());
+
+      setDaily(d);
+      setWeekly(w);
+    }
+    load();
+  }, []);
+
   return (
     <div className="space-y-10">
-      {/* Page Title */}
       <section>
-        <h1 className="text-3xl font-semibold mb-2">Trivia</h1>
+        <h1 className="text-3xl font-semibold mb-2">Trivia Hub</h1>
         <p className="text-slate-400">
-          Choose a mode and put your sports knowledge to the test.
+          Daily questions, weekly challenges, and fast-paced trivia modes.
         </p>
       </section>
 
-      {/* Trivia Modes */}
-      <section className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {modes.map((mode) => (
-          <TriviaModeCard key={mode.title} {...mode} />
-        ))}
+      <section className="grid gap-6 md:grid-cols-2">
+        <Link href="/trivia/game?mode=daily" className="block">
+          <DailyChallenge data={daily} />
+        </Link>
+
+        <Link href="/challenges/weekly" className="block">
+          <WeeklyChallenge data={weekly} />
+        </Link>
+      </section>
+
+      <section>
+        <h2 className="text-xl font-semibold mb-4">Trivia Modes</h2>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <Link href="/trivia/game?mode=blitz" className="block">
+            <TriviaModeCard mode="blitz" />
+          </Link>
+
+          <Link href="/trivia/game?mode=timed" className="block">
+            <TriviaModeCard mode="timed" />
+          </Link>
+
+          <Link href="/trivia/game?mode=classic" className="block">
+            <TriviaModeCard mode="classic" />
+          </Link>
+        </div>
+      </section>
+
+      <section>
+        <h2 className="text-xl font-semibold mb-4">Hall of Fame</h2>
+        <HallOfFame />
       </section>
     </div>
   );

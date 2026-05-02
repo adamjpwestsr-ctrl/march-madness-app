@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import WeeklyBanner from "@/app/components/WeeklyBanner";
 import TodayTrivia from "@/app/components/TodayTrivia";
 import FeaturedSports from "@/app/components/FeaturedSports";
@@ -25,13 +27,20 @@ export default function HomePage() {
 
       {/* Top row: Weekly + Today’s Trivia */}
       <section className="grid gap-6 md:grid-cols-2">
-        <WeeklyBanner />
-        <TodayTrivia />
+        <Link href="/challenges" className="block">
+          <WeeklyBanner />
+        </Link>
+
+        <Link href="/trivia" className="block">
+          <TodayTrivia />
+        </Link>
       </section>
 
       {/* Featured Sports / Challenges */}
       <section>
-        <FeaturedSports />
+        <Link href="/sports" className="block">
+          <FeaturedSports />
+        </Link>
       </section>
 
       {/* Footer / Branding */}

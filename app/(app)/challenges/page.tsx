@@ -1,62 +1,60 @@
+import Link from "next/link";
 import ChallengeCard from "@/app/components/ChallengeCard";
+import WeeklyBanner from "@/app/components/WeeklyBanner";
+import TriviaModeCard from "@/app/components/TriviaModeCard";
+import LeaderboardCard from "@/app/components/LeaderboardCard";
 
-const categories = ["All", "NBA", "NFL", "MLB", "NHL"];
-
-const challenges = [
-  {
-    sport: "NBA",
-    title: "NBA Playoff Bracket",
-    difficulty: "Medium",
-    status: "Open",
-  },
-  {
-    sport: "NFL",
-    title: "Weekly Pick'em",
-    difficulty: "Easy",
-    status: "Open",
-  },
-  {
-    sport: "MLB",
-    title: "Home Run Derby Picks",
-    difficulty: "Hard",
-    status: "Coming Soon",
-  },
-  {
-    sport: "NHL",
-    title: "Stanley Cup Bracket",
-    difficulty: "Medium",
-    status: "Coming Soon",
-  },
-] as const;
-
-export default function ChallengesPage() {
+export default function ChallengesHub() {
   return (
     <div className="space-y-10">
-      {/* Page Title */}
+      {/* Header */}
       <section>
         <h1 className="text-3xl font-semibold mb-2">Challenges</h1>
         <p className="text-slate-400">
-          Pick a sport and jump into a challenge.
+          Weekly picks, trivia, and sports challenges — all in one place.
         </p>
       </section>
 
-      {/* Category Filters */}
-      <section className="flex gap-3 overflow-x-auto pb-2">
-        {categories.map((cat) => (
-          <button
-            key={cat}
-            className="px-4 py-2 rounded-lg border border-slate-800 bg-slate-900 hover:bg-slate-800 transition text-sm whitespace-nowrap"
-          >
-            {cat}
-          </button>
-        ))}
+      {/* Weekly Challenge */}
+      <section>
+        <Link href="/challenges/weekly" className="block">
+          <WeeklyBanner />
+        </Link>
       </section>
 
       {/* Challenge Grid */}
-      <section className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {challenges.map((challenge) => (
-          <ChallengeCard key={challenge.title} {...challenge} />
-        ))}
+      <section className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <Link href="/trivia" className="block">
+          <TriviaModeCard />
+        </Link>
+
+        <Link href="/sports/golf/weekly" className="block">
+          <ChallengeCard
+            title="Golf Weekly"
+            description="Pick winners for this week's PGA event."
+            icon="⛳"
+          />
+        </Link>
+
+        <Link href="/sports/nfl/weekly" className="block">
+          <ChallengeCard
+            title="NFL Weekly"
+            description="Predict winners for the upcoming NFL slate."
+            icon="🏈"
+          />
+        </Link>
+      </section>
+
+      {/* Progress + Leaderboard */}
+      <section className="grid gap-6 md:grid-cols-2">
+        <div className="rounded-xl border border-slate-800 p-6 bg-slate-900/40">
+          <h2 className="text-xl font-semibold mb-4">Your Progress</h2>
+          <p className="text-slate-400">Progress tracking coming soon.</p>
+        </div>
+
+        <Link href="/leaderboard" className="block">
+          <LeaderboardCard />
+        </Link>
       </section>
     </div>
   );

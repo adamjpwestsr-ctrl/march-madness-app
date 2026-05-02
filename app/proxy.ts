@@ -3,29 +3,41 @@ export const runtime = "edge";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-export function middleware(req: NextRequest) {
-  // ⭐ LOGGING BLOCK — must be inside the function
-  console.log("MIDDLEWARE HIT:", req.nextUrl.pathname);
-  console.log("COOKIE RAW:", req.cookies.get("mm_session"));
+// Public routes
+const PUBLIC_PATHS = [
+  "/login",
+  "/logout",
+  "/auth",
+  "/api/login",
+];
 
-  const sessionCookie = req.cookies.get("mm_session");
+function isPublic(path: string) {
+  return PUBLIC_PATHS.some((p) => path.startsWith(p));
+}
+
+export function middleware(req: NextRequest) {
   const pathname = req.nextUrl.pathname;
 
-  const isLoggedIn = !!sessionCookie;
-  const isAdminRoute = pathname.startsWith("/admin");
+  console.log("MIDDLEWARE HIT:", pathname);
+  console.log("COOKIE RAW:", req.cookies.get("mm_session"));
 
-  // Allow login route always
-  if (pathname === "/login" || pathname.startsWith("/api/login")) {
+  // Allow public routes
+  if (isPublic(pathname)) {
     return NextResponse.next();
   }
 
+  const sessionCookie = req.cookies.get("mm_session");
+  const isLoggedIn = !!sessionCookie;
+
   // Not logged in → redirect to login
   if (!isLoggedIn) {
-    return NextResponse.redirect(new URL("/login", req.url));
+    const loginUrl = new URL("/login", req.url);
+    loginUrl.searchParams.set("redirect", pathname);
+    return NextResponse.redirect(loginUrl);
   }
 
-  // Logged in but accessing admin without admin rights
-  if (isAdminRoute) {
+  // Admin route protection
+  if (pathname.startsWith("/admin")) {
     try {
       const parsed = JSON.parse(sessionCookie!.value);
       if (!parsed.isAdmin) {

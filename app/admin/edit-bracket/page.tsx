@@ -83,9 +83,7 @@ const fetchUsers = async () => {
     )
     .order('round', { ascending: true })
     .order('region', { ascending: true })
-    .order('game_number', { ascending: true });
-};
-
+    .order('game_number', { ascending: true })
 
     if (error) {
       console.error('Error fetching games:', error)
@@ -93,7 +91,7 @@ const fetchUsers = async () => {
     }
 
     setGames(data as Game[])
-  }
+  }}
 
   const loadBracketForUser = async (userId: number) => {
     setLoading(true)

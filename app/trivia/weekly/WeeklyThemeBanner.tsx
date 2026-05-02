@@ -1,3 +1,4 @@
+//app/trivia/weekly/WeeklyThemeBanner.tsx
 "use client";
 
 import { useWeeklyTheme } from "@/app/trivia/weekly/useWeeklyTheme";

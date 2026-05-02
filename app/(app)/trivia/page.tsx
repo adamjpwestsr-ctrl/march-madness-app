@@ -32,12 +32,17 @@ export default function TriviaHub() {
 
       <section className="grid gap-6 md:grid-cols-2">
         <Link href="/trivia/game?mode=daily" className="block">
-          {/* FIX: DailyChallenge expects displayName, not data */}
           <DailyChallenge displayName={displayName} />
         </Link>
 
         <Link href="/challenges/weekly" className="block">
-          <WeeklyChallenge data={weekly} />
+          {weekly && (
+            <WeeklyChallenge
+              displayName={displayName}
+              weekStart={weekly.weekStart}
+              weeklyQuestions={weekly.questions}
+            />
+          )}
         </Link>
       </section>
 

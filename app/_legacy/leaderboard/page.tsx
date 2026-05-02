@@ -4,7 +4,7 @@ import type React from 'react'
 import { useEffect, useState } from 'react'
 import { supabase } from "lib/supabaseClient";
 import { getTeamLogo } from 'lib/getTeamLogo'
-import HistoryOverlay from '@/app/leaderboard/HistoryOverlay'
+import HistoryOverlay from '@/app/_legacy/leaderboard/HistoryOverlay'
 import TeamHoverCard from '../../components/TeamHoverCard'
 import BadgeStrip from '@/components/BadgeStrip'
 import ForumPanel from './ForumPanel'

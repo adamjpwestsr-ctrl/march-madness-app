@@ -8,15 +8,14 @@ import TriviaModeCard from "@/app/components/TriviaModeCard";
 import HallOfFame from "@/app/trivia/components/HallOfFame";
 
 export default function TriviaHub() {
-  const [daily, setDaily] = useState<any>(null);
   const [weekly, setWeekly] = useState<any>(null);
+
+  // TODO: Replace with real user display name from auth/session
+  const displayName = "Guest";
 
   useEffect(() => {
     async function load() {
-      const d = await fetch("/api/trivia/daily").then((r) => r.json());
       const w = await fetch("/api/trivia/weekly").then((r) => r.json());
-
-      setDaily(d);
       setWeekly(w);
     }
     load();
@@ -33,7 +32,8 @@ export default function TriviaHub() {
 
       <section className="grid gap-6 md:grid-cols-2">
         <Link href="/trivia/game?mode=daily" className="block">
-          <DailyChallenge data={daily} />
+          {/* FIX: DailyChallenge expects displayName, not data */}
+          <DailyChallenge displayName={displayName} />
         </Link>
 
         <Link href="/challenges/weekly" className="block">

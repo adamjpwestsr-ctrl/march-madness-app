@@ -60,7 +60,10 @@ export default function ChallengesHub() {
         </div>
 
         <Link href="/leaderboard" className="block">
-          <LeaderboardCard />
+          <LeaderboardCard
+            title="Leaderboard"
+            value="View Rankings"
+          />
         </Link>
       </section>
     </div>

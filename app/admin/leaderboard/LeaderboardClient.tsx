@@ -155,11 +155,12 @@ export default function LeaderboardClient() {
   // 6. SAVE PAYOUT SNAPSHOT
   // -------------------------------------------------------
   const saveSnapshot = async (round: number) => {
-    if (!supabase) return;
-    const { error } = if (!supabase) return;
-    await supabase.rpc("snapshot_payouts", {
-      snapshot_round: round,
-    });
+if (!supabase) return;
+
+const { error } = await supabase.rpc("snapshot_payouts", {
+  snapshot_round: round,
+});
+
     if (error) throw error;
   };
 

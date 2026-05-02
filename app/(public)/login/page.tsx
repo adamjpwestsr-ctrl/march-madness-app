@@ -6,7 +6,7 @@ export const runtime = "nodejs";
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import LoginForm from "@/app/login/LoginForm";
+import LoginForm from "@/login/LoginForm";
 
 export default function LoginPage() {
   const [showAbout, setShowAbout] = useState(false);

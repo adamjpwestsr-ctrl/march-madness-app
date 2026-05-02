@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import WeeklyThemeBanner from "@/app/trivia/weekly/WeeklyThemeBanner";
+import WeeklyThemeBanner from "@/trivia/weekly/WeeklyThemeBanner";
 import Link from "next/link";
 
 export default function WeeklyChallengeDetail() {

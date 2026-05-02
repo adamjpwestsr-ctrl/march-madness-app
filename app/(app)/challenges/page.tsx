@@ -26,27 +26,30 @@ export default function ChallengesHub() {
       <section className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <Link href="/trivia" className="block">
           <TriviaModeCard
-  title="Trivia"
-  description="Daily & weekly trivia challenges"
-  color="blue"
-  status="active"
-/>
-
+            title="Trivia"
+            description="Daily & weekly trivia challenges"
+            color="blue"
+            status="active"
+          />
         </Link>
 
         <Link href="/sports/golf/weekly" className="block">
           <ChallengeCard
             title="Golf Weekly"
-            description="Pick winners for this week's PGA event."
             icon="⛳"
+            sport="Golf"
+            difficulty="Medium"
+            status="Open"
           />
         </Link>
 
         <Link href="/sports/nfl/weekly" className="block">
           <ChallengeCard
             title="NFL Weekly"
-            description="Predict winners for the upcoming NFL slate."
             icon="🏈"
+            sport="NFL"
+            difficulty="Medium"
+            status="Open"
           />
         </Link>
       </section>

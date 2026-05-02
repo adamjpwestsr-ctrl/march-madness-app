@@ -46,22 +46,37 @@ export default function TriviaHub() {
         </Link>
       </section>
 
-      <section>
-        <h2 className="text-xl font-semibold mb-4">Trivia Modes</h2>
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <Link href="/trivia/game?mode=blitz" className="block">
-            <TriviaModeCard mode="blitz" />
-          </Link>
+<section>
+  <h2 className="text-xl font-semibold mb-4">Trivia Modes</h2>
+  <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+    <Link href="/trivia/game?mode=blitz" className="block">
+      <TriviaModeCard
+        title="Blitz Mode"
+        description="10 rapid-fire questions. No time to think."
+        color="from-purple-500 to-fuchsia-600"
+        status="Open"
+      />
+    </Link>
 
-          <Link href="/trivia/game?mode=timed" className="block">
-            <TriviaModeCard mode="timed" />
-          </Link>
+    <Link href="/trivia/game?mode=timed" className="block">
+      <TriviaModeCard
+        title="Timed Mode"
+        description="Beat the clock with precision and speed."
+        color="from-blue-500 to-cyan-600"
+        status="Open"
+      />
+    </Link>
 
-          <Link href="/trivia/game?mode=classic" className="block">
-            <TriviaModeCard mode="classic" />
-          </Link>
-        </div>
-      </section>
+    <Link href="/trivia/game?mode=classic" className="block">
+      <TriviaModeCard
+        title="Classic Mode"
+        description="Standard trivia. Accuracy over speed."
+        color="from-emerald-500 to-green-600"
+        status="Open"
+      />
+    </Link>
+  </div>
+</section>
 
       <section>
         <h2 className="text-xl font-semibold mb-4">Hall of Fame</h2>

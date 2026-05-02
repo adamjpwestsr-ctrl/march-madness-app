@@ -74,14 +74,18 @@ const fetchUsers = async () => {
   }
 
   const fetchGames = async () => {
-    const { data, error } = await supabase
-      .from('games')
-      .select(
-        'game_id, round, region, game_number, team1, seed1, team2, seed2, winner, source_game1, source_game2'
-      )
-      .order('round', { ascending: true })
-      .order('region', { ascending: true })
-      .order('game_number', { ascending: true })
+  if (!supabase) return;
+
+  const { data, error } = await supabase
+    .from('games')
+    .select(
+      'game_id, round, region, game_number, team1, seed1, team2, seed2, winner, source_game1, source_game2'
+    )
+    .order('round', { ascending: true })
+    .order('region', { ascending: true })
+    .order('game_number', { ascending: true });
+};
+
 
     if (error) {
       console.error('Error fetching games:', error)

@@ -3,15 +3,19 @@
 import React from 'react'
 import { getTeamLogo } from 'lib/getTeamLogo'
 
-export default function HistoryOverlay({
-  round,
-  rows,
-  onClose
-}: {
-  round: number
-  rows: any[]
+type HistoryOverlayProps = {
+  selectedRound: number | null
+  onRoundSelect: (round: number) => void
+  historyRows: any[]
   onClose: () => void
-}) {
+}
+
+export default function HistoryOverlay({
+  selectedRound,
+  onRoundSelect,
+  historyRows,
+  onClose
+}: HistoryOverlayProps) {
   const roundNames: Record<number, string> = {
     1: 'Round of 64',
     2: 'Round of 32',
@@ -56,7 +60,7 @@ export default function HistoryOverlay({
           }}
         >
           <h2 style={{ fontSize: 22, fontWeight: 700, color: '#e5e7eb' }}>
-            {roundNames[round]} Rankings
+            {selectedRound ? roundNames[selectedRound] : 'History'} Rankings
           </h2>
 
           <button
@@ -71,6 +75,42 @@ export default function HistoryOverlay({
           >
             ✕
           </button>
+        </div>
+
+        {/* ROUND SELECTOR */}
+        <div
+          style={{
+            display: 'flex',
+            gap: 8,
+            marginBottom: 16,
+            flexWrap: 'wrap'
+          }}
+        >
+          {Object.entries(roundNames).map(([num, label]) => {
+            const roundNum = Number(num)
+            const isActive = selectedRound === roundNum
+
+            return (
+              <button
+                key={num}
+                onClick={() => onRoundSelect(roundNum)}
+                style={{
+                  padding: '6px 10px',
+                  borderRadius: 6,
+                  border: isActive
+                    ? '1px solid #38bdf8'
+                    : '1px solid #475569',
+                  background: isActive ? '#0ea5e9' : 'rgba(30,41,59,0.6)',
+                  color: isActive ? '#0f172a' : '#e5e7eb',
+                  cursor: 'pointer',
+                  fontSize: 13,
+                  fontWeight: 600
+                }}
+              >
+                {label}
+              </button>
+            )
+          })}
         </div>
 
         {/* TABLE */}
@@ -93,7 +133,7 @@ export default function HistoryOverlay({
           </thead>
 
           <tbody>
-            {rows.map((row, index) => {
+            {historyRows.map((row, index) => {
               const championLogo = row.champion_pick
                 ? getTeamLogo(row.champion_pick)
                 : null
@@ -114,7 +154,7 @@ export default function HistoryOverlay({
                     {row.name}
                     {championLogo && (
                       <img
-                        src={championLogo}
+                        src={championLogo ?? ''}
                         style={{
                           width: 18,
                           height: 18,

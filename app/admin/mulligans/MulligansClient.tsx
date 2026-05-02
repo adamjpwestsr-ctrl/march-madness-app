@@ -95,9 +95,11 @@ export default function MulligansClient() {
 
     const allPicks = [basePick, ...propagated];
 
-    await supabase.from("picks").upsert(allPicks, {
-      onConflict: "bracket_id,game_id",
-    });
+if (!supabase) return;
+
+await supabase.from("picks").upsert(allPicks, {
+  onConflict: "bracket_id,game_id",
+});
 
     // 3. Mark request as approved
     await supabase

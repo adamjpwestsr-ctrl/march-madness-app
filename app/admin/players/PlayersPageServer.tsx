@@ -6,20 +6,23 @@ export default async function PlayersPageServer() {
   const supabase = await createSupabaseServerClient();
 
   // 1) Fetch active contests
-  const { data: contests } = await supabase
+  if (!supabase) return;
+    const { data: contests } = await supabase
     .from("contests")
     .select("id, name, sport")
     .eq("is_active", true)
     .order("name", { ascending: true });
 
   // 2) Fetch all users
-  const { data: users } = await supabase
+  if (!supabase) return;
+    const { data: users } = await supabase
     .from("users")
     .select("user_id, email")
     .order("email", { ascending: true });
 
   // 3) Fetch participation rows
-  const { data: statuses } = await supabase
+  if (!supabase) return;
+    const { data: statuses } = await supabase
     .from("user_challenge_status")
     .select(`
       id,

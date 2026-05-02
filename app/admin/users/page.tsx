@@ -30,7 +30,8 @@ export default async function UsersAdminPage() {
   });
 
   // LOAD USERS
-  const { data: users, error } = await supabase
+  if (!supabase) return;
+    const { data: users, error } = await supabase
     .from("users")
     .select("user_id, email, is_active, has_paid")
     .order("email");

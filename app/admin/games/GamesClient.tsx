@@ -30,6 +30,7 @@ export default function GamesClient() {
     setLoading(true);
     setError(null);
 
+    if (!supabase) return;
     const { data, error } = await supabase
       .from("games")
       .select("*")
@@ -98,7 +99,8 @@ export default function GamesClient() {
       setSaving(true);
       setError(null);
 
-      const { error } = await supabase.from("games").upsert(
+      if (!supabase) return;
+    const { error } = await supabase.from("games").upsert(
         games.map((g) => ({
           game_id: g.game_id,
           winner: g.winner,

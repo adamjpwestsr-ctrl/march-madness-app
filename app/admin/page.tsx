@@ -24,6 +24,7 @@ export default async function AdminPage() {
     }
 
     // 2) Check admin status in DB
+    if (!supabase) return;
     const { data: dbUser, error: dbError } = await supabase
       .from("users")
       .select("is_admin")

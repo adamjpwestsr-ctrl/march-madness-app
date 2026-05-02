@@ -6,13 +6,15 @@ export default async function PlayoffPage() {
   const supabase = await createClient();
 
   // Load teams
-  const { data: teams } = await supabase
+  if (!supabase) return;
+    const { data: teams } = await supabase
     .from("nfl_teams")
     .select("*")
     .order("name");
 
   // Load saved playoff bracket
-  const { data: bracketRow } = await supabase
+  if (!supabase) return;
+    const { data: bracketRow } = await supabase
     .from("playoff_brackets")
     .select("bracket")
     .eq("season", 2024)

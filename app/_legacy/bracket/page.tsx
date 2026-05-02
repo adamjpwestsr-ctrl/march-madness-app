@@ -54,6 +54,7 @@ export default async function BracketPage({
     // -----------------------------
     // LOAD BRACKETS BY EMAIL
     // -----------------------------
+    if (!supabase) return;
     const { data: brackets, error } = await supabase
       .from("brackets")
       .select("bracket_id, bracket_name, icon, created_at, updated_at")

@@ -42,6 +42,7 @@ export default function BracketsClient() {
       return;
     }
 
+    if (!supabase) return;
     const { data: bracketRows, error: bracketErr } = await supabase
       .from("brackets")
       .select("bracket_id, user_id, bracket_name, created_at")
@@ -55,6 +56,7 @@ export default function BracketsClient() {
       return;
     }
 
+    if (!supabase) return;
     const { data: submissionRows, error: subErr } = await supabase
       .from("bracket_submissions")
       .select("*");
@@ -72,6 +74,7 @@ export default function BracketsClient() {
       return;
     }
 
+    if (!supabase) return;
     const { data: userRows, error: userErr } = await supabase
       .from("users")
       .select("user_id, email");
@@ -95,6 +98,7 @@ export default function BracketsClient() {
       return;
     }
 
+    if (!supabase) return;
     const { data, error } = await supabase
       .from("picks")
       .select("game_id, selected_team")

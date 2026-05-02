@@ -6,7 +6,8 @@ export const dynamic = "force-dynamic";
 export default async function AdminSettingsPage() {
   const supabase = await createSupabaseServerClient();
 
-  const { data: admins, error } = await supabase
+  if (!supabase) return;
+    const { data: admins, error } = await supabase
     .from("users")
     .select("user_id, email, admin_code")
     .eq("is_admin", true)

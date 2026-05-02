@@ -23,12 +23,14 @@ export default function LeaderboardClient() {
   // 1. RECALCULATE SCORES
   // -------------------------------------------------------
   const recalcScores = async () => {
+    if (!supabase) return;
     const { data: games } = await supabase
       .from("games")
       .select("game_id, round, winner");
 
     if (!games) return;
 
+    if (!supabase) return;
     const { data: picks } = await supabase
       .from("picks")
       .select("bracket_id, game_id, selected_team");
@@ -70,6 +72,7 @@ export default function LeaderboardClient() {
   // 2. RECALCULATE MULLIGAN STARS
   // -------------------------------------------------------
   const recalcMulliganStars = async () => {
+    if (!supabase) return;
     const { data: mulligans } = await supabase
       .from("mulligan_requests")
       .select("bracket_id, status");
@@ -98,6 +101,7 @@ export default function LeaderboardClient() {
   // 3. RECALCULATE RANK CHANGES
   // -------------------------------------------------------
   const recalcRankChanges = async () => {
+    if (!supabase) return;
     const { data: rows } = await supabase
       .from("leaderboard")
       .select("*")
@@ -120,6 +124,7 @@ export default function LeaderboardClient() {
   // 4. RECALCULATE TIEBREAKERS
   // -------------------------------------------------------
   const recalcTiebreakers = async () => {
+    if (!supabase) return;
     const { data: submissions } = await supabase
       .from("bracket_submissions")
       .select("bracket_id, tiebreaker");
@@ -150,6 +155,7 @@ export default function LeaderboardClient() {
   // 6. SAVE PAYOUT SNAPSHOT
   // -------------------------------------------------------
   const saveSnapshot = async (round: number) => {
+    if (!supabase) return;
     const { error } = await supabase.rpc("snapshot_payouts", {
       snapshot_round: round,
     });

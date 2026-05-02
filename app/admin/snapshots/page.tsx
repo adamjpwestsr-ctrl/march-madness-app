@@ -11,6 +11,7 @@ const supabase = createSupabaseBrowserClient();
   const takeSnapshot = async () => {
     setLoading(true);
 
+    if (!supabase) return;
     const { error } = await supabase.rpc("snapshot_payouts", {
       snapshot_round: round,
     });

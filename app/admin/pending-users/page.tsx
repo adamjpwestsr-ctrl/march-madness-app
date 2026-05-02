@@ -13,7 +13,8 @@ export default async function PendingUsersPage() {
     auth: { persistSession: false },
   });
 
-  const { data: pending, error } = await supabase
+  if (!supabase) return;
+    const { data: pending, error } = await supabase
     .from("pending_users")
     .select("*")
     .order("requested_at", { ascending: true });

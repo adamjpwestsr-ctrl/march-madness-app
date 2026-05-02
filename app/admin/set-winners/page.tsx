@@ -13,6 +13,7 @@ export default function AdminPage() {
   }, [])
 
   const loadGames = async () => {
+    if (!supabase) return;
     const { data } = await supabase
       .from('games')
       .select('*')

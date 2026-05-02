@@ -60,7 +60,8 @@ export default function AdminEditBracketPage() {
 const fetchUsers = async () => {
   if (!supabase) return;
 
-  const { data, error } = await supabase
+  if (!supabase) return;
+    const { data, error } = await supabase
     .from('users')
     .select('user_id, name')
     .order('name', { ascending: true });
@@ -76,7 +77,8 @@ const fetchUsers = async () => {
   const fetchGames = async () => {
   if (!supabase) return;
 
-  const { data, error } = await supabase
+  if (!supabase) return;
+    const { data, error } = await supabase
     .from('games')
     .select(
       'game_id, round, region, game_number, team1, seed1, team2, seed2, winner, source_game1, source_game2'
@@ -96,6 +98,7 @@ const fetchUsers = async () => {
   const loadBracketForUser = async (userId: number) => {
     setLoading(true)
 
+    if (!supabase) return;
     const { data: picks, error: picksError } = await supabase
       .from('picks')
       .select('game_id, selected_team')
@@ -114,6 +117,7 @@ const fetchUsers = async () => {
 
     setPicksByGameId(picksMap)
 
+    if (!supabase) return;
     const { data: bracketRow, error: bracketError } = await supabase
       .from('bracket_submissions')
       .select('tiebreaker')
@@ -294,7 +298,8 @@ const fetchUsers = async () => {
     setSaving(true)
 
     try {
-      const { error: deleteError } = await supabase
+      if (!supabase) return;
+    const { error: deleteError } = await supabase
         .from('picks')
         .delete()
         .eq('user_id', selectedUserId)
@@ -315,7 +320,8 @@ const fetchUsers = async () => {
         }))
 
       if (picksToInsert.length > 0) {
-        const { error: insertError } = await supabase
+        if (!supabase) return;
+    const { error: insertError } = await supabase
           .from('picks')
           .insert(picksToInsert)
 
@@ -326,7 +332,8 @@ const fetchUsers = async () => {
         }
       }
 
-      const { error: upsertError } = await supabase
+      if (!supabase) return;
+    const { error: upsertError } = await supabase
         .from('bracket_submissions')
         .upsert(
           {
@@ -351,7 +358,8 @@ const fetchUsers = async () => {
     setSaving(true)
 
     try {
-      const { error: deletePicksError } = await supabase
+      if (!supabase) return;
+    const { error: deletePicksError } = await supabase
         .from('picks')
         .delete()
         .eq('user_id', selectedUserId)
@@ -362,7 +370,8 @@ const fetchUsers = async () => {
         return
       }
 
-      const { error: deleteBracketError } = await supabase
+      if (!supabase) return;
+    const { error: deleteBracketError } = await supabase
         .from('bracket_submissions')
         .delete()
         .eq('user_id', selectedUserId)

@@ -46,6 +46,7 @@ export default function UsersClient() {
     setLoading(true);
 
     // Load users
+    if (!supabase) return;
     const { data: userRows, error: userErr } = await supabase
       .from("users")
       .select("user_id, name, email, is_admin, admin_code")
@@ -55,6 +56,7 @@ export default function UsersClient() {
     setUsers(userRows ?? []);
 
     // Load brackets
+    if (!supabase) return;
     const { data: bracketRows, error: bracketErr } = await supabase
       .from("brackets")
       .select("bracket_id, user_id, bracket_name, created_at");
@@ -69,6 +71,7 @@ export default function UsersClient() {
     setBrackets(bracketMap);
 
     // Load mulligans
+    if (!supabase) return;
     const { data: mulliganRows, error: mulliganErr } = await supabase
       .from("mulligan_requests")
       .select("*");

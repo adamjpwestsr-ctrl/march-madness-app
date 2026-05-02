@@ -21,7 +21,8 @@ export default async function PlayersPage() {
   if (!email) redirect("/login");
 
   // 2) Admin check
-  const { data: dbUser } = await supabase
+  if (!supabase) return;
+    const { data: dbUser } = await supabase
     .from("users")
     .select("is_admin")
     .eq("email", email)

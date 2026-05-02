@@ -5,13 +5,15 @@ export default async function AdminNFLWeeklyPage() {
   const supabase = await createClient();
 
   // Load teams server-side
-  const { data: teams } = await supabase
+  if (!supabase) return;
+    const { data: teams } = await supabase
     .from("nfl_teams")
     .select("*")
     .order("name");
 
   // Load weekly settings (lock time, etc.)
-  const { data: settings } = await supabase
+  if (!supabase) return;
+    const { data: settings } = await supabase
     .from("nfl_weekly_settings")
     .select("*")
     .single();

@@ -149,6 +149,7 @@ export default function LeaderboardPage() {
   const fetchLeaderboard = async () => {
     if (!supabase) return
 
+    if (!supabase) return;
     const { data, error } = await supabase
       .from('bracket_leaderboard_full_view')
       .select('*')
@@ -168,6 +169,7 @@ export default function LeaderboardPage() {
   const fetchPrizePool = async () => {
     if (!supabase) return
 
+    if (!supabase) return;
     const { data, error } = await supabase
       .from('contest_prize_pool')
       .select('*')
@@ -193,6 +195,7 @@ export default function LeaderboardPage() {
   const fetchHistory = async (round: number) => {
     if (!supabase) return
 
+    if (!supabase) return;
     const { data, error } = await supabase
       .from('leaderboard_snapshots')
       .select('*')

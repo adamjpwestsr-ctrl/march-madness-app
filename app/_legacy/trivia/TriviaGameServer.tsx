@@ -6,7 +6,9 @@ import TriviaGameClient from "./TriviaGameClient";
 export default async function TriviaGameServer() {
   const supabase = await createSupabaseServerClient();
 
-  const { data: leaderboard } = await supabase
+  if (!supabase) return;
+    if (!supabase) return;
+    const { data: leaderboard } = await supabase
     .from("trivia_rounds")
     .select("id, display_name, score, created_at")
     .order("score", { ascending: false })

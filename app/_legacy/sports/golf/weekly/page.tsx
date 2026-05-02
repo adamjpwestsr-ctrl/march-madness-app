@@ -20,12 +20,14 @@ interface Player {
 export default async function GolfWeeklyPage() {
   const supabase = await createClient();
 
-  const { data: tournaments } = await supabase
+  if (!supabase) return;
+    const { data: tournaments } = await supabase
     .from("golf_tournaments")
     .select("id, name, start_date, end_date, category, is_premium_event")
     .order("start_date");
 
-  const { data: players } = await supabase
+  if (!supabase) return;
+    const { data: players } = await supabase
     .from("golf_players")
     .select("id, name, country, photo_url")
     .order("name");

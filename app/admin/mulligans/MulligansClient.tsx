@@ -112,12 +112,15 @@ await supabase.from("picks").upsert(allPicks, {
   };
 
   const denyRequest = async (req: MulliganRequest) => {
-    if (!confirm("Deny this mulligan?")) return;
+   if (!confirm("Deny this mulligan?")) return;
 
-    await supabase
-      .from("mulligan_requests")
-      .update({ status: "denied" })
-      .eq("id", req.id);
+if (!supabase) return;
+
+await supabase
+  .from("mulligan_requests")
+  .update({ status: "denied" })
+  .eq("id", req.id);
+
 
     alert("Mulligan denied.");
     loadData();

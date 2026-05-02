@@ -14,7 +14,6 @@ export default function TriviaGamePage() {
   const [index, setIndex] = useState(0);
   const [score, setScore] = useState(0);
 
-  // REQUIRED BY ScoreSummary
   const [correct, setCorrect] = useState(0);
   const [wrong, setWrong] = useState(0);
   const [passed, setPassed] = useState(0);
@@ -30,7 +29,10 @@ export default function TriviaGamePage() {
     load();
   }, [mode]);
 
-  function handleAnswer(isCorrect: boolean) {
+  function handleSelectChoice(choice: string) {
+    const q = questions[index];
+    const isCorrect = choice === q.correct_answer;
+
     if (isCorrect) {
       setScore((s) => s + 1);
       setCorrect((c) => c + 1);
@@ -74,7 +76,7 @@ export default function TriviaGamePage() {
       {questions.length > 0 && (
         <QuestionCard
           question={questions[index]}
-          onAnswer={handleAnswer}
+          onSelectChoice={handleSelectChoice}
           onPass={handlePass}
         />
       )}

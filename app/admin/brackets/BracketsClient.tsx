@@ -23,9 +23,7 @@ type Pick = {
 
 export default function BracketsClient() {
   const [brackets, setBrackets] = useState<Bracket[]>([]);
-  const [submissions, setSubmissions] = useState<
-    Record<string, Submission>
-  >({});
+  const [submissions, setSubmissions] = useState<Record<string, Submission>>({});
   const [users, setUsers] = useState<Record<number, string>>({});
   const [loading, setLoading] = useState(false);
   const [viewingBracket, setViewingBracket] = useState<string | null>(null);
@@ -39,6 +37,11 @@ export default function BracketsClient() {
   const loadBrackets = async () => {
     setLoading(true);
 
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
+
     const { data: bracketRows, error: bracketErr } = await supabase
       .from("brackets")
       .select("bracket_id, user_id, bracket_name, created_at")
@@ -47,7 +50,11 @@ export default function BracketsClient() {
     if (bracketErr) console.error("Bracket load error:", bracketErr);
     setBrackets(bracketRows ?? []);
 
-    // Load submissions
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
+
     const { data: submissionRows, error: subErr } = await supabase
       .from("bracket_submissions")
       .select("*");
@@ -60,7 +67,11 @@ export default function BracketsClient() {
     });
     setSubmissions(submissionMap);
 
-    // Load user emails
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
+
     const { data: userRows, error: userErr } = await supabase
       .from("users")
       .select("user_id, email");
@@ -79,6 +90,11 @@ export default function BracketsClient() {
   const loadBracketPicks = async (bracketId: string) => {
     setLoadingPicks(true);
 
+    if (!supabase) {
+      setLoadingPicks(false);
+      return;
+    }
+
     const { data, error } = await supabase
       .from("picks")
       .select("game_id, selected_team")
@@ -94,11 +110,10 @@ export default function BracketsClient() {
   const deleteBracket = async (bracketId: string) => {
     if (!confirm("Delete this bracket?")) return;
 
+    if (!supabase) return;
+
     await supabase.from("picks").delete().eq("bracket_id", bracketId);
-    await supabase
-      .from("bracket_submissions")
-      .delete()
-      .eq("bracket_id", bracketId);
+    await supabase.from("bracket_submissions").delete().eq("bracket_id", bracketId);
     await supabase.from("brackets").delete().eq("bracket_id", bracketId);
 
     alert("Bracket deleted.");
@@ -108,11 +123,10 @@ export default function BracketsClient() {
   const resetBracket = async (bracketId: string) => {
     if (!confirm("Reset all picks for this bracket?")) return;
 
+    if (!supabase) return;
+
     await supabase.from("picks").delete().eq("bracket_id", bracketId);
-    await supabase
-      .from("bracket_submissions")
-      .delete()
-      .eq("bracket_id", bracketId);
+    await supabase.from("bracket_submissions").delete().eq("bracket_id", bracketId);
 
     alert("Bracket reset.");
     loadBrackets();

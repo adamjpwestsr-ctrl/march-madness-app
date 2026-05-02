@@ -1,10 +1,28 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 interface Props {
-  timeLeft: number;
+  duration: number;
+  onExpire: () => void;
 }
 
-export default function Timer({ timeLeft }: Props) {
+export default function Timer({ duration, onExpire }: Props) {
+  const [timeLeft, setTimeLeft] = useState(duration);
+
+  useEffect(() => {
+    if (timeLeft <= 0) {
+      onExpire();
+      return;
+    }
+
+    const id = setTimeout(() => {
+      setTimeLeft((t) => t - 1);
+    }, 1000);
+
+    return () => clearTimeout(id);
+  }, [timeLeft, onExpire]);
+
   return (
     <div
       style={{

@@ -2,7 +2,7 @@
 
 import type React from 'react'
 import { useEffect, useState } from 'react'
-import { supabase } from "lib/supabaseClient";
+import { supabase } from 'lib/supabaseClient'
 import { getTeamLogo } from 'lib/getTeamLogo'
 import HistoryOverlay from '@/app/_legacy/leaderboard/HistoryOverlay'
 import TeamHoverCard from '@/components/TeamHoverCard'
@@ -141,14 +141,15 @@ export default function LeaderboardPage() {
   const [historyRows, setHistoryRows] = useState<any[]>([])
   const [hoveredTeam, setHoveredTeam] = useState<string | null>(null)
 
-  // ⭐ Correct placement of prizePool hook
   const [prizePool, setPrizePool] = useState<any>(null)
 
   /* -----------------------------
      FETCH LEADERBOARD (FULL VIEW)
   ------------------------------ */
   const fetchLeaderboard = async () => {
-    if (!supabase) return;\n    const { data, error } = await supabase
+    if (!supabase) return
+
+    const { data, error } = await supabase
       .from('bracket_leaderboard_full_view')
       .select('*')
       .order('current_rank', { ascending: true })
@@ -165,7 +166,9 @@ export default function LeaderboardPage() {
      FETCH PRIZE POOL
   ------------------------------ */
   const fetchPrizePool = async () => {
-    if (!supabase) return;\n    const { data, error } = await supabase
+    if (!supabase) return
+
+    const { data, error } = await supabase
       .from('contest_prize_pool')
       .select('*')
       .eq('sport', 'march_madness')
@@ -188,7 +191,9 @@ export default function LeaderboardPage() {
      FETCH HISTORY SNAPSHOT
   ------------------------------ */
   const fetchHistory = async (round: number) => {
-    if (!supabase) return;\n    const { data, error } = await supabase
+    if (!supabase) return
+
+    const { data, error } = await supabase
       .from('leaderboard_snapshots')
       .select('*')
       .eq('round_number', round)
@@ -207,7 +212,6 @@ export default function LeaderboardPage() {
     setShowHistory(true)
     fetchHistory(round)
   }
-
   return (
     <div
       style={{
@@ -237,337 +241,362 @@ export default function LeaderboardPage() {
             </div>
           )}
 
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <h1
-              style={{
-                marginBottom: '20px',
-                color: '#e5e7eb',
-                fontSize: 28,
-                fontWeight: 700
-              }}
-            >
-              Leaderboard
-            </h1>
-
-            {/* HISTORY DROPDOWN */}
+          {/* HEADER */}
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'flex-end',
+              marginBottom: 16
+            }}
+          >
             <div>
-              <button
-                onClick={() => setShowHistory(prev => !prev)}
+              <h1
                 style={{
-                  padding: '8px 14px',
-                  background: '#1E3A8A',
-                  color: 'white',
-                  borderRadius: 8,
-                  border: 'none',
-                  cursor: 'pointer',
-                  fontSize: 14
+                  fontSize: 28,
+                  fontWeight: 700,
+                  letterSpacing: 0.5,
+                  color: '#f9fafb'
                 }}
               >
-                History ▾
-              </button>
+                Bracket Leaderboard
+              </h1>
+              <p style={{ color: '#9ca3af', marginTop: 4, fontSize: 14 }}>
+                Live standings with rank movement, badges, and history snapshots.
+              </p>
+            </div>
 
-              {showHistory && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    right: 30,
-                    marginTop: 6,
-                    background: '#1e293b',
-                    border: '1px solid #334155',
-                    borderRadius: 8,
-                    padding: 10,
-                    zIndex: 20
-                  }}
-                >
-                  {[
-                    { round: 1, label: 'Round of 64' },
-                    { round: 2, label: 'Round of 32' },
-                    { round: 3, label: 'Sweet 16' },
-                    { round: 4, label: 'Elite 8' },
-                    { round: 5, label: 'Final Four' },
-                    { round: 6, label: 'Championship' }
-                  ].map(r => (
-                    <div
-                      key={r.round}
-                      onClick={() => handleRoundSelect(r.round)}
-                      style={{
-                        padding: '6px 10px',
-                        cursor: 'pointer',
-                        borderRadius: 6
-                      }}
-                    >
-                      {r.label}
-                    </div>
-                  ))}
-                </div>
-              )}
+            {/* BADGE STRIP */}
+            <div style={{ minWidth: 260 }}>
+              <BadgeStrip />
             </div>
           </div>
 
-          {/* MAIN TABLE */}
-          <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+          {/* HISTORY OVERLAY TRIGGER */}
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'flex-end',
+              marginBottom: 12
+            }}
+          >
+            <button
+              onClick={() => setShowHistory(true)}
+              style={{
+                padding: '6px 12px',
+                borderRadius: 999,
+                border: '1px solid #4b5563',
+                background: 'rgba(15,23,42,0.9)',
+                color: '#e5e7eb',
+                fontSize: 13,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                cursor: 'pointer'
+              }}
+            >
+              <span
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: '999px',
+                  background: '#22c55e',
+                  boxShadow: '0 0 8px rgba(34,197,94,0.8)'
+                }}
+              />
+              View History Snapshots
+            </button>
+          </div>
+
+          {/* TABLE WRAPPER */}
+          <div
+            style={{
+              borderRadius: 16,
+              border: '1px solid #1f2937',
+              background:
+                'radial-gradient(circle at top, rgba(56,189,248,0.08), transparent 55%), rgba(15,23,42,0.95)',
+              boxShadow:
+                '0 18px 45px rgba(15,23,42,0.9), 0 0 0 1px rgba(15,23,42,0.9)',
+              overflow: 'hidden'
+            }}
+          >
             <table
               style={{
                 width: '100%',
                 borderCollapse: 'collapse',
-                background: 'rgba(30,41,59,0.6)',
-                borderRadius: 12,
-                overflow: 'hidden',
-                boxShadow: '0 12px 30px rgba(0,0,0,0.45)'
+                fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont'
               }}
             >
-              <thead>
-                <tr style={{ background: '#1E3A8A', color: 'white' }}>
-                  <th style={{ ...th, width: 60 }}>Rank</th>
-                  <th style={{ ...th, textAlign: 'left' }}>Name</th>
-                  <th style={{ ...th, width: 120 }}>Points</th>
-                  <th style={{ ...th, width: 120 }}>Champion</th>
-                  <th style={{ ...th, width: 140 }}>Trend</th>
-                  <th style={{ ...th, width: 180 }}>Potential</th>
-                  <th style={{ ...th, width: 140 }}>Mulligans Used</th>
+              <thead
+                style={{
+                  background:
+                    'linear-gradient(to right, rgba(15,23,42,0.95), rgba(15,23,42,0.9))'
+                }}
+              >
+                <tr>
+                  <th style={{ ...th, textAlign: 'left', paddingLeft: 16 }}>
+                    Rank
+                  </th>
+                  <th style={{ ...th, textAlign: 'left' }}>Bracket</th>
+                  <th style={th}>Owner</th>
+                  <th style={th}>Correct</th>
+                  <th style={th}>Remaining</th>
+                  <th style={th}>Max Pts</th>
+                  <th style={th}>Total Pts</th>
+                  <th style={th}>Badges</th>
                 </tr>
               </thead>
 
               <tbody>
                 {rows.map((row, index) => {
-                  const champion = row.champion_pick
-                  const championLogo = champion ? getTeamLogo(champion) : null
+                  const {
+                    current_rank,
+                    previous_rank,
+                    rank_change,
+                    bracket_name,
+                    owner_name,
+                    correct_picks,
+                    remaining_teams,
+                    max_points,
+                    total_points,
+                    favorite_team
+                  } = row
 
-                  const status = {
-                    is_alive: row.is_alive,
-                    is_eliminated: row.is_eliminated,
-                    is_champion: row.is_champion,
-                    is_playing: row.is_playing
-                  }
-
-                  const potential = {
-                    earned_points: row.earned_points,
-                    possible_points: row.possible_points,
-                    max_possible_score: row.max_possible_score
-                  }
-
-                  const earned = potential.earned_points ?? 0
-                  const possible = potential.possible_points ?? 0
-                  const maxScore = potential.max_possible_score ?? earned
-
-                  const percentRemaining =
-                    maxScore > 0 ? (possible / maxScore) * 100 : 0
-
-                  let barColor = '#64748b'
-                  if (possible === 0) barColor = '#475569'
-                  else if (percentRemaining > 70) barColor = '#22c55e'
-                  else if (percentRemaining > 30) barColor = '#facc15'
-                  else barColor = '#dc2626'
-
-                  const championStyle: React.CSSProperties = {
-                    width: 36,
-                    height: 36,
-                    borderRadius: '50%',
-                    overflow: 'hidden',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    margin: '0 auto',
-                    transition: 'all 0.25s ease',
-                    border: '2px solid transparent'
-                  }
-
-                  if (status.is_champion) {
-                    championStyle.border = '3px solid gold'
-                    championStyle.boxShadow = '0 0 12px gold'
-                    championStyle.animation =
-                      'championPulse 1.6s ease-in-out infinite'
-                  } else if (status.is_playing) {
-                    championStyle.border = '3px solid #facc15'
-                    championStyle.boxShadow = '0 0 10px #facc15'
-                    championStyle.animation =
-                      'playingPulse 1.2s ease-in-out infinite'
-                  } else if (status.is_alive) {
-                    championStyle.border = '2px solid #22c55e'
-                    championStyle.boxShadow = '0 0 8px rgba(34,197,94,0.5)'
-                  } else if (status.is_eliminated) {
-                    championStyle.border = '2px solid #dc2626'
-                    championStyle.filter = 'grayscale(100%)'
-                    championStyle.opacity = 0.6
-                  }
+                  const rowStyle = getRowStyleByChange(index, rank_change)
 
                   return (
                     <tr
                       key={row.bracket_id}
-                      style={getRowStyleByChange(index, row.rank_change)}
+                      style={{
+                        ...rowStyle,
+                        transition:
+                          'transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease'
+                      }}
+                      onMouseEnter={() => {
+                        if (favorite_team) setHoveredTeam(favorite_team)
+                      }}
+                      onMouseLeave={() => setHoveredTeam(null)}
                     >
-                      <td style={td}>
-                        {row.current_rank}
-                        {renderRankArrow(row.rank_change, row.previous_rank)}
-                      </td>
-
-                      <td style={{ ...td, textAlign: 'left' }}>
-                        {row.user_name} #{row.bracket_number}
-                        <BadgeStrip badges={row.badges} />
-                      </td>
-
-                      <td style={td}>{row.total_points}</td>
-
-                      {/* CHAMPION COLUMN */}
-                      <td style={td}>
-                        {championLogo ? (
-                          <div
-                            style={{
-                              position: 'relative',
-                              display: 'inline-block'
-                            }}
-                            onMouseEnter={() => setHoveredTeam(champion)}
-                            onMouseLeave={() => setHoveredTeam(null)}
-                          >
-                            <div style={championStyle}>
-                              <img
-                                src={championLogo}
-                                style={{
-                                  width: '100%',
-                                  height: '100%',
-                                  objectFit: 'cover'
-                                }}
-                              />
-                            </div>
-
-                            {hoveredTeam === champion && (
-                              <TeamHoverCard team={champion} />
-                            )}
-
-                            {status.is_champion && (
-                              <div className="confetti-container"></div>
-                            )}
-                          </div>
-                        ) : (
-                          <span style={{ color: '#64748b' }}>—</span>
-                        )}
-                      </td>
-
-                      {/* TREND SHELL */}
-                      <td style={td}>
-                        <div
+                      {/* RANK + MOVEMENT */}
+                      <td
+                        style={{
+                          ...td,
+                          textAlign: 'left',
+                          paddingLeft: 16,
+                          fontWeight: 600,
+                          fontSize: 15,
+                          display: 'flex',
+                          alignItems: 'center'
+                        }}
+                      >
+                        <span
                           style={{
-                            width: 70,
-                            height: 22,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: 28,
+                            height: 28,
                             borderRadius: 999,
                             background:
-                              'linear-gradient(90deg, rgba(148,163,184,0.15), rgba(56,189,248,0.5))',
-                            overflow: 'hidden',
-                            position: 'relative'
-                          }}
-                        ></div>
-                      </td>
-
-                      {/* POTENTIAL POINTS */}
-                      <td style={{ ...td, textAlign: 'left' }}>
-                        <div style={{ marginBottom: 4, fontSize: 13 }}>
-                          Max:{' '}
-                          <span style={{ fontWeight: 600 }}>{maxScore}</span>
-                        </div>
-
-                        <div
-                          style={{
-                            width: '100%',
-                            height: 10,
-                            background: '#1e293b',
-                            borderRadius: 999,
-                            overflow: 'hidden',
-                            position: 'relative'
+                              current_rank === 1
+                                ? 'linear-gradient(135deg, #facc15, #f97316)'
+                                : 'rgba(15,23,42,0.9)',
+                            color:
+                              current_rank === 1 ? '#111827' : '#e5e7eb',
+                            boxShadow:
+                              current_rank === 1
+                                ? '0 0 18px rgba(250,204,21,0.7)'
+                                : '0 0 0 1px rgba(31,41,55,0.9)'
                           }}
                         >
-                          <div
+                          {current_rank}
+                        </span>
+                        {renderRankArrow(rank_change, previous_rank)}
+                      </td>
+
+                      {/* BRACKET NAME + FAVORITE TEAM LOGO */}
+                      <td
+                        style={{
+                          ...td,
+                          textAlign: 'left',
+                          fontWeight: 500,
+                          fontSize: 15
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 10
+                          }}
+                        >
+                          {favorite_team && (
+                            <img
+                              src={getTeamLogo(favorite_team)}
+                              alt={favorite_team}
+                              style={{
+                                width: 26,
+                                height: 26,
+                                borderRadius: 999,
+                                border: '1px solid rgba(148,163,184,0.6)',
+                                background: '#020617'
+                              }}
+                            />
+                          )}
+                          <span>{bracket_name}</span>
+                        </div>
+                      </td>
+
+                      {/* OWNER */}
+                      <td style={td}>{owner_name}</td>
+
+                      {/* CORRECT PICKS */}
+                      <td style={td}>{correct_picks}</td>
+
+                      {/* REMAINING TEAMS */}
+                      <td style={td}>{remaining_teams}</td>
+
+                      {/* MAX POINTS */}
+                      <td style={td}>{max_points}</td>
+
+                      {/* TOTAL POINTS */}
+                      <td
+                        style={{
+                          ...td,
+                          fontWeight: 600,
+                          color: '#facc15'
+                        }}
+                      >
+                        {total_points}
+                      </td>
+
+                      {/* BADGES */}
+                      <td style={td}>
+                        <div
+                          style={{
+                            display: 'flex',
+                            justifyContent: 'center',
+                            gap: 6
+                          }}
+                        >
+                          <span
                             style={{
-                              width: `${percentRemaining}%`,
-                              height: '100%',
-                              background: barColor,
-                              transition: 'width 0.4s ease'
+                              padding: '2px 6px',
+                              borderRadius: 999,
+                              background: 'rgba(34,197,94,0.12)',
+                              color: '#4ade80',
+                              fontSize: 11,
+                              fontWeight: 600
                             }}
-                          ></div>
-                        </div>
-
-                        <div
-                          style={{
-                            marginTop: 4,
-                            fontSize: 12,
-                            color: '#94a3b8'
-                          }}
-                        >
-                          Remaining: {possible}
+                          >
+                            HOT STREAK
+                          </span>
+                          <span
+                            style={{
+                              padding: '2px 6px',
+                              borderRadius: 999,
+                              background: 'rgba(59,130,246,0.12)',
+                              color: '#60a5fa',
+                              fontSize: 11,
+                              fontWeight: 600
+                            }}
+                          >
+                            FINAL FOUR
+                          </span>
                         </div>
                       </td>
-
-                      {/* MULLIGANS */}
-                      <td style={td}>{row.mulligans_used ?? 0}/2</td>
                     </tr>
                   )
                 })}
               </tbody>
             </table>
           </div>
-
-          {/* Animations */}
-          <style>{`
-            @keyframes fadeSlideIn {
-              from { opacity: 0; transform: translateY(6px); }
-              to { opacity: 1; transform: translateY(0); }
-            }
-
-            @keyframes rankUpPulse {
-              0% { transform: translateY(0); }
-              40% { transform: translateY(-2px); }
-              100% { transform: translateY(0); }
-            }
-
-            @keyframes rankDownPulse {
-              0% { transform: translateY(0); }
-              40% { transform: translateY(2px); }
-              100% { transform: translateY(0); }
-            }
-
-            @keyframes rankRowUpGlow {
-              0% { box-shadow: 0 0 0 rgba(34,197,94,0); }
-              40% { box-shadow: 0 0 18px rgba(34,197,94,0.55); }
-              100% { box-shadow: 0 0 0 rgba(34,197,94,0); }
-            }
-
-            @keyframes rankRowDownGlow {
-              0% { box-shadow: 0 0 0 rgba(248,113,113,0); }
-              40% { box-shadow: 0 0 18px rgba(248,113,113,0.55); }
-              100% { box-shadow: 0 0 0 rgba(248,113,113,0); }
-            }
-
-            @keyframes championPulse {
-              0% { box-shadow: 0 0 10px gold; }
-              50% { box-shadow: 0 0 20px gold; }
-              100% { box-shadow: 0 0 10px gold; }
-            }
-
-            @keyframes playingPulse {
-              0% { box-shadow: 0 0 6px #facc15; }
-              50% { box-shadow: 0 0 14px #facc15; }
-              100% { box-shadow: 0 0 6px #facc15; }
-            }
-
-            .confetti-container {
-              position: absolute;
-              top: -10px;
-              left: 50%;
-              width: 0;
-              height: 0;
-              pointer-events: none;
-              animation: confettiBurst 1.2s ease-out forwards;
-            }
-
-            @keyframes confettiBurst {
-              0% { opacity: 1; transform: translateX(-50%) translateY(0); }
-            @keyframes confettiBurst {
-              0% { opacity: 1; transform: translateX(-50%) translateY(0); }
-              100% { opacity: 0; transform: translateX(-50%) translateY(-40px); }
-            }
-          `}</style>
-
         </div>
       </div>
+      {/* HISTORY OVERLAY */}
+      {showHistory && (
+        <HistoryOverlay
+          onClose={() => setShowHistory(false)}
+          selectedRound={selectedRound}
+          onRoundSelect={handleRoundSelect}
+          historyRows={historyRows}
+        />
+      )}
+
+      {/* TEAM HOVER CARD */}
+      {hoveredTeam && (
+        <div
+          style={{
+            position: 'fixed',
+            pointerEvents: 'none',
+            zIndex: 50
+          }}
+        >
+          <TeamHoverCard team={hoveredTeam} />
+        </div>
+      )}
+
+      {/* GLOBAL STYLES FOR ANIMATIONS */}
+      <style jsx global>{`
+        @keyframes fadeSlideIn {
+          from {
+            opacity: 0;
+            transform: translateY(6px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes rankUpPulse {
+          0% {
+            transform: translateY(0);
+          }
+          40% {
+            transform: translateY(-2px);
+          }
+          100% {
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes rankDownPulse {
+          0% {
+            transform: translateY(0);
+          }
+          40% {
+            transform: translateY(2px);
+          }
+          100% {
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes rankRowUpGlow {
+          0% {
+            box-shadow: 0 0 0 rgba(34, 197, 94, 0);
+          }
+          40% {
+            box-shadow: 0 0 18px rgba(34, 197, 94, 0.45);
+          }
+          100% {
+            box-shadow: 0 0 0 rgba(34, 197, 94, 0);
+          }
+        }
+
+        @keyframes rankRowDownGlow {
+          0% {
+            box-shadow: 0 0 0 rgba(248, 113, 113, 0);
+          }
+          40% {
+            box-shadow: 0 0 18px rgba(248, 113, 113, 0.45);
+          }
+          100% {
+            box-shadow: 0 0 0 rgba(248, 113, 113, 0);
+          }
+        }
+      `}</style>
     </div>
   )
 }

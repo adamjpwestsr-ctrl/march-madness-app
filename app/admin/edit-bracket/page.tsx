@@ -92,8 +92,8 @@ const fetchUsers = async () => {
       return
     }
 
-    setGames(data as Game[])
-  }}
+   setGames(data as Game[])
+  }
 
   const loadBracketForUser = async (userId: number) => {
     setLoading(true)

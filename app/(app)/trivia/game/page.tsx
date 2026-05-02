@@ -13,6 +13,12 @@ export default function TriviaGamePage() {
   const [questions, setQuestions] = useState<any[]>([]);
   const [index, setIndex] = useState(0);
   const [score, setScore] = useState(0);
+
+  // REQUIRED BY ScoreSummary
+  const [correct, setCorrect] = useState(0);
+  const [wrong, setWrong] = useState(0);
+  const [passed, setPassed] = useState(0);
+
   const [finished, setFinished] = useState(false);
 
   useEffect(() => {
@@ -24,8 +30,14 @@ export default function TriviaGamePage() {
     load();
   }, [mode]);
 
-  function handleAnswer(correct: boolean) {
-    if (correct) setScore((s) => s + 1);
+  function handleAnswer(isCorrect: boolean) {
+    if (isCorrect) {
+      setScore((s) => s + 1);
+      setCorrect((c) => c + 1);
+    } else {
+      setScore((s) => s - 1);
+      setWrong((w) => w + 1);
+    }
 
     if (index + 1 >= questions.length) {
       setFinished(true);
@@ -34,24 +46,38 @@ export default function TriviaGamePage() {
     }
   }
 
-  if (!questions.length) {
-    return <p className="text-slate-400">Loading questions…</p>;
+  function handlePass() {
+    setPassed((p) => p + 1);
+
+    if (index + 1 >= questions.length) {
+      setFinished(true);
+    } else {
+      setIndex((i) => i + 1);
+    }
   }
 
   if (finished) {
-    return <ScoreSummary score={score} total={questions.length} mode={mode} />;
+    return (
+      <ScoreSummary
+        score={score}
+        correct={correct}
+        wrong={wrong}
+        passed={passed}
+      />
+    );
   }
 
   return (
     <div className="space-y-6">
-      {mode === "blitz" && <Timer seconds={60} onExpire={() => setFinished(true)} />}
+      <Timer duration={60} onExpire={() => setFinished(true)} />
 
-      <QuestionCard
-        question={questions[index]}
-        index={index}
-        total={questions.length}
-        onAnswer={handleAnswer}
-      />
+      {questions.length > 0 && (
+        <QuestionCard
+          question={questions[index]}
+          onAnswer={handleAnswer}
+          onPass={handlePass}
+        />
+      )}
     </div>
   );
 }

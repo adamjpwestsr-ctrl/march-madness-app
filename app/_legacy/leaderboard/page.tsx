@@ -148,7 +148,7 @@ export default function LeaderboardPage() {
      FETCH LEADERBOARD (FULL VIEW)
   ------------------------------ */
   const fetchLeaderboard = async () => {
-    const { data, error } = await supabase
+    if (!supabase) return;\n    const { data, error } = await supabase
       .from('bracket_leaderboard_full_view')
       .select('*')
       .order('current_rank', { ascending: true })
@@ -165,7 +165,7 @@ export default function LeaderboardPage() {
      FETCH PRIZE POOL
   ------------------------------ */
   const fetchPrizePool = async () => {
-    const { data, error } = await supabase
+    if (!supabase) return;\n    const { data, error } = await supabase
       .from('contest_prize_pool')
       .select('*')
       .eq('sport', 'march_madness')
@@ -188,7 +188,7 @@ export default function LeaderboardPage() {
      FETCH HISTORY SNAPSHOT
   ------------------------------ */
   const fetchHistory = async (round: number) => {
-    const { data, error } = await supabase
+    if (!supabase) return;\n    const { data, error } = await supabase
       .from('leaderboard_snapshots')
       .select('*')
       .eq('round_number', round)

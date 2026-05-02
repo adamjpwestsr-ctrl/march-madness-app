@@ -156,7 +156,8 @@ export default function LeaderboardClient() {
   // -------------------------------------------------------
   const saveSnapshot = async (round: number) => {
     if (!supabase) return;
-    const { error } = await supabase.rpc("snapshot_payouts", {
+    const { error } = if (!supabase) return;
+    await supabase.rpc("snapshot_payouts", {
       snapshot_round: round,
     });
     if (error) throw error;
@@ -340,3 +341,4 @@ function btn(color: string): React.CSSProperties {
     boxShadow: "0 4px 10px rgba(0,0,0,0.35)",
   };
 }
+

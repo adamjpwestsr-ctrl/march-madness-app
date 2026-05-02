@@ -25,7 +25,8 @@ export default async function NFLWeeklyPage() {
 
   // Load leaderboard
   if (!supabase) return;
-    const { data: leaderboard } = await supabase.rpc("nfl_weekly_leaderboard");
+    const { data: leaderboard } = if (!supabase) return;
+    await supabase.rpc("nfl_weekly_leaderboard");
 
   // Load weekly settings (current week + lock time)
   if (!supabase) return;
@@ -44,3 +45,4 @@ export default async function NFLWeeklyPage() {
     />
   );
 }
+

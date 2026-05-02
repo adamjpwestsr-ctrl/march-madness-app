@@ -12,7 +12,8 @@ const supabase = createSupabaseBrowserClient();
     setLoading(true);
 
     if (!supabase) return;
-    const { error } = await supabase.rpc("snapshot_payouts", {
+    const { error } = if (!supabase) return;
+    await supabase.rpc("snapshot_payouts", {
       snapshot_round: round,
     });
 
@@ -62,3 +63,4 @@ const supabase = createSupabaseBrowserClient();
     </div>
   );
 }
+

@@ -54,7 +54,11 @@ export default function GamesClient() {
     setLoading(true);
     setError(null);
 
+    if (!supabase) return;
+
+if (!supabase) return;
     await supabase.rpc("reset_tournament");
+
 
     await fetchGames(); // refresh UI
     setLoading(false);
@@ -393,3 +397,4 @@ export default function GamesClient() {
     </div>
   );
 }
+

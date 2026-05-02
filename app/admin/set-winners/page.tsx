@@ -25,11 +25,13 @@ export default function AdminPage() {
   const submitWinner = async () => {
     if (!selectedGame || !winner) return
 
+    if (!supabase) return;
     await supabase.rpc('set_game_winner', {
       gameid: selectedGame,
       winningteam: winner
     })
 
+    if (!supabase) return;
     await supabase.rpc('run_game_scoring')
 
     alert('Winner updated and scoring recalculated!')
@@ -169,3 +171,4 @@ export default function AdminPage() {
     </div>
   )
 }
+

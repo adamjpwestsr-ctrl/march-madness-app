@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getTeamLogo } from "../../lib/getTeamLogo";
+import { getTeamLogo } from "lib/getTeamLogo";
 
 // -----------------------------
 // INLINE TYPES

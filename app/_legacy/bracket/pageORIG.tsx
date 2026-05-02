@@ -3,7 +3,7 @@
 import React from 'react'
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabaseClient'
-import { getTeamLogo } from '../../lib/getTeamLogo'
+import { getTeamLogo } from 'lib/getTeamLogo'
 
 const TEAM_BLOCK_HEIGHT = 52
 const ROUND_COLUMN_WIDTH = 170

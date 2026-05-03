@@ -1,13 +1,15 @@
 // app/(app)/layout.tsx
-{/* Layout version Update v6.2.2 */}
+
+/* Layout version Update v6.2.3 */
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
 
 import Header from "@/app/components/Header";
 import MobileNav from "@/app/components/MobileNav";
 import SidebarNav from "@/app/components/SidebarNav";
 import type { ReactNode } from "react";
-
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   return (

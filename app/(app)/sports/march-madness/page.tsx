@@ -1,7 +1,7 @@
 //app/(app)/sports/march-madness/page.tsx
 "use client";
 
-import BracketClient from "@/app/_legacy/sports/ncaab/playoffs/BracketClient";
+import BracketClient from "@/app/_legacy/bracket/BracketClient";
 
 export default function MarchMadnessPage() {
   return (

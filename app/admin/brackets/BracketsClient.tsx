@@ -81,6 +81,8 @@ export default function BracketsClient() {
   const loadBracketPicks = async (bracketId: string) => {
     setLoadingPicks(true);
 
+    if (!supabase) return;
+    
     const { data, error } = await supabase
       .from("picks")
       .select("game_id, selected_team")
@@ -96,6 +98,8 @@ export default function BracketsClient() {
   const deleteBracket = async (bracketId: string) => {
     if (!confirm("Delete this bracket?")) return;
 
+    if (!supabase) return;
+
     await supabase.from("picks").delete().eq("bracket_id", bracketId);
     await supabase
       .from("bracket_submissions")
@@ -109,6 +113,8 @@ export default function BracketsClient() {
 
   const resetBracket = async (bracketId: string) => {
     if (!confirm("Reset all picks for this bracket?")) return;
+
+    if (!supabase) return;
 
     await supabase.from("picks").delete().eq("bracket_id", bracketId);
     await supabase

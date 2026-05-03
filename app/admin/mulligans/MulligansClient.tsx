@@ -32,6 +32,7 @@ export default function MulligansClient() {
 
   const loadData = async () => {
     setLoading(true);
+if (!supabase) return;
 
     const { data: reqRows } = await supabase
       .from("mulligan_requests")
@@ -39,12 +40,14 @@ export default function MulligansClient() {
       .order("created_at", { ascending: false });
 
     setRequests(reqRows ?? []);
+if (!supabase) return;
 
     const { data: gameRows } = await supabase
       .from("games")
       .select("game_id, source_game1, source_game2");
 
     setGames(gameRows ?? []);
+if (!supabase) return;
 
     const { data: userRows } = await supabase
       .from("users")
@@ -91,12 +94,16 @@ export default function MulligansClient() {
     );
 
     const allPicks = [basePick, ...propagated];
+if (!supabase) return;
 
     await supabase.from("picks").upsert(allPicks, {
       onConflict: "bracket_id,game_id",
     });
 
     // 3. Mark request as approved
+
+if (!supabase) return;
+
     await supabase
       .from("mulligan_requests")
       .update({ status: "approved" })
@@ -108,6 +115,8 @@ export default function MulligansClient() {
 
   const denyRequest = async (req: MulliganRequest) => {
     if (!confirm("Deny this mulligan?")) return;
+
+if (!supabase) return;
 
     await supabase
       .from("mulligan_requests")

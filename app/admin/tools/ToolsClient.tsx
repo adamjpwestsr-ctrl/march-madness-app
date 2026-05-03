@@ -25,6 +25,9 @@ export default function ToolsClient() {
   // -----------------------------
 
   const generateChalkBracket = async () => {
+
+if (!supabase) return;
+
     const { data: games } = await supabase.from("games").select("*");
     if (!games) return;
 
@@ -48,6 +51,7 @@ export default function ToolsClient() {
   };
 
   const generateUpsetBracket = async () => {
+if (!supabase) return;
     const { data: games } = await supabase.from("games").select("*");
     if (!games) return;
 
@@ -71,6 +75,7 @@ export default function ToolsClient() {
   };
 
   const generatePerfectBracket = async () => {
+if (!supabase) return;
     const { data: games } = await supabase.from("games").select("*");
     if (!games) return;
 
@@ -92,6 +97,7 @@ export default function ToolsClient() {
   // -----------------------------
 
   const simulateRound = async (round: number) => {
+if (!supabase) return;
     const { data: games } = await supabase
       .from("games")
       .select("*")
@@ -121,6 +127,7 @@ export default function ToolsClient() {
   // -----------------------------
 
   const resetTournament = async () => {
+if (!supabase) return;
     await supabase.from("games").update({ winner: null });
     await supabase.from("picks").delete().neq("bracket_id", -1);
     await supabase.from("bracket_submissions").delete().neq("bracket_id", -1);

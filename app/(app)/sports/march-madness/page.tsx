@@ -1,7 +1,7 @@
 //app/(app)/sports/march-madness/page.tsx
 "use client";
 
-import BracketClient from "@/app/_legacy/bracket/BracketClient";
+import BracketShell from "@/app/_legacy/bracket/BracketShell";
 
 export default function MarchMadnessPage() {
   return (
@@ -10,7 +10,7 @@ export default function MarchMadnessPage() {
       <p className="text-muted-foreground">
         Fill out your bracket, track your picks, and compete for the top spot.
       </p>
-      <BracketClient />
+      <BracketShell />
     </div>
   );
 }

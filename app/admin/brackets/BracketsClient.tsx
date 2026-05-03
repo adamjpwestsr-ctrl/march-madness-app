@@ -39,6 +39,8 @@ export default function BracketsClient() {
   const loadBrackets = async () => {
     setLoading(true);
 
+    if (!supabase) return;
+
     const { data: bracketRows, error: bracketErr } = await supabase
       .from("brackets")
       .select("bracket_id, user_id, bracket_name, created_at")

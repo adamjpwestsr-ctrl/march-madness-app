@@ -41,7 +41,10 @@ export default function MobileNav() {
       </button>
 
       {open && (
-        <div className="fixed inset-0 bg-black/60 z-40" onClick={() => setOpen(false)} />
+        <div
+          className="fixed inset-0 bg-black/60 z-40"
+          onClick={() => setOpen(false)}
+        />
       )}
 
       <div
@@ -58,6 +61,7 @@ export default function MobileNav() {
 
         <nav className="flex flex-col">
           {link("/home", "Home", Home)}
+          {link("/sports/march-madness", "March Madness", Trophy)}
           {link("/challenges", "Challenges", ListChecks)}
           {link("/trivia", "Trivia", Brain)}
           {link("/leaderboard", "Leaderboard", Trophy)}

@@ -36,6 +36,7 @@ export default function SidebarNav() {
   return (
     <nav className="flex flex-col gap-2 p-4">
       {link("/home", "Home", Home)}
+      {link("/sports/march-madness", "March Madness", Trophy)}
       {link("/challenges", "Challenges", ListChecks)}
       {link("/trivia", "Trivia", Brain)}
       {link("/leaderboard", "Leaderboard", Trophy)}

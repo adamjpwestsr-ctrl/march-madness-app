@@ -17,6 +17,13 @@ export default function SportsHub() {
           />
         </Link>
 
+	<Link href="/sports/march-madness" className="block">
+          <SportsCard
+            sport="College Basketball"
+            description="Enter your March Madness Bracket."
+          />
+        </Link>
+
         <Link href="/sports/golf/weekly" className="block">
           <SportsCard
             sport="Golf"

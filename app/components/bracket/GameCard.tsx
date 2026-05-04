@@ -1,6 +1,6 @@
 "use client";
 
-import { getTeamLogo } from "@/app/lib/getTeamLogo";
+import { getTeamLogo } from "@/lib/getTeamLogo";
 
 export default function GameCard({ game }) {
   const { team1, team2, winner } = game;

@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import BracketClient from "./BracketClient";
+import DesktopBracket from "./DesktopBracket";
+
 
 type Pick = {
   bracket_id: string;

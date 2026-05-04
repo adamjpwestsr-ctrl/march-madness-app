@@ -2,51 +2,52 @@
 
 import GameCard from "./GameCard";
 
-export default function MobileBracket({ games }) {
+type Team = {
+  team_id: string;
+  name: string;
+  seed: number | null;
+};
+
+type Game = {
+  game_id: number;
+  round: number;
+  region: string;
+  team1: Team | null;
+  team2: Team | null;
+  winner: string | null;
+  source_game1: number | null;
+  source_game2: number | null;
+};
+
+export default function MobileBracket({ games }: { games: Game[] }) {
   const rounds = groupByRound(games);
 
   return (
-    <div className="flex flex-col gap-8 px-2 pb-10">
-      {rounds.map((round, i) => (
-        <Round key={i} title={round.title} games={round.games} />
+    <div className="flex flex-col gap-8 p-4">
+      {Object.entries(rounds).map(([round, roundGames]) => (
+        <div key={round} className="flex flex-col gap-4">
+          <h2 className="text-xl font-bold text-cyan-300">
+            Round {round}
+          </h2>
+
+          <div className="flex flex-col gap-4">
+            {roundGames.map((g) => (
+              <GameCard key={g.game_id} game={g} />
+            ))}
+          </div>
+        </div>
       ))}
     </div>
   );
 }
 
-function Round({ title, games }) {
-  return (
-    <section className="bg-slate-900/40 backdrop-blur rounded-xl border border-slate-800 p-4">
-      <h2 className="text-xl font-bold mb-4 tracking-tight">{title}</h2>
+function groupByRound(games: Game[]) {
+  const grouped: Record<number, Game[]> = {};
 
-      <div className="flex flex-col gap-4">
-        {games.map((g) => (
-          <GameCard key={g.game_id} game={g} />
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function groupByRound(games) {
-  const roundNames = {
-    1: "Round of 64",
-    2: "Round of 32",
-    3: "Sweet 16",
-    4: "Elite 8",
-    5: "Final Four",
-    6: "Championship",
-  };
-
-  const grouped = {};
-
-  games.forEach((g) => {
+  for (const g of games) {
     if (!grouped[g.round]) grouped[g.round] = [];
     grouped[g.round].push(g);
-  });
+  }
 
-  return Object.keys(grouped).map((round) => ({
-    title: roundNames[round] ?? `Round ${round}`,
-    games: grouped[round],
-  }));
+  return grouped;
 }

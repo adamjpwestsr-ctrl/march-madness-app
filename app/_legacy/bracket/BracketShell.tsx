@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import DesktopBracket from "./DesktopBracket";
 
-
 type Pick = {
   bracket_id: string;
   game_id: number;
@@ -28,26 +27,18 @@ type Game = {
 };
 
 type BracketData = {
-  bracket: { bracket_id: string };
+  bracket: { bracket_id: string; bracket_name: string };
   picks: Pick[];
   games: Game[];
 };
 
-export default function BracketShell({
-  bracketId,
-  bracketName,
-}: {
-  bracketId: string;
-  bracketName: string;
-}) {
+export default function BracketShell() {
   const [bracketData, setBracketData] = useState<BracketData | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const loadBracket = async () => {
     try {
-      const res = await fetch(`/api/bracket?bracketId=${bracketId}`, {
-        cache: "no-store",
-      });
+      const res = await fetch(`/api/bracket`, { cache: "no-store" });
       const json = await res.json();
       setBracketData(json);
     } catch (err) {
@@ -58,9 +49,13 @@ export default function BracketShell({
 
   useEffect(() => {
     loadBracket();
-  }, [bracketId]);
+  }, []);
 
   const handlePick = (gameId: number, teamId: string) => {
+    if (!bracketData) return;
+
+    const bracketId = bracketData.bracket.bracket_id;
+
     setBracketData((prev) => {
       if (!prev) return prev;
 
@@ -82,6 +77,10 @@ export default function BracketShell({
   };
 
   const handleReset = async () => {
+    if (!bracketData) return;
+
+    const bracketId = bracketData.bracket.bracket_id;
+
     await fetch("/api/bracket/reset", {
       method: "POST",
       body: JSON.stringify({ bracketId }),
@@ -107,22 +106,21 @@ export default function BracketShell({
     );
   }
 
-  const { bracket, picks, games } = bracketData!;
+  const { bracket, picks, games } = bracketData;
 
   return (
     <div className="w-full min-h-screen bg-slate-950 text-white overflow-x-hidden">
       {/* Full-width header */}
       <div className="px-8 pt-8 pb-4 border-b border-white/10 bg-slate-900/40 backdrop-blur-xl">
-        <h1 className="text-3xl font-bold tracking-wide">{bracketName}</h1>
+        <h1 className="text-3xl font-bold tracking-wide">
+          {bracket.bracket_name}
+        </h1>
         <div className="h-[3px] w-24 mt-2 rounded-full bg-emerald-500" />
       </div>
 
       {/* Full-width bracket client */}
-      <BracketClient
-        bracket={{
-          bracket_id: bracket.bracket_id,
-          bracket_name: bracketName,
-        }}
+      <DesktopBracket
+        bracket={bracket}
         picks={picks}
         games={games}
         onPick={handlePick}

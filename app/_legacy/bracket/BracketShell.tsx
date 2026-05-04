@@ -106,7 +106,7 @@ export default function BracketShell() {
     );
   }
 
-  const { bracket, picks, games } = bracketData;
+  const { bracket, picks, games } = bracketData!;
 
   return (
     <div className="w-full min-h-screen bg-slate-950 text-white overflow-x-hidden">

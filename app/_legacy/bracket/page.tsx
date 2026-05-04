@@ -213,10 +213,8 @@ export default async function BracketPage({
             activeId={activeBracket.bracket_id}
           />
 
-          <BracketShell
-            bracketId={activeBracket.bracket_id}
-            bracketName={activeBracket.bracket_name ?? "My Bracket"}
-          />
+          <BracketShell />
+
         </main>
       </div>
     );

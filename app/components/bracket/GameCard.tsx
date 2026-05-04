@@ -2,7 +2,24 @@
 
 import { getTeamLogo } from "@/lib/getTeamLogo";
 
-export default function GameCard({ game }) {
+type Team = {
+  team_id: string;
+  name: string;
+  seed: number | null;
+};
+
+type Game = {
+  game_id: number;
+  round: number;
+  region: string;
+  team1: Team | null;
+  team2: Team | null;
+  winner: string | null;
+  source_game1: number | null;
+  source_game2: number | null;
+};
+
+export default function GameCard({ game }: { game: Game }) {
   const { team1, team2, winner } = game;
 
   return (
@@ -13,7 +30,13 @@ export default function GameCard({ game }) {
   );
 }
 
-function TeamRow({ team, isWinner }) {
+function TeamRow({
+  team,
+  isWinner,
+}: {
+  team: Team | null;
+  isWinner: boolean;
+}) {
   if (!team) {
     return (
       <div className="px-3 py-2 bg-slate-800/40 rounded-lg text-slate-500 text-sm italic">
@@ -33,7 +56,6 @@ function TeamRow({ team, isWinner }) {
       }`}
     >
       <div className="flex items-center gap-3">
-        {/* Team Logo */}
         {logo && (
           <img
             src={logo}
@@ -42,7 +64,6 @@ function TeamRow({ team, isWinner }) {
           />
         )}
 
-        {/* Seed Badge */}
         <span
           className={`text-xs px-2 py-1 rounded-md ${
             isWinner
@@ -53,11 +74,9 @@ function TeamRow({ team, isWinner }) {
           {team.seed ?? "-"}
         </span>
 
-        {/* Team Name */}
         <span className="font-semibold text-sm">{team.name}</span>
       </div>
 
-      {/* Score */}
       <span className="font-bold text-lg">-</span>
     </div>
   );

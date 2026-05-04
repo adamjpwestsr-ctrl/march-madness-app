@@ -1,8 +1,8 @@
 //app/(app)/sports/march-madness/page.tsx
 import BracketWrapper from "@/app/components/bracket/BracketWrapper";
 
-export default async function Page({ searchParams }) {
-  const { games, picks, bracket } = await getBracketData(); //existing loader
+export default async function Page() {
+  const { games, picks, bracket } = await getBracketData();
 
   return (
     <BracketWrapper

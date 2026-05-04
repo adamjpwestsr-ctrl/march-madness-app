@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import DesktopBracket from "@/app/_legacy/bracket/DesktopBracket";
 import MobileBracket from "./MobileBracket";
 
-export default function BracketWrapper(props) {
+export default function BracketWrapper(props: any) {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {

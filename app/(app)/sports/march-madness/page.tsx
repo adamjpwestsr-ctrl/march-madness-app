@@ -1,16 +1,8 @@
 //app/(app)/sports/march-madness/page.tsx
-import BracketWrapper from "@/app/components/bracket/BracketWrapper";
+// app/(app)/sports/march-madness/page.tsx
 
-export default async function Page() {
-  const { games, picks, bracket } = await getBracketData();
+import BracketShell from "@/app/_legacy/bracket/BracketShell";
 
-  return (
-    <BracketWrapper
-      games={games}
-      picks={picks}
-      bracket={bracket}
-      onPick={onPick}
-      onReset={onReset}
-    />
-  );
+export default function Page() {
+  return <BracketShell />;
 }

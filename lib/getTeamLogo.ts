@@ -1,33 +1,56 @@
-import { teamLogos } from './teamLogos'
-import { teamNameAliases } from './teamNameAliases'
+import { teamLogos } from "./teamLogos";
+import { teamNameAliases } from "./teamNameAliases";
 
-const loggedMissing: Set<string> = new Set()
+export function getTeamLogo(rawName?: string | null): string | null {
+  if (!rawName || typeof rawName !== "string") return null;
 
-export const getTeamLogo = (rawName: string | null) => {
-  if (!rawName) return null
+  // Normalize the incoming name
+  const name = normalizeName(rawName);
 
-  const official = teamNameAliases[rawName] ?? rawName
-  const logo = teamLogos[official]
+  // 1. Direct match
+  if (teamLogos[name]) return teamLogos[name];
 
-  if (!logo && !loggedMissing.has(rawName)) {
-    loggedMissing.add(rawName)
+  // 2. Alias match
+  const alias = teamNameAliases[name];
+  if (alias && teamLogos[alias]) return teamLogos[alias];
 
-    console.warn(
-      `%c[LOGO MISSING]`,
-      'color: red; font-weight: bold;',
-      `No logo found for team: "${rawName}".`,
-      `Resolved official name: "${official}".`
-    )
+  // 3. Try fuzzy fallback (e.g., "uconn" → "connecticut")
+  const fuzzy = fuzzyMatch(name);
+  if (fuzzy && teamLogos[fuzzy]) return teamLogos[fuzzy];
 
-    // Optional: Suggest closest match
-    const suggestions = Object.keys(teamLogos)
-      .filter(name => name.toLowerCase().includes(rawName.toLowerCase()))
-      .slice(0, 5)
+  // 4. No match found
+  if (process.env.NODE_ENV === "development") {
+    console.warn(`[getTeamLogo] No logo found for team: "${rawName}" (normalized: "${name}")`);
+  }
 
-    if (suggestions.length > 0) {
-      console.warn(`Closest matches:`, suggestions)
+  return null;
+}
+
+// -----------------------------
+// Helpers
+// -----------------------------
+
+function normalizeName(name: string): string {
+  return name
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9 ]/g, "") // remove punctuation
+    .replace(/\s+/g, " ");      // collapse spaces
+}
+
+// Fuzzy match: find closest alias or team name
+function fuzzyMatch(name: string): string | null {
+  const allKeys = [
+    ...Object.keys(teamLogos),
+    ...Object.keys(teamNameAliases),
+  ];
+
+  // Simple contains-based fuzzy match
+  for (const key of allKeys) {
+    if (name.includes(key) || key.includes(name)) {
+      return teamNameAliases[key] ?? key;
     }
   }
 
-  return logo ?? null
+  return null;
 }

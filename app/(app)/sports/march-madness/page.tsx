@@ -1,10 +1,16 @@
 //app/(app)/sports/march-madness/page.tsx
-import BracketPage from "@/app/_legacy/bracket/page";
+import BracketWrapper from "@/app/components/bracket/BracketWrapper";
 
-export default function MarchMadnessPage({
-  searchParams,
-}: {
-  searchParams: { bid?: string };
-}) {
-  return <BracketPage searchParams={searchParams} />;
+export default function Page({ searchParams }) {
+  const { games, picks, bracket } = await getBracketData(); // your existing loader
+
+  return (
+    <BracketWrapper
+      games={games}
+      picks={picks}
+      bracket={bracket}
+      onPick={onPick}
+      onReset={onReset}
+    />
+  );
 }

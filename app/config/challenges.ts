@@ -1,14 +1,13 @@
 export const CHALLENGES = [
- {
-  id: "trivia",
-  title: "Trivia",
-  sport: "Trivia",
-  description: "Daily & weekly trivia challenges",
-  difficulty: "Easy",
-  status: "Open",   // <-- FIXED
-  href: "/trivia",
+  {
+    id: "trivia",
+    title: "Trivia",
+    sport: "Trivia",
+    description: "Daily & weekly trivia challenges",
+    difficulty: "Easy",
+    status: "Open",
+    href: "/trivia",
   },
-
   {
     id: "golf-weekly",
     title: "Golf Weekly",

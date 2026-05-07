@@ -3,11 +3,11 @@ import ChallengeCard from "@/app/components/ChallengeCard";
 import WeeklyBanner from "@/app/components/WeeklyBanner";
 import TriviaModeCard from "@/app/components/TriviaModeCard";
 import LeaderboardCard from "@/app/components/LeaderboardCard";
+import { CHALLENGES } from "@/app/config/challenges";
 
 export default function ChallengesHub() {
   return (
     <div className="space-y-10">
-      {/* Header */}
       <section>
         <h1 className="text-3xl font-semibold mb-2">Challenges</h1>
         <p className="text-slate-400">
@@ -15,44 +15,40 @@ export default function ChallengesHub() {
         </p>
       </section>
 
-      {/* Weekly Challenge */}
       <section>
         <Link href="/challenges/weekly" className="block">
           <WeeklyBanner />
         </Link>
       </section>
 
-      {/* Challenge Grid */}
       <section className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <Link href="/trivia" className="block">
-          <TriviaModeCard
-            title="Trivia"
-            description="Daily & weekly trivia challenges"
-            color="blue"
-            status="active"
-          />
-        </Link>
-
-        <Link href="/sports/golf/weekly" className="block">
-          <ChallengeCard
-            sport="Golf"
-            title="Golf Weekly"
-            difficulty="Medium"
-            status="Open"
-          />
-        </Link>
-
-        <Link href="/sports/nfl/weekly" className="block">
-          <ChallengeCard
-            sport="NFL"
-            title="NFL Weekly"
-            difficulty="Medium"
-            status="Open"
-          />
-        </Link>
+        {CHALLENGES.map((c) =>
+          c.href ? (
+            <Link key={c.id} href={c.href} className="block">
+              <ChallengeCard
+                sport={c.sport}
+                title={c.title}
+                difficulty={c.difficulty}
+                status={c.status}
+              />
+            </Link>
+          ) : (
+            <div
+              key={c.id}
+              className="opacity-60 cursor-not-allowed"
+              title="Coming Soon"
+            >
+              <ChallengeCard
+                sport={c.sport}
+                title={c.title}
+                difficulty={c.difficulty}
+                status={c.status}
+              />
+            </div>
+          )
+        )}
       </section>
 
-      {/* Progress + Leaderboard */}
       <section className="grid gap-6 md:grid-cols-2">
         <div className="rounded-xl border border-slate-800 p-6 bg-slate-900/40">
           <h2 className="text-xl font-semibold mb-4">Your Progress</h2>
@@ -60,10 +56,7 @@ export default function ChallengesHub() {
         </div>
 
         <Link href="/leaderboard" className="block">
-          <LeaderboardCard
-            title="Leaderboard"
-            value="View Rankings"
-          />
+          <LeaderboardCard title="Leaderboard" value="View Rankings" />
         </Link>
       </section>
     </div>

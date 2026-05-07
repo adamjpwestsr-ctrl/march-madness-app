@@ -3,24 +3,21 @@ import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 
 export async function GET() {
   const supabase = await createSupabaseServerClient();
-
   const today = new Date().toISOString().slice(0, 10);
 
+  // 1. Check if today's challenge already exists
   let { data: challenge } = await supabase
     .from("daily_challenge")
     .select("*")
     .eq("challenge_date", today)
     .single();
 
+  // 2. If not, create one using the RPC
   if (!challenge) {
     const { data: randomQ } = await supabase
-      .from("trivia_questions")
-      .select("id")
-      .order("random()")
-      .limit(1)
+      .rpc("get_random_trivia_id")
       .single();
 
-    // ✅ FIX: handle null
     if (!randomQ) {
       return NextResponse.json(
         { error: "No trivia questions available for daily challenge" },
@@ -40,6 +37,7 @@ export async function GET() {
     challenge = newChallenge;
   }
 
+  // 3. Fetch the actual question
   const { data: question } = await supabase
     .from("trivia_questions")
     .select("*")

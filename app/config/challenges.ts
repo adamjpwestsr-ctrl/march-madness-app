@@ -1,4 +1,19 @@
-export const CHALLENGES = [
+// Allowed status values for all challenges
+export type ChallengeStatus = "Open" | "Coming Soon";
+
+// Shape of each challenge entry
+export type ChallengeConfig = {
+  id: string;
+  title: string;
+  sport: string;
+  description: string;
+  difficulty: string;
+  status: ChallengeStatus;
+  href: string | null;
+};
+
+// Unified challenge + sports configuration
+export const CHALLENGES: ChallengeConfig[] = [
   {
     id: "trivia",
     title: "Trivia",
@@ -25,6 +40,15 @@ export const CHALLENGES = [
     difficulty: "Medium",
     status: "Open",
     href: "/sports/nfl/weekly",
+  },
+  {
+    id: "march-madness",
+    title: "College Basketball",
+    sport: "College Basketball",
+    description: "Enter your March Madness Bracket.",
+    difficulty: "Medium",
+    status: "Open",
+    href: "/sports/march-madness",
   },
   {
     id: "nba-daily",
@@ -61,14 +85,5 @@ export const CHALLENGES = [
     difficulty: "Medium",
     status: "Coming Soon",
     href: null,
-  },
-  {
-    id: "march-madness",
-    title: "College Basketball",
-    sport: "College Basketball",
-    description: "Enter your March Madness Bracket.",
-    difficulty: "Medium",
-    status: "Open",
-    href: "/sports/march-madness",
   },
 ];

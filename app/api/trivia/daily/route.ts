@@ -16,7 +16,7 @@ export async function GET() {
   if (!challenge) {
     const { data: randomQ } = await supabase
       .rpc("get_random_trivia_id")
-      .single();
+      .single<{ id: number }>();   // <-- FIXED HERE
 
     if (!randomQ) {
       return NextResponse.json(

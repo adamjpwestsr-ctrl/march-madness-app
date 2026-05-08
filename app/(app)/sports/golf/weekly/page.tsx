@@ -1,61 +1,37 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
-type Tournament = {
-  id: number;
-  name: string;
-  start_date: string;
-  end_date: string;
-  course: string | null;
-  par: number | null;
-  week_number: number | null;
-  category: string | null;
-  is_premium_event: boolean | null;
-};
-
-type Golfer = {
-  id: number;
-  name: string;
-  country: string | null;
-  photo_url: string | null;
-  is_active: boolean;
-};
-
-export default function GolfWeeklyPage() {
-  const [tournament, setTournament] = useState<Tournament | null>(null);
-  const [golfers, setGolfers] = useState<Golfer[]>([]);
+export default function GolfWeeklyLandingPage() {
+  const [state, setState] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function loadData() {
-      setLoading(true);
-
-      // Fetch from API route instead of Supabase directly
+    async function load() {
       const res = await fetch("/api/golf/weekly/state");
       const data = await res.json();
-
-      setTournament(data.tournament || null);
-      setGolfers(data.golfers || []);
+      setState(data);
       setLoading(false);
     }
-
-    loadData();
+    load();
   }, []);
+
+  if (loading) return <p className="text-slate-400">Loading…</p>;
+
+  const tournament = state.tournament;
+  const leaderboard = state.leaderboard || [];
 
   return (
     <div className="space-y-10">
-      {/* Header */}
       <section>
         <h1 className="text-3xl font-semibold mb-2">Golf Weekly Challenge</h1>
         <p className="text-slate-400 max-w-2xl">
-          Pick golfers for this week’s PGA event. Earn points based on their
+          Pick a golfer for this week’s PGA event. Earn points based on their
           performance and climb the leaderboard.
         </p>
       </section>
 
-      {/* CTA */}
       <section>
         <Link
           href="/sports/golf/weekly/picks"
@@ -65,61 +41,30 @@ export default function GolfWeeklyPage() {
         </Link>
       </section>
 
-      {/* Tournament + Field */}
-      <section className="rounded-xl border border-slate-800 p-6 bg-slate-900/40">
-        <h2 className="text-xl font-semibold mb-4">This Week’s Field</h2>
+      {tournament && (
+        <section className="rounded-xl border border-slate-800 p-6 bg-slate-900/40">
+          <h2 className="text-xl font-semibold mb-4">This Week’s Tournament</h2>
+          <p className="text-slate-300">
+            <strong>{tournament.name}</strong> — {tournament.course || "TBD"} (
+            {new Date(tournament.start_date).toLocaleDateString()} →{" "}
+            {new Date(tournament.end_date).toLocaleDateString()})
+          </p>
+        </section>
+      )}
 
-        {loading && <p className="text-slate-400">Loading golfers…</p>}
-
-        {!loading && tournament && (
-          <>
-            <p className="text-slate-300 mb-4">
-              <strong>{tournament.name}</strong> — {tournament.course || "TBD"} (
-              {new Date(tournament.start_date).toLocaleDateString()} →{" "}
-              {new Date(tournament.end_date).toLocaleDateString()})
-            </p>
-
-            <ul className="grid md:grid-cols-2 lg:grid-cols-3 gap-2 text-slate-400">
-              {golfers.map((g) => (
-                <li
-                  key={g.id}
-                  className="border border-slate-800 rounded-lg p-3 hover:bg-slate-800/40 flex items-center gap-3"
-                >
-                  {g.photo_url && (
-                    <img
-                      src={g.photo_url}
-                      alt={g.name}
-                      className="w-8 h-8 rounded-full border border-slate-700 object-cover"
-                    />
-                  )}
-                  <div>
-                    <span className="font-medium text-white">{g.name}</span>
-                    {g.country && (
-                      <span className="text-slate-500 text-sm ml-2">
-                        ({g.country})
-                      </span>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </>
-        )}
-
-        {!loading && !tournament && (
-          <p className="text-slate-400">No upcoming tournament found.</p>
-        )}
-      </section>
-
-      {/* Scoring */}
-      <section className="rounded-xl border border-slate-800 p-6 bg-slate-900/40">
-        <h2 className="text-xl font-semibold mb-4">Scoring</h2>
-        <ul className="text-slate-400 list-disc pl-6 space-y-2">
-          <li>Points based on finishing position</li>
-          <li>Bonus points for top‑10 finishes</li>
-          <li>Leaderboard updates after each round</li>
-        </ul>
-      </section>
+      {leaderboard.length > 0 && (
+        <section className="rounded-xl border border-slate-800 p-6 bg-slate-900/40">
+          <h2 className="text-xl font-semibold mb-4">Leaderboard Preview</h2>
+          <ul className="space-y-2 text-slate-400">
+            {leaderboard.slice(0, 5).map((entry: any, i: number) => (
+              <li key={i}>
+                <span className="text-white font-medium">{entry.user_name}</span>{" "}
+                — {entry.total_points} pts
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </div>
   );
 }

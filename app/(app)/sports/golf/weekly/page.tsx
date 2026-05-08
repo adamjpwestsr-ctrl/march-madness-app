@@ -2,12 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 type Tournament = {
   id: number;
@@ -38,26 +32,12 @@ export default function GolfWeeklyPage() {
     async function loadData() {
       setLoading(true);
 
-      const today = new Date().toISOString().split("T")[0];
+      // Fetch from API route instead of Supabase directly
+      const res = await fetch("/api/golf/weekly/state");
+      const data = await res.json();
 
-      // Fetch next upcoming tournament
-      const { data: event } = await supabase
-        .from("golf_tournaments")
-        .select("*")
-        .gte("start_date", today)
-        .order("start_date", { ascending: true })
-        .limit(1)
-        .single();
-
-      // Fetch active golfers
-      const { data: field } = await supabase
-        .from("golf_players")
-        .select("*")
-        .eq("is_active", true)
-        .order("name", { ascending: true });
-
-      setTournament(event);
-      setGolfers(field || []);
+      setTournament(data.tournament || null);
+      setGolfers(data.golfers || []);
       setLoading(false);
     }
 

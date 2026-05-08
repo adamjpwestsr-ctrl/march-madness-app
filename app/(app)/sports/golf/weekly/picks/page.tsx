@@ -32,6 +32,8 @@ export default function GolfWeeklyPicksPage() {
 
   if (loading) return <p className="text-slate-400">Loading golfers…</p>;
 
+  const userPick = state.pick; // API returns "pick", not "currentPick"
+
   return (
     <div className="space-y-10">
       <section>
@@ -43,12 +45,12 @@ export default function GolfWeeklyPicksPage() {
 
       <section className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {state.golfers.map((g: any) => {
-          const isPick = state.currentPick?.golferId === g.id;
+          const isPick = userPick?.player_id === g.id;
 
           return (
             <button
               key={g.id}
-              disabled={submitting || state.locked}
+              disabled={submitting}
               onClick={() => submitPick(g.id)}
               className={`p-4 rounded-xl border text-left ${
                 isPick
@@ -57,9 +59,9 @@ export default function GolfWeeklyPicksPage() {
               }`}
             >
               <div className="flex items-center gap-4">
-                {g.photo ? (
+                {g.photo_url ? (
                   <img
-                    src={g.photo}
+                    src={g.photo_url}
                     alt={g.name}
                     className="w-12 h-12 rounded-full object-cover"
                   />
@@ -70,9 +72,6 @@ export default function GolfWeeklyPicksPage() {
                 <div>
                   <p className="text-lg font-medium">{g.name}</p>
                   <p className="text-slate-400 text-sm">{g.country}</p>
-                  <p className="text-slate-500 text-xs">
-                    World Rank: {g.rank}
-                  </p>
                 </div>
               </div>
             </button>
@@ -83,8 +82,8 @@ export default function GolfWeeklyPicksPage() {
       <section className="rounded-xl border border-slate-800 p-6 bg-slate-900/40">
         <h2 className="text-xl font-semibold mb-4">Your Pick</h2>
         <p className="text-slate-400">
-          {state.currentPick
-            ? state.currentPick.name
+          {userPick
+            ? state.golfers.find((g: any) => g.id === userPick.player_id)?.name
             : "You haven't made a pick yet."}
         </p>
       </section>

@@ -30,15 +30,15 @@ export async function POST(req: Request) {
   }
 
   // Upsert pick
-  const { error } = await supabase
-    .from("golf_weekly_picks")
-    .upsert({
-      user_id: user.id,
-      tournament_id: tournament.id,
-      golfer_id: golferId,
-      created_at: new Date().toISOString(),
-    })
-    .select();
+const { error } = await supabase
+  .from("golf_weekly_picks")
+  .upsert({
+    user_id: user.id,
+    tournament_id: tournament.id,
+    player_id: golferId, // ✅ correct column name
+    created_at: new Date().toISOString(),
+  })
+  .select();
 
   if (error) {
     console.error(error);

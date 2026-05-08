@@ -4,12 +4,16 @@ import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 export async function GET() {
   const supabase = await createSupabaseServerClient();
 
-  const { data: question } = await supabase
+  const { data: question, error } = await supabase
     .from("trivia_daily_questions")
     .select("*")
     .order("random()")
     .limit(1)
     .single();
+
+  if (error) {
+    console.error("Trivia daily - select error:", error);
+  }
 
   if (!question) {
     return NextResponse.json(

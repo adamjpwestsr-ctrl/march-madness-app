@@ -23,7 +23,7 @@ export default function GolfWeeklyFullLeaderboardPage() {
   const leaderboard = state.leaderboard || [];
   const userId = state.user_id;
 
-  const filtered = leaderboard.filter((entry) =>
+  const filtered = leaderboard.filter((entry: any) =>
     entry.user_name.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -34,7 +34,6 @@ export default function GolfWeeklyFullLeaderboardPage() {
       <div className="relative backdrop-blur-sm bg-slate-950/70 min-h-screen p-8">
         <div className="max-w-4xl mx-auto space-y-10">
 
-          {/* Back Link */}
           <Link
             href="/sports/golf/weekly"
             className="text-emerald-400 hover:text-emerald-300 transition-all duration-300"
@@ -42,7 +41,6 @@ export default function GolfWeeklyFullLeaderboardPage() {
             ← Back to Weekly Dashboard
           </Link>
 
-          {/* Header */}
           <section className="opacity-0 translate-y-4 animate-[fadeUp_0.6s_ease-out_forwards]">
             <h1 className="text-3xl font-semibold bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">
               Full Leaderboard
@@ -52,7 +50,6 @@ export default function GolfWeeklyFullLeaderboardPage() {
             </p>
           </section>
 
-          {/* Search */}
           <div className="opacity-0 translate-y-4 animate-[fadeUp_0.6s_ease-out_forwards]">
             <input
               type="text"
@@ -63,7 +60,6 @@ export default function GolfWeeklyFullLeaderboardPage() {
             />
           </div>
 
-          {/* Leaderboard Table */}
           <section className="rounded-xl border border-slate-800 bg-slate-900/60 backdrop-blur-md shadow-xl p-6 transition-all duration-300 opacity-0 translate-y-4 animate-[fadeUp_0.6s_ease-out_forwards]">
             <table className="w-full text-left text-slate-300">
               <thead>
@@ -75,7 +71,7 @@ export default function GolfWeeklyFullLeaderboardPage() {
               </thead>
 
               <tbody>
-                {filtered.map((entry, i) => {
+                {filtered.map((entry: any, i: number) => {
                   const isUser = entry.user_id === userId;
 
                   return (
@@ -89,7 +85,6 @@ export default function GolfWeeklyFullLeaderboardPage() {
                     >
                       <td className="py-2">{i + 1}</td>
 
-                      {/* Avatar + Name */}
                       <td className="py-2 flex items-center gap-3">
                         {entry.avatar_url ? (
                           <img

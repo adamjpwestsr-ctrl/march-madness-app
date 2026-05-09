@@ -39,6 +39,7 @@ export default function GolfWeeklyFullPickPage() {
   if (loading) return <p className="text-slate-400">Loading players…</p>;
 
   const userPick = state.pick;
+
   const filteredGolfers = state.golfers.filter((g: any) =>
     g.name.toLowerCase().includes(search.toLowerCase())
   );
@@ -86,7 +87,7 @@ export default function GolfWeeklyFullPickPage() {
           <div className="space-y-8">
             {Object.keys(grouped)
               .sort()
-              .map((letter) => (
+              .map((letter: string) => (
                 <div
                   key={letter}
                   className="opacity-0 translate-y-4 animate-[fadeUp_0.6s_ease-out_forwards]"

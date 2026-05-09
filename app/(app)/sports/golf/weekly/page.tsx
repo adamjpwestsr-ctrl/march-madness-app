@@ -21,13 +21,10 @@ export default function GolfWeeklyDashboardPage() {
 
   return (
     <div className="relative min-h-screen bg-[url('/images/golf-bg.jpg')] bg-cover bg-center bg-fixed bg-no-repeat">
-      {/* Vignette overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-black/70 pointer-events-none" />
 
       <div className="relative backdrop-blur-sm bg-slate-950/70 min-h-screen p-8">
         <Header tournament={state.tournament} />
-
-        {/* Season Progress Bar */}
         <SeasonProgress season={state.season} />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
@@ -48,10 +45,7 @@ export default function GolfWeeklyDashboardPage() {
   );
 }
 
-/* -------------------------------------------------------
-   HEADER (with course banner)
-------------------------------------------------------- */
-function Header({ tournament }) {
+function Header({ tournament }: any) {
   return (
     <section className="mb-10 opacity-0 translate-y-4 animate-[fadeUp_0.6s_ease-out_forwards]">
       <h1 className="text-4xl font-bold bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">
@@ -61,7 +55,6 @@ function Header({ tournament }) {
         Pick your golfer, track your performance, and climb the leaderboard.
       </p>
 
-      {/* Course Tag */}
       {tournament && (
         <div className="inline-flex items-center gap-2 mt-3 px-3 py-1 rounded-full bg-slate-900/70 border border-slate-700 text-xs text-slate-300">
           <span>🏌️‍♂️ {tournament.name}</span>
@@ -73,11 +66,7 @@ function Header({ tournament }) {
   );
 }
 
-/* -------------------------------------------------------
-   SEASON PROGRESS BAR (Option 2: placeholder safe)
-------------------------------------------------------- */
-function SeasonProgress({ season }) {
-  // Safe fallback if API does not return season data
+function SeasonProgress({ season }: any) {
   if (!season) {
     return (
       <div className="mb-8 rounded-xl border border-slate-800 bg-slate-900/60 backdrop-blur-md shadow-xl p-4 opacity-0 translate-y-4 animate-[fadeUp_0.6s_ease-out_forwards]">
@@ -115,13 +104,9 @@ function SeasonProgress({ season }) {
   );
 }
 
-/* -------------------------------------------------------
-   CURRENT TOURNAMENT CARD (with countdown safe)
-------------------------------------------------------- */
-function CurrentTournamentCard({ tournament }) {
+function CurrentTournamentCard({ tournament }: any) {
   if (!tournament) return null;
 
-  // Safe countdown fallback
   let countdownLabel = null;
   if (tournament.lock_time) {
     const lockTime = new Date(tournament.lock_time);
@@ -155,16 +140,13 @@ function CurrentTournamentCard({ tournament }) {
   );
 }
 
-/* -------------------------------------------------------
-   QUICK PICK SCROLL BOX
-------------------------------------------------------- */
-function QuickPickScroll({ golfers, userPick }) {
+function QuickPickScroll({ golfers, userPick }: any) {
   return (
     <div className="rounded-xl border border-slate-800 bg-slate-900/60 backdrop-blur-md shadow-xl p-6 transition-all duration-300 opacity-0 translate-y-4 animate-[fadeUp_0.6s_ease-out_forwards]">
       <h2 className="text-xl font-semibold text-white mb-4">Quick Pick</h2>
 
       <div className="max-h-64 overflow-y-auto pr-2 space-y-3">
-        {golfers.slice(0, 25).map((g) => {
+        {golfers.slice(0, 25).map((g: any) => {
           const isPick = userPick?.player_id === g.id;
 
           return (
@@ -202,16 +184,13 @@ function QuickPickScroll({ golfers, userPick }) {
   );
 }
 
-/* -------------------------------------------------------
-   PAST TOURNAMENTS
-------------------------------------------------------- */
-function PastTournaments({ history }) {
+function PastTournaments({ history }: any) {
   return (
     <div className="rounded-xl border border-slate-800 bg-slate-900/60 backdrop-blur-md shadow-xl p-6 transition-all duration-300 opacity-0 translate-y-4 animate-[fadeUp_0.6s_ease-out_forwards]">
       <h2 className="text-xl font-semibold text-white mb-4">Your Recent Rounds</h2>
 
       <div className="space-y-4">
-        {history.slice(0, 5).map((h) => (
+        {history.slice(0, 5).map((h: any) => (
           <div
             key={h.id}
             className="p-4 rounded-lg bg-slate-800/40 border border-slate-700 backdrop-blur-md shadow-lg transition-all duration-300"
@@ -236,10 +215,7 @@ function PastTournaments({ history }) {
   );
 }
 
-/* -------------------------------------------------------
-   LEADERBOARD (with avatar safe-guard)
-------------------------------------------------------- */
-function LeaderboardSection({ leaderboard, userId }) {
+function LeaderboardSection({ leaderboard, userId }: any) {
   return (
     <section className="mt-12 rounded-xl border border-slate-800 bg-slate-900/60 backdrop-blur-md shadow-xl p-6 transition-all duration-300 opacity-0 translate-y-4 animate-[fadeUp_0.6s_ease-out_forwards]">
       <h2 className="text-xl font-semibold text-white mb-4">Leaderboard</h2>
@@ -253,7 +229,7 @@ function LeaderboardSection({ leaderboard, userId }) {
           </tr>
         </thead>
         <tbody>
-          {leaderboard.slice(0, 10).map((entry, i) => {
+          {leaderboard.slice(0, 10).map((entry: any, i: number) => {
             const isUser = entry.user_id === userId;
 
             return (
@@ -267,7 +243,6 @@ function LeaderboardSection({ leaderboard, userId }) {
               >
                 <td className="py-2">{i + 1}</td>
 
-                {/* Avatar + Name */}
                 <td className="py-2 flex items-center gap-3">
                   {entry.avatar_url ? (
                     <img
@@ -291,9 +266,6 @@ function LeaderboardSection({ leaderboard, userId }) {
   );
 }
 
-/* -------------------------------------------------------
-   SCORING RULES
-------------------------------------------------------- */
 function ScoringRules() {
   return (
     <section className="mt-8 rounded-xl border border-slate-800 bg-slate-900/60 backdrop-blur-md shadow-xl p-6 transition-all duration-300 opacity-0 translate-y-4 animate-[fadeUp_0.6s_ease-out_forwards]">

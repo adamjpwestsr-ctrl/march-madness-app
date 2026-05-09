@@ -1,67 +1,59 @@
-import { NextResponse } from "next/server";
-import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
+import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
+import { cookies } from "next/headers";
 
 export async function GET() {
-  const supabase = await createSupabaseServerClient();
+  const supabase = createRouteHandlerClient({ cookies });
 
-  // Get logged-in user (optional)
   const {
     data: { user },
-    error: userError,
   } = await supabase.auth.getUser();
 
-  if (userError) {
-    console.error("Golf state - getUser error:", userError);
+  if (!user) {
+    return Response.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const today = new Date().toISOString().split("T")[0];
+  const userId = user.id;
 
-  // Fetch next upcoming tournament
-  const { data: tournament, error: tournamentError } = await supabase
+  // 1. Get current tournament
+  const { data: tournament } = await supabase
     .from("golf_tournaments")
     .select("*")
-    .gte("start_date", today)
-    .order("start_date", { ascending: true })
-    .limit(1)
+    .eq("is_current", true)
     .single();
 
-  if (tournamentError) {
-    console.error("Golf state - tournament error:", tournamentError);
-  }
-
-  // Fetch active golfers
-  const { data: golfers, error: golfersError } = await supabase
+  // 2. Get golfers for this tournament
+  const { data: golfers } = await supabase
     .from("golf_players")
     .select("*")
-    .eq("is_active", true)
     .order("name", { ascending: true });
 
-  if (golfersError) {
-    console.error("Golf state - golfers error:", golfersError);
-  }
+  // 3. Get user's pick
+  const { data: pick } = await supabase
+    .from("golf_weekly_picks")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("tournament_id", tournament?.id)
+    .maybeSingle();
 
-  // Fetch user's pick (if logged in and tournament exists)
-  let pick = null;
+  // 4. Get user history (last 5)
+  const { data: history } = await supabase
+    .from("golf_weekly_history_view")
+    .select("*")
+    .order("tournament_id", { ascending: false })
+    .limit(5);
 
-  if (user && tournament) {
-    const { data: pickData, error: pickError } = await supabase
-      .from("golf_weekly_picks")
-      .select("*")
-      .eq("user_id", user.id)
-      .eq("tournament_id", tournament.id)
-      .single();
+  // 5. Leaderboard
+  const { data: leaderboard } = await supabase
+    .from("golf_weekly_leaderboard_view")
+    .select("*")
+    .order("total_points", { ascending: false });
 
-    if (pickError && pickError.code !== "PGRST116") {
-      // PGRST116 = no rows found
-      console.error("Golf state - pick error:", pickError);
-    }
-
-    pick = pickData || null;
-  }
-
-  return NextResponse.json({
-    tournament: tournament || null,
-    golfers: golfers || [],
+  return Response.json({
+    user_id: userId,
+    tournament,
+    golfers,
     pick,
+    history,
+    leaderboard,
   });
 }

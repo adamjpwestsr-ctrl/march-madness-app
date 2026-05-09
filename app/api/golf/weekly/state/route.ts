@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
 export async function GET() {
-  const cookieStore = cookies();
+  const cookieStore = cookies(); // ← CORRECT
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -22,7 +22,6 @@ export async function GET() {
     }
   );
 
-  // 1. Auth
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -33,20 +32,17 @@ export async function GET() {
 
   const userId = user.id;
 
-  // 2. Current tournament (now includes lock_time)
   const { data: tournament } = await supabase
     .from("golf_tournaments")
     .select("*")
     .eq("is_current", true)
     .single();
 
-  // 3. Golfers
   const { data: golfers } = await supabase
     .from("golf_players")
     .select("*")
     .order("name", { ascending: true });
 
-  // 4. User pick
   const { data: pick } = await supabase
     .from("golf_weekly_picks")
     .select("*")
@@ -54,20 +50,17 @@ export async function GET() {
     .eq("tournament_id", tournament?.id)
     .maybeSingle();
 
-  // 5. History
   const { data: history } = await supabase
     .from("golf_weekly_history_view")
     .select("*")
     .order("tournament_id", { ascending: false })
     .limit(5);
 
-  // 6. Leaderboard (now includes avatar_url)
   const { data: leaderboard } = await supabase
     .from("golf_weekly_leaderboard_view")
     .select("*")
     .order("total_points", { ascending: false });
 
-  // 7. Season progress (safe fallback)
   const { data: seasonRow } = await supabase
     .from("golf_season_progress")
     .select("*")
@@ -88,6 +81,6 @@ export async function GET() {
     pick,
     history,
     leaderboard,
-    season, // NEW
+    season,
   });
 }

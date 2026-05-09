@@ -52,7 +52,7 @@ export default function GolfWeeklyHistoryPage() {
               <p className="text-slate-400">No history available yet.</p>
             )}
 
-            {history.map((h) => (
+	{history.map((h: any) => (
               <div
                 key={h.id}
                 className="p-4 rounded-lg bg-slate-800/40 border border-slate-700 backdrop-blur-md shadow-lg transition-all duration-300"

@@ -9,36 +9,59 @@ export default function GolfWeeklyDashboardPage() {
 
   useEffect(() => {
     async function load() {
-      const res = await fetch("/api/golf/weekly/state");
-      const data = await res.json();
-      setState(data);
-      setLoading(false);
+      try {
+        const res = await fetch("/api/golf/weekly/state");
+        if (!res.ok) throw new Error("API failed");
+        const data = await res.json();
+        setState(data);
+      } catch (err) {
+        console.error("Golf Weekly load error:", err);
+        setState(null);
+      } finally {
+        setLoading(false);
+      }
     }
     load();
   }, []);
 
   if (loading) return <p className="text-slate-400">Loading…</p>;
 
+  if (!state) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-slate-400">
+        Failed to load Golf Weekly data.
+      </div>
+    );
+  }
+
+  // 🔐 Safe fallbacks so child components never receive null
+  const tournament = state.tournament || null;
+  const golfers = state.golfers || [];
+  const history = state.history || [];
+  const leaderboard = state.leaderboard || [];
+  const season = state.season || null;
+  const userId = state.user_id;
+
   return (
     <div className="relative min-h-screen bg-[url('/images/golf-bg.jpg')] bg-cover bg-center bg-fixed bg-no-repeat">
       <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-black/70 pointer-events-none" />
 
       <div className="relative backdrop-blur-sm bg-slate-950/70 min-h-screen p-8">
-        <Header tournament={state.tournament} />
-        <SeasonProgress season={state.season} />
+        <Header tournament={tournament} />
+        <SeasonProgress season={season} />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
           <div className="space-y-8">
-            <CurrentTournamentCard tournament={state.tournament} />
-            <QuickPickScroll golfers={state.golfers} userPick={state.pick} />
+            <CurrentTournamentCard tournament={tournament} />
+            <QuickPickScroll golfers={golfers} userPick={state.pick} />
           </div>
 
           <div className="space-y-8">
-            <PastTournaments history={state.history || []} />
+            <PastTournaments history={history} />
           </div>
         </div>
 
-        <LeaderboardSection leaderboard={state.leaderboard} userId={state.user_id} />
+        <LeaderboardSection leaderboard={leaderboard} userId={userId} />
         <ScoringRules />
       </div>
     </div>

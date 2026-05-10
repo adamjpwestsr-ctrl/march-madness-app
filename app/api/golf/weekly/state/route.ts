@@ -2,20 +2,20 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
 export async function GET() {
-  const cookieStore = await cookies(); // Next.js 16 requires await
+  const cookieStore = await cookies();
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get: (name: string) => {
+        get(name: string) {
           return cookieStore.get(name)?.value;
         },
-        set: (name: string, value: string, options: any) => {
+        set(name: string, value: string, options: any) {
           cookieStore.set({ name, value, ...options });
         },
-        remove: (name: string, options: any) => {
+        remove(name: string, options: any) {
           cookieStore.set({ name, value: "", ...options });
         },
       },
@@ -61,18 +61,18 @@ export async function GET() {
     .select("*")
     .order("total_points", { ascending: false });
 
-  const { data: seasonRow } = await supabase
+  // FIX: no .catch() on the builder – handle error explicitly
+  const { data: seasonRow, error: seasonError } = await supabase
     .from("golf_season_progress")
     .select("*")
-    .single()
-    .catch(() => ({ data: null }));
+    .single();
 
-  const season = seasonRow
-    ? {
-        completed_events: seasonRow.completed_events ?? 0,
-        total_events: seasonRow.total_events ?? 0,
-      }
-    : null;
+  const season = seasonError
+    ? null
+    : {
+        completed_events: seasonRow?.completed_events ?? 0,
+        total_events: seasonRow?.total_events ?? 0,
+      };
 
   return Response.json({
     user_id: userId,

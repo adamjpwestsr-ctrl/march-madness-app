@@ -40,7 +40,7 @@ export default function BracketPage() {
       setLoading(true);
 
       // 1. Load lock date
-      const { data: settings } = await supabase
+      const { data: settings } = await supabase!
         .from("settings")
         .select("lock_date")
         .eq("id", 1)
@@ -53,7 +53,7 @@ export default function BracketPage() {
       }
 
       // 2. Load bracket metadata
-      const { data: bracket } = await supabase
+      const { data: settings } = await supabase!
         .from("brackets")
         .select("*")
         .eq("bracket_id", bracketId)
@@ -66,7 +66,7 @@ export default function BracketPage() {
       }
 
       // 3. Load existing picks
-      const { data: existingPicks } = await supabase
+      const { data: settings } = await supabase!
         .from("picks")
         .select("*")
         .eq("bracket_id", bracketId);

@@ -18,9 +18,11 @@ export function generateBracketStructure(teams: Team[]): BracketState {
 
   // --- Round of 64 ---
   const roundOf64Games = createGames(
-    roundOf64Teams.concat(openingRoundWinners),
-    32
-  );
+  roundOf64Teams.concat(
+    openingRoundWinners.filter((t): t is Team => t !== null)
+  ),
+  32
+);
 
   // Map Opening Round winners into their correct Round of 64 slots
   mapOpeningRoundWinners(openingRoundGames, roundOf64Games, openingToRound64Map);

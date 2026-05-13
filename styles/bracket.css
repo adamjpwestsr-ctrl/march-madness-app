@@ -229,3 +229,23 @@
   background: #22c55e;
   color: #0f172a;
 }
+
+.bracket-rename {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.bracket-name-input {
+  padding: 6px 10px;
+  font-size: 1rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+.save-name-button {
+  padding: 6px 12px;
+  background: #0070f3;
+  color: white;
+  border-radius: 6px;
+}

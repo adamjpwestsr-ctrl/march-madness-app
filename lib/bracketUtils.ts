@@ -1,29 +1,12 @@
-// lib/bracketUtils.ts
-
-export type Team = {
-  id: number;
-  name: string;
-  seed: number;
-  region: string;
-};
-
-export type Game = {
-  id: number;
-  round: number;
-  region: string;
-  team1: string | null;
-  team2: string | null;
-  winner: string | null;
-};
+import { Game, Team } from "@/lib/bracketTypes";
 
 /**
- * Generates the full 64‑team bracket structure.
- * Assumes teams are already sorted by seed ASC within each region.
+ * Generate the full tournament bracket structure from a list of teams.
+ * Teams must already be sorted by seed within each region.
  */
-export function generateBracketStructure(teams: Team[]) {
-  if (!teams || teams.length === 0) {
-    throw new Error("No teams provided to generateBracketStructure");
-  }
+export function generateBracketStructure(teams: Team[]): Game[] {
+  const games: Game[] = [];
+  let gameId = 1;
 
   // Group teams by region
   const regions = ["East", "West", "South", "Midwest"];
@@ -40,49 +23,78 @@ export function generateBracketStructure(teams: Team[]) {
     }
   });
 
-  let gameId = 1;
-  const games: Game[] = [];
-
-  // Round of 64 (round 1)
-  regions.forEach((region) => {
-    const list = regionTeams[region];
-    if (!list || list.length !== 16) {
-      throw new Error(`Region ${region} does not have exactly 16 teams`);
-    }
-
-    // Standard 1 vs 16, 2 vs 15, 3 vs 14, etc.
-    for (let i = 0; i < 8; i++) {
-      const team1 = list[i].name;
-      const team2 = list[15 - i].name;
-
-      games.push({
-        id: gameId++,
-        round: 1,
-        region,
-        team1,
-        team2,
-        winner: null,
-      });
-    }
+  // Ensure each region is sorted by seed
+  regions.forEach((r) => {
+    regionTeams[r].sort((a, b) => a.seed - b.seed);
   });
 
-  // Future rounds (Round of 32, Sweet 16, Elite 8, Final Four, Championship)
-  // These start empty and get filled as results come in.
-  for (let round = 2; round <= 6; round++) {
-    const numGames =
-      round <= 4 ? 8 * Math.pow(2, 1 - (round - 1)) : round === 5 ? 2 : 1;
+  // Helper to create a round of games
+  function createRound(
+    round: number,
+    region: string,
+    inputTeams: (Team | null)[]
+  ): Game[] {
+    const roundGames: Game[] = [];
 
-    for (let i = 0; i < numGames; i++) {
-      games.push({
+    for (let i = 0; i < inputTeams.length; i += 2) {
+      const t1 = inputTeams[i];
+      const t2 = inputTeams[i + 1];
+
+      roundGames.push({
         id: gameId++,
         round,
-        region: round <= 4 ? regions[Math.floor(i / (numGames / 4))] : "Final",
-        team1: null,
-        team2: null,
+        region,
+        team1: t1 ? t1.name : null,
+        team2: t2 ? t2.name : null,
         winner: null,
       });
     }
+
+    return roundGames;
   }
+
+  // Build rounds region by region
+  regions.forEach((region) => {
+    const t = regionTeams[region];
+
+    // ROUND 1 — 64 teams (16 per region)
+    const round1 = createRound(1, region, t);
+    games.push(...round1);
+
+    // ROUND 2 — winners of Round 1
+    const round2 = createRound(
+      2,
+      region,
+      new Array(round1.length).fill(null)
+    );
+    games.push(...round2);
+
+    // SWEET 16 — winners of Round 2
+    const round3 = createRound(
+      3,
+      region,
+      new Array(round2.length).fill(null)
+    );
+    games.push(...round3);
+
+    // ELITE 8 — winners of Round 3
+    const round4 = createRound(
+      4,
+      region,
+      new Array(round3.length).fill(null)
+    );
+    games.push(...round4);
+  });
+
+  // FINAL FOUR — winners of each region
+  const finalFourTeams = new Array(4).fill(null);
+  const finalFour = createRound(5, "FinalFour", finalFourTeams);
+  games.push(...finalFour);
+
+  // CHAMPIONSHIP — winners of Final Four
+  const championshipTeams = new Array(2).fill(null);
+  const championship = createRound(6, "Championship", championshipTeams);
+  games.push(...championship);
 
   return games;
 }

@@ -1,12 +1,19 @@
-import { getTeamStrength } from '@/lib/bracket/getTeamStrength';
-import type { Team } from '@/lib/bracket/types';
+"use client";
 
-export default function TeamCard({ team }: { team: Team | null }) {
+import { Team } from "@/lib/bracketTypes";
+import { getTeamStrength } from "@/lib/bracketTypes";
+
+type Props = {
+  team: Team | null;
+  selected?: boolean;
+  onSelect?: () => void;
+};
+
+export default function TeamCard({ team, selected, onSelect }: Props) {
   if (!team) {
     return (
-      <div className="team">
-        <div>TBD</div>
-        <div className="team-meta">—</div>
+      <div className="team-card empty">
+        <span className="team-name">TBD</span>
       </div>
     );
   }
@@ -14,11 +21,22 @@ export default function TeamCard({ team }: { team: Team | null }) {
   const strength = getTeamStrength(team.conference);
 
   return (
-    <div className="team">
-      <div>{team.seed}. {team.name}</div>
-      <div className="team-meta">
-        {team.record} &nbsp; {strength.emoji} {strength.label}
+    <button
+      type="button"
+      className={`team-card ${selected ? "selected" : ""}`}
+      onClick={onSelect}
+    >
+      <div className="team-header">
+        <span className="team-seed">{team.seed}</span>
+        <span className="team-name">{team.name}</span>
       </div>
-    </div>
+
+      <div className="team-meta">
+        <span className="team-record">{team.record}</span>
+        <span className="team-strength">
+          {strength.emoji} {strength.label}
+        </span>
+      </div>
+    </button>
   );
 }

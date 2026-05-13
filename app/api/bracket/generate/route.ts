@@ -2,7 +2,9 @@ import { supabase } from "@/lib/supabaseClient";
 import { generateBracketStructure } from "@/lib/bracketUtils";
 
 export async function GET() {
-  const { data: teams, error } = await supabase
+  const client = supabase!; // <-- fixes TS null warning
+
+  const { data: teams, error } = await client
     .from("teams")
     .select("*")
     .order("seed", { ascending: true });

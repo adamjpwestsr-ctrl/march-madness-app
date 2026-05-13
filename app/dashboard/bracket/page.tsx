@@ -19,12 +19,12 @@ export default function BracketPage() {
       .then(setBracket);
   }, []);
 
-  function handlePick(gameId, teamId) {
-    setPicks(prev => ({
-      ...prev,
-      [gameId]: teamId
-    }));
-  }
+function handlePick(gameId: number, teamId: string) {
+  setPicks(prev => ({
+    ...prev,
+    [gameId]: teamId
+  }));
+}
 
   async function submitBracket() {
     const res = await fetch('/api/bracket/submit', {

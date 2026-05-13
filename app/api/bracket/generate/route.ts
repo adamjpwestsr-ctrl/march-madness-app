@@ -3,7 +3,7 @@ import { generateBracketStructure } from "@/lib/bracketUtils";
 import { Team } from "@/lib/bracketTypes";
 
 export async function GET() {
-  const client = supabase!; // keep your existing fix
+  const client = supabase!; // non-null assertion is required for SSR
 
   // Load teams with full data (including conference + record)
   const { data: teams, error } = await client
@@ -16,7 +16,7 @@ export async function GET() {
     return Response.json({ error: "Failed to load teams" }, { status: 500 });
   }
 
-console.log("Team count:", teams.length);
+  console.log("Team count:", teams.length);
 
   // Ensure correct typing
   const typedTeams = teams as Team[];

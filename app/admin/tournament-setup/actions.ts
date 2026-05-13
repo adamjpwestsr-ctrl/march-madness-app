@@ -6,20 +6,27 @@ import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 const REGIONS = ["East", "West", "South", "Midwest"] as const;
 type Region = (typeof REGIONS)[number];
 
+// ⭐ Updated RegionTeam type
 type RegionTeam = {
   seed: number;
   team: string;
+  record?: string;
+  conference?: string;
 };
 
 export async function saveRegionTeams(region: Region, teams: RegionTeam[]) {
   const supabase = await createSupabaseServerClient();
 
+  // Clear existing teams for this region
   await supabase.from("tournament_teams").delete().eq("region", region);
 
+  // ⭐ Insert new fields (record + conference)
   const rows = teams.map((t) => ({
     region,
     seed: t.seed,
     team: t.team,
+    record: t.record ?? null,
+    conference: t.conference ?? null,
   }));
 
   await supabase.from("tournament_teams").insert(rows);

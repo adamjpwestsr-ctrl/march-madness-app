@@ -27,7 +27,12 @@ const PAIRS = [
 
 export default function TournamentSetupClient() {
   const [region, setRegion] = useState<"East" | "West" | "South" | "Midwest">("East");
-  const [teams, setTeams] = useState<{ [seed: number]: string }>({});
+
+  // ⭐ Updated team structure
+  const [teams, setTeams] = useState<{
+    [seed: number]: { team: string; record?: string; conference?: string };
+  }>({});
+
   const [lockTime, setLockTime] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -46,7 +51,16 @@ export default function TournamentSetupClient() {
     (async () => {
       const data = await loadRegionTeams(region);
       const map: any = {};
-      data.forEach((t: any) => (map[t.seed] = t.team));
+
+      // ⭐ Load full team structure
+      data.forEach((t: any) => {
+        map[t.seed] = {
+          team: t.team || "",
+          record: t.record || "",
+          conference: t.conference || "",
+        };
+      });
+
       setTeams(map);
     })();
   }, [region]);
@@ -56,9 +70,12 @@ export default function TournamentSetupClient() {
     setSaving(true);
     setSaved(false);
 
-    const rows = Object.entries(teams).map(([seed, team]) => ({
+    // ⭐ Save full team structure
+    const rows = Object.entries(teams).map(([seed, data]) => ({
       seed: Number(seed),
-      team,
+      team: data.team,
+      record: data.record,
+      conference: data.conference,
     }));
 
     await saveRegionTeams(region, rows);
@@ -75,8 +92,15 @@ export default function TournamentSetupClient() {
     debounceRef.current = setTimeout(autoSave, 500);
   };
 
-  const updateTeam = (seed: number, value: string) => {
-    setTeams((prev) => ({ ...prev, [seed]: value }));
+  // ⭐ Updated updateTeam function
+  const updateTeam = (seed: number, field: string, value: string) => {
+    setTeams((prev) => ({
+      ...prev,
+      [seed]: {
+        ...prev[seed],
+        [field]: value,
+      },
+    }));
     triggerDebounceSave();
   };
 
@@ -119,11 +143,9 @@ export default function TournamentSetupClient() {
     if (e.key === "Enter") {
       e.preventDefault();
       if (e.shiftKey) {
-        // Previous input
         if (col === 1) inputRefs.current[row][0]?.focus();
         else if (row > 0) inputRefs.current[row - 1][1]?.focus();
       } else {
-        // Next input
         if (col === 0) inputRefs.current[row][1]?.focus();
         else if (row < maxRow) inputRefs.current[row + 1][0]?.focus();
       }
@@ -224,17 +246,19 @@ export default function TournamentSetupClient() {
           >
             {/* LEFT INPUT */}
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <LogoCircle team={teams[s1]} />
+              <LogoCircle team={teams[s1]?.team} />
 
               <div style={{ flex: 1 }}>
                 <label style={{ fontSize: 14, opacity: 0.8 }}>#{s1}</label>
+
+                {/* TEAM NAME */}
                 <input
                   ref={(el) => {
                     inputRefs.current[row][0] = el;
                   }}
                   type="text"
-                  value={teams[s1] || ""}
-                  onChange={(e) => updateTeam(s1, e.target.value)}
+                  value={teams[s1]?.team || ""}
+                  onChange={(e) => updateTeam(s1, "team", e.target.value)}
                   onBlur={handleBlurSave}
                   onKeyDown={(e) => handleKeyDown(e, row, 0)}
                   placeholder={`Seed ${s1} team`}
@@ -248,6 +272,55 @@ export default function TournamentSetupClient() {
                     color: "#e5e7eb",
                   }}
                 />
+
+                {/* RECORD */}
+                <input
+                  type="text"
+                  value={teams[s1]?.record || ""}
+                  onChange={(e) => updateTeam(s1, "record", e.target.value)}
+                  placeholder="Record (e.g. 28-4)"
+                  style={{
+                    width: "100%",
+                    padding: 8,
+                    marginTop: 6,
+                    borderRadius: 6,
+                    background: "#1e293b",
+                    border: "1px solid #334155",
+                    color: "#e5e7eb",
+                    fontSize: 13,
+                  }}
+                />
+
+                {/* CONFERENCE */}
+                <select
+                  value={teams[s1]?.conference || ""}
+                  onChange={(e) => updateTeam(s1, "conference", e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: 8,
+                    marginTop: 6,
+                    borderRadius: 6,
+                    background: "#1e293b",
+                    border: "1px solid #334155",
+                    color: "#e5e7eb",
+                    fontSize: 13,
+                  }}
+                >
+                  <option value="">Conference</option>
+                  <option value="ACC">ACC</option>
+                  <option value="SEC">SEC</option>
+                  <option value="Big Ten">Big Ten</option>
+                  <option value="Big 12">Big 12</option>
+                  <option value="Pac-12">Pac-12</option>
+                  <option value="Big East">Big East</option>
+                  <option value="AAC">AAC</option>
+                  <option value="Mountain West">Mountain West</option>
+                  <option value="A-10">A-10</option>
+                  <option value="WCC">WCC</option>
+                  <option value="MVC">MVC</option>
+                  <option value="Ivy League">Ivy League</option>
+                  <option value="Other">Other</option>
+                </select>
               </div>
             </div>
 
@@ -274,17 +347,19 @@ export default function TournamentSetupClient() {
 
             {/* RIGHT INPUT */}
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <LogoCircle team={teams[s2]} />
+              <LogoCircle team={teams[s2]?.team} />
 
               <div style={{ flex: 1 }}>
                 <label style={{ fontSize: 14, opacity: 0.8 }}>#{s2}</label>
+
+                {/* TEAM NAME */}
                 <input
                   ref={(el) => {
                     inputRefs.current[row][1] = el;
                   }}
                   type="text"
-                  value={teams[s2] || ""}
-                  onChange={(e) => updateTeam(s2, e.target.value)}
+                  value={teams[s2]?.team || ""}
+                  onChange={(e) => updateTeam(s2, "team", e.target.value)}
                   onBlur={handleBlurSave}
                   onKeyDown={(e) => handleKeyDown(e, row, 1)}
                   placeholder={`Seed ${s2} team`}
@@ -298,6 +373,55 @@ export default function TournamentSetupClient() {
                     color: "#e5e7eb",
                   }}
                 />
+
+                {/* RECORD */}
+                <input
+                  type="text"
+                  value={teams[s2]?.record || ""}
+                  onChange={(e) => updateTeam(s2, "record", e.target.value)}
+                  placeholder="Record (e.g. 28-4)"
+                  style={{
+                    width: "100%",
+                    padding: 8,
+                    marginTop: 6,
+                    borderRadius: 6,
+                    background: "#1e293b",
+                    border: "1px solid #334155",
+                    color: "#e5e7eb",
+                    fontSize: 13,
+                  }}
+                />
+
+                {/* CONFERENCE */}
+                <select
+                  value={teams[s2]?.conference || ""}
+                  onChange={(e) => updateTeam(s2, "conference", e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: 8,
+                    marginTop: 6,
+                    borderRadius: 6,
+                    background: "#1e293b",
+                    border: "1px solid #334155",
+                    color: "#e5e7eb",
+                    fontSize: 13,
+                  }}
+                >
+                  <option value="">Conference</option>
+                  <option value="ACC">ACC</option>
+                  <option value="SEC">SEC</option>
+                  <option value="Big Ten">Big Ten</option>
+                  <option value="Big 12">Big 12</option>
+                  <option value="Pac-12">Pac-12</option>
+                  <option value="Big East">Big East</option>
+                  <option value="AAC">AAC</option>
+                  <option value="Mountain West">Mountain West</option>
+                  <option value="A-10">A-10</option>
+                  <option value="WCC">WCC</option>
+                  <option value="MVC">MVC</option>
+                  <option value="Ivy League">Ivy League</option>
+                  <option value="Other">Other</option>
+                </select>
               </div>
             </div>
           </div>

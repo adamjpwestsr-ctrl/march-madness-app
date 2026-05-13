@@ -3,6 +3,8 @@ export const runtime = "nodejs";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import '@/styles/bracket.css';
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

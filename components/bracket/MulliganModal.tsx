@@ -1,119 +1,139 @@
 "use client";
 
-import React from "react";
+import { useMemo, useState } from "react";
+import { Game, Picks, DownstreamRoundOption } from "@/lib/bracketTypes";
 
-type MulliganPick = {
-  selected_team: string;
-  [key: string]: any;
-};
-
-type MulliganModalProps = {
-  isOpen: boolean;
+type Props = {
+  game: Game;
+  games: Game[];
+  picks: Picks;
+  onApply: (gameId: number, roundsToFix: number[]) => void;
   onClose: () => void;
-  game: MulliganPick | null;
-  aliveTeams: string[];
-  onSubmit: (team: string) => void | Promise<void>;
 };
 
-export default function MulliganModal({
-  isOpen,
-  onClose,
-  game,
-  aliveTeams,
-  onSubmit
-}: MulliganModalProps) {
-  const [selectedTeam, setSelectedTeam] = React.useState("");
+export function MulliganModal({ game, games, picks, onApply, onClose }: Props) {
+  const actualWinner = game.winner;
+  const userPick = picks[game.id];
 
-  if (!isOpen || !game) return null;
+  const downstreamOptions = useMemo<DownstreamRoundOption[]>(() => {
+    if (!actualWinner || !userPick) return [];
+
+    const options: DownstreamRoundOption[] = [];
+
+    // Always include the current game (required)
+    options.push({
+      round: game.round,
+      gameId: game.id,
+      label: `Round of ${Math.pow(2, 7 - game.round)} (this game)`,
+    });
+
+    // Find all future games where the user picked this losing team
+    games
+      .filter((g) => g.round > game.round)
+      .forEach((g) => {
+        const pick = picks[g.id];
+        if (pick === userPick) {
+          const label = (() => {
+            switch (g.round) {
+              case 2:
+                return "Round of 32";
+              case 3:
+                return "Sweet 16";
+              case 4:
+                return "Elite 8";
+              case 5:
+                return "Final Four";
+              case 6:
+                return "Championship";
+              default:
+                return `Round ${g.round}`;
+            }
+          })();
+
+          options.push({
+            round: g.round,
+            gameId: g.id,
+            label,
+          });
+        }
+      });
+
+    return options;
+  }, [actualWinner, userPick, game, games, picks]);
+
+  const [selectedGameIds, setSelectedGameIds] = useState<number[]>(
+    downstreamOptions.length ? [downstreamOptions[0].gameId] : []
+  );
+
+  if (!actualWinner || !userPick) return null;
+
+  const handleToggle = (gameId: number) => {
+    // First option (index 0) is required (the original game)
+    if (gameId === downstreamOptions[0].gameId) return;
+
+    setSelectedGameIds((prev) =>
+      prev.includes(gameId)
+        ? prev.filter((id) => id !== gameId)
+        : [...prev, gameId]
+    );
+  };
+
+  const handleConfirm = () => {
+    if (!selectedGameIds.includes(downstreamOptions[0].gameId)) {
+      // Ensure original game is always included
+      setSelectedGameIds((prev) => [downstreamOptions[0].gameId, ...prev]);
+      onApply(game.id, [downstreamOptions[0].gameId, ...selectedGameIds]);
+    } else {
+      onApply(game.id, selectedGameIds);
+    }
+  };
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        width: "100vw",
-        height: "100vh",
-        background: "rgba(0,0,0,0.6)",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        zIndex: 9999
-      }}
-    >
-      <div
-        style={{
-          background: "#0f172a",
-          padding: 24,
-          borderRadius: 12,
-          width: 360,
-          color: "white",
-          boxShadow: "0 8px 24px rgba(0,0,0,0.5)"
-        }}
-      >
-        <h2 style={{ fontSize: 20, marginBottom: 12 }}>
-          Request Mulligan
-        </h2>
-
-        <p style={{ marginBottom: 16, fontSize: 14, lineHeight: 1.4 }}>
-          Replace <strong>{game.selected_team}</strong> with a team still alive
-          in the tournament.
+    <div className="mulligan-backdrop">
+      <div className="mulligan-modal">
+        <h2>Use a Mulligan?</h2>
+        <p style={{ marginTop: 8, marginBottom: 12 }}>
+          Oops! That pick didn&apos;t age well.
+        </p>
+        <p style={{ marginBottom: 16 }}>
+          Use a mulligan to switch your pick to{" "}
+          <strong>{actualWinner}</strong>?
         </p>
 
-        <select
-          value={selectedTeam}
-          onChange={(e) => setSelectedTeam(e.target.value)}
-          style={{
-            width: "100%",
-            padding: 10,
-            borderRadius: 6,
-            background: "#1e293b",
-            color: "white",
-            marginBottom: 16
-          }}
-        >
-          <option value="">Select replacement team</option>
-          {aliveTeams.map((team) => (
-            <option key={team} value={team}>
-              {team}
-            </option>
-          ))}
-        </select>
+        {downstreamOptions.length > 0 && (
+          <div className="mulligan-rounds">
+            <p style={{ marginBottom: 8, fontWeight: 600 }}>
+              Where do you want to apply this correction?
+            </p>
+            {downstreamOptions.map((opt, idx) => (
+              <label
+                key={opt.gameId}
+                className="mulligan-round-option"
+                style={{ opacity: idx === 0 ? 0.9 : 1 }}
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedGameIds.includes(opt.gameId)}
+                  disabled={idx === 0} // original game is required
+                  onChange={() => handleToggle(opt.gameId)}
+                />
+                <span>
+                  {opt.label}
+                  {idx === 0 ? " (required)" : ""}
+                </span>
+              </label>
+            ))}
+          </div>
+        )}
 
-        <button
-          onClick={() => {
-            if (!selectedTeam) return;
-            onSubmit(selectedTeam);
-          }}
-          style={{
-            width: "100%",
-            padding: 12,
-            background: "#1d4ed8",
-            border: "none",
-            borderRadius: 6,
-            color: "white",
-            fontWeight: 600,
-            cursor: "pointer",
-            marginBottom: 12
-          }}
-        >
-          Submit Mulligan Request
-        </button>
-
-        <button
-          onClick={onClose}
-          style={{
-            width: "100%",
-            padding: 10,
-            background: "#334155",
-            border: "none",
-            borderRadius: 6,
-            color: "white",
-            cursor: "pointer"
-          }}
-        >
-          Cancel
-        </button>
+        <div className="mulligan-actions">
+          <button className="mulligan-cancel" onClick={onClose}>
+            Cancel
+          </button>
+          <button className="mulligan-confirm" onClick={handleConfirm}>
+            Apply Mulligan
+          </button>
+        </div>
       </div>
     </div>
   );

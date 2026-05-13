@@ -1,0 +1,231 @@
+.round {
+  margin: 2rem 0;
+}
+
+.games-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+/* ✔ Perfect — your glassmorphism card */
+.game-card {
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.team {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.vs {
+  opacity: 0.6;
+  font-size: 0.85rem;
+}
+
+/* ✔ Region colors — perfect */
+.region-east .game-card {
+  border-left: 4px solid #10b981;
+}
+
+.region-west .game-card {
+  border-left: 4px solid #3b82f6;
+}
+
+.region-south .game-card {
+  border-left: 4px solid #ef4444;
+}
+
+.region-midwest .game-card {
+  border-left: 4px solid #f59e0b;
+}
+
+/* ⭐ FIX #1 — Add this wrapper style */
+.game-connector-wrapper {
+  position: relative;        /* required for ::after connectors */
+  display: flex;
+  align-items: center;
+}
+
+/* ⭐ FIX #2 — Add the horizontal connector line */
+.connector-line {
+  flex: 1;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.25);
+  margin-left: 1rem;
+  border-radius: 2px;
+}
+
+/* ✔ Vertical connectors — perfect */
+.game-connector-wrapper:nth-child(odd)::after {
+  content: '';
+  position: absolute;
+  right: -1rem;
+  top: 50%;
+  width: 1rem;
+  height: calc(100% + 1rem);
+  border-right: 2px solid rgba(255, 255, 255, 0.25);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.25);
+  border-radius: 0 0 6px 0;
+}
+
+.game-connector-wrapper:nth-child(even)::after {
+  content: '';
+  position: absolute;
+  right: -1rem;
+  bottom: 50%;
+  width: 1rem;
+  height: calc(100% + 1rem);
+  border-right: 2px solid rgba(255, 255, 255, 0.25);
+  border-top: 2px solid rgba(255, 255, 255, 0.25);
+  border-radius: 0 6px 0 0;
+}
+
+.team-select {
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.team-select.selected {
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 8px;
+  padding: 0.25rem 0.5rem;
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.35);
+}
+
+.team-select:not(.selected) {
+  opacity: 0.85;
+}
+
+.team-select.losing {
+  border: 2px solid rgba(255, 0, 0, 0.4);
+  border-radius: 8px;
+}
+
+.mulligan-button {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 6px;
+  padding: 4px 6px;
+  margin-left: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.mulligan-button:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.team-select {
+  display: flex;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.team-select.losing {
+  border: 2px solid rgba(255, 0, 0, 0.45);
+  border-radius: 8px;
+  padding: 0.25rem 0.5rem;
+}
+
+.team-button {
+  flex: 1;
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  background: rgba(15, 23, 42, 0.9);
+  color: #e5e7eb;
+  cursor: pointer;
+  text-align: left;
+}
+
+.team-button.selected {
+  border-color: #38bdf8;
+  background: rgba(56, 189, 248, 0.15);
+}
+
+.team-button:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.mulligan-button {
+  margin-left: 8px;
+  padding: 4px 6px;
+  font-size: 0.85rem;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.15s ease;
+}
+
+.mulligan-button:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Modal */
+
+.mulligan-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 40;
+}
+
+.mulligan-modal {
+  background: #0f172a;
+  border-radius: 12px;
+  padding: 20px 24px;
+  max-width: 420px;
+  width: 100%;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  color: #e5e7eb;
+}
+
+.mulligan-rounds {
+  margin-bottom: 16px;
+}
+
+.mulligan-round-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 0.9rem;
+}
+
+.mulligan-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.mulligan-cancel,
+.mulligan-confirm {
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.mulligan-cancel {
+  background: rgba(148, 163, 184, 0.2);
+  color: #e5e7eb;
+}
+
+.mulligan-confirm {
+  background: #22c55e;
+  color: #0f172a;
+}

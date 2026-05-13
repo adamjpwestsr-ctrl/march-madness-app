@@ -2,9 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Team, CONFERENCE_STRENGTH_MAP } from "@/lib/bracketTypes";
-import { createClient } from "@/lib/supabaseClient";
-
-const supabase = createClient();
+import { supabase } from "@/lib/supabaseClient";
 
 export default function AdminTeamsPage() {
   const [teams, setTeams] = useState<Team[]>([]);

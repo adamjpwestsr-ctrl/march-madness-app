@@ -82,7 +82,7 @@ export default function AdminTeamsPage() {
 
   // Delete
   async function deleteTeam(id: number) {
-    await supabase.from("teams").delete().eq("id", id);
+    await supabase!.from("teams").delete().eq("id", id);
     loadTeams();
   }
 

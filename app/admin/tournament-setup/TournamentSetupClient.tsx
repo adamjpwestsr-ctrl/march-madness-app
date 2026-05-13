@@ -25,12 +25,22 @@ const PAIRS = [
   [8, 9],
 ];
 
-export default function TournamentSetupClient() {
-  const [region, setRegion] = useState<"East" | "West" | "South" | "Midwest">("East");
+type Region = (typeof REGIONS)[number];
 
-  // ⭐ Updated team structure
+type RegionTeamState = {
+  team: string;
+  record?: string;
+  conference?: string;
+  bid_type?: "AQ" | "AT_LARGE" | "";
+  opening_round?: boolean;
+  advances_to_game?: number | null;
+};
+
+export default function TournamentSetupClient() {
+  const [region, setRegion] = useState<Region>("East");
+
   const [teams, setTeams] = useState<{
-    [seed: number]: { team: string; record?: string; conference?: string };
+    [seed: number]: RegionTeamState;
   }>({});
 
   const [lockTime, setLockTime] = useState("");
@@ -38,26 +48,26 @@ export default function TournamentSetupClient() {
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Refs for keyboard navigation
   const inputRefs = useRef<(HTMLInputElement | null)[][]>(
     PAIRS.map(() => [null, null])
   );
 
-  // Debounce timer
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
   // Load teams when region changes
   useEffect(() => {
     (async () => {
       const data = await loadRegionTeams(region);
-      const map: any = {};
+      const map: { [seed: number]: RegionTeamState } = {};
 
-      // ⭐ Load full team structure
       data.forEach((t: any) => {
         map[t.seed] = {
           team: t.team || "",
           record: t.record || "",
           conference: t.conference || "",
+          bid_type: (t.bid_type as "AQ" | "AT_LARGE") || "",
+          opening_round: t.opening_round ?? false,
+          advances_to_game: t.advances_to_game ?? null,
         };
       });
 
@@ -65,20 +75,21 @@ export default function TournamentSetupClient() {
     })();
   }, [region]);
 
-  // Auto-save function
   const autoSave = useCallback(async () => {
     setSaving(true);
     setSaved(false);
 
-    // ⭐ Save full team structure
     const rows = Object.entries(teams).map(([seed, data]) => ({
       seed: Number(seed),
       team: data.team,
       record: data.record,
       conference: data.conference,
+      bid_type: data.bid_type || null,
+      opening_round: data.opening_round ?? false,
+      advances_to_game: data.advances_to_game ?? null,
     }));
 
-    await saveRegionTeams(region, rows);
+    await saveRegionTeams(region, rows as any);
 
     setSaving(false);
     setSaved(true);
@@ -86,14 +97,12 @@ export default function TournamentSetupClient() {
     setTimeout(() => setSaved(false), 1500);
   }, [teams, region]);
 
-  // Debounced auto-save
   const triggerDebounceSave = () => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(autoSave, 500);
   };
 
-  // ⭐ Updated updateTeam function
-  const updateTeam = (seed: number, field: string, value: string) => {
+  const updateTeam = (seed: number, field: keyof RegionTeamState, value: any) => {
     setTeams((prev) => ({
       ...prev,
       [seed]: {
@@ -136,7 +145,6 @@ export default function TournamentSetupClient() {
     alert("Lock time updated!");
   };
 
-  // Keyboard navigation
   const handleKeyDown = (e: React.KeyboardEvent, row: number, col: number) => {
     const maxRow = PAIRS.length - 1;
 
@@ -191,13 +199,11 @@ export default function TournamentSetupClient() {
         Enter teams by region, generate the full tournament bracket, set the lock time, and publish the tournament.
       </p>
 
-      {/* Auto-save indicator */}
       <div style={{ textAlign: "center", height: 20, marginBottom: 10 }}>
         {saving && <span style={{ color: "#38bdf8" }}>Saving…</span>}
         {saved && <span style={{ color: "#4ade80" }}>Saved ✓</span>}
       </div>
 
-      {/* REGION SELECT */}
       <div style={{ marginBottom: 20, textAlign: "center" }}>
         <label style={{ marginRight: 10 }}>Region:</label>
         <select
@@ -219,7 +225,6 @@ export default function TournamentSetupClient() {
         </select>
       </div>
 
-      {/* MATCHUP GRID */}
       <div
         style={{
           display: "grid",
@@ -272,7 +277,6 @@ export default function TournamentSetupClient() {
                     color: "#e5e7eb",
                   }}
                 />
-
                 {/* RECORD */}
                 <input
                   type="text"
@@ -321,6 +325,76 @@ export default function TournamentSetupClient() {
                   <option value="Ivy League">Ivy League</option>
                   <option value="Other">Other</option>
                 </select>
+
+                {/* BID TYPE */}
+                <select
+                  value={teams[s1]?.bid_type || ""}
+                  onChange={(e) =>
+                    updateTeam(
+                      s1,
+                      "bid_type",
+                      e.target.value as "AQ" | "AT_LARGE" | ""
+                    )
+                  }
+                  style={{
+                    width: "100%",
+                    padding: 8,
+                    marginTop: 6,
+                    borderRadius: 6,
+                    background: "#1e293b",
+                    border: "1px solid #334155",
+                    color: "#e5e7eb",
+                    fontSize: 13,
+                  }}
+                >
+                  <option value="">Bid Type</option>
+                  <option value="AQ">Automatic Qualifier</option>
+                  <option value="AT_LARGE">At-Large</option>
+                </select>
+
+                {/* OPENING ROUND FLAG */}
+                <label
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    marginTop: 6,
+                    fontSize: 13,
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={teams[s1]?.opening_round ?? false}
+                    onChange={(e) =>
+                      updateTeam(s1, "opening_round", e.target.checked)
+                    }
+                  />
+                  Opening Round
+                </label>
+
+                {/* ADVANCES TO GAME (ROUND OF 64 GAME ID) */}
+                <input
+                  type="number"
+                  value={teams[s1]?.advances_to_game ?? ""}
+                  onChange={(e) =>
+                    updateTeam(
+                      s1,
+                      "advances_to_game",
+                      e.target.value ? Number(e.target.value) : null
+                    )
+                  }
+                  placeholder="Advances to Game ID (Round of 64)"
+                  style={{
+                    width: "100%",
+                    padding: 8,
+                    marginTop: 6,
+                    borderRadius: 6,
+                    background: "#1e293b",
+                    border: "1px solid #334155",
+                    color: "#e5e7eb",
+                    fontSize: 13,
+                  }}
+                />
               </div>
             </div>
 
@@ -422,13 +496,82 @@ export default function TournamentSetupClient() {
                   <option value="Ivy League">Ivy League</option>
                   <option value="Other">Other</option>
                 </select>
+
+                {/* BID TYPE */}
+                <select
+                  value={teams[s2]?.bid_type || ""}
+                  onChange={(e) =>
+                    updateTeam(
+                      s2,
+                      "bid_type",
+                      e.target.value as "AQ" | "AT_LARGE" | ""
+                    )
+                  }
+                  style={{
+                    width: "100%",
+                    padding: 8,
+                    marginTop: 6,
+                    borderRadius: 6,
+                    background: "#1e293b",
+                    border: "1px solid #334155",
+                    color: "#e5e7eb",
+                    fontSize: 13,
+                  }}
+                >
+                  <option value="">Bid Type</option>
+                  <option value="AQ">Automatic Qualifier</option>
+                  <option value="AT_LARGE">At-Large</option>
+                </select>
+
+                {/* OPENING ROUND FLAG */}
+                <label
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    marginTop: 6,
+                    fontSize: 13,
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={teams[s2]?.opening_round ?? false}
+                    onChange={(e) =>
+                      updateTeam(s2, "opening_round", e.target.checked)
+                    }
+                  />
+                  Opening Round
+                </label>
+
+                {/* ADVANCES TO GAME (ROUND OF 64 GAME ID) */}
+                <input
+                  type="number"
+                  value={teams[s2]?.advances_to_game ?? ""}
+                  onChange={(e) =>
+                    updateTeam(
+                      s2,
+                      "advances_to_game",
+                      e.target.value ? Number(e.target.value) : null
+                    )
+                  }
+                  placeholder="Advances to Game ID (Round of 64)"
+                  style={{
+                    width: "100%",
+                    padding: 8,
+                    marginTop: 6,
+                    borderRadius: 6,
+                    background: "#1e293b",
+                    border: "1px solid #334155",
+                    color: "#e5e7eb",
+                    fontSize: 13,
+                  }}
+                />
               </div>
             </div>
           </div>
         ))}
       </div>
 
-      {/* CLEAR BUTTON */}
       <div style={{ textAlign: "center", marginBottom: 40 }}>
         <button
           onClick={handleClear}
@@ -445,7 +588,6 @@ export default function TournamentSetupClient() {
         </button>
       </div>
 
-      {/* LOCK TIME */}
       <div style={{ textAlign: "center", marginBottom: 40 }}>
         <h3 style={{ marginBottom: 10 }}>Tournament Lock Time</h3>
         <input
@@ -476,7 +618,6 @@ export default function TournamentSetupClient() {
         </button>
       </div>
 
-      {/* GENERATE + PUBLISH */}
       <div style={{ textAlign: "center" }}>
         <button
           onClick={handleGenerate}
@@ -513,7 +654,6 @@ export default function TournamentSetupClient() {
   );
 }
 
-/* LOGO CIRCLE COMPONENT */
 function LogoCircle({ team }: { team: string | undefined }) {
   const logo = team ? getTeamLogo(team) : null;
 
@@ -533,7 +673,6 @@ function LogoCircle({ team }: { team: string | undefined }) {
     );
   }
 
-  // Fallback initials
   const initials =
     team
       ?.split(" ")

@@ -9,20 +9,33 @@ export async function GET() {
     const client = supabase!;
     if (!client) {
       console.error("❌ Supabase client is null");
-      return Response.json({ error: "Supabase client not initialized" }, { status: 500 });
+      return Response.json(
+        { error: "Supabase client not initialized" },
+        { status: 500 }
+      );
     }
 
-    // ✅ FIXED: Removed invalid .order("seed")
-    const { data: teams, error } = await client.from("teams").select("*");
+    // Pull enriched team data from the unified view
+    const { data: teams, error } = await client
+      .from("v_tournament_teams")
+      .select("*")
+      .order("region", { ascending: true })
+      .order("seed", { ascending: true });
 
     if (error) {
       console.error("❌ Supabase query error:", error);
-      return Response.json({ error: "Failed to load teams from Supabase" }, { status: 500 });
+      return Response.json(
+        { error: "Failed to load teams from Supabase" },
+        { status: 500 }
+      );
     }
 
     if (!teams || teams.length === 0) {
-      console.error("❌ No teams found in Supabase");
-      return Response.json({ error: "No teams found in Supabase" }, { status: 500 });
+      console.error("❌ No teams found in v_tournament_teams");
+      return Response.json(
+        { error: "No teams found in v_tournament_teams" },
+        { status: 500 }
+      );
     }
 
     console.log("✅ Team count:", teams.length);
@@ -35,13 +48,19 @@ export async function GET() {
       bracket = generateBracketStructure(typedTeams);
     } catch (genError) {
       console.error("❌ Error generating bracket structure:", genError);
-      return Response.json({ error: "Bracket generation failed" }, { status: 500 });
+      return Response.json(
+        { error: "Bracket generation failed" },
+        { status: 500 }
+      );
     }
 
     console.log("✅ Bracket generation successful");
     return Response.json(bracket);
   } catch (outerError) {
     console.error("❌ Unexpected error in /api/bracket/generate:", outerError);
-    return Response.json({ error: "Unexpected server error" }, { status: 500 });
+    return Response.json(
+      { error: "Unexpected server error" },
+      { status: 500 }
+    );
   }
 }

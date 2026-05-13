@@ -6,12 +6,15 @@ import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 const REGIONS = ["East", "West", "South", "Midwest"] as const;
 type Region = (typeof REGIONS)[number];
 
-// ⭐ Updated RegionTeam type
+// ⭐ Updated RegionTeam type to match new fields
 type RegionTeam = {
   seed: number;
   team: string;
   record?: string;
   conference?: string;
+  bid_type?: "AQ" | "AT_LARGE" | "";
+  opening_round?: boolean;
+  advances_to_game?: number | null;
 };
 
 export async function saveRegionTeams(region: Region, teams: RegionTeam[]) {
@@ -20,16 +23,20 @@ export async function saveRegionTeams(region: Region, teams: RegionTeam[]) {
   // Clear existing teams for this region
   await supabase.from("tournament_teams").delete().eq("region", region);
 
-  // ⭐ Insert new fields (record + conference)
+  // Insert new fields
   const rows = teams.map((t) => ({
     region,
     seed: t.seed,
     team: t.team,
+    bid_type: t.bid_type ?? null,
+    opening_round: t.opening_round ?? false,
+    advances_to_game: t.advances_to_game ?? null,
     record: t.record ?? null,
     conference: t.conference ?? null,
   }));
 
-  await supabase.from("tournament_teams").insert(rows);
+  const { error } = await supabase.from("tournament_teams").insert(rows);
+  if (error) throw new Error(error.message);
 }
 
 export async function clearRegion(region: Region) {
@@ -40,18 +47,19 @@ export async function clearRegion(region: Region) {
 export async function loadRegionTeams(region: Region) {
   const supabase = await createSupabaseServerClient();
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("tournament_teams")
     .select("*")
     .eq("region", region)
     .order("seed");
 
+  if (error) throw new Error(error.message);
   return data ?? [];
 }
 
 //
 // ⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐
-// ⭐  FULLY CORRECTED ESPN‑STYLE BRACKET GENERATOR
+// ⭐  NEW 76‑TEAM MANUAL BRACKET GENERATOR
 // ⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐
 //
 export async function generateBracket() {
@@ -86,6 +94,7 @@ export async function generateBracket() {
     seed2,
     source_game1,
     source_game2,
+    is_placeholder = false,
   }: any) => {
     gameRows.push({
       game_id: gameId++,
@@ -100,12 +109,66 @@ export async function generateBracket() {
       source_game1,
       source_game2,
       final_score: null,
+      is_placeholder,
     });
   };
 
-  // -----------------------------
-  // ROUND OF 64 — 32 games
-  // -----------------------------
+  // ----------------------------------------------------
+  // 1. OPENING ROUND (round = 0, 12 games)
+  // ----------------------------------------------------
+  const openingRoundTeams = teams.filter((t: any) => t.opening_round === true);
+
+  if (openingRoundTeams.length !== 24) {
+    return { message: "Exactly 24 teams must be marked as Opening Round." };
+  }
+
+  // Group by advances_to_game (Round of 64 destination)
+  const groupedByAdvance: Record<number, any[]> = {};
+
+  for (const t of openingRoundTeams) {
+    if (!t.advances_to_game) {
+      return {
+        message: `Opening Round team ${t.team} is missing advances_to_game.`,
+      };
+    }
+    if (!groupedByAdvance[t.advances_to_game]) {
+      groupedByAdvance[t.advances_to_game] = [];
+    }
+    groupedByAdvance[t.advances_to_game].push(t);
+  }
+
+  // Each destination must have exactly 2 teams
+  for (const gameDest in groupedByAdvance) {
+    if (groupedByAdvance[gameDest].length !== 2) {
+      return {
+        message: `Round of 64 game ${gameDest} must have exactly 2 Opening Round teams.`,
+      };
+    }
+  }
+
+  // Create Opening Round games and map dest → OR game_id
+  const openingRoundGameMap: Record<number, number> = {};
+
+  for (const destGameId in groupedByAdvance) {
+    const pair = groupedByAdvance[destGameId];
+
+    addGame({
+      round: 0,
+      region: "Opening Round",
+      team1: pair[0].team,
+      seed1: pair[0].seed,
+      team2: pair[1].team,
+      seed2: pair[1].seed,
+      source_game1: null,
+      source_game2: null,
+    });
+
+    openingRoundGameMap[Number(destGameId)] = gameId - 1;
+  }
+
+  // ----------------------------------------------------
+  // 2. ROUND OF 64 (round = 1, 32 games)
+  // ----------------------------------------------------
   for (const region of REGIONS) {
     const regionTeams = teams
       .filter((t: any) => t.region === region)
@@ -126,30 +189,56 @@ export async function generateBracket() {
       const t1 = regionTeams.find((t: any) => t.seed === s1);
       const t2 = regionTeams.find((t: any) => t.seed === s2);
 
+      const isOpening1 = t1.opening_round === true;
+      const isOpening2 = t2.opening_round === true;
+
+      let team1 = t1.team;
+      let team2 = t2.team;
+      let seed1 = t1.seed;
+      let seed2 = t2.seed;
+      let placeholder = false;
+      let source_game1: number | null = null;
+      let source_game2: number | null = null;
+
+      if (isOpening1) {
+        const orGameId = openingRoundGameMap[t1.advances_to_game];
+        team1 = `Winner of OR Game ${orGameId}`;
+        seed1 = null;
+        placeholder = true;
+        source_game1 = orGameId;
+      }
+
+      if (isOpening2) {
+        const orGameId = openingRoundGameMap[t2.advances_to_game];
+        team2 = `Winner of OR Game ${orGameId}`;
+        seed2 = null;
+        placeholder = true;
+        source_game2 = orGameId;
+      }
+
       addGame({
         round: 1,
         region,
-        team1: t1.team,
-        seed1: t1.seed,
-        team2: t2.team,
-        seed2: t2.seed,
-        source_game1: null,
-        source_game2: null,
+        team1,
+        seed1,
+        team2,
+        seed2,
+        source_game1,
+        source_game2,
+        is_placeholder: placeholder,
       });
     }
   }
 
-  // -----------------------------
-  // ROUND OF 32 — 16 games (4 per region)
-  // -----------------------------
+  // ----------------------------------------------------
+  // 3. ROUND OF 32 (round = 2, 16 games)
+  // ----------------------------------------------------
   for (const region of REGIONS) {
-    const regionRound1Games = gameRows.filter(
-      (g) => g.round === 1 && g.region === region
-    );
+    const r64 = gameRows.filter((g) => g.round === 1 && g.region === region);
 
     for (let i = 0; i < 4; i++) {
-      const g1 = regionRound1Games[i * 2];
-      const g2 = regionRound1Games[i * 2 + 1];
+      const g1 = r64[i * 2];
+      const g2 = r64[i * 2 + 1];
 
       addGame({
         round: 2,
@@ -164,17 +253,15 @@ export async function generateBracket() {
     }
   }
 
-  // -----------------------------
-  // SWEET 16 — 8 games (2 per region)
-  // -----------------------------
+  // ----------------------------------------------------
+  // 4. SWEET 16 (round = 3, 8 games)
+  // ----------------------------------------------------
   for (const region of REGIONS) {
-    const regionRound2Games = gameRows.filter(
-      (g) => g.round === 2 && g.region === region
-    );
+    const r32 = gameRows.filter((g) => g.round === 2 && g.region === region);
 
     for (let i = 0; i < 2; i++) {
-      const g1 = regionRound2Games[i * 2];
-      const g2 = regionRound2Games[i * 2 + 1];
+      const g1 = r32[i * 2];
+      const g2 = r32[i * 2 + 1];
 
       addGame({
         round: 3,
@@ -189,13 +276,11 @@ export async function generateBracket() {
     }
   }
 
-  // -----------------------------
-  // ELITE 8 — 4 games (1 per region)
-  // -----------------------------
+  // ----------------------------------------------------
+  // 5. ELITE 8 (round = 4, 4 games)
+  // ----------------------------------------------------
   for (const region of REGIONS) {
-    const regionRound3Games = gameRows.filter(
-      (g) => g.round === 3 && g.region === region
-    );
+    const r16 = gameRows.filter((g) => g.round === 3 && g.region === region);
 
     addGame({
       round: 4,
@@ -204,14 +289,14 @@ export async function generateBracket() {
       seed1: null,
       team2: null,
       seed2: null,
-      source_game1: regionRound3Games[0].game_id,
-      source_game2: regionRound3Games[1].game_id,
+      source_game1: r16[0].game_id,
+      source_game2: r16[1].game_id,
     });
   }
 
-  // -----------------------------
-  // FINAL FOUR — 2 games
-  // -----------------------------
+  // ----------------------------------------------------
+  // 6. FINAL FOUR (round = 5, 2 games)
+  // ----------------------------------------------------
   const elite8 = gameRows.filter((g) => g.round === 4);
 
   // East vs West
@@ -238,9 +323,9 @@ export async function generateBracket() {
     source_game2: elite8[3].game_id,
   });
 
-  // -----------------------------
-  // CHAMPIONSHIP — 1 game
-  // -----------------------------
+  // ----------------------------------------------------
+  // 7. CHAMPIONSHIP (round = 6, 1 game)
+  // ----------------------------------------------------
   const finalFour = gameRows.filter((g) => g.round === 5);
 
   addGame({
@@ -310,4 +395,77 @@ export async function updateLockTime(lockTime: string) {
     .from("tournament_settings")
     .update({ lock_time: lockTime })
     .neq("id", "");
+}
+
+//
+// ⭐ STEP 5 — WINNER ADVANCEMENT
+// Propagate a winner through the bracket using `winner` (team name)
+//
+export async function advanceWinner(gameId: number, winnerTeam: string) {
+  const supabase = await createSupabaseServerClient();
+
+  // Set winner on this game
+  const { data: game, error: gameErr } = await supabase
+    .from("games")
+    .update({ winner: winnerTeam })
+    .eq("game_id", gameId)
+    .select("*")
+    .single();
+
+  if (gameErr || !game) {
+    throw new Error("Failed to update winner for game.");
+  }
+
+  // Find any games that depend on this game as a source
+  const { data: nextGames, error: nextErr } = await supabase
+    .from("games")
+    .select("*")
+    .or(`source_game1.eq.${gameId},source_game2.eq.${gameId}`);
+
+  if (nextErr) {
+    throw new Error("Failed to load downstream games.");
+  }
+
+  if (!nextGames || nextGames.length === 0) {
+    // No downstream games (could be Championship)
+    return { message: "Winner updated; no downstream games." };
+  }
+
+  // Update each downstream game: put winner into team1 or team2
+  const updates = nextGames.map((g: any) => {
+    const update: any = {};
+    if (g.source_game1 === gameId) {
+      update.team1 = winnerTeam;
+    }
+    if (g.source_game2 === gameId) {
+      update.team2 = winnerTeam;
+    }
+    // Once a real team is known, it's no longer a placeholder
+    update.is_placeholder = false;
+    return supabase.from("games").update(update).eq("game_id", g.game_id);
+  });
+
+  await Promise.all(updates);
+
+  return { message: "Winner advanced successfully." };
+}
+export async function updateBracketScores() {
+  const supabase = await createSupabaseServerClient();
+
+  // Pull current scores from the view
+  const { data: scores, error } = await supabase
+    .from("bracket_scores")
+    .select("bracket_id, total_points");
+
+  if (error) throw new Error("Failed to load bracket scores.");
+
+  // Optionally update a leaderboard table or cache
+  for (const s of scores) {
+    await supabase
+      .from("bracket_leaderboard_view")
+      .update({ total_points: s.total_points })
+      .eq("bracket_id", s.bracket_id);
+  }
+
+  return { message: "Scores refreshed successfully.", count: scores.length };
 }

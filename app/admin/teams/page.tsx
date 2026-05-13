@@ -51,10 +51,10 @@ export default function AdminTeamsPage() {
 
     if (editingTeam) {
       // Update
-      await supabase.from("teams").update(payload).eq("id", editingTeam.id);
+      await supabase!.from("teams").update(payload).eq("id", editingTeam.id);
     } else {
       // Create
-      await supabase.from("teams").insert(payload);
+      await supabase!.from("teams").insert(payload);
     }
 
     setForm({

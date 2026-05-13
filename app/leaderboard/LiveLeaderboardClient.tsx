@@ -5,7 +5,16 @@ import { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { getLeaderboardScores } from "../admin/tournament-setup/actions";
 
-export default function LiveLeaderboardClient({ initialScores }) {
+type LeaderboardScore = {
+  bracket_id: string;
+  total_points: number;
+};
+
+export default function LiveLeaderboardClient({
+  initialScores,
+}: {
+  initialScores: LeaderboardScore[];
+}) {
   const [scores, setScores] = useState(initialScores);
 
   useEffect(() => {

@@ -11,11 +11,7 @@ type Props = {
   isSubmitted: boolean;
 };
 
-export function Sweet16(props: Props) {
-  return <RoundTemplate {...props} />;
-}
-
-function RoundTemplate({
+export function Sweet16({
   games,
   picks,
   mulligans,
@@ -32,10 +28,7 @@ function RoundTemplate({
         const actualWinner = game.winner;
 
         const userPickedWrong =
-          isSubmitted &&
-          actualWinner &&
-          userPick &&
-          userPick !== actualWinner;
+          isSubmitted && actualWinner && userPick && userPick !== actualWinner;
 
         const canUseMulligan =
           userPickedWrong &&
@@ -44,7 +37,6 @@ function RoundTemplate({
 
         const team1IsLosing =
           userPickedWrong && userPick === game.team1 && actualWinner === game.team2;
-
         const team2IsLosing =
           userPickedWrong && userPick === game.team2 && actualWinner === game.team1;
 
@@ -56,7 +48,9 @@ function RoundTemplate({
                 className={
                   "team-button" + (userPick === game.team1 ? " selected" : "")
                 }
-                onClick={() => !isSubmitted && game.team1 && onPick(game.id, game.team1)}
+                onClick={() =>
+                  !isSubmitted && game.team1 && onPick(game.id, game.team1)
+                }
                 disabled={isSubmitted}
               >
                 {game.team1 || "TBD"}
@@ -79,7 +73,9 @@ function RoundTemplate({
                 className={
                   "team-button" + (userPick === game.team2 ? " selected" : "")
                 }
-                onClick={() => !isSubmitted && game.team2 && onPick(game.id, game.team2)}
+                onClick={() =>
+                  !isSubmitted && game.team2 && onPick(game.id, game.team2)
+                }
                 disabled={isSubmitted}
               >
                 {game.team2 || "TBD"}

@@ -18,7 +18,7 @@ export default function OpeningRound({
           const selectedTeam = picks[game.id];
 
           return (
-            <div key={game.gameNumber} className="game-connector-wrapper">
+            <div key={game.id} className="game-connector-wrapper">
               <div className="game-card">
 
                 <div

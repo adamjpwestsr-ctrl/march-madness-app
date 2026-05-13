@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import OpeningRound from '@/components/bracket/OpeningRound';
-import RoundOf64 from '@/components/bracket/RoundOf64';
-import RoundOf32 from '@/components/bracket/RoundOf32';
-import Sweet16 from '@/components/bracket/Sweet16';
-import Elite8 from '@/components/bracket/Elite8';
-import Final4 from '@/components/bracket/Final4';
-import Championship from '@/components/bracket/Championship';
+import { RoundOf64 } from "@/components/bracket/RoundOf64";
+import { RoundOf32 } from "@/components/bracket/RoundOf32";
+import { Sweet16 } from "@/components/bracket/Sweet16";
+import { Elite8 } from "@/components/bracket/Elite8";
+import { FinalFour } from "@/components/bracket/FinalFour";
+import { Championship } from "@/components/bracket/Championship";
 
 export default function BracketPage() {
   const [bracket, setBracket] = useState(null);

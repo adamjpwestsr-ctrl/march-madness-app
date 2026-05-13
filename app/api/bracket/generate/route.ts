@@ -12,11 +12,8 @@ export async function GET() {
       return Response.json({ error: "Supabase client not initialized" }, { status: 500 });
     }
 
-    // Load teams with full data (including conference + record)
-    const { data: teams, error } = await client
-      .from("teams")
-      .select("*")
-      .order("seed", { ascending: true });
+    // ✅ FIXED: Removed invalid .order("seed")
+    const { data: teams, error } = await client.from("teams").select("*");
 
     if (error) {
       console.error("❌ Supabase query error:", error);
@@ -31,21 +28,14 @@ export async function GET() {
     console.log("✅ Team count:", teams.length);
     console.log("✅ First team sample:", teams[0]);
 
-    // Ensure correct typing
     const typedTeams = teams as Team[];
 
-    // Generate full bracket structure safely
     let bracket;
     try {
       bracket = generateBracketStructure(typedTeams);
     } catch (genError) {
       console.error("❌ Error generating bracket structure:", genError);
       return Response.json({ error: "Bracket generation failed" }, { status: 500 });
-    }
-
-    if (!bracket) {
-      console.error("❌ Bracket generation returned null or undefined");
-      return Response.json({ error: "Bracket generation returned null" }, { status: 500 });
     }
 
     console.log("✅ Bracket generation successful");

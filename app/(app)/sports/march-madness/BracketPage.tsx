@@ -27,6 +27,7 @@ export default function BracketPage() {
   const [tiebreaker, setTiebreaker] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [isLocked, setIsLocked] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const [mulliganGame, setMulliganGame] = useState<Game | null>(null);
 
@@ -34,57 +35,89 @@ export default function BracketPage() {
   // LOAD BRACKET METADATA + PICKS + GAMES + LOCK DATE
   // -----------------------------------------------------
   useEffect(() => {
-    if (!bracketId) return;
+    // If no bracketId, stop loading and show a clear message
+    if (!bracketId) {
+      console.warn("No bracketId found in search params");
+      setError("No bracket selected. Missing ?bid= in URL.");
+      setLoading(false);
+      return;
+    }
 
     async function loadBracket() {
       setLoading(true);
+      setError(null);
 
-      // 1. Load lock date
-      const { data: lockSettings } = await supabase!
-        .from("settings")
-        .select("lock_date")
-        .eq("id", 1)
-        .single();
+      try {
+        // 1. Load lock date
+        const { data: lockSettings, error: lockError } = await supabase!
+          .from("settings")
+          .select("lock_date")
+          .eq("id", 1)
+          .single();
 
-      if (lockSettings?.lock_date) {
-        const lockDate = new Date(lockSettings.lock_date);
-        const now = new Date();
-        if (now > lockDate) setIsLocked(true);
+        if (lockError) {
+          console.error("Error loading lock settings:", lockError);
+        }
+
+        if (lockSettings?.lock_date) {
+          const lockDate = new Date(lockSettings.lock_date);
+          const now = new Date();
+          if (now > lockDate) setIsLocked(true);
+        }
+
+        // 2. Load bracket metadata
+        const { data: bracketData, error: bracketError } = await supabase!
+          .from("brackets")
+          .select("*")
+          .eq("bracket_id", bracketId)
+          .single();
+
+        if (bracketError) {
+          console.error("Error loading bracket:", bracketError);
+          setError("Failed to load bracket metadata.");
+        }
+
+        if (bracketData) {
+          setBracketName(bracketData.bracket_name);
+          setTiebreaker(bracketData.tiebreaker_score ?? null);
+          setMulligans({ remaining: bracketData.mulligans_remaining ?? 2 });
+        }
+
+        // 3. Load existing picks
+        const { data: picksData, error: picksError } = await supabase!
+          .from("picks")
+          .select("*")
+          .eq("bracket_id", bracketId);
+
+        if (picksError) {
+          console.error("Error loading picks:", picksError);
+        }
+
+        if (picksData) {
+          const pickMap: Picks = {};
+          picksData.forEach((p) => {
+            pickMap[p.game_id] = p.selected_team;
+          });
+          setPicks(pickMap);
+        }
+
+        // 4. Load games from API
+        const res = await fetch("/api/bracket/generate");
+        if (!res.ok) {
+          const body = await res.text();
+          console.error("Error from /api/bracket/generate:", res.status, body);
+          setError("Failed to generate bracket structure.");
+          setGames([]);
+        } else {
+          const gameData = await res.json();
+          setGames(gameData);
+        }
+      } catch (e) {
+        console.error("Unexpected error loading bracket:", e);
+        setError("Unexpected error loading bracket.");
+      } finally {
+        setLoading(false);
       }
-
-      // 2. Load bracket metadata
-      const { data: bracketData } = await supabase!
-        .from("brackets")
-        .select("*")
-        .eq("bracket_id", bracketId)
-        .single();
-
-      if (bracketData) {
-        setBracketName(bracketData.bracket_name);
-        setTiebreaker(bracketData.tiebreaker_score ?? null);
-        setMulligans({ remaining: bracketData.mulligans_remaining ?? 2 });
-      }
-
-      // 3. Load existing picks
-      const { data: picksData } = await supabase!
-        .from("picks")
-        .select("*")
-        .eq("bracket_id", bracketId);
-
-      if (picksData) {
-        const pickMap: Picks = {};
-        picksData.forEach((p) => {
-          pickMap[p.game_id] = p.selected_team;
-        });
-        setPicks(pickMap);
-      }
-
-      // 4. Load games
-      const res = await fetch("/api/bracket/generate");
-      const gameData = await res.json();
-      setGames(gameData);
-
-      setLoading(false);
     }
 
     loadBracket();
@@ -123,7 +156,10 @@ export default function BracketPage() {
     setMulliganGame(game);
   };
 
-  const handleApplyMulligan = (originalGameId: number, gameIdsToFix: number[]) => {
+  const handleApplyMulligan = (
+    originalGameId: number,
+    gameIdsToFix: number[]
+  ) => {
     if (isLocked || isSubmitted) return;
 
     const originalGame = games.find((g) => g.id === originalGameId);
@@ -180,10 +216,25 @@ export default function BracketPage() {
 
   if (loading) return <div className="bracket-page">Loading bracket…</div>;
 
+  if (error) {
+    return (
+      <div className="bracket-page">
+        <h1>March Madness Bracket</h1>
+        <p style={{ color: "red" }}>{error}</p>
+        {!bracketId && (
+          <p>
+            Try visiting with a bracket ID, e.g.{" "}
+            <code>?bid=1</code> (or a valid ID from your DB).
+          </p>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="bracket-page">
       {/* BRACKET NAME */}
-      <h1 className="bracket-title">{bracketName}</h1>
+      <h1 className="bracket-title">{bracketName || "March Madness Bracket"}</h1>
 
       {/* LOCKED BANNER */}
       {isLocked && (

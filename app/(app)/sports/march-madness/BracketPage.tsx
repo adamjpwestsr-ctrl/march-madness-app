@@ -6,13 +6,13 @@ import { supabase } from "@/lib/supabaseClient";
 
 import { Game, Picks, MulliganState } from "@/lib/bracketTypes";
 
-import { RoundOf64 } from "@/app/components/bracket/RoundOf64";
-import { RoundOf32 } from "@/app/components/bracket/RoundOf32";
-import { Sweet16 } from "@/app/components/bracket/Sweet16";
-import { Elite8 } from "@/app/components/bracket/Elite8";
-import { FinalFour } from "@/app/components/bracket/FinalFour";
-import { Championship } from "@/app/components/bracket/Championship";
-import { MulliganModal } from "@/app/components/bracket/MulliganModal";
+import { RoundOf64 } from "@/components/bracket/RoundOf64";
+import { RoundOf32 } from "@/components/bracket/RoundOf32";
+import { Sweet16 } from "@/components/bracket/Sweet16";
+import { Elite8 } from "@/components/bracket/Elite8";
+import { FinalFour } from "@/components/bracket/FinalFour";
+import { Championship } from "@/components/bracket/Championship";
+import { MulliganModal } from "@/components/bracket/MulliganModal";
 
 export default function BracketPage() {
   const searchParams = useSearchParams();

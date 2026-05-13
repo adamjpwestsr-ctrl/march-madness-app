@@ -5,9 +5,6 @@ import { Team } from "@/lib/bracketTypes";
 export async function GET() {
   const client = supabase!; // keep your existing fix
 
-console.log("Team count:", teams.length);
-
-
   // Load teams with full data (including conference + record)
   const { data: teams, error } = await client
     .from("teams")
@@ -18,6 +15,8 @@ console.log("Team count:", teams.length);
     console.error("Error loading teams:", error);
     return Response.json({ error: "Failed to load teams" }, { status: 500 });
   }
+
+console.log("Team count:", teams.length);
 
   // Ensure correct typing
   const typedTeams = teams as Team[];

@@ -40,40 +40,40 @@ export default function BracketPage() {
       setLoading(true);
 
       // 1. Load lock date
-      const { data: settings } = await supabase!
+      const { data: lockSettings } = await supabase!
         .from("settings")
         .select("lock_date")
         .eq("id", 1)
         .single();
 
-      if (settings?.lock_date) {
-        const lockDate = new Date(settings.lock_date);
+      if (lockSettings?.lock_date) {
+        const lockDate = new Date(lockSettings.lock_date);
         const now = new Date();
         if (now > lockDate) setIsLocked(true);
       }
 
       // 2. Load bracket metadata
-      const { data: settings } = await supabase!
+      const { data: bracketData } = await supabase!
         .from("brackets")
         .select("*")
         .eq("bracket_id", bracketId)
         .single();
 
-      if (bracket) {
-        setBracketName(bracket.bracket_name);
-        setTiebreaker(bracket.tiebreaker_score ?? null);
-        setMulligans({ remaining: bracket.mulligans_remaining ?? 2 });
+      if (bracketData) {
+        setBracketName(bracketData.bracket_name);
+        setTiebreaker(bracketData.tiebreaker_score ?? null);
+        setMulligans({ remaining: bracketData.mulligans_remaining ?? 2 });
       }
 
       // 3. Load existing picks
-      const { data: settings } = await supabase!
+      const { data: picksData } = await supabase!
         .from("picks")
         .select("*")
         .eq("bracket_id", bracketId);
 
-      if (existingPicks) {
+      if (picksData) {
         const pickMap: Picks = {};
-        existingPicks.forEach((p) => {
+        picksData.forEach((p) => {
           pickMap[p.game_id] = p.selected_team;
         });
         setPicks(pickMap);

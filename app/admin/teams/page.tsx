@@ -25,10 +25,10 @@ export default function AdminTeamsPage() {
 
   async function loadTeams() {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("teams")
-      .select("*")
-      .order("seed", { ascending: true });
+    const { data, error } = await supabase!
+  .from("teams")
+  .select("*")
+  .order("seed", { ascending: true });
 
     if (!error && data) setTeams(data as Team[]);
     setLoading(false);

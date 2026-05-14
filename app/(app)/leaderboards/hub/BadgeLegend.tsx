@@ -2,7 +2,19 @@
 
 import { useState } from "react";
 
-export default function BadgeLegend({ badges }) {
+type BadgeLegendProps = {
+  badges: {
+    id: number;
+    badge_name: string;
+    badge_icon: string | null;
+    rule_type: "contests_played" | "total_points";
+    threshold: number;
+    tier: string | null;
+    color_class: string | null;
+  }[];
+};
+
+export default function BadgeLegend({ badges }: BadgeLegendProps) {
   const [open, setOpen] = useState(false);
 
   return (

@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { createServerClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
 import BadgeLegend from "./BadgeLegend";
 
 /**
@@ -65,40 +64,38 @@ type PlayerWithBadges = LeaderboardRow & {
 };
 
 export default async function LeaderboardHub() {
-  // --- FIXED SUPABASE CLIENT INITIALIZATION ---
-  const cookieStore = cookies();
-
-const supabase = createServerClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  {
-    cookies: {
-      get() {
-        return undefined;
-      },
-      set() {},
-      remove() {}
+  // --- NO-OP COOKIE ADAPTER (Next.js 16 compatible) ---
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get() {
+          return undefined;
+        },
+        set() {},
+        remove() {}
+      }
     }
-  }
-);
-  // ------------------------------------------------
+  );
+  // ----------------------------------------------------
 
   // Fetch all contests (sports)
   const { data: sports } = await supabase
-    .from<Contest>("contests")
+    .from("contests")
     .select("*")
     .order("name", { ascending: true });
 
   // Fetch cross-sport leaderboard
   const { data: players } = await supabase
-    .from<LeaderboardRow>("leaderboard_all_challenges")
+    .from("leaderboard_all_challenges")
     .select("*")
     .order("total_points", { ascending: false })
     .limit(10);
 
   // Fetch badge rules
   const { data: badgeRules } = await supabase
-    .from<BadgeRule>("badges")
+    .from("badges")
     .select("*");
 
   // Attach badges to each player
@@ -153,7 +150,6 @@ const supabase = createServerClient(
       {/* CROSS-SPORT LEADERBOARD WITH BADGES + LEGEND */}
       <section>
 
-        {/* Header with Legend Button */}
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-2xl font-bold">Top Players Across All Sports</h2>
           <BadgeLegend badges={badgeRules ?? []} />
@@ -177,7 +173,6 @@ const supabase = createServerClient(
               <div className="flex items-center gap-3">
                 <span className="text-slate-400">{p.total_points} pts</span>
 
-                {/* BADGES */}
                 <div className="flex gap-1">
                   {p.badges.map((b) => (
                     <span

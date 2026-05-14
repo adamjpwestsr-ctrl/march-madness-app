@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createServerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 
 type Contest = {
@@ -32,7 +32,7 @@ type PlayerWithBadges = LeaderboardRow & {
 };
 
 export default async function LeaderboardHub() {
-  const supabase = createServerComponentClient({ cookies });
+const supabase = createServerClient({ cookies });
 
   // Fetch contests
   const { data: sports } = await supabase

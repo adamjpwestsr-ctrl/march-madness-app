@@ -1,8 +1,8 @@
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createServerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 
 export default async function BadgeProfilePage() {
-  const supabase = createServerComponentClient({ cookies });
+  const supabase = createServerClient({ cookies });
 
   const {
     data: { user },

@@ -65,7 +65,11 @@ type PlayerWithBadges = LeaderboardRow & {
 };
 
 export default async function LeaderboardHub() {
-  const supabase = createServerClient({ cookies });
+const supabase = createServerClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  { cookies }
+);
 
   // Fetch all contests (sports)
   const { data: sports } = await supabase

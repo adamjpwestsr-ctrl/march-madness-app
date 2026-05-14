@@ -1,21 +1,24 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
 import { getLeaderboardScores } from "../admin/tournament-setup/actions";
 
-type LeaderboardScore = {
+type LeaderboardRow = {
   bracket_id: string;
   total_points: number;
+  user_id: number;
+  username: string;
 };
 
 export default function LiveLeaderboardClient({
   initialScores,
 }: {
-  initialScores: LeaderboardScore[];
+  initialScores: LeaderboardRow[];
 }) {
   const [scores, setScores] = useState(initialScores);
-  const prevScores = useRef<LeaderboardScore[]>(initialScores);
+  const prevScores = useRef<LeaderboardRow[]>(initialScores);
 
   useEffect(() => {
     const supabase = createClient(
@@ -80,62 +83,78 @@ export default function LiveLeaderboardClient({
             previous && previous.total_points !== s.total_points;
 
           return (
-            <div
+            <Link
+              href={`/bracket/${s.bracket_id}`}
               key={s.bracket_id}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: "16px",
-                borderRadius: "12px",
-                background: "rgba(255, 255, 255, 0.06)",
-                backdropFilter: "blur(10px)",
-                border: "1px solid rgba(255, 255, 255, 0.1)",
-                transition: "transform 0.25s ease, background 0.25s ease",
-                ...(rankChange && {
-                  background: "rgba(34,197,94,0.15)",
-                  transform: "scale(1.02)",
-                }),
-              }}
+              className="block"
             >
-              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: "16px",
+                  borderRadius: "12px",
+                  background: "rgba(255, 255, 255, 0.06)",
+                  backdropFilter: "blur(10px)",
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
+                  transition:
+                    "transform 0.25s ease, background 0.25s ease, box-shadow 0.25s ease",
+                  cursor: "pointer",
+                  ...(rankChange && {
+                    background: "rgba(34,197,94,0.15)",
+                    transform: "scale(1.02)",
+                  }),
+                }}
+                className="hover:bg-slate-800/40 hover:scale-[1.02]"
+              >
+                {/* Left side */}
                 <div
                   style={{
-                    width: "40px",
-                    height: "40px",
-                    borderRadius: "50%",
-                    background: "#1e293b",
                     display: "flex",
                     alignItems: "center",
-                    justifyContent: "center",
+                    gap: "12px",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: "40px",
+                      height: "40px",
+                      borderRadius: "50%",
+                      background: "#1e293b",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontWeight: 700,
+                      fontSize: "16px",
+                      color: "#38bdf8",
+                    }}
+                  >
+                    {(s.username || "??").slice(0, 2).toUpperCase()}
+                  </div>
+
+                  <div>
+                    <div style={{ fontSize: "14px", opacity: 0.8 }}>
+                      #{index + 1}
+                    </div>
+                    <div style={{ fontSize: "16px", fontWeight: 600 }}>
+                      {s.username}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right side */}
+                <div
+                  style={{
+                    fontSize: "18px",
                     fontWeight: 700,
-                    fontSize: "16px",
                     color: "#38bdf8",
                   }}
                 >
-                  {s.bracket_id.slice(0, 2).toUpperCase()}
-                </div>
-
-                <div>
-                  <div style={{ fontSize: "14px", opacity: 0.8 }}>
-                    #{index + 1}
-                  </div>
-                  <div style={{ fontSize: "16px", fontWeight: 600 }}>
-                    {s.bracket_id}
-                  </div>
+                  {s.total_points} pts
                 </div>
               </div>
-
-              <div
-                style={{
-                  fontSize: "18px",
-                  fontWeight: 700,
-                  color: "#38bdf8",
-                }}
-              >
-                {s.total_points} pts
-              </div>
-            </div>
+            </Link>
           );
         })}
       </div>

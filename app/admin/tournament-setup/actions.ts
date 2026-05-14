@@ -413,15 +413,43 @@ export async function updateBracketScores() {
 export async function getLeaderboardScores() {
   const supabase = await createSupabaseServerClient();
 
-  const { data, error } = await supabase
+  // Load bracket scores (from your view)
+  const { data: scores, error: scoreErr } = await supabase
     .from("bracket_scores")
-    .select("bracket_id, total_points")
+    .select("bracket_id, total_points, user_id")
     .order("total_points", { ascending: false });
 
-  if (error) {
-    console.error("Error loading leaderboard scores:", error);
+  if (scoreErr) {
     throw new Error("Failed to load leaderboard scores.");
   }
 
-  return data ?? [];
+  if (!scores || scores.length === 0) return [];
+
+  // Fetch usernames for all users in leaderboard
+  const userIds = scores.map((s) => s.user_id);
+
+  const { data: users, error: userErr } = await supabase
+    .from("users")
+    .select("user_id, username, email")
+    .in("user_id", userIds);
+
+  if (userErr) {
+    throw new Error("Failed to load leaderboard users.");
+  }
+
+  const userMap = new Map(users.map((u) => [u.user_id, u]));
+
+  // Merge username into leaderboard rows
+  return scores.map((row) => {
+    const u = userMap.get(row.user_id);
+
+    const username =
+      u?.username ||
+      (u?.email ? u.email.split("@")[0] : `User${row.user_id}`);
+
+    return {
+      ...row,
+      username,
+    };
+  });
 }

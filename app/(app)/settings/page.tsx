@@ -1,12 +1,58 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import SettingsSection from "@/app/components/SettingsSection";
+import {
+  getUserProfile,
+  updateUserProfile,
+  initializeUsername,
+} from "./actions";
 
 export default function SettingsPage() {
+  const [loading, setLoading] = useState(true);
+
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [pushNotifications, setPushNotifications] = useState(false);
   const [favoriteSport, setFavoriteSport] = useState("NBA");
+  const [theme, setTheme] = useState("dark");
+
+  // TODO: Replace with your actual auth user ID
+  const currentUserId = 1;
+
+  // Load profile on mount
+  useEffect(() => {
+    async function loadProfile() {
+      const profile = await getUserProfile(currentUserId);
+
+      // Auto-generate username if missing
+      const finalUsername =
+        profile.username || (await initializeUsername(currentUserId));
+
+      setUsername(finalUsername);
+      setEmail(profile.email);
+
+      setEmailNotifications(profile.email_notifications);
+      setPushNotifications(profile.push_notifications);
+      setFavoriteSport(profile.favorite_sport);
+      setTheme(profile.theme);
+
+      setLoading(false);
+    }
+
+    loadProfile();
+  }, []);
+
+  // Save helper
+  async function saveField(field: string, value: any) {
+    await updateUserProfile(currentUserId, { [field]: value });
+  }
+
+  if (loading) {
+    return <p className="text-slate-400">Loading settings...</p>;
+  }
 
   return (
     <div className="space-y-10">
@@ -21,19 +67,22 @@ export default function SettingsPage() {
       {/* Profile Section */}
       <SettingsSection title="Profile">
         <div className="space-y-4">
+          {/* Username */}
           <div>
             <p className="text-sm text-slate-400">Display Name</p>
-            <p className="text-lg font-medium">Adam</p>
+            <input
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              onBlur={() => saveField("username", username)}
+              className="bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm w-full"
+            />
           </div>
 
+          {/* Email (read-only) */}
           <div>
             <p className="text-sm text-slate-400">Email</p>
-            <p className="text-lg font-medium">adam@example.com</p>
+            <p className="text-lg font-medium">{email}</p>
           </div>
-
-          <button className="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 transition text-sm">
-            Edit Profile
-          </button>
         </div>
       </SettingsSection>
 
@@ -50,7 +99,11 @@ export default function SettingsPage() {
             </div>
 
             <button
-              onClick={() => setEmailNotifications(!emailNotifications)}
+              onClick={() => {
+                const newVal = !emailNotifications;
+                setEmailNotifications(newVal);
+                saveField("email_notifications", newVal);
+              }}
               className={`w-12 h-6 rounded-full transition ${
                 emailNotifications ? "bg-emerald-600" : "bg-slate-700"
               } relative`}
@@ -73,7 +126,11 @@ export default function SettingsPage() {
             </div>
 
             <button
-              onClick={() => setPushNotifications(!pushNotifications)}
+              onClick={() => {
+                const newVal = !pushNotifications;
+                setPushNotifications(newVal);
+                saveField("push_notifications", newVal);
+              }}
               className={`w-12 h-6 rounded-full transition ${
                 pushNotifications ? "bg-emerald-600" : "bg-slate-700"
               } relative`}
@@ -96,7 +153,10 @@ export default function SettingsPage() {
             <p className="font-medium mb-2">Favorite Sport</p>
             <select
               value={favoriteSport}
-              onChange={(e) => setFavoriteSport(e.target.value)}
+              onChange={(e) => {
+                setFavoriteSport(e.target.value);
+                saveField("favorite_sport", e.target.value);
+              }}
               className="bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm"
             >
               <option>NBA</option>
@@ -110,10 +170,31 @@ export default function SettingsPage() {
           <div>
             <p className="font-medium mb-2">Theme</p>
             <div className="flex gap-3">
-              <button className="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 transition text-sm">
+              <button
+                onClick={() => {
+                  setTheme("dark");
+                  saveField("theme", "dark");
+                }}
+                className={`px-4 py-2 rounded-lg text-sm ${
+                  theme === "dark"
+                    ? "bg-slate-800"
+                    : "bg-slate-900 border border-slate-700"
+                }`}
+              >
                 Dark
               </button>
-              <button className="px-4 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm">
+
+              <button
+                onClick={() => {
+                  setTheme("light");
+                  saveField("theme", "light");
+                }}
+                className={`px-4 py-2 rounded-lg text-sm ${
+                  theme === "light"
+                    ? "bg-slate-800"
+                    : "bg-slate-900 border border-slate-700"
+                }`}
+              >
                 Light
               </button>
             </div>

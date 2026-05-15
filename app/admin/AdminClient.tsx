@@ -139,3 +139,5 @@ export default function AdminClient({ adminEmail }: { adminEmail: string }) {
   <AdminGenerateBracketButton />
 </div>
 
+</div>   
+</div>

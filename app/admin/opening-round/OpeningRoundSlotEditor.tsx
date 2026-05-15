@@ -118,12 +118,12 @@ export function OpeningRoundSlotEditor({
         type="button"
         className="p-2 mb-2 bg-purple-600 rounded-lg w-full"
         onClick={() => {
-          const s = suggestMapping(game, allTeams, r64Games);
-          setRegion(s.region);
-          setSeed(s.seed);
-          setR64GameId(s.r64GameId);
-          setSlot(s.slot);
-          save(true); // mark as auto-suggested
+const s = suggestMapping(game, allTeams, r64Games);
+setRegion(s.region);
+setSeed(String(s.seed)); // FIXED
+setR64GameId(s.r64GameId);
+setSlot(s.slot);
+save(true);
         }}
       >
         Auto‑Suggest

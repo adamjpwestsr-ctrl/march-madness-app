@@ -28,7 +28,7 @@ export default async function BadgeProfilePage() {
   const { data: badges } = await supabase
     .from("user_badges")
     .select("badge_name, badge_description, earned_at, badges:badges_id(*)")
-    .eq("user_id", user.id); // <-- FIXED HERE
+    .eq("user_id", user.id);
 
   return (
     <div className="p-6 space-y-6">
@@ -40,9 +40,13 @@ export default async function BadgeProfilePage() {
             key={b.badge_name}
             className="p-6 rounded-xl bg-slate-800/40 border border-slate-700/40"
           >
-            <div className="text-4xl mb-3">{b.badges.badge_icon}</div>
+            <div className="text-4xl mb-3">
+              {b.badges?.[0]?.badge_icon ?? "🏅"}
+            </div>
+
             <h2 className="text-xl font-semibold">{b.badge_name}</h2>
             <p className="text-slate-400 text-sm">{b.badge_description}</p>
+
             <p className="text-slate-500 text-xs mt-2">
               Earned: {new Date(b.earned_at).toLocaleDateString()}
             </p>

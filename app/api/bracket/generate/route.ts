@@ -11,7 +11,7 @@ import { generateBracketStructure } from "@/lib/bracketUtils";
  *  - inserts into Supabase `games` table
  */
 export async function POST() {
-  const supabase = createClient();
+const supabase = await createClient();
 
   // ---------------------------------------------------------
   // 1. Load true‑seed list (admin input)

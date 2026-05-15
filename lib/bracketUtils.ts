@@ -53,8 +53,8 @@ export function generateBracketStructure(teams: Team[]): BracketState {
       id: gid("OR", i + 1),
       round: "Opening Round",
       gameNumber: i + 1,
-     team1Id: String(team1.id),
-     team2Id: String(team2.id),
+      team1Id: String(team1.id),
+      team2Id: String(team2.id),
       winnerToGameId: null, // ADMIN will assign via opening_round_slots
       winnerToSlot: null,
     });
@@ -74,10 +74,10 @@ export function generateBracketStructure(teams: Team[]): BracketState {
       id: gid("R64", i + 1),
       round: "Round of 64",
       gameNumber: i + 1,
-      team1Id: team1?.id ?? null,
-      team2Id: team2?.id ?? null,
+      team1Id: team1 ? String(team1.id) : null,
+      team2Id: team2 ? String(team2.id) : null,
       winnerToGameId: gid("R32", Math.floor(i / 2) + 1),
-      winnerToSlot: (i % 2 === 0 ? 1 : 2),
+      winnerToSlot: i % 2 === 0 ? 1 : 2,
     });
   }
 
@@ -93,7 +93,7 @@ export function generateBracketStructure(teams: Team[]): BracketState {
       team1Id: null,
       team2Id: null,
       winnerToGameId: gid("S16", Math.floor(i / 2) + 1),
-      winnerToSlot: (i % 2 === 0 ? 1 : 2),
+      winnerToSlot: i % 2 === 0 ? 1 : 2,
     });
   }
 
@@ -109,7 +109,7 @@ export function generateBracketStructure(teams: Team[]): BracketState {
       team1Id: null,
       team2Id: null,
       winnerToGameId: gid("E8", Math.floor(i / 2) + 1),
-      winnerToSlot: (i % 2 === 0 ? 1 : 2),
+      winnerToSlot: i % 2 === 0 ? 1 : 2,
     });
   }
 
@@ -125,7 +125,7 @@ export function generateBracketStructure(teams: Team[]): BracketState {
       team1Id: null,
       team2Id: null,
       winnerToGameId: gid("F4", Math.floor(i / 2) + 1),
-      winnerToSlot: (i % 2 === 0 ? 1 : 2),
+      winnerToSlot: i % 2 === 0 ? 1 : 2,
     });
   }
 
@@ -141,7 +141,7 @@ export function generateBracketStructure(teams: Team[]): BracketState {
       team1Id: null,
       team2Id: null,
       winnerToGameId: gid("CH", 1),
-      winnerToSlot: (i === 0 ? 1 : 2),
+      winnerToSlot: i === 0 ? 1 : 2,
     });
   }
 

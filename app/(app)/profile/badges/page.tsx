@@ -1,22 +1,21 @@
 import { createServerClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
 
 export default async function BadgeProfilePage() {
-  // --- FIXED SUPABASE CLIENT INITIALIZATION ---
-const supabase = createServerClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  {
-    cookies: {
-      get() {
-        return undefined;
-      },
-      set() {},
-      remove() {}
+  // --- NO-OP COOKIE ADAPTER (Next.js 16 compatible) ---
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get() {
+          return undefined;
+        },
+        set() {},
+        remove() {}
+      }
     }
-  }
-);
-  // ------------------------------------------------
+  );
+  // ----------------------------------------------------
 
   const {
     data: { user },
@@ -29,7 +28,7 @@ const supabase = createServerClient(
   const { data: badges } = await supabase
     .from("user_badges")
     .select("badge_name, badge_description, earned_at, badges:badges_id(*)")
-    .eq("user_id", user.user_id);
+    .eq("user_id", user.id); // <-- FIXED HERE
 
   return (
     <div className="p-6 space-y-6">

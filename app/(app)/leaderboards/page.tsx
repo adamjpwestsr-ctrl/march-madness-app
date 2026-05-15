@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { createServerClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
 
 type Contest = {
   id: string;
@@ -32,37 +31,38 @@ type PlayerWithBadges = LeaderboardRow & {
 };
 
 export default async function LeaderboardHub() {
-const supabase = createServerClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  {
-    cookies: {
-      get() {
-        return undefined;
-      },
-      set() {},
-      remove() {}
+  // --- NO-OP COOKIE ADAPTER (Next.js 16 compatible) ---
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get() {
+          return undefined;
+        },
+        set() {},
+        remove() {}
+      }
     }
-  }
-);
-  // ------------------------------------------------
+  );
+  // ----------------------------------------------------
 
   // Fetch contests
   const { data: sports } = await supabase
-    .from<Contest>("contests")
+    .from("contests")
     .select("*")
     .order("name", { ascending: true });
 
   // Fetch cross-sport leaderboard
   const { data: players } = await supabase
-    .from<LeaderboardRow>("leaderboard_all_challenges")
+    .from("leaderboard_all_challenges")
     .select("*")
     .order("total_points", { ascending: false })
     .limit(10);
 
   // Fetch badge rules
   const { data: badgeRules } = await supabase
-    .from<BadgeRule>("badges")
+    .from("badges")
     .select("*");
 
   const playersWithBadges: PlayerWithBadges[] = (players ?? []).map((p) => {

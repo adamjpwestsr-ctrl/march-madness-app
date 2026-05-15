@@ -29,10 +29,14 @@ export default async function OpeningRoundAdminPage() {
     .eq("round", "Round of 64")
     .order("game_number");
 
-  // Load all teams (needed for Auto‑Suggest)
+  // Load all teams
   const { data: allTeams } = await supabase
     .from("teams")
     .select("*");
+
+  // FIX: Normalize null → []
+  const safeR64Games = r64Games ?? [];
+  const safeAllTeams = allTeams ?? [];
 
   return (
     <div className="p-6 space-y-10">
@@ -56,8 +60,8 @@ export default async function OpeningRoundAdminPage() {
             <OpeningRoundSlotEditor
               key={g.id}
               game={g}
-              r64Games={r64Games}
-              allTeams={allTeams}
+              r64Games={safeR64Games}
+              allTeams={safeAllTeams}
             />
           ))}
         </div>

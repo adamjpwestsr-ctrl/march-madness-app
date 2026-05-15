@@ -101,3 +101,14 @@ export function getTeamStrength(conference: string) {
   const tier = CONFERENCE_STRENGTH_MAP[conference] || "LowMajor";
   return CONFERENCE_STRENGTH_DISPLAY[tier];
 }
+
+export interface TournamentTeam {
+  id: number;          // from tournament_teams
+  region: string | null;
+  seed: number | null;
+  team: string;        // team_name
+  bid_type: string | null;
+  conference: string | null;
+  record: string | null;
+  logo_url: string | null;
+}

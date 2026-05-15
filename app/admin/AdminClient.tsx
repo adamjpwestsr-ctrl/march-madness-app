@@ -4,7 +4,6 @@ import Link from "next/link";
 import AdminGenerateBracketButton from "./components/AdminGenerateBracketButton";
 import AdminTrueSeedForm from "./components/AdminTrueSeedForm";
 
-
 export default function AdminClient({ adminEmail }: { adminEmail: string }) {
   const tools = [
     { href: "/admin/brackets", label: "Bracket Management" },
@@ -32,7 +31,6 @@ export default function AdminClient({ adminEmail }: { adminEmail: string }) {
     { href: "/admin/weekly-challenge", label: "Weekly Challenge Admin" },
   ];
 
-  // Alphabetize by label
   const sortedTools = tools.sort((a, b) =>
     a.label.localeCompare(b.label, "en", { sensitivity: "base" })
   );
@@ -118,26 +116,25 @@ export default function AdminClient({ adminEmail }: { adminEmail: string }) {
           boxShadow: "0 8px 20px rgba(0,0,0,0.35)",
         }}
       >
- <h2
-  style={{
-    fontSize: 22,
-    fontWeight: 700,
-    marginBottom: 15,
-    textAlign: "center",
-  }}
->
-  Bracket Generation
-</h2>
+        <h2
+          style={{
+            fontSize: 22,
+            fontWeight: 700,
+            marginBottom: 15,
+            textAlign: "center",
+          }}
+        >
+          Bracket Generation
+        </h2>
 
-{/* True Seed Input Form */}
-<div style={{ marginTop: 20 }}>
-  <AdminTrueSeedForm />
-</div>
+        <div style={{ marginTop: 20 }}>
+          <AdminTrueSeedForm />
+        </div>
 
-{/* Generate Bracket Button */}
-<div style={{ marginTop: 30, display: "flex", justifyContent: "center" }}>
-  <AdminGenerateBracketButton />
-</div>
-
-</div>   
-</div>
+        <div style={{ marginTop: 30, display: "flex", justifyContent: "center" }}>
+          <AdminGenerateBracketButton />
+        </div>
+      </div>
+    </div>
+  );
+}

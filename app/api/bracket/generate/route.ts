@@ -15,7 +15,6 @@ export async function GET() {
       );
     }
 
-    // Pull enriched team data from the unified view
     const { data: teams, error } = await client
       .from("v_tournament_teams")
       .select("*")

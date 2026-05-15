@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
-import { generateBracketStructure } from "@/lib/BracketUtils";
+import { generateBracketStructure } from "@/lib/bracketUtils";
 
 /**
  * POST /api/bracket/generate
  * Generates the full 75‑game bracket using:
  *  - admin‑provided true‑seed list (1–76)
  *  - v_tournament_teams metadata
- *  - pure generator (BracketUtils)
+ *  - pure generator (bracketUtils)
  *  - inserts into Supabase `games` table
  */
 export async function POST() {

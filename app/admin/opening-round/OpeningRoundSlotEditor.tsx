@@ -6,7 +6,11 @@ import { useState } from "react";
  * Suggests a mapping based on true seed and geography.
  * This uses basic heuristics that can later be replaced with NCAA data logic.
  */
-function suggestMapping(game, allTeams, r64Games) {
+function suggestMapping(
+  game: any,
+  allTeams: any[],
+  r64Games: any[]
+) {
   const team1 = allTeams.find((t) => t.id === game.team1Id);
   const team2 = allTeams.find((t) => t.id === game.team2Id);
 
@@ -33,7 +37,15 @@ function suggestMapping(game, allTeams, r64Games) {
  * Opening Round Slot Editor — allows admin to assign region, seed, and Round of 64 slot.
  * Includes Auto‑Suggest button for NCAA‑style recommendations.
  */
-export function OpeningRoundSlotEditor({ game, r64Games, allTeams }) {
+export function OpeningRoundSlotEditor({
+  game,
+  r64Games,
+  allTeams,
+}: {
+  game: any;
+  r64Games: any[];
+  allTeams: any[];
+}) {
   const [region, setRegion] = useState("");
   const [seed, setSeed] = useState("");
   const [r64GameId, setR64GameId] = useState("");

@@ -13,24 +13,41 @@ export default async function RoundOf64Page() {
     }
   );
 
+  // Load Round of 64 games
   const { data: games } = await supabase
     .from("games")
     .select("*, team1:team1_id(name), team2:team2_id(name)")
     .eq("round", "Round of 64")
     .order("game_number");
 
+  // Load Opening Round mappings
   const { data: slots } = await supabase
     .from("opening_round_slots")
     .select("*");
 
-  // Group games by region
+  // Define regions
   const regions = ["East", "West", "South", "Midwest"];
-  const grouped = Object.fromEntries(regions.map(r => [r, []]));
 
+  // Strongly typed grouped structure
+  type GroupedGames = Record<
+    string,
+    { game: any; slot: any }[]
+  >;
+
+  const grouped: GroupedGames = {
+    East: [],
+    West: [],
+    South: [],
+    Midwest: [],
+  };
+
+  // Group games by region
   games?.forEach((g) => {
     const slot = slots?.find((s) => s.round_of_64_game_id === g.id);
     const region = slot?.target_region ?? "Unassigned";
+
     if (!grouped[region]) grouped[region] = [];
+
     grouped[region].push({ game: g, slot });
   });
 
@@ -58,16 +75,19 @@ export default async function RoundOf64Page() {
                       Game {g.game_number}
                     </h3>
 
-                    <a
-                      href={`/admin/opening-round/edit/${slot?.id}`}
-                      className={`text-xs px-2 py-1 rounded ${
-                        isAutoSuggested
-                          ? "bg-purple-600 text-white"
-                          : "bg-blue-600 text-white"
-                      } hover:opacity-80`}
-                    >
-                      {isAutoSuggested ? "Auto‑Suggested" : "Manual"}
-                    </a>
+                    {/* Clickable badge */}
+                    {slot && (
+                      <a
+                        href={`/admin/opening-round/edit/${slot.id}`}
+                        className={`text-xs px-2 py-1 rounded ${
+                          isAutoSuggested
+                            ? "bg-purple-600 text-white"
+                            : "bg-blue-600 text-white"
+                        } hover:opacity-80`}
+                      >
+                        {isAutoSuggested ? "Auto‑Suggested" : "Manual"}
+                      </a>
+                    )}
                   </div>
 
                   <div className="space-y-3">

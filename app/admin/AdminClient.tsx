@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import AdminGenerateBracketButton from "./components/AdminGenerateBracketButton";
+import AdminTrueSeedForm from "./components/AdminTrueSeedForm";
+
 
 export default function AdminClient({ adminEmail }: { adminEmail: string }) {
   const tools = [
@@ -116,21 +118,24 @@ export default function AdminClient({ adminEmail }: { adminEmail: string }) {
           boxShadow: "0 8px 20px rgba(0,0,0,0.35)",
         }}
       >
-        <h2
-          style={{
-            fontSize: 22,
-            fontWeight: 700,
-            marginBottom: 15,
-            textAlign: "center",
-          }}
-        >
-          Bracket Generation
-        </h2>
+ <h2
+  style={{
+    fontSize: 22,
+    fontWeight: 700,
+    marginBottom: 15,
+    textAlign: "center",
+  }}
+>
+  Bracket Generation
+</h2>
 
-        <div style={{ display: "flex", justifyContent: "center" }}>
-          <AdminGenerateBracketButton />
-        </div>
-      </div>
-    </div>
-  );
-}
+{/* True Seed Input Form */}
+<div style={{ marginTop: 20 }}>
+  <AdminTrueSeedForm />
+</div>
+
+{/* Generate Bracket Button */}
+<div style={{ marginTop: 30, display: "flex", justifyContent: "center" }}>
+  <AdminGenerateBracketButton />
+</div>
+

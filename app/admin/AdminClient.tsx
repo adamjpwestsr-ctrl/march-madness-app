@@ -1,33 +1,34 @@
 "use client";
 
 import Link from "next/link";
+import AdminGenerateBracketButton from "./components/AdminGenerateBracketButton";
 
 export default function AdminClient({ adminEmail }: { adminEmail: string }) {
-const tools = [
-  { href: "/admin/brackets", label: "Bracket Management" },
-  { href: "/admin/tools", label: "Bracket Tools & Simulations" },
-  { href: "/admin/forum", label: "Forum Moderation" },
-  { href: "/admin/games", label: "Game Results" },
-  { href: "/sports/golf/weekly/admin", label: "Golf Weekly — Score Entry" },
-  { href: "/sports/golf/weekly/admin/metadata", label: "Golf Weekly — Tournament Metadata" },
-  { href: "/admin/leaderboard", label: "Leaderboard Tools" },
-  { href: "/admin/mulligans", label: "Mulligan Approvals" },
-  { href: "/sports", label: "Other Sports" },
-  { href: "/admin/snapshots", label: "Payout Snapshots" },
-  { href: "/admin/pending-users", label: "Pending Users" },
+  const tools = [
+    { href: "/admin/brackets", label: "Bracket Management" },
+    { href: "/admin/tools", label: "Bracket Tools & Simulations" },
+    { href: "/admin/forum", label: "Forum Moderation" },
+    { href: "/admin/games", label: "Game Results" },
+    { href: "/sports/golf/weekly/admin", label: "Golf Weekly — Score Entry" },
+    { href: "/sports/golf/weekly/admin/metadata", label: "Golf Weekly — Tournament Metadata" },
+    { href: "/admin/leaderboard", label: "Leaderboard Tools" },
+    { href: "/admin/mulligans", label: "Mulligan Approvals" },
+    { href: "/sports", label: "Other Sports" },
+    { href: "/admin/snapshots", label: "Payout Snapshots" },
+    { href: "/admin/pending-users", label: "Pending Users" },
 
-  // ⭐ NEW — Admin Tools Suite
-  { href: "/admin/players", label: "Player Management" },
-  { href: "/admin/scoring-audit", label: "Scoring Audit Log" },
-  { href: "/admin/tournaments/create", label: "Tournament Creator" },
+    // ⭐ NEW — Admin Tools Suite
+    { href: "/admin/players", label: "Player Management" },
+    { href: "/admin/scoring-audit", label: "Scoring Audit Log" },
+    { href: "/admin/tournaments/create", label: "Tournament Creator" },
 
-  { href: "/admin/tournament-setup", label: "Tournament Setup" },
-  { href: "/admin/users", label: "User Management" },
-  { href: "/admin/trivia", label: "Trivia Management" },
+    { href: "/admin/tournament-setup", label: "Tournament Setup" },
+    { href: "/admin/users", label: "User Management" },
+    { href: "/admin/trivia", label: "Trivia Management" },
 
-  // ⭐ NEW — WEEKLY CHALLENGE ADMIN
-  { href: "/admin/weekly-challenge", label: "Weekly Challenge Admin" },
-];
+    // ⭐ NEW — WEEKLY CHALLENGE ADMIN
+    { href: "/admin/weekly-challenge", label: "Weekly Challenge Admin" },
+  ];
 
   // Alphabetize by label
   const sortedTools = tools.sort((a, b) =>
@@ -99,6 +100,36 @@ const tools = [
             {item.label}
           </Link>
         ))}
+      </div>
+
+      {/* ⭐ NEW — Bracket Generation Section */}
+      <div
+        style={{
+          marginTop: 40,
+          maxWidth: 1000,
+          marginLeft: "auto",
+          marginRight: "auto",
+          padding: 20,
+          background: "rgba(30,41,59,0.9)",
+          borderRadius: 12,
+          border: "1px solid rgba(148,163,184,0.35)",
+          boxShadow: "0 8px 20px rgba(0,0,0,0.35)",
+        }}
+      >
+        <h2
+          style={{
+            fontSize: 22,
+            fontWeight: 700,
+            marginBottom: 15,
+            textAlign: "center",
+          }}
+        >
+          Bracket Generation
+        </h2>
+
+        <div style={{ display: "flex", justifyContent: "center" }}>
+          <AdminGenerateBracketButton />
+        </div>
       </div>
     </div>
   );

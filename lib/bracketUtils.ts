@@ -53,8 +53,8 @@ export function generateBracketStructure(teams: Team[]): BracketState {
       id: gid("OR", i + 1),
       round: "Opening Round",
       gameNumber: i + 1,
-      team1Id: team1.id,
-      team2Id: team2.id,
+     team1Id: String(team1.id),
+     team2Id: String(team2.id),
       winnerToGameId: null, // ADMIN will assign via opening_round_slots
       winnerToSlot: null,
     });

@@ -11,7 +11,11 @@ type Props = {
   isSubmitted: boolean;
 };
 
-export function FinalFour({
+export function FinalFour(props: Props) {
+  return <RoundTemplate {...props} />;
+}
+
+function RoundTemplate({
   games,
   picks,
   mulligans,
@@ -19,20 +23,24 @@ export function FinalFour({
   onUseMulligan,
   isSubmitted,
 }: Props) {
+  // Only rounds 1–3 allow mulligans
   const mulliganEligibleRounds = [1, 2, 3];
 
   return (
     <div className="round final-four">
       {games.map((game) => {
-        const userPick = picks[game.id];
+        const userPick = picks[game.game_id];
         const actualWinner = game.winner;
 
         const userPickedWrong =
-          isSubmitted && actualWinner && userPick && userPick !== actualWinner;
+          isSubmitted &&
+          actualWinner &&
+          userPick &&
+          userPick !== actualWinner;
 
         const canUseMulligan =
           userPickedWrong &&
-          mulliganEligibleRounds.includes(game.round) &&
+          mulliganEligibleRounds.includes(game.round ?? 0) &&
           mulligans.remaining > 0;
 
         const team1IsLosing =
@@ -46,7 +54,7 @@ export function FinalFour({
           actualWinner === game.team1;
 
         return (
-          <div key={game.id} className="game-row">
+          <div key={game.game_id} className="game-row">
             {/* TEAM 1 */}
             <div className={"team-select" + (team1IsLosing ? " losing" : "")}>
               <button
@@ -55,7 +63,7 @@ export function FinalFour({
                   "team-button" + (userPick === game.team1 ? " selected" : "")
                 }
                 onClick={() =>
-                  !isSubmitted && game.team1 && onPick(game.id, game.team1)
+                  !isSubmitted && game.team1 && onPick(game.game_id, game.team1)
                 }
                 disabled={isSubmitted}
               >
@@ -81,7 +89,7 @@ export function FinalFour({
                   "team-button" + (userPick === game.team2 ? " selected" : "")
                 }
                 onClick={() =>
-                  !isSubmitted && game.team2 && onPick(game.id, game.team2)
+                  !isSubmitted && game.team2 && onPick(game.game_id, game.team2)
                 }
                 disabled={isSubmitted}
               >

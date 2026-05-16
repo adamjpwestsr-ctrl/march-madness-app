@@ -11,7 +11,11 @@ type Props = {
   isSubmitted: boolean;
 };
 
-export function RoundOf64({
+export function RoundOf64(props: Props) {
+  return <RoundTemplate {...props} />;
+}
+
+function RoundTemplate({
   games,
   picks,
   mulligans,
@@ -19,12 +23,13 @@ export function RoundOf64({
   onUseMulligan,
   isSubmitted,
 }: Props) {
+  // Only rounds 1–3 allow mulligans
   const mulliganEligibleRounds = [1, 2, 3];
 
   return (
-    <div className="round round-64">
+    <div className="round round-of-64">
       {games.map((game) => {
-        const userPick = picks[game.id];
+        const userPick = picks[game.game_id];
         const actualWinner = game.winner;
 
         const userPickedWrong =
@@ -35,17 +40,21 @@ export function RoundOf64({
 
         const canUseMulligan =
           userPickedWrong &&
-          mulliganEligibleRounds.includes(game.round) &&
+          mulliganEligibleRounds.includes(game.round ?? 0) &&
           mulligans.remaining > 0;
 
         const team1IsLosing =
-          userPickedWrong && userPick === game.team1 && actualWinner === game.team2;
+          userPickedWrong &&
+          userPick === game.team1 &&
+          actualWinner === game.team2;
 
         const team2IsLosing =
-          userPickedWrong && userPick === game.team2 && actualWinner === game.team1;
+          userPickedWrong &&
+          userPick === game.team2 &&
+          actualWinner === game.team1;
 
         return (
-          <div key={game.id} className="game-row">
+          <div key={game.game_id} className="game-row">
             {/* TEAM 1 */}
             <div className={"team-select" + (team1IsLosing ? " losing" : "")}>
               <button
@@ -53,7 +62,9 @@ export function RoundOf64({
                 className={
                   "team-button" + (userPick === game.team1 ? " selected" : "")
                 }
-                onClick={() => !isSubmitted && game.team1 && onPick(game.id, game.team1)}
+                onClick={() =>
+                  !isSubmitted && game.team1 && onPick(game.game_id, game.team1)
+                }
                 disabled={isSubmitted}
               >
                 {game.team1 || "TBD"}
@@ -77,7 +88,9 @@ export function RoundOf64({
                 className={
                   "team-button" + (userPick === game.team2 ? " selected" : "")
                 }
-                onClick={() => !isSubmitted && game.team2 && onPick(game.id, game.team2)}
+                onClick={() =>
+                  !isSubmitted && game.team2 && onPick(game.game_id, game.team2)
+                }
                 disabled={isSubmitted}
               >
                 {game.team2 || "TBD"}

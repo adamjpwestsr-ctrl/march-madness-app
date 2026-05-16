@@ -21,11 +21,11 @@ export function MulliganModal({ game, games, picks, onApply, onClose }: Props) {
     const options: DownstreamRoundOption[] = [];
 
     // Always include the current game (required)
-    options.push({
-      round: game.round,
-      gameId: game.game_id,
-      label: `Round of ${Math.pow(2, 7 - (game.round ?? 0))} (this game)`,
-    });
+   options.push({
+  round: game.round ?? 0,
+  gameId: game.game_id,
+  label: `Round of ${Math.pow(2, 7 - (game.round ?? 0))} (this game)`,
+});
 
     // Find all future games where the user picked this losing team
     games

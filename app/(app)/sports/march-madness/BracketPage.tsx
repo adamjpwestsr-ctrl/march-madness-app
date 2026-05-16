@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 
 import { Game, Picks, MulliganState } from "@/lib/bracketTypes";
@@ -14,10 +13,7 @@ import { FinalFour } from "@/components/bracket/FinalFour";
 import { Championship } from "@/components/bracket/Championship";
 import { MulliganModal } from "@/components/bracket/MulliganModal";
 
-export default function BracketPage() {
-  const searchParams = useSearchParams();
-  const bracketId = searchParams.get("bid");
-
+export default function BracketPage({ bracketId }: { bracketId: string }) {
   const [games, setGames] = useState<Game[]>([]);
   const [picks, setPicks] = useState<Picks>({});
   const [mulligans, setMulligans] = useState<MulliganState>({ remaining: 2 });
@@ -35,10 +31,8 @@ export default function BracketPage() {
   // LOAD BRACKET METADATA + PICKS + GAMES + LOCK DATE
   // -----------------------------------------------------
   useEffect(() => {
-    // If no bracketId, stop loading and show a clear message
     if (!bracketId) {
-      console.warn("No bracketId found in search params");
-      setError("No bracket selected. Missing ?bid= in URL.");
+      setError("No bracket selected.");
       setLoading(false);
       return;
     }
@@ -49,24 +43,19 @@ export default function BracketPage() {
 
       try {
         // 1. Load lock date
-        const { data: lockSettings, error: lockError } = await supabase!
+        const { data: lockSettings } = await supabase
           .from("settings")
           .select("lock_date")
           .eq("id", 1)
           .single();
 
-        if (lockError) {
-          console.error("Error loading lock settings:", lockError);
-        }
-
         if (lockSettings?.lock_date) {
           const lockDate = new Date(lockSettings.lock_date);
-          const now = new Date();
-          if (now > lockDate) setIsLocked(true);
+          if (new Date() > lockDate) setIsLocked(true);
         }
 
         // 2. Load bracket metadata
-        const { data: bracketData, error: bracketError } = await supabase!
+        const { data: bracketData, error: bracketError } = await supabase
           .from("brackets")
           .select("*")
           .eq("bracket_id", bracketId)
@@ -84,14 +73,10 @@ export default function BracketPage() {
         }
 
         // 3. Load existing picks
-        const { data: picksData, error: picksError } = await supabase!
+        const { data: picksData } = await supabase
           .from("picks")
           .select("*")
           .eq("bracket_id", bracketId);
-
-        if (picksError) {
-          console.error("Error loading picks:", picksError);
-        }
 
         if (picksData) {
           const pickMap: Picks = {};
@@ -101,16 +86,19 @@ export default function BracketPage() {
           setPicks(pickMap);
         }
 
-        // 4. Load games from API
-        const res = await fetch("/api/bracket/generate");
-        if (!res.ok) {
-          const body = await res.text();
-          console.error("Error from /api/bracket/generate:", res.status, body);
-          setError("Failed to generate bracket structure.");
+        // 4. Load games from DB (NOT from /api/bracket/generate)
+        const { data: gameData, error: gameError } = await supabase
+          .from("games")
+          .select("*")
+          .order("round", { ascending: true })
+          .order("game_id", { ascending: true });
+
+        if (gameError) {
+          console.error("Error loading games:", gameError);
+          setError("Failed to load games.");
           setGames([]);
         } else {
-          const gameData = await res.json();
-          setGames(gameData);
+          setGames(gameData || []);
         }
       } catch (e) {
         console.error("Unexpected error loading bracket:", e);
@@ -128,7 +116,6 @@ export default function BracketPage() {
   // -----------------------------------------------------
   const handleRenameBracket = async () => {
     if (isLocked || isSubmitted) return;
-    if (!bracketId) return;
 
     const res = await fetch("/api/bracket/rename", {
       method: "POST",
@@ -162,7 +149,7 @@ export default function BracketPage() {
   ) => {
     if (isLocked || isSubmitted) return;
 
-    const originalGame = games.find((g) => g.id === originalGameId);
+    const originalGame = games.find((g) => g.game_id === originalGameId);
     if (!originalGame || !originalGame.winner) return;
 
     const winner = originalGame.winner;
@@ -186,7 +173,6 @@ export default function BracketPage() {
   // -----------------------------------------------------
   const handleSubmitBracket = async () => {
     if (isLocked || isSubmitted) return;
-    if (!bracketId) return;
 
     const formattedPicks = Object.entries(picks).map(([gameId, team]) => ({
       game_id: Number(gameId),
@@ -221,12 +207,6 @@ export default function BracketPage() {
       <div className="bracket-page">
         <h1>March Madness Bracket</h1>
         <p style={{ color: "red" }}>{error}</p>
-        {!bracketId && (
-          <p>
-            Try visiting with a bracket ID, e.g.{" "}
-            <code>?bid=1</code> (or a valid ID from your DB).
-          </p>
-        )}
       </div>
     );
   }

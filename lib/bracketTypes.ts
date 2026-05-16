@@ -112,3 +112,18 @@ export interface TournamentTeam {
   record: string | null;
   logo_url: string | null;
 }
+
+export interface Game {
+  game_id: number;
+  round: number | null;
+  region: string | null;
+  game_number: number | null;
+  team1: string | null;
+  seed1: number | null;
+  team2: string | null;
+  seed2: number | null;
+  winner: string | null;
+  source_game1: number | null;
+  source_game2: number | null;
+  final_score: number | null;
+}

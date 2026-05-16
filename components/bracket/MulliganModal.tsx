@@ -13,7 +13,7 @@ type Props = {
 
 export function MulliganModal({ game, games, picks, onApply, onClose }: Props) {
   const actualWinner = game.winner;
-  const userPick = picks[game.id];
+  const userPick = picks[game.game_id];
 
   const downstreamOptions = useMemo<DownstreamRoundOption[]>(() => {
     if (!actualWinner || !userPick) return [];
@@ -23,15 +23,15 @@ export function MulliganModal({ game, games, picks, onApply, onClose }: Props) {
     // Always include the current game (required)
     options.push({
       round: game.round,
-      gameId: game.id,
-      label: `Round of ${Math.pow(2, 7 - game.round)} (this game)`,
+      gameId: game.game_id,
+      label: `Round of ${Math.pow(2, 7 - (game.round ?? 0))} (this game)`,
     });
 
     // Find all future games where the user picked this losing team
     games
-      .filter((g) => g.round > game.round)
+      .filter((g) => (g.round ?? 0) > (game.round ?? 0))
       .forEach((g) => {
-        const pick = picks[g.id];
+        const pick = picks[g.game_id];
         if (pick === userPick) {
           const label = (() => {
             switch (g.round) {
@@ -51,8 +51,8 @@ export function MulliganModal({ game, games, picks, onApply, onClose }: Props) {
           })();
 
           options.push({
-            round: g.round,
-            gameId: g.id,
+            round: g.round!,
+            gameId: g.game_id,
             label,
           });
         }
@@ -79,12 +79,14 @@ export function MulliganModal({ game, games, picks, onApply, onClose }: Props) {
   };
 
   const handleConfirm = () => {
-    if (!selectedGameIds.includes(downstreamOptions[0].gameId)) {
-      // Ensure original game is always included
-      setSelectedGameIds((prev) => [downstreamOptions[0].gameId, ...prev]);
-      onApply(game.id, [downstreamOptions[0].gameId, ...selectedGameIds]);
+    const requiredId = downstreamOptions[0].gameId;
+
+    if (!selectedGameIds.includes(requiredId)) {
+      const updated = [requiredId, ...selectedGameIds];
+      setSelectedGameIds(updated);
+      onApply(game.game_id, updated);
     } else {
-      onApply(game.id, selectedGameIds);
+      onApply(game.game_id, selectedGameIds);
     }
   };
 

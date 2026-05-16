@@ -8,17 +8,15 @@ type Props = {
   onPick: (gameId: number, team: string) => void;
 };
 
-export default function OpeningRound({ games, picks, onPick }: Props) {
+export function OpeningRound({ games, picks, onPick }: Props) {
   return (
     <div className="opening-round">
-      <h2>Opening Round</h2>
-
       <div className="games-grid">
         {games.map((game) => {
-          const selectedTeam = picks[game.id];
+          const selectedTeam = picks[game.game_id];
 
           return (
-            <div key={game.id} className="game-connector-wrapper">
+            <div key={game.game_id} className="game-connector-wrapper">
               <div className="team-select">
                 <button
                   type="button"
@@ -26,7 +24,9 @@ export default function OpeningRound({ games, picks, onPick }: Props) {
                     "team-button" +
                     (selectedTeam === game.team1 ? " selected" : "")
                   }
-                  onClick={() => game.team1 && onPick(game.id, game.team1)}
+                  onClick={() =>
+                    game.team1 && onPick(game.game_id, game.team1)
+                  }
                 >
                   {game.team1 || "TBD"}
                 </button>
@@ -39,7 +39,9 @@ export default function OpeningRound({ games, picks, onPick }: Props) {
                     "team-button" +
                     (selectedTeam === game.team2 ? " selected" : "")
                   }
-                  onClick={() => game.team2 && onPick(game.id, game.team2)}
+                  onClick={() =>
+                    game.team2 && onPick(game.game_id, game.team2)
+                  }
                 >
                   {game.team2 || "TBD"}
                 </button>

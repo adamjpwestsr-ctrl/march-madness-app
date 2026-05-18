@@ -9,8 +9,13 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 export async function POST(req: Request) {
+  // Force fresh schema + disable stale metadata
   const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
-    auth: { persistSession: false },
+    db: { schema: "public" },
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false
+    }
   });
 
   // -----------------------------
@@ -74,23 +79,24 @@ export async function POST(req: Request) {
   // -----------------------------
   const defaultName = `${session.username || "My"} Bracket ${nextNumber}`;
 
-  // Allow user override
   const { bracketName } = await req.json();
   const finalName = bracketName?.trim() || defaultName;
 
   // -----------------------------
   // CREATE NEW BRACKET
   // -----------------------------
-  const { data: inserted, error: insertErr } = await supabase
+  const { error: insertErr } = await supabase
     .from("brackets")
-    .insert({
-      user_id: userId,
-      email,
-      bracket_name: finalName,
-      bracket_number: nextNumber,
-    })
-    .select()
-    .single();
+    .insert(
+      {
+        user_id: userId,
+        email,
+        bracket_name: finalName,
+        bracket_number: nextNumber,
+        // sport intentionally omitted unless you want to set a default
+      },
+      { returning: "minimal" } // <-- CRITICAL FIX
+    );
 
   if (insertErr) {
     console.error("Error creating bracket:", insertErr);
@@ -102,8 +108,7 @@ export async function POST(req: Request) {
 
   return NextResponse.json({
     success: true,
-    bracketId: inserted.bracket_id,
     bracketNumber: nextNumber,
-    bracketName: finalName,
+    bracketName: finalName
   });
 }

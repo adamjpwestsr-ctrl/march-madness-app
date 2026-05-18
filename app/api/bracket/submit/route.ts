@@ -52,7 +52,7 @@ export async function POST(req: Request) {
     .from("settings")
     .select("lock_date")
     .eq("id", 1)
-    .single();
+    .maybeSingle(); // FIXED
 
   const lockDateUTC = settings?.lock_date
     ? new Date(settings.lock_date)
@@ -71,13 +71,13 @@ export async function POST(req: Request) {
   }
 
   // -----------------------------
-  // FIXED: VALIDATE CHAMPION PICK
+  // VALIDATE CHAMPION PICK
   // -----------------------------
   const { data: champGame, error: champErr } = await supabase
     .from("games")
     .select("game_id")
     .eq("round", 6)
-    .single();
+    .maybeSingle(); // FIXED
 
   if (champErr || !champGame) {
     return NextResponse.json(
@@ -164,7 +164,7 @@ export async function POST(req: Request) {
       .from("games")
       .select("*")
       .eq("game_id", p.game_id)
-      .single();
+      .maybeSingle(); // FIXED
 
     if (!game?.next_game_id) continue;
 

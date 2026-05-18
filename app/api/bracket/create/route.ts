@@ -1,3 +1,5 @@
+console.log("USING NEW CREATE BRACKET ROUTE");
+
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createClient } from "@supabase/supabase-js";

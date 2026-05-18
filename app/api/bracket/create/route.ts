@@ -9,7 +9,6 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 export async function POST(req: Request) {
-  // Force fresh schema + disable stale metadata
   const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
     db: { schema: "public" },
     auth: {
@@ -19,7 +18,7 @@ export async function POST(req: Request) {
   });
 
   // -----------------------------
-  // AUTH: Read mm_session cookie
+  // AUTH
   // -----------------------------
   const cookieStore = await cookies();
   const sessionCookie = cookieStore.get("mm_session");
@@ -49,15 +48,9 @@ export async function POST(req: Request) {
 
   if (error) {
     console.error("Error loading brackets:", error);
-    return NextResponse.json(
-      { error: "Failed to load brackets" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to load brackets" }, { status: 500 });
   }
 
-  // -----------------------------
-  // ENFORCE MAX 4 BRACKETS
-  // -----------------------------
   if (existing.length >= 4) {
     return NextResponse.json(
       { error: "Maximum of 4 brackets reached" },
@@ -75,35 +68,30 @@ export async function POST(req: Request) {
   }
 
   // -----------------------------
-  // DETERMINE DEFAULT BRACKET NAME
+  // DETERMINE BRACKET NAME
   // -----------------------------
   const defaultName = `${session.username || "My"} Bracket ${nextNumber}`;
-
   const { bracketName } = await req.json();
   const finalName = bracketName?.trim() || defaultName;
 
   // -----------------------------
-  // CREATE NEW BRACKET
+  // INSERT USING ARRAY OVERLOAD
+  // (avoids returning id)
   // -----------------------------
   const { error: insertErr } = await supabase
     .from("brackets")
-    .insert(
+    .insert([
       {
         user_id: userId,
         email,
         bracket_name: finalName,
-        bracket_number: nextNumber,
-        // sport intentionally omitted unless you want to set a default
-      },
-      { returning: "minimal" } // <-- CRITICAL FIX
-    );
+        bracket_number: nextNumber
+      }
+    ]);
 
   if (insertErr) {
     console.error("Error creating bracket:", insertErr);
-    return NextResponse.json(
-      { error: "Failed to create bracket" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to create bracket" }, { status: 500 });
   }
 
   return NextResponse.json({

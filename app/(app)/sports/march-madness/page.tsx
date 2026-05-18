@@ -1,4 +1,15 @@
 // app/(app)/sports/march-madness/page.tsx
+
+try {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+  // ...rest of code
+} catch (err) {
+  console.error("March Madness server error:", err);
+  throw err;
+}
+
 import { createClient } from "@/utils/supabase/server";
 import BracketPage from "./BracketPage";
 import { redirect } from "next/navigation";

@@ -1,5 +1,3 @@
-console.log("USING NEW CREATE BRACKET ROUTE");
-
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createClient } from "@supabase/supabase-js";
@@ -15,12 +13,12 @@ export async function POST(req: Request) {
     db: { schema: "public" },
     auth: {
       persistSession: false,
-      autoRefreshToken: false
-    }
+      autoRefreshToken: false,
+    },
   });
 
   // -----------------------------
-  // AUTH
+  // AUTH: Read mm_session cookie
   // -----------------------------
   const cookieStore = await cookies();
   const sessionCookie = cookieStore.get("mm_session");
@@ -50,9 +48,15 @@ export async function POST(req: Request) {
 
   if (error) {
     console.error("Error loading brackets:", error);
-    return NextResponse.json({ error: "Failed to load brackets" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to load brackets" },
+      { status: 500 }
+    );
   }
 
+  // -----------------------------
+  // ENFORCE MAX 4 BRACKETS
+  // -----------------------------
   if (existing.length >= 4) {
     return NextResponse.json(
       { error: "Maximum of 4 brackets reached" },
@@ -70,15 +74,14 @@ export async function POST(req: Request) {
   }
 
   // -----------------------------
-  // DETERMINE BRACKET NAME
+  // DETERMINE DEFAULT BRACKET NAME
   // -----------------------------
   const defaultName = `${session.username || "My"} Bracket ${nextNumber}`;
   const { bracketName } = await req.json();
   const finalName = bracketName?.trim() || defaultName;
 
   // -----------------------------
-  // INSERT USING ARRAY OVERLOAD
-  // (avoids returning id)
+  // INSERT NEW BRACKET (SAFE)
   // -----------------------------
   const { error: insertErr } = await supabase
     .from("brackets")
@@ -87,18 +90,24 @@ export async function POST(req: Request) {
         user_id: userId,
         email,
         bracket_name: finalName,
-        bracket_number: nextNumber
-      }
-    ]);
+        bracket_number: nextNumber,
+      },
+    ]); // <-- NO returning, NO single(), NO select()
 
   if (insertErr) {
     console.error("Error creating bracket:", insertErr);
-    return NextResponse.json({ error: "Failed to create bracket" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to create bracket" },
+      { status: 500 }
+    );
   }
 
+  // -----------------------------
+  // SUCCESS
+  // -----------------------------
   return NextResponse.json({
     success: true,
     bracketNumber: nextNumber,
-    bracketName: finalName
+    bracketName: finalName,
   });
 }

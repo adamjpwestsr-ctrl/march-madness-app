@@ -1,23 +1,13 @@
 // app/(app)/sports/march-madness/page.tsx
-
-try {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
-  // ...rest of code
-} catch (err) {
-  console.error("March Madness server error:", err);
-  throw err;
-}
-
 import { createClient } from "@/utils/supabase/server";
 import BracketPage from "./BracketPage";
 import { redirect } from "next/navigation";
 
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 export default async function Page() {
   const supabase = await createClient();
-
-  // AUTH
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -26,18 +16,16 @@ export default async function Page() {
     redirect("/login");
   }
 
-  // Check for existing bracket
   const { data: existing } = await supabase
     .from("brackets")
     .select("bracket_id")
     .eq("user_id", user.id)
     .eq("sport", "march-madness")
     .limit(1)
-    .maybeSingle(); // FIXED
+    .maybeSingle();
 
   let bracketId = existing?.bracket_id;
 
-  // Create new bracket if none exists
   if (!bracketId) {
     const { data: created, error } = await supabase
       .from("brackets")
@@ -46,7 +34,7 @@ export default async function Page() {
         sport: "march-madness",
       })
       .select("bracket_id")
-      .maybeSingle(); // FIXED
+      .maybeSingle();
 
     if (error) {
       console.error("Failed to create bracket:", error.message);

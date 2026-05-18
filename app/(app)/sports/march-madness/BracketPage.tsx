@@ -27,9 +27,6 @@ export default function BracketPage({ bracketId }: { bracketId: string }) {
 
   const [mulliganGame, setMulliganGame] = useState<Game | null>(null);
 
-  // -----------------------------------------------------
-  // LOAD BRACKET METADATA + PICKS + GAMES + LOCK DATE
-  // -----------------------------------------------------
   useEffect(() => {
     if (!bracketId) {
       setError("No bracket selected.");
@@ -47,7 +44,7 @@ export default function BracketPage({ bracketId }: { bracketId: string }) {
           .from("settings")
           .select("lock_date")
           .eq("id", 1)
-          .single();
+          .maybeSingle(); // FIXED
 
         if (lockSettings?.lock_date) {
           const lockDate = new Date(lockSettings.lock_date);
@@ -59,7 +56,7 @@ export default function BracketPage({ bracketId }: { bracketId: string }) {
           .from("brackets")
           .select("*")
           .eq("bracket_id", bracketId)
-          .single();
+          .maybeSingle(); // FIXED
 
         if (bracketError) {
           console.error("Error loading bracket:", bracketError);
@@ -86,7 +83,7 @@ export default function BracketPage({ bracketId }: { bracketId: string }) {
           setPicks(pickMap);
         }
 
-        // 4. Load games from DB (NOT from /api/bracket/generate)
+        // 4. Load games
         const { data: gameData, error: gameError } = await supabase
           .from("games")
           .select("*")
@@ -111,9 +108,6 @@ export default function BracketPage({ bracketId }: { bracketId: string }) {
     loadBracket();
   }, [bracketId]);
 
-  // -----------------------------------------------------
-  // RENAME BRACKET
-  // -----------------------------------------------------
   const handleRenameBracket = async () => {
     if (isLocked || isSubmitted) return;
 
@@ -127,17 +121,11 @@ export default function BracketPage({ bracketId }: { bracketId: string }) {
     if (!res.ok) alert(data.error || "Failed to rename bracket");
   };
 
-  // -----------------------------------------------------
-  // USER SELECTS A TEAM
-  // -----------------------------------------------------
   const handlePick = (gameId: number, team: string) => {
     if (isLocked || isSubmitted) return;
     setPicks((prev) => ({ ...prev, [gameId]: team }));
   };
 
-  // -----------------------------------------------------
-  // USER USES A MULLIGAN
-  // -----------------------------------------------------
   const handleUseMulligan = (game: Game) => {
     if (isLocked || isSubmitted) return;
     setMulliganGame(game);
@@ -168,9 +156,6 @@ export default function BracketPage({ bracketId }: { bracketId: string }) {
     setMulliganGame(null);
   };
 
-  // -----------------------------------------------------
-  // SUBMIT BRACKET
-  // -----------------------------------------------------
   const handleSubmitBracket = async () => {
     if (isLocked || isSubmitted) return;
 
@@ -190,9 +175,6 @@ export default function BracketPage({ bracketId }: { bracketId: string }) {
     else alert(data.error || "Failed to submit bracket");
   };
 
-  // -----------------------------------------------------
-  // ROUND FILTERS
-  // -----------------------------------------------------
   const round1Games = games.filter((g) => g.round === 1);
   const round2Games = games.filter((g) => g.round === 2);
   const round3Games = games.filter((g) => g.round === 3);
@@ -213,17 +195,14 @@ export default function BracketPage({ bracketId }: { bracketId: string }) {
 
   return (
     <div className="bracket-page">
-      {/* BRACKET NAME */}
       <h1 className="bracket-title">{bracketName || "March Madness Bracket"}</h1>
 
-      {/* LOCKED BANNER */}
       {isLocked && (
         <div className="bracket-locked-banner">
           Bracket submissions are locked.
         </div>
       )}
 
-      {/* RENAME UI */}
       <div className="bracket-rename">
         <input
           type="text"
@@ -242,7 +221,6 @@ export default function BracketPage({ bracketId }: { bracketId: string }) {
         </button>
       </div>
 
-      {/* TIEBREAKER UI */}
       <div className="tiebreaker-section">
         <label className="tiebreaker-label">
           Championship Total Points (Tiebreaker)
@@ -257,12 +235,10 @@ export default function BracketPage({ bracketId }: { bracketId: string }) {
         />
       </div>
 
-      {/* MULLIGAN COUNT */}
       <div className="mulligan-count">
         Mulligans remaining: {mulligans.remaining}
       </div>
 
-      {/* SUBMIT BUTTON */}
       <button
         type="button"
         onClick={handleSubmitBracket}
@@ -276,7 +252,6 @@ export default function BracketPage({ bracketId }: { bracketId: string }) {
           : "Submit Bracket"}
       </button>
 
-      {/* ROUND OF 64 */}
       <RoundOf64
         games={round1Games}
         picks={picks}
@@ -286,7 +261,6 @@ export default function BracketPage({ bracketId }: { bracketId: string }) {
         isSubmitted={isSubmitted || isLocked}
       />
 
-      {/* ROUND OF 32 */}
       <RoundOf32
         games={round2Games}
         picks={picks}
@@ -296,7 +270,6 @@ export default function BracketPage({ bracketId }: { bracketId: string }) {
         isSubmitted={isSubmitted || isLocked}
       />
 
-      {/* SWEET 16 */}
       <Sweet16
         games={round3Games}
         picks={picks}
@@ -306,7 +279,6 @@ export default function BracketPage({ bracketId }: { bracketId: string }) {
         isSubmitted={isSubmitted || isLocked}
       />
 
-      {/* ELITE 8 */}
       <Elite8
         games={round4Games}
         picks={picks}
@@ -316,7 +288,6 @@ export default function BracketPage({ bracketId }: { bracketId: string }) {
         isSubmitted={isSubmitted || isLocked}
       />
 
-      {/* FINAL FOUR */}
       <FinalFour
         games={round5Games}
         picks={picks}
@@ -326,7 +297,6 @@ export default function BracketPage({ bracketId }: { bracketId: string }) {
         isSubmitted={isSubmitted || isLocked}
       />
 
-      {/* CHAMPIONSHIP */}
       <Championship
         games={round6Games}
         picks={picks}
@@ -336,7 +306,6 @@ export default function BracketPage({ bracketId }: { bracketId: string }) {
         isSubmitted={isSubmitted || isLocked}
       />
 
-      {/* MULLIGAN MODAL */}
       {mulliganGame && !isLocked && !isSubmitted && (
         <MulliganModal
           game={mulliganGame}

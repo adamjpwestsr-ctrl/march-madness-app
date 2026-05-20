@@ -42,16 +42,15 @@ export default async function BracketPage({
 
       const email = session.user.email;
 
-const { data, error } = await supabase
-  .from("brackets")
-  .insert({
-    user_id: session.user.id,     // ✅ required
-    email,
-    bracket_name: `Bracket ${brackets ? brackets.length + 1 : 1}`,
-  })
-  .select()
-  .single();
-
+      const { data, error } = await supabase
+        .from("brackets")
+        .insert({
+          user_id: session.user.id, // REQUIRED by schema
+          email,
+          bracket_name: "My Bracket",
+        })
+        .select()
+        .single();
 
       if (error) {
         console.error(error);
@@ -119,15 +118,14 @@ const { data, error } = await supabase
             const email = session.user.email;
 
             const { data, error } = await supabase
-  .from("brackets")
-  .insert({
-    user_id: session.user.id,     // ✅ required
-    email,
-    bracket_name: "My Bracket",
-  })
-  .select()
-  .single();
-
+              .from("brackets")
+              .insert({
+                user_id: session.user.id, // REQUIRED
+                email,
+                bracket_name: `Bracket ${(brackets?.length ?? 0) + 1}`,
+              })
+              .select()
+              .single();
 
             if (error) console.error(error);
 

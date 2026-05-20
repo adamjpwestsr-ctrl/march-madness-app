@@ -47,7 +47,7 @@ const { data, error } = await supabase
   .insert({
     user_id: session.user.id,     // ✅ required
     email,
-    bracket_name: `Bracket ${brackets.length + 1}`,
+    bracket_name: `Bracket ${brackets ? brackets.length + 1 : 1}`,
   })
   .select()
   .single();

@@ -24,8 +24,9 @@ export default function MulliganModal({
   const [selectedTeam, setSelectedTeam] = useState<string>("");
 
   // The only valid replacement teams are the two teams in the game
-  const currentTeams = [game.team1, game.team2]
-    .filter((t): t is string => typeof t === "string");
+  const currentTeams = [game.team1, game.team2].filter(
+    (t): t is { team_id: string; name: string; seed: number | null } => t !== null
+  );
 
   const handleSubmit = () => {
     if (!selectedTeam) return;
@@ -67,10 +68,10 @@ export default function MulliganModal({
           >
             <option value="">Select a team</option>
             {currentTeams.map((team) => {
-              const logo = getTeamLogo(team);
+              const logo = getTeamLogo(team.name);
               return (
-                <option key={team} value={team}>
-                  {team}
+                <option key={team.team_id} value={team.team_id}>
+                  {team.name}
                 </option>
               );
             })}

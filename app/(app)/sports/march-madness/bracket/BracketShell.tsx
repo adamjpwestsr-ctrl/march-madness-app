@@ -13,7 +13,7 @@ import { Game } from "@/lib/bracketTypes";
 // -----------------------------
 type BracketShellProps = {
   games: Game[];
-  picks: Record<number, string>;
+  picks: Record<number, string | null>;   // ← FIXED HERE
   mulligans: { remaining: number };
   bracketName: string;
   tiebreaker: number | null;
@@ -21,7 +21,7 @@ type BracketShellProps = {
   isSubmitted: boolean;
   mulliganGame: Game | null;
 
-  onPick: (gameId: number, team: string) => void;
+  onPick: (gameId: number, team: string) => void; // team is always string
   onUseMulligan: (game: Game) => void;
   onApplyMulligan: (gameId: number, newTeam: string) => void;
 

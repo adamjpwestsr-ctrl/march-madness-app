@@ -42,21 +42,23 @@ export default async function BracketPage({
 
       const email = session.user.email;
 
-      const { data, error } = await supabase
-        .from("brackets")
-        .insert({
-          email,
-          bracket_name: "My Bracket",
-        })
-        .select()
-        .single();
+const { data, error } = await supabase
+  .from("brackets")
+  .insert({
+    user_id: session.user.id,     // ✅ required
+    email,
+    bracket_name: `Bracket ${brackets.length + 1}`,
+  })
+  .select()
+  .single();
+
 
       if (error) {
         console.error(error);
         return;
       }
 
-      redirect(`/sports/march-madness?bid=${data.id}`);
+      redirect(`/sports/march-madness?bid=${data.bracket_id}`);
     };
 
     return (
@@ -78,7 +80,7 @@ export default async function BracketPage({
 
   // Determine active bracket
   const activeBracket =
-    brackets.find((b) => b.id === searchParams.bid) ?? brackets[0];
+    brackets.find((b) => b.bracket_id === searchParams.bid) ?? brackets[0];
 
   return (
     <div className="flex min-h-screen bg-slate-950 text-slate-100">
@@ -89,10 +91,10 @@ export default async function BracketPage({
         <div className="flex flex-col gap-2">
           {brackets.map((b) => (
             <a
-              key={b.id}
-              href={`/sports/march-madness?bid=${b.id}`}
+              key={b.bracket_id}
+              href={`/sports/march-madness?bid=${b.bracket_id}`}
               className={`px-3 py-2 rounded-md transition ${
-                b.id === activeBracket.id
+                b.bracket_id === activeBracket.bracket_id
                   ? "bg-blue-600 text-white"
                   : "bg-slate-800 hover:bg-slate-700"
               }`}
@@ -117,17 +119,19 @@ export default async function BracketPage({
             const email = session.user.email;
 
             const { data, error } = await supabase
-              .from("brackets")
-              .insert({
-                email,
-                bracket_name: `Bracket ${brackets.length + 1}`,
-              })
-              .select()
-              .single();
+  .from("brackets")
+  .insert({
+    user_id: session.user.id,     // ✅ required
+    email,
+    bracket_name: "My Bracket",
+  })
+  .select()
+  .single();
+
 
             if (error) console.error(error);
 
-            redirect(`/sports/march-madness?bid=${data.id}`);
+            redirect(`/sports/march-madness?bid=${data.bracket_id}`);
           }}
         >
           <button
@@ -141,7 +145,7 @@ export default async function BracketPage({
 
       {/* Main Content */}
       <main className="flex-1 p-6 overflow-y-auto">
-        <BracketClient bracketId={activeBracket.id} />
+        <BracketClient bracketId={activeBracket.bracket_id} />
       </main>
     </div>
   );

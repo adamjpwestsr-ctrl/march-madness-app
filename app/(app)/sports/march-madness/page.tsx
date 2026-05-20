@@ -8,7 +8,7 @@ export default async function BracketPage({
 }: {
   searchParams: { bid?: string };
 }) {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   // Get session
   const {

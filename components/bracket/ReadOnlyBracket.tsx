@@ -85,6 +85,9 @@ export default function ReadOnlyBracket({ games, picks }: ReadOnlyBracketProps) 
                       ? '#fef2f2'
                       : '#f8fafc'
 
+                    const team1 = game.team1
+                    const team2 = game.team2
+
                     return (
                       <div
                         key={game.game_id}
@@ -95,22 +98,24 @@ export default function ReadOnlyBracket({ games, picks }: ReadOnlyBracketProps) 
                           background: gameBg
                         }}
                       >
+                        {/* TEAM 1 */}
                         <div
                           style={{
-                            fontWeight: userPick === game.team1 ? 700 : 400,
-                            color: userPick === game.team1 ? '#1d4ed8' : '#0f172a'
+                            fontWeight: userPick === team1?.team_id ? 700 : 400,
+                            color: userPick === team1?.team_id ? '#1d4ed8' : '#0f172a'
                           }}
                         >
-                          {game.team1} (Seed {game.seed1})
+                          {team1?.name || 'TBD'} (Seed {team1?.seed ?? '?'})
                         </div>
 
+                        {/* TEAM 2 */}
                         <div
                           style={{
-                            fontWeight: userPick === game.team2 ? 700 : 400,
-                            color: userPick === game.team2 ? '#1d4ed8' : '#0f172a'
+                            fontWeight: userPick === team2?.team_id ? 700 : 400,
+                            color: userPick === team2?.team_id ? '#1d4ed8' : '#0f172a'
                           }}
                         >
-                          {game.team2} (Seed {game.seed2})
+                          {team2?.name || 'TBD'} (Seed {team2?.seed ?? '?'})
                         </div>
 
                         {userPick && (

@@ -6,7 +6,7 @@ type Props = {
   games: Game[];
   picks: Picks;
   mulligans: MulliganState;
-  onPick: (gameId: number, team: string) => void;
+  onPick: (gameId: number, teamId: string) => void;
   onUseMulligan: (game: Game) => void;
   isSubmitted: boolean;
 };
@@ -45,13 +45,13 @@ function RoundTemplate({
 
         const team1IsLosing =
           userPickedWrong &&
-          userPick === game.team1 &&
-          actualWinner === game.team2;
+          userPick === game.team1?.team_id &&
+          actualWinner === game.team2?.team_id;
 
         const team2IsLosing =
           userPickedWrong &&
-          userPick === game.team2 &&
-          actualWinner === game.team1;
+          userPick === game.team2?.team_id &&
+          actualWinner === game.team1?.team_id;
 
         return (
           <div key={game.game_id} className="game-row">
@@ -60,14 +60,17 @@ function RoundTemplate({
               <button
                 type="button"
                 className={
-                  "team-button" + (userPick === game.team1 ? " selected" : "")
+                  "team-button" +
+                  (userPick === game.team1?.team_id ? " selected" : "")
                 }
                 onClick={() =>
-                  !isSubmitted && game.team1 && onPick(game.game_id, game.team1)
+                  !isSubmitted &&
+                  game.team1 &&
+                  onPick(game.game_id, game.team1.team_id)
                 }
                 disabled={isSubmitted}
               >
-                {game.team1 || "TBD"}
+                {game.team1?.name || "TBD"}
               </button>
 
               {canUseMulligan && team1IsLosing && (
@@ -86,14 +89,17 @@ function RoundTemplate({
               <button
                 type="button"
                 className={
-                  "team-button" + (userPick === game.team2 ? " selected" : "")
+                  "team-button" +
+                  (userPick === game.team2?.team_id ? " selected" : "")
                 }
                 onClick={() =>
-                  !isSubmitted && game.team2 && onPick(game.game_id, game.team2)
+                  !isSubmitted &&
+                  game.team2 &&
+                  onPick(game.game_id, game.team2.team_id)
                 }
                 disabled={isSubmitted}
               >
-                {game.team2 || "TBD"}
+                {game.team2?.name || "TBD"}
               </button>
 
               {canUseMulligan && team2IsLosing && (

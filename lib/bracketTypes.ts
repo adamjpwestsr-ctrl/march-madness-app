@@ -108,12 +108,23 @@ export interface Game {
   round: number | null;
   region: string | null;
   game_number: number | null;
-  team1: string | null;
-  seed1: number | null;
-  team2: string | null;
-  seed2: number | null;
+
+  team1: {
+    team_id: string;
+    name: string;
+    seed: number | null;
+  } | null;
+
+  team2: {
+    team_id: string;
+    name: string;
+    seed: number | null;
+  } | null;
+
   winner: string | null;
+
   source_game1: number | null;
   source_game2: number | null;
+
   final_score: number | null;
 }

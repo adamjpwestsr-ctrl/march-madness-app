@@ -1,19 +1,24 @@
 "use client";
 
+import React from "react";
+
+export type RegionButtonProps = {
+  label: string;
+  icon: string;
+  gradient: string;
+  onClick: () => void;
+};
+
 export function RegionButton({
   label,
   icon,
   gradient,
   onClick,
-}: {
-  label: string;
-  icon: string;
-  gradient: string;
-  onClick: () => void;
-}) {
+}: RegionButtonProps) {
   return (
     <button
       onClick={onClick}
+      type="button"
       className={`
         relative overflow-hidden rounded-2xl p-6 w-full h-32
         bg-white/5 border border-white/10 backdrop-blur-md

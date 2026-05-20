@@ -1,4 +1,4 @@
-// app/bracket/page.tsx
+// app/(app)/sports/march-madness/page.tsx
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import BracketClient from "./BracketClient";
@@ -56,7 +56,7 @@ export default async function BracketPage({
         return;
       }
 
-      redirect(`/bracket?bid=${data.id}`);
+      redirect(`/sports/march-madness?bid=${data.id}`);
     };
 
     return (
@@ -90,7 +90,7 @@ export default async function BracketPage({
           {brackets.map((b) => (
             <a
               key={b.id}
-              href={`/bracket?bid=${b.id}`}
+              href={`/sports/march-madness?bid=${b.id}`}
               className={`px-3 py-2 rounded-md transition ${
                 b.id === activeBracket.id
                   ? "bg-blue-600 text-white"
@@ -127,7 +127,7 @@ export default async function BracketPage({
 
             if (error) console.error(error);
 
-            redirect(`/bracket?bid=${data.id}`);
+            redirect(`/sports/march-madness?bid=${data.id}`);
           }}
         >
           <button

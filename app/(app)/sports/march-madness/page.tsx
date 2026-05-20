@@ -32,7 +32,7 @@ export default async function BracketPage({
   if (!brackets || brackets.length === 0) {
     const createBracket = async () => {
       "use server";
-      const supabase = createClient();
+      const supabase = await createClient();
 
       const {
         data: { session },
@@ -106,7 +106,7 @@ export default async function BracketPage({
         <form
           action={async () => {
             "use server";
-            const supabase = createClient();
+            const supabase = await createClient();
 
             const {
               data: { session },

@@ -6,6 +6,34 @@ import FinalFourView from "./FinalFourView";
 import ChampionshipView from "./ChampionshipView";
 import MulliganModal from "./MulliganModal";
 
+import { Game } from "@/lib/bracketTypes";
+
+// -----------------------------
+// PROPS INTERFACE
+// -----------------------------
+type BracketShellProps = {
+  games: Game[];
+  picks: Record<number, string>;
+  mulligans: { remaining: number };
+  bracketName: string;
+  tiebreaker: number | null;
+  isLocked: boolean;
+  isSubmitted: boolean;
+  mulliganGame: Game | null;
+
+  onPick: (gameId: number, team: string) => void;
+  onUseMulligan: (game: Game) => void;
+  onApplyMulligan: (gameId: number, newTeam: string) => void;
+
+  onSubmit: () => void;
+  onRename: (name: string) => void;
+  onSetTiebreaker: (value: number) => void;
+  onCloseMulligan: () => void;
+};
+
+// -----------------------------
+// COMPONENT
+// -----------------------------
 export default function BracketShell({
   games,
   picks,
@@ -22,7 +50,7 @@ export default function BracketShell({
   onRename,
   onSetTiebreaker,
   onCloseMulligan,
-}) {
+}: BracketShellProps) {
   const [view, setView] = useState<
     "East" | "West" | "South" | "Midwest" | "final-four" | "championship"
   >("East");

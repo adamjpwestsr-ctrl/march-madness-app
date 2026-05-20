@@ -1,22 +1,22 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import DesktopBracket from "@/app/_legacy/bracket/DesktopBracket";
 import MobileBracket from "./MobileBracket";
 
 export default function BracketWrapper(props: any) {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768);
-    check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
+    const checkSize = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+
+    checkSize();
+    window.addEventListener("resize", checkSize);
+
+    return () => window.removeEventListener("resize", checkSize);
   }, []);
 
-  return isMobile ? (
-    <MobileBracket {...props} />
-  ) : (
-    <DesktopBracket {...props} />
-  );
+  // Always render the new bracket system
+  return <MobileBracket {...props} />;
 }

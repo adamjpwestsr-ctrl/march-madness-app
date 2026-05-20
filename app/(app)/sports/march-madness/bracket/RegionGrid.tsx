@@ -20,6 +20,12 @@ type RegionGridProps = {
 };
 
 // -----------------------------
+// TYPE GUARD (cleanest version)
+// -----------------------------
+const hasValidRound = (g: Game): g is Game & { round: number } =>
+  g.round !== null;
+
+// -----------------------------
 // COMPONENT
 // -----------------------------
 export default function RegionGrid({
@@ -41,9 +47,17 @@ export default function RegionGrid({
     return () => clearTimeout(t);
   }, []);
 
-  // Filter out Opening Round (round = 0)
+  // -----------------------------
+  // FILTER REGION GAMES (cleanest)
+  // -----------------------------
   const regionGames = games
-    .filter((g) => g.region === regionName && g.round > 0 && g.round <= 4)
+    .filter(hasValidRound)
+    .filter(
+      (g) =>
+        g.region === regionName &&
+        g.round > 0 &&
+        g.round <= 4
+    )
     .sort((a, b) => a.round - b.round || a.game_id - b.game_id);
 
   const rounds = [1, 2, 3, 4];
@@ -60,7 +74,7 @@ export default function RegionGrid({
 
   const handlePick = (game: Game, teamId: string) => {
     if (isLocked || isSubmitted) return;
-    setLastAnimatedRound(game.round);
+    if (game.round !== null) setLastAnimatedRound(game.round);
     onPick(game.game_id, teamId);
   };
 
@@ -69,11 +83,10 @@ export default function RegionGrid({
   // -----------------------------
   const renderTeamButton = (
     game: Game,
-    teamName: string | null,
-    seed: number | null,
+    team: { team_id: string; name: string; seed: number | null } | null,
     selectedTeamId: string | null
   ) => {
-    if (!teamName) {
+    if (!team) {
       return (
         <div className="text-xs text-slate-500 italic px-3 py-2 border border-dashed border-slate-700 rounded-md h-9 flex items-center">
           TBD
@@ -81,17 +94,17 @@ export default function RegionGrid({
       );
     }
 
-    const isSelected = selectedTeamId === teamName;
-    const isHovered = hoveredTeamId === teamName;
-    const logo = getTeamLogo(teamName);
+    const isSelected = selectedTeamId === team.team_id;
+    const isHovered = hoveredTeamId === team.team_id;
+    const logo = getTeamLogo(team.name);
 
     return (
       <button
         type="button"
-        onClick={() => handlePick(game, teamName)}
-        onMouseEnter={() => setHoveredTeamId(teamName)}
+        onClick={() => handlePick(game, team.team_id)}
+        onMouseEnter={() => setHoveredTeamId(team.team_id)}
         onMouseLeave={() =>
-          setHoveredTeamId((prev) => (prev === teamName ? null : prev))
+          setHoveredTeamId((prev) => (prev === team.team_id ? null : prev))
         }
         disabled={isLocked || isSubmitted}
         className={`
@@ -108,12 +121,12 @@ export default function RegionGrid({
         {logo && (
           <img
             src={logo}
-            alt={teamName}
+            alt={team.name}
             className="w-5 h-5 rounded-full object-cover shadow-sm"
           />
         )}
 
-        {seed !== null && (
+        {team.seed !== null && (
           <span
             className={`
               text-[10px] font-bold px-1.5 py-0.5 rounded 
@@ -124,12 +137,12 @@ export default function RegionGrid({
               }
             `}
           >
-            {seed}
+            {team.seed}
           </span>
         )}
 
         <span className="flex-1 text-left text-[11px] tracking-wide truncate">
-          {teamName}
+          {team.name}
         </span>
       </button>
     );
@@ -214,8 +227,8 @@ export default function RegionGrid({
 
                 const isPathActive =
                   hoveredTeamId &&
-                  (game.team1 === hoveredTeamId ||
-                    game.team2 === hoveredTeamId);
+                  (game.team1?.team_id === hoveredTeamId ||
+                    game.team2?.team_id === hoveredTeamId);
 
                 return (
                   <div
@@ -228,8 +241,8 @@ export default function RegionGrid({
                     "
                   >
                     <div className="flex flex-col gap-1">
-                      {renderTeamButton(game, game.team1, game.seed1, selectedTeamId)}
-                      {renderTeamButton(game, game.team2, game.seed2, selectedTeamId)}
+                      {renderTeamButton(game, game.team1, selectedTeamId)}
+                      {renderTeamButton(game, game.team2, selectedTeamId)}
                     </div>
 
                     {round < 4 && (

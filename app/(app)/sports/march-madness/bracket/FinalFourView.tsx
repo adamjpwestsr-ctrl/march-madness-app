@@ -1,64 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getTeamLogo } from "lib/getTeamLogo";
+import { getTeamLogo } from "@/lib/getTeamLogo";
 
-// -----------------------------
-// INLINE TYPES
-// -----------------------------
-type Team = {
-  team_id: string;
-  name: string;
-  seed: number | null;
-};
-
-type Game = {
-  game_id: number;
-  round: number;
-  region: string;
-  team1: Team | null;
-  team2: Team | null;
-  winner: string | null;
-  source_game1: number | null;
-  source_game2: number | null;
-};
-
-type Pick = {
-  bracket_id: string;
-  game_id: number;
-  selected_team: string;
-};
-
-// -----------------------------
-// PROPS
-// -----------------------------
-type FinalFourViewProps = {
-  bracket: { bracket_id: string };
-  games: Game[];
-  picks: Pick[];
-  isLocked: boolean;
-  onPick: (gameId: number, teamId: string) => void;
-  setView: (view: any) => void;
-};
-
-// -----------------------------
-// CONSTANTS
-// -----------------------------
-const ROUND_LABELS: Record<number, string> = {
-  5: "Final Four",
-};
-
-// -----------------------------
-// COMPONENT
-// -----------------------------
 export default function FinalFourView({
-  bracket,
   games,
   picks,
   isLocked,
+  isSubmitted,
   onPick,
-  setView,
-}: FinalFourViewProps) {
+  onUseMulligan,
+  onBack,
+  onContinue,
+}) {
   const [mounted, setMounted] = useState(false);
   const [lastAnimatedRound, setLastAnimatedRound] = useState<number | null>(null);
   const [hoveredTeamId, setHoveredTeamId] = useState<string | null>(null);
@@ -68,35 +22,19 @@ export default function FinalFourView({
     return () => clearTimeout(t);
   }, []);
 
-  // -----------------------------
-  // HELPERS
-  // -----------------------------
-  const getSelectedTeamId = (gameId: number) => {
-    const pick = picks.find((p) => p.game_id === gameId);
-    return pick ? pick.selected_team : null;
-  };
+  const finalFourGames = games
+    .filter((g) => g.round === 5)
+    .sort((a, b) => a.game_id - b.game_id);
+
+  const getSelectedTeamId = (gameId: number) => picks[gameId] ?? null;
 
   const handlePick = (gameId: number, teamId: string) => {
-    if (isLocked) return;
+    if (isLocked || isSubmitted) return;
     setLastAnimatedRound(5);
     onPick(gameId, teamId);
   };
 
-  // -----------------------------
-  // GET FINAL FOUR GAMES (REAL DB GAMES)
-  // -----------------------------
-  const finalFourGames = games
-    .filter((g) => g.round === 5)
-    .sort((a, b) => a.game_id - b.game_id); // 61 then 62
-
-  // -----------------------------
-  // TEAM BUTTON
-  // -----------------------------
-  const renderTeamButton = (
-    game: Game,
-    team: Team | null,
-    selectedTeamId: string | null
-  ) => {
+  const renderTeamButton = (game, team, selectedTeamId) => {
     if (!team) {
       return (
         <div className="text-xs text-slate-500 italic px-3 py-2 border border-dashed border-slate-700 rounded-md h-9 flex items-center">
@@ -117,7 +55,7 @@ export default function FinalFourView({
         onMouseLeave={() =>
           setHoveredTeamId((prev) => (prev === team.team_id ? null : prev))
         }
-        disabled={isLocked}
+        disabled={isLocked || isSubmitted}
         className={`
           relative flex items-center gap-2 px-3 h-9 rounded-md text-xs
           border transition-all w-full
@@ -126,7 +64,7 @@ export default function FinalFourView({
               ? "bg-emerald-600/30 border-emerald-400 text-white shadow-[0_0_12px_rgba(16,185,129,0.5)]"
               : "bg-white/5 border-white/10 text-slate-100 hover:bg-white/10 hover:scale-[1.02]"
           }
-          ${isLocked ? "opacity-60 cursor-not-allowed" : ""}
+          ${(isLocked || isSubmitted) ? "opacity-60 cursor-not-allowed" : ""}
         `}
       >
         {logo && (
@@ -159,57 +97,38 @@ export default function FinalFourView({
     );
   };
 
-  // -----------------------------
-  // CONNECTOR
-  // -----------------------------
-  const Connector = ({ isActive }: { isActive: boolean }) => {
-    return (
-      <div className="flex items-center justify-center h-6">
+  const Connector = ({ isActive }) => (
+    <div className="flex items-center justify-center h-6">
+      <div
+        className={`
+          flex items-center justify-center
+          transition-all duration-200
+          ${isActive ? "opacity-80" : "opacity-40"}
+        `}
+      >
         <div
           className={`
-            flex items-center justify-center
-            transition-all duration-200
-            ${isActive ? "opacity-80" : "opacity-40"}
+            h-[2px] w-6 rounded-full
+            ${isActive ? "bg-emerald-400" : "bg-slate-600/60"}
           `}
-        >
-          <div
-            className={`
-              h-[2px] w-6 rounded-full
-              ${isActive ? "bg-emerald-400" : "bg-slate-600/60"}
-            `}
-          />
-          <div
-            className={`
-              h-8 w-[2px] rounded-full ml-3
-              ${isActive ? "bg-emerald-400" : "bg-slate-600/60"}
-            `}
-          />
-        </div>
+        />
+        <div
+          className={`
+            h-8 w-[2px] rounded-full ml-3
+            ${isActive ? "bg-emerald-400" : "bg-slate-600/60"}
+          `}
+        />
       </div>
-    );
-  };
+    </div>
+  );
 
-  const shouldAnimateRound = (round: number) => {
-    if (!mounted) return true;
-    if (lastAnimatedRound == null) return false;
-    return round === lastAnimatedRound || round === lastAnimatedRound + 1;
-  };
+  const roundWrapperClasses = `
+    flex flex-col gap-4
+    transition-all duration-300
+    ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"}
+    animate-pulse
+  `;
 
-  const roundWrapperClasses = (round: number) =>
-    `
-      flex flex-col gap-4
-      transition-all duration-300
-      ${
-        mounted
-          ? "opacity-100 translate-y-0"
-          : "opacity-0 translate-y-3"
-      }
-      ${shouldAnimateRound(round) ? "animate-pulse" : ""}
-    `;
-
-  // -----------------------------
-  // RENDER
-  // -----------------------------
   return (
     <div className="flex flex-col gap-6 w-full">
       {/* HEADER */}
@@ -219,7 +138,7 @@ export default function FinalFourView({
         </h2>
 
         <button
-          onClick={() => setView("region")}
+          onClick={onBack}
           className="
             flex items-center gap-2 px-3 py-1.5
             bg-white/5 border border-white/10 backdrop-blur-md
@@ -229,21 +148,14 @@ export default function FinalFourView({
             transition-all duration-200
           "
         >
-          <span className="text-sm">←</span>
-          Back
+          ← Back
         </button>
       </div>
 
-      {/* BRACKET LAYOUT */}
+      {/* BRACKET */}
       <div className="overflow-y-auto overflow-x-hidden pb-6">
-        <div
-          className="
-            grid gap-6
-            grid-cols-[repeat(2,minmax(180px,1fr))]
-          "
-        >
-          <div className={roundWrapperClasses(5)}>
-            {/* STICKY ROUND HEADER */}
+        <div className="grid gap-6 grid-cols-[repeat(2,minmax(180px,1fr))]">
+          <div className={roundWrapperClasses}>
             <div
               className="
                 sticky top-0 z-20
@@ -256,17 +168,15 @@ export default function FinalFourView({
                 text-slate-200
               "
             >
-              {ROUND_LABELS[5]}
+              Final Four
             </div>
 
-            {/* FINAL FOUR GAMES */}
             {finalFourGames.map((game) => {
               const selectedTeamId = getSelectedTeamId(game.game_id);
-
               const isPathActive =
                 hoveredTeamId &&
-                ((game.team1 && game.team1.team_id === hoveredTeamId) ||
-                  (game.team2 && game.team2.team_id === hoveredTeamId));
+                (game.team1?.team_id === hoveredTeamId ||
+                  game.team2?.team_id === hoveredTeamId);
 
               return (
                 <div
@@ -293,9 +203,9 @@ export default function FinalFourView({
         </div>
       </div>
 
-      {/* CONTINUE BUTTON */}
+      {/* CONTINUE */}
       <button
-        onClick={() => setView("championship")}
+        onClick={onContinue}
         className="
           self-center px-6 py-3 rounded-xl text-white font-semibold tracking-wide
           bg-gradient-to-br from-emerald-400 to-emerald-600

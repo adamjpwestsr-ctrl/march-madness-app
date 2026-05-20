@@ -2,7 +2,27 @@
 
 import { useEffect, useState } from "react";
 import { getTeamLogo } from "@/lib/getTeamLogo";
+import { Game } from "@/lib/bracketTypes";
 
+// -----------------------------
+// PROPS INTERFACE
+// -----------------------------
+type FinalFourViewProps = {
+  games: Game[];
+  picks: Record<number, string | null>;
+  isLocked: boolean;
+  isSubmitted: boolean;
+
+  onPick: (gameId: number, teamId: string) => void;
+  onUseMulligan: (game: Game) => void;
+
+  onContinue: () => void;
+  onBack: () => void;
+};
+
+// -----------------------------
+// COMPONENT
+// -----------------------------
 export default function FinalFourView({
   games,
   picks,
@@ -10,9 +30,9 @@ export default function FinalFourView({
   isSubmitted,
   onPick,
   onUseMulligan,
-  onBack,
   onContinue,
-}) {
+  onBack,
+}: FinalFourViewProps) {
   const [mounted, setMounted] = useState(false);
   const [lastAnimatedRound, setLastAnimatedRound] = useState<number | null>(null);
   const [hoveredTeamId, setHoveredTeamId] = useState<string | null>(null);
@@ -26,7 +46,8 @@ export default function FinalFourView({
     .filter((g) => g.round === 5)
     .sort((a, b) => a.game_id - b.game_id);
 
-  const getSelectedTeamId = (gameId: number) => picks[gameId] ?? null;
+  const getSelectedTeamId = (gameId: number): string | null =>
+    picks[gameId] ?? null;
 
   const handlePick = (gameId: number, teamId: string) => {
     if (isLocked || isSubmitted) return;
@@ -34,7 +55,14 @@ export default function FinalFourView({
     onPick(gameId, teamId);
   };
 
-  const renderTeamButton = (game, team, selectedTeamId) => {
+  // -----------------------------
+  // TEAM BUTTON
+  // -----------------------------
+  const renderTeamButton = (
+    game: Game,
+    team: { team_id: string; name: string; seed: number | null } | null,
+    selectedTeamId: string | null
+  ) => {
     if (!team) {
       return (
         <div className="text-xs text-slate-500 italic px-3 py-2 border border-dashed border-slate-700 rounded-md h-9 flex items-center">
@@ -97,7 +125,10 @@ export default function FinalFourView({
     );
   };
 
-  const Connector = ({ isActive }) => (
+  // -----------------------------
+  // CONNECTOR
+  // -----------------------------
+  const Connector = ({ isActive }: { isActive: boolean }) => (
     <div className="flex items-center justify-center h-6">
       <div
         className={`
@@ -122,13 +153,23 @@ export default function FinalFourView({
     </div>
   );
 
-  const roundWrapperClasses = `
-    flex flex-col gap-4
-    transition-all duration-300
-    ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"}
-    animate-pulse
-  `;
+  const shouldAnimateRound = (round: number): boolean => {
+    if (!mounted) return true;
+    if (lastAnimatedRound == null) return false;
+    return round === lastAnimatedRound || round === lastAnimatedRound + 1;
+  };
 
+  const roundWrapperClasses = (round: number): string =>
+    `
+      flex flex-col gap-4
+      transition-all duration-300
+      ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"}
+      ${shouldAnimateRound(round) ? "animate-pulse" : ""}
+    `;
+
+  // -----------------------------
+  // RENDER
+  // -----------------------------
   return (
     <div className="flex flex-col gap-6 w-full">
       {/* HEADER */}
@@ -155,7 +196,7 @@ export default function FinalFourView({
       {/* BRACKET */}
       <div className="overflow-y-auto overflow-x-hidden pb-6">
         <div className="grid gap-6 grid-cols-[repeat(2,minmax(180px,1fr))]">
-          <div className={roundWrapperClasses}>
+          <div className={roundWrapperClasses(5)}>
             <div
               className="
                 sticky top-0 z-20

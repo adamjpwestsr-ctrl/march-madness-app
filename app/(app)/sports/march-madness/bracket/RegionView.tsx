@@ -1,6 +1,22 @@
 "use client";
 
 import RegionGrid from "./RegionGrid";
+import { Game } from "@/lib/bracketTypes";
+
+type RegionViewProps = {
+  regionName: string;
+  games: Game[];
+  picks: Record<number, string | null>;
+  isLocked: boolean;
+  isSubmitted: boolean;
+  mulligans: { remaining: number };
+
+  onPick: (gameId: number, teamId: string) => void;
+  onUseMulligan: (game: Game) => void;
+
+  onContinue: () => void;
+  onBack: () => void;
+};
 
 export default function RegionView({
   regionName,
@@ -13,7 +29,7 @@ export default function RegionView({
   onUseMulligan,
   onContinue,
   onBack,
-}) {
+}: RegionViewProps) {
   const regionEmoji =
     regionName === "East"
       ? "🧭"
@@ -23,10 +39,6 @@ export default function RegionView({
       ? "☀️"
       : regionName === "Midwest"
       ? "⭐"
-      : regionName === "Final Four"
-      ? "🏀"
-      : regionName === "Championship"
-      ? "🏆"
       : "🏀";
 
   const regionColor =
@@ -38,9 +50,7 @@ export default function RegionView({
       ? "bg-rose-500"
       : regionName === "Midwest"
       ? "bg-amber-500"
-      : regionName === "Final Four"
-      ? "bg-violet-500"
-      : "bg-yellow-500";
+      : "bg-violet-500";
 
   return (
     <div className="flex flex-col gap-6 w-full">
@@ -68,8 +78,7 @@ export default function RegionView({
             transition-all duration-200
           "
         >
-          <span className="text-sm">←</span>
-          Back
+          ← Back
         </button>
       </div>
 
@@ -85,7 +94,7 @@ export default function RegionView({
         onUseMulligan={onUseMulligan}
       />
 
-      {/* CONTINUE BUTTON */}
+      {/* CONTINUE */}
       <button
         onClick={onContinue}
         className="

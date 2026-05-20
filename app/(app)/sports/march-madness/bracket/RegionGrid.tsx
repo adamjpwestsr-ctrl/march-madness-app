@@ -2,16 +2,36 @@
 
 import { useState, useEffect } from "react";
 import { getTeamLogo } from "@/lib/getTeamLogo";
+import { Game } from "@/lib/bracketTypes";
 
+// -----------------------------
+// PROPS INTERFACE
+// -----------------------------
+type RegionGridProps = {
+  regionName: string;
+  games: Game[];
+  picks: Record<number, string | null>;
+  isLocked: boolean;
+  isSubmitted: boolean;
+  mulligans: { remaining: number };
+
+  onPick: (gameId: number, teamId: string) => void;
+  onUseMulligan: (game: Game) => void;
+};
+
+// -----------------------------
+// COMPONENT
+// -----------------------------
 export default function RegionGrid({
   regionName,
   games,
   picks,
   isLocked,
   isSubmitted,
+  mulligans,
   onPick,
   onUseMulligan,
-}) {
+}: RegionGridProps) {
   const [mounted, setMounted] = useState(false);
   const [lastAnimatedRound, setLastAnimatedRound] = useState<number | null>(null);
   const [hoveredTeamId, setHoveredTeamId] = useState<string | null>(null);
@@ -28,16 +48,17 @@ export default function RegionGrid({
 
   const rounds = [1, 2, 3, 4];
 
-  const gamesByRound: Record<number, any[]> = {};
-  rounds.forEach((r) => {
-    gamesByRound[r] = regionGames.filter((g) => g.round === r);
-  });
-
-  const getSelectedTeamId = (gameId: number) => {
-    return picks[gameId] ?? null;
+  const gamesByRound: Record<number, Game[]> = {
+    1: regionGames.filter((g) => g.round === 1),
+    2: regionGames.filter((g) => g.round === 2),
+    3: regionGames.filter((g) => g.round === 3),
+    4: regionGames.filter((g) => g.round === 4),
   };
 
-  const handlePick = (game: any, teamId: string) => {
+  const getSelectedTeamId = (gameId: number): string | null =>
+    picks[gameId] ?? null;
+
+  const handlePick = (game: Game, teamId: string) => {
     if (isLocked || isSubmitted) return;
     setLastAnimatedRound(game.round);
     onPick(game.game_id, teamId);
@@ -46,7 +67,12 @@ export default function RegionGrid({
   // -----------------------------
   // TEAM BUTTON
   // -----------------------------
-  const renderTeamButton = (game: any, teamName: string | null, seed: number | null, selectedTeamId: string | null) => {
+  const renderTeamButton = (
+    game: Game,
+    teamName: string | null,
+    seed: number | null,
+    selectedTeamId: string | null
+  ) => {
     if (!teamName) {
       return (
         <div className="text-xs text-slate-500 italic px-3 py-2 border border-dashed border-slate-700 rounded-md h-9 flex items-center">
@@ -112,48 +138,42 @@ export default function RegionGrid({
   // -----------------------------
   // CONNECTOR
   // -----------------------------
-  const Connector = ({ isActive }: { isActive: boolean }) => {
-    return (
-      <div className="flex items-center justify-center h-6">
+  const Connector = ({ isActive }: { isActive: boolean }) => (
+    <div className="flex items-center justify-center h-6">
+      <div
+        className={`
+          flex items-center justify-center
+          transition-all duration-200
+          ${isActive ? "opacity-80" : "opacity-40"}
+        `}
+      >
         <div
           className={`
-            flex items-center justify-center
-            transition-all duration-200
-            ${isActive ? "opacity-80" : "opacity-40"}
+            h-[2px] w-6 rounded-full
+            ${isActive ? "bg-emerald-400" : "bg-slate-600/60"}
           `}
-        >
-          <div
-            className={`
-              h-[2px] w-6 rounded-full
-              ${isActive ? "bg-emerald-400" : "bg-slate-600/60"}
-            `}
-          />
-          <div
-            className={`
-              h-8 w-[2px] rounded-full ml-3
-              ${isActive ? "bg-emerald-400" : "bg-slate-600/60"}
-            `}
-          />
-        </div>
+        />
+        <div
+          className={`
+            h-8 w-[2px] rounded-full ml-3
+            ${isActive ? "bg-emerald-400" : "bg-slate-600/60"}
+          `}
+        />
       </div>
-    );
-  };
+    </div>
+  );
 
-  const shouldAnimateRound = (round: number) => {
+  const shouldAnimateRound = (round: number): boolean => {
     if (!mounted) return true;
     if (lastAnimatedRound == null) return false;
     return round === lastAnimatedRound || round === lastAnimatedRound + 1;
   };
 
-  const roundWrapperClasses = (round: number) =>
+  const roundWrapperClasses = (round: number): string =>
     `
       flex flex-col gap-4
       transition-all duration-300
-      ${
-        mounted
-          ? "opacity-100 translate-y-0"
-          : "opacity-0 translate-y-3"
-      }
+      ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"}
       ${shouldAnimateRound(round) ? "animate-pulse" : ""}
     `;
 
@@ -162,14 +182,9 @@ export default function RegionGrid({
   // -----------------------------
   return (
     <div className="overflow-y-auto overflow-x-hidden pb-6">
-      <div
-        className="
-          grid gap-6
-          grid-cols-[repeat(4,minmax(180px,1fr))]
-        "
-      >
+      <div className="grid gap-6 grid-cols-[repeat(4,minmax(180px,1fr))]">
         {rounds.map((round) => {
-          const roundGames = gamesByRound[round] || [];
+          const roundGames = gamesByRound[round];
           if (!roundGames.length) return null;
 
           return (

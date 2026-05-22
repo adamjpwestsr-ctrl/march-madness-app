@@ -1,6 +1,6 @@
 "use client";
 
-import { OpeningRound } from "@/components/OpeningRound";
+import { OpeningRound } from "@/components/bracket/OpeningRound";
 import { Game, Picks } from "@/lib/bracketTypes";
 
 type OpeningRoundViewProps = {

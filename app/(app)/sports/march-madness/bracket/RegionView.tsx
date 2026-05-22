@@ -78,11 +78,11 @@ export default function RegionView({
             transition-all duration-200
           "
         >
-          ← Back
+          ← Back to Regions
         </button>
       </div>
 
-      {/* REGION GRID */}
+      {/* REGION GRID (Rounds 1–4) */}
       <RegionGrid
         regionName={regionName}
         games={games}

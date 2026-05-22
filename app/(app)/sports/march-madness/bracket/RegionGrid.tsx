@@ -4,9 +4,6 @@ import { useState, useEffect } from "react";
 import { getTeamLogo } from "@/lib/getTeamLogo";
 import { Game } from "@/lib/bracketTypes";
 
-// -----------------------------
-// PROPS INTERFACE
-// -----------------------------
 type RegionGridProps = {
   regionName: string;
   games: Game[];
@@ -14,20 +11,10 @@ type RegionGridProps = {
   isLocked: boolean;
   isSubmitted: boolean;
   mulligans: { remaining: number };
-
   onPick: (gameId: number, teamId: string) => void;
   onUseMulligan: (game: Game) => void;
 };
 
-// -----------------------------
-// TYPE GUARD (cleanest version)
-// -----------------------------
-const hasValidRound = (g: Game): g is Game & { round: number } =>
-  g.round !== null;
-
-// -----------------------------
-// COMPONENT
-// -----------------------------
 export default function RegionGrid({
   regionName,
   games,
@@ -47,30 +34,14 @@ export default function RegionGrid({
     return () => clearTimeout(t);
   }, []);
 
-  // -----------------------------
-  // FILTER REGION GAMES (cleanest)
-  // -----------------------------
-  const regionGames = games
-    .filter(hasValidRound)
-    .filter(
-      (g) =>
-        g.region === regionName &&
-        g.round > 0 &&
-        g.round <= 4
-    )
-    .sort((a, b) => a.round - b.round || a.game_id - b.game_id);
+  // ✅ Group games by round (Rounds 1–4 only)
+  const validRounds = [1, 2, 3, 4];
+  const gamesByRound: Record<number, Game[]> = {};
+  validRounds.forEach((r) => {
+    gamesByRound[r] = games.filter((g) => g.round === r && g.region === regionName);
+  });
 
-  const rounds = [1, 2, 3, 4];
-
-  const gamesByRound: Record<number, Game[]> = {
-    1: regionGames.filter((g) => g.round === 1),
-    2: regionGames.filter((g) => g.round === 2),
-    3: regionGames.filter((g) => g.round === 3),
-    4: regionGames.filter((g) => g.round === 4),
-  };
-
-  const getSelectedTeamId = (gameId: number): string | null =>
-    picks[gameId] ?? null;
+  const getSelectedTeamId = (gameId: number): string | null => picks[gameId] ?? null;
 
   const handlePick = (game: Game, teamId: string) => {
     if (isLocked || isSubmitted) return;
@@ -78,9 +49,7 @@ export default function RegionGrid({
     onPick(game.game_id, teamId);
   };
 
-  // -----------------------------
-  // TEAM BUTTON
-  // -----------------------------
+  // 🏀 Team Button Renderer
   const renderTeamButton = (
     game: Game,
     team: { team_id: string; name: string; seed: number | null } | null,
@@ -148,9 +117,7 @@ export default function RegionGrid({
     );
   };
 
-  // -----------------------------
-  // CONNECTOR
-  // -----------------------------
+  // 🔗 Connector between rounds
   const Connector = ({ isActive }: { isActive: boolean }) => (
     <div className="flex items-center justify-center h-6">
       <div
@@ -190,19 +157,17 @@ export default function RegionGrid({
       ${shouldAnimateRound(round) ? "animate-pulse" : ""}
     `;
 
-  // -----------------------------
-  // RENDER
-  // -----------------------------
+  // 🧩 Render grouped rounds
   return (
     <div className="overflow-y-auto overflow-x-hidden pb-6">
       <div className="grid gap-6 grid-cols-[repeat(4,minmax(180px,1fr))]">
-        {rounds.map((round) => {
+        {validRounds.map((round) => {
           const roundGames = gamesByRound[round];
           if (!roundGames.length) return null;
 
           return (
             <div key={round} className={roundWrapperClasses(round)}>
-              {/* STICKY ROUND HEADER */}
+              {/* Round Header */}
               <div
                 className="
                   sticky top-0 z-20
@@ -221,10 +186,9 @@ export default function RegionGrid({
                 {round === 4 && "Elite 8"}
               </div>
 
-              {/* GAMES */}
+              {/* Games */}
               {roundGames.map((game) => {
                 const selectedTeamId = getSelectedTeamId(game.game_id);
-
                 const isPathActive =
                   hoveredTeamId &&
                   (game.team1?.team_id === hoveredTeamId ||

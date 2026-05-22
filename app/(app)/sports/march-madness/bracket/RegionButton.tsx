@@ -5,7 +5,7 @@ import React from "react";
 export type RegionButtonProps = {
   label: string;
   icon: string;
-  gradient: string;
+  gradient: string; // e.g. "from-emerald-400 to-teal-600"
   onClick: () => void;
 };
 
@@ -24,8 +24,9 @@ export function RegionButton({
         bg-white/5 border border-white/10 backdrop-blur-md
         shadow-xl shadow-black/40
         transition-all duration-300 ease-out
-        hover:scale-[1.03] hover:ring-2 hover:ring-white/20
+        hover:scale-[1.04] hover:ring-2 hover:ring-white/20
         active:scale-[0.97]
+        focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300
       `}
     >
       {/* Gradient Layer */}
@@ -37,13 +38,13 @@ export function RegionButton({
       />
 
       {/* Icon */}
-      <div className="absolute top-3 left-3 text-2xl opacity-70">
+      <div className="absolute top-3 left-3 text-2xl opacity-80">
         {icon}
       </div>
 
       {/* Label */}
       <div className="relative z-10 flex items-center justify-center h-full">
-        <span className="text-xl font-semibold tracking-wide drop-shadow-md">
+        <span className="text-xl font-semibold tracking-wide drop-shadow-md text-slate-100">
           {label}
         </span>
       </div>

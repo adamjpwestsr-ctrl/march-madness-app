@@ -1,318 +1,245 @@
-// app/admin/tournament-setup/actions.ts
 "use server";
 
-import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const REGIONS = ["East", "West", "South", "Midwest"] as const;
 type Region = (typeof REGIONS)[number];
 
-type RegionTeam = {
-  seed: number;
-  team: string;
-  record?: string;
-  conference?: string;
-  bid_type?: "AQ" | "AT_LARGE" | "";
-  opening_round?: boolean;
-  advances_to_game?: number | null;
-};
-
-export async function saveRegionTeams(region: Region, teams: RegionTeam[]) {
-  const supabase = await createSupabaseServerClient();
-
-  await supabase.from("tournament_teams").delete().eq("region", region);
-
-  const rows = teams.map((t) => ({
-    region,
-    seed: t.seed,
-    team: t.team,
-    bid_type: t.bid_type ?? null,
-    opening_round: t.opening_round ?? false,
-    advances_to_game: t.advances_to_game ?? null,
-    record: t.record ?? null,
-    conference: t.conference ?? null,
-  }));
-
-  const { error } = await supabase.from("tournament_teams").insert(rows);
-  if (error) throw new Error(error.message);
-}
-
-export async function clearRegion(region: Region) {
-  const supabase = await createSupabaseServerClient();
-  await supabase.from("tournament_teams").delete().eq("region", region);
-}
-
-export async function loadRegionTeams(region: Region) {
+// ------------------------------------------------------------
+// LOAD ALL TEAMS (for dropdowns)
+// ------------------------------------------------------------
+export async function loadAllTeams() {
   const supabase = await createSupabaseServerClient();
 
   const { data, error } = await supabase
-    .from("tournament_teams")
-    .select("*")
-    .eq("region", region)
-    .order("seed");
+    .from("teams")
+    .select("id, team_name, logo_url, conference")
+    .order("team_name", { ascending: true });
 
-  if (error) throw new Error(error.message);
-  return data ?? [];
+  if (error || !data) return [];
+
+  return data.map((t) => ({
+    id: t.id,
+    name: t.team_name,
+    logo: t.logo_url,
+    conference: t.conference,
+  }));
 }
 
-export async function generateBracket() {
+// ------------------------------------------------------------
+// OPENING ROUND (ROUND 0)
+// ------------------------------------------------------------
+export async function loadOpeningRoundGames() {
   const supabase = await createSupabaseServerClient();
 
-  const { data: teams, error: teamErr } = await supabase
-    .from("tournament_teams")
-    .select("*");
+  const { data } = await supabase
+    .from("tournament_games")
+    .select("id, game_number, team1, team2")
+    .eq("round", 0)
+    .order("game_number", { ascending: true });
 
-  if (teamErr) return { message: "Error loading teams." };
+  return data || [];
+}
 
-  for (const region of REGIONS) {
-    const regionTeams = teams.filter((t: any) => t.region === region);
-    if (regionTeams.length !== 16) {
-      return { message: `Region ${region} must have exactly 16 teams.` };
+export async function saveOpeningRoundGames(
+  games: { team1: string; team2: string }[]
+) {
+  const supabase = await createSupabaseServerClient();
+
+  // Clear existing Opening Round
+  await supabase.from("tournament_games").delete().eq("round", 0);
+
+  const rows = games.map((g, idx) => ({
+    round: 0,
+    region: "Opening Round",
+    game_number: idx + 1,
+    team1: g.team1 || null,
+    team2: g.team2 || null,
+    winner: null,
+    winner_to_game_id: null,
+  }));
+
+  const { error } = await supabase.from("tournament_games").insert(rows);
+  if (error) throw new Error("Failed to save Opening Round games.");
+}
+
+// ------------------------------------------------------------
+// ROUND OF 64 (ROUND 1)
+// ------------------------------------------------------------
+export async function loadRoundOf64Games(region: Region) {
+  const supabase = await createSupabaseServerClient();
+
+  const { data } = await supabase
+    .from("tournament_games")
+    .select("id, game_number, team1, team2")
+    .eq("round", 1)
+    .eq("region", region)
+    .order("game_number", { ascending: true });
+
+  return data || [];
+}
+
+export async function saveRoundOf64Games(
+  region: Region,
+  games: { team1: string; team2: string }[]
+) {
+  const supabase = await createSupabaseServerClient();
+
+  // Clear existing region games
+  await supabase
+    .from("tournament_games")
+    .delete()
+    .eq("round", 1)
+    .eq("region", region);
+
+  const normalize = (val: string | null) => {
+    if (!val) return null;
+    if (val.startsWith("OR-")) {
+      const n = Number(val.split("-")[1]);
+      return `Opening Round Game ${n} Winner`;
     }
-  }
-
-  await supabase.from("games").delete().neq("game_id", -1);
-
-  let gameId = 1;
-  const gameRows: any[] = [];
-
-  const addGame = ({
-    round,
-    region,
-    team1,
-    seed1,
-    team2,
-    seed2,
-    source_game1,
-    source_game2,
-  }: any) => {
-    gameRows.push({
-      game_id: gameId++,
-      round,
-      region,
-      game_number: null,
-      team1,
-      seed1,
-      team2,
-      seed2,
-      winner: null,
-      source_game1,
-      source_game2,
-      final_score: null,
-    });
+    return val;
   };
 
-  const openingRoundTeams = teams.filter((t: any) => t.opening_round === true);
+  const rows = games.map((g, idx) => ({
+    round: 1,
+    region,
+    game_number: idx + 1,
+    team1: normalize(g.team1),
+    team2: normalize(g.team2),
+    winner: null,
+    winner_to_game_id: null,
+  }));
 
-  if (openingRoundTeams.length !== 24) {
-    return { message: "Exactly 24 teams must be marked as Opening Round." };
-  }
+  const { error } = await supabase.from("tournament_games").insert(rows);
+  if (error) throw new Error("Failed to save Round of 64 games.");
+}
 
-  const groupedByAdvance: Record<number, any[]> = {};
+// ------------------------------------------------------------
+// GENERATE REMAINING ROUNDS (2–6)
+// ------------------------------------------------------------
+export async function generateRemainingRounds() {
+  const supabase = await createSupabaseServerClient();
 
-  for (const t of openingRoundTeams) {
-    if (!t.advances_to_game) {
-      return {
-        message: `Opening Round team ${t.team} is missing advances_to_game.`,
-      };
-    }
-    if (!groupedByAdvance[t.advances_to_game]) {
-      groupedByAdvance[t.advances_to_game] = [];
-    }
-    groupedByAdvance[t.advances_to_game].push(t);
-  }
+  // Remove previously generated rounds
+  await supabase.from("tournament_games").delete().gte("round", 2);
 
-  for (const gameDest in groupedByAdvance) {
-    if (groupedByAdvance[gameDest].length !== 2) {
-      return {
-        message: `Round of 64 game ${gameDest} must have exactly 2 Opening Round teams.`,
-      };
-    }
-  }
+  // Load Round of 64
+  const { data: r64 } = await supabase
+    .from("tournament_games")
+    .select("id, region, game_number")
+    .eq("round", 1);
 
-  const openingRoundGameMap: Record<number, number> = {};
+  if (!r64) return { message: "No Round of 64 games found." };
 
-  for (const destGameId in groupedByAdvance) {
-    const pair = groupedByAdvance[destGameId];
+  // Organize by region
+  const byRegion: Record<Region, { id: number; game_number: number }[]> = {
+    East: [],
+    West: [],
+    South: [],
+    Midwest: [],
+  };
 
-    addGame({
-      round: 0,
-      region: "Opening Round",
-      team1: pair[0].team,
-      seed1: pair[0].seed,
-      team2: pair[1].team,
-      seed2: pair[1].seed,
-      source_game1: null,
-      source_game2: null,
-    });
-
-    openingRoundGameMap[Number(destGameId)] = gameId - 1;
-  }
-
-  for (const region of REGIONS) {
-    const regionTeams = teams
-      .filter((t: any) => t.region === region)
-      .sort((a: any, b: any) => a.seed - b.seed);
-
-    const matchups: [number, number][] = [
-      [1, 16],
-      [8, 9],
-      [5, 12],
-      [4, 13],
-      [6, 11],
-      [3, 14],
-      [7, 10],
-      [2, 15],
-    ];
-
-    for (const [s1, s2] of matchups) {
-      const t1 = regionTeams.find((t: any) => t.seed === s1);
-      const t2 = regionTeams.find((t: any) => t.seed === s2);
-
-      const isOpening1 = t1.opening_round === true;
-      const isOpening2 = t2.opening_round === true;
-
-      let team1 = t1.team;
-      let team2 = t2.team;
-      let seed1 = t1.seed;
-      let seed2 = t2.seed;
-      let source_game1: number | null = null;
-      let source_game2: number | null = null;
-
-      if (isOpening1) {
-        const orGameId = openingRoundGameMap[t1.advances_to_game];
-        team1 = `Winner of OR Game ${orGameId}`;
-        seed1 = null;
-        source_game1 = orGameId;
-      }
-
-      if (isOpening2) {
-        const orGameId = openingRoundGameMap[t2.advances_to_game];
-        team2 = `Winner of OR Game ${orGameId}`;
-        seed2 = null;
-        source_game2 = orGameId;
-      }
-
-      addGame({
-        round: 1,
-        region,
-        team1,
-        seed1,
-        team2,
-        seed2,
-        source_game1,
-        source_game2,
+  for (const g of r64) {
+    if (REGIONS.includes(g.region as Region)) {
+      byRegion[g.region as Region].push({
+        id: g.id,
+        game_number: g.game_number,
       });
     }
   }
 
+  // Sort each region
+  REGIONS.forEach((r) =>
+    byRegion[r].sort((a, b) => a.game_number - b.game_number)
+  );
+
+  const inserts: any[] = [];
+
+  // Build rounds 2–4 per region
   for (const region of REGIONS) {
-    const r64 = gameRows.filter((g) => g.round === 1 && g.region === region);
+    const games = byRegion[region];
+    if (games.length !== 8) continue;
 
-    for (let i = 0; i < 4; i++) {
-      const g1 = r64[i * 2];
-      const g2 = r64[i * 2 + 1];
+    // Round 2 (Round of 32)
+    inserts.push(
+      { round: 2, region, game_number: 1, team1: null, team2: null },
+      { round: 2, region, game_number: 2, team1: null, team2: null },
+      { round: 2, region, game_number: 3, team1: null, team2: null },
+      { round: 2, region, game_number: 4, team1: null, team2: null }
+    );
 
-      addGame({
-        round: 2,
-        region,
-        team1: null,
-        seed1: null,
-        team2: null,
-        seed2: null,
-        source_game1: g1.game_id,
-        source_game2: g2.game_id,
-      });
-    }
-  }
+    // Round 3 (Sweet 16)
+    inserts.push(
+      { round: 3, region, game_number: 1, team1: null, team2: null },
+      { round: 3, region, game_number: 2, team1: null, team2: null }
+    );
 
-  for (const region of REGIONS) {
-    const r32 = gameRows.filter((g) => g.round === 2 && g.region === region);
-
-    for (let i = 0; i < 2; i++) {
-      const g1 = r32[i * 2];
-      const g2 = r32[i * 2 + 1];
-
-      addGame({
-        round: 3,
-        region,
-        team1: null,
-        seed1: null,
-        team2: null,
-        seed2: null,
-        source_game1: g1.game_id,
-        source_game2: g2.game_id,
-      });
-    }
-  }
-
-  for (const region of REGIONS) {
-    const r16 = gameRows.filter((g) => g.round === 3 && g.region === region);
-
-    addGame({
+    // Round 4 (Elite 8)
+    inserts.push({
       round: 4,
       region,
+      game_number: 1,
       team1: null,
-      seed1: null,
       team2: null,
-      seed2: null,
-      source_game1: r16[0].game_id,
-      source_game2: r16[1].game_id,
     });
   }
 
-  const elite8 = gameRows.filter((g) => g.round === 4);
+  // Final Four (Round 5)
+  inserts.push(
+    {
+      round: 5,
+      region: "Final Four",
+      game_number: 1,
+      team1: null,
+      team2: null,
+    },
+    {
+      round: 5,
+      region: "Final Four",
+      game_number: 2,
+      team1: null,
+      team2: null,
+    }
+  );
 
-  addGame({
-    round: 5,
-    region: "Final Four",
-    team1: null,
-    seed1: null,
-    team2: null,
-    seed2: null,
-    source_game1: elite8[0].game_id,
-    source_game2: elite8[1].game_id,
-  });
-
-  addGame({
-    round: 5,
-    region: "Final Four",
-    team1: null,
-    seed1: null,
-    team2: null,
-    seed2: null,
-    source_game1: elite8[2].game_id,
-    source_game2: elite8[3].game_id,
-  });
-
-  const finalFour = gameRows.filter((g) => g.round === 5);
-
-  addGame({
+  // Championship (Round 6)
+  inserts.push({
     round: 6,
     region: "Championship",
+    game_number: 1,
     team1: null,
-    seed1: null,
     team2: null,
-    seed2: null,
-    source_game1: finalFour[0].game_id,
-    source_game2: finalFour[1].game_id,
   });
 
-  await supabase.from("games").insert(gameRows);
+  const { error } = await supabase.from("tournament_games").insert(inserts);
+  if (error) throw new Error("Failed to generate remaining rounds.");
 
-  return { message: "Tournament bracket generated successfully!" };
+  return { message: "Remaining rounds generated successfully." };
+}
+
+// ------------------------------------------------------------
+// LOCK TIME + PUBLISH
+// ------------------------------------------------------------
+export async function updateLockTime(lockTime: string) {
+  const supabase = await createSupabaseServerClient();
+
+  await supabase
+    .from("tournament_settings")
+    .update({ lock_time: lockTime })
+    .neq("id", "");
 }
 
 export async function publishTournament() {
   const supabase = await createSupabaseServerClient();
 
   const { data: games } = await supabase
-    .from("games")
-    .select("game_id")
+    .from("tournament_games")
+    .select("id")
     .limit(1);
 
-  if (!games || games.length === 0) {
+  if (!games || games.length === 0)
     return { message: "Cannot publish — no games exist." };
-  }
 
   const { data: settings } = await supabase
     .from("tournament_settings")
@@ -320,20 +247,15 @@ export async function publishTournament() {
     .limit(1)
     .single();
 
-  if (!settings) {
-    return { message: "Tournament settings not found." };
-  }
-
-  if (!settings.lock_time) {
+  if (!settings) return { message: "Tournament settings not found." };
+  if (!settings.lock_time)
     return { message: "Cannot publish — lock time is not set." };
-  }
 
   const now = new Date();
   const lock = new Date(settings.lock_time);
 
-  if (lock <= now) {
+  if (lock <= now)
     return { message: "Cannot publish — lock time must be in the future." };
-  }
 
   await supabase
     .from("tournament_settings")
@@ -344,106 +266,4 @@ export async function publishTournament() {
     .neq("id", "");
 
   return { message: "Tournament published successfully!" };
-}
-
-export async function updateLockTime(lockTime: string) {
-  const supabase = await createSupabaseServerClient();
-
-  await supabase
-    .from("tournament_settings")
-    .update({ lock_time: lockTime })
-    .neq("id", "");
-}
-
-export async function advanceWinner(gameId: number, winnerTeam: string) {
-  const supabase = await createSupabaseServerClient();
-
-  const { data: game, error: gameErr } = await supabase
-    .from("games")
-    .update({ winner: winnerTeam })
-    .eq("game_id", gameId)
-    .select("*")
-    .single();
-
-  if (gameErr || !game) {
-    throw new Error("Failed to update winner for game.");
-  }
-
-  const { data: nextGames, error: nextErr } = await supabase
-    .from("games")
-    .select("*")
-    .or(`source_game1.eq.${gameId},source_game2.eq.${gameId}`);
-
-  if (nextErr) {
-    throw new Error("Failed to load downstream games.");
-  }
-
-  if (!nextGames || nextGames.length === 0) {
-    return { message: "Winner updated; no downstream games." };
-  }
-
-  const updates = nextGames.map((g: any) => {
-    const update: any = {};
-    if (g.source_game1 === gameId) {
-      update.team1 = winnerTeam;
-    }
-    if (g.source_game2 === gameId) {
-      update.team2 = winnerTeam;
-    }
-    return supabase.from("games").update(update).eq("game_id", g.game_id);
-  });
-
-  await Promise.all(updates);
-
-  return { message: "Winner advanced successfully." };
-}
-
-export async function updateBracketScores() {
-  const supabase = await createSupabaseServerClient();
-
-  const { data: scores, error } = await supabase
-    .from("bracket_scores")
-    .select("bracket_id, total_points");
-
-  if (error) throw new Error("Failed to load bracket scores.");
-
-  return { message: "Scores refreshed successfully.", count: scores.length };
-}
-
-export async function getLeaderboardScores() {
-  const supabase = await createSupabaseServerClient();
-  try {
-    const { data: scores, error: scoreErr } = await supabase
-      .from("bracket_scores")
-      .select("bracket_id, total_points, user_id")
-      .order("total_points", { ascending: false });
-
-    if (scoreErr) {
-      console.error("Score query failed:", scoreErr);
-      throw scoreErr;
-    }
-
-    const userIds = scores.map((s) => s.user_id);
-    const { data: users, error: userErr } = await supabase
-      .from("users")
-      .select("user_id, username, email")
-      .in("user_id", userIds);
-
-    if (userErr) {
-      console.error("User query failed:", userErr);
-      throw userErr;
-    }
-
-    const userMap = new Map(users.map((u) => [u.user_id, u]));
-    return scores.map((row) => {
-      const u = userMap.get(row.user_id);
-      const username =
-        u?.username ||
-        (u?.email ? u.email.split("@")[0] : `User${row.user_id}`);
-      return { ...row, username };
-    });
-  } catch (err) {
-    console.error("getLeaderboardScores crashed:", err);
-    throw err;
-  }
 }

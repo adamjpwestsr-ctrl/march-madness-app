@@ -5,7 +5,8 @@ import LockAndPublish from "./LockAndPublish";
 import { loadAllTeams } from "./actions";
 
 export default async function TournamentSetupPage() {
-  const allTeams = await loadAllTeams();
+  const allTeamsRaw = await loadAllTeams();
+  const allTeams = allTeamsRaw.map(t => t.name);
 
   return (
     <div style={{ padding: 30, background: "#0f172a", minHeight: "100vh" }}>

@@ -1,6 +1,6 @@
 "use server";
 
-import { createSupabaseServerClient } from "../../../lib/supabase/server";
+import { createSupabaseServerClient } from "../../../../lib/supabaseServerClient";
 
 const REGIONS = ["East", "West", "South", "Midwest"] as const;
 type Region = (typeof REGIONS)[number];

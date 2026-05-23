@@ -1,3 +1,4 @@
+// /app/admin/tournament-setup/RoundOf64Editor.tsx
 "use client";
 
 import { useState, useEffect } from "react";

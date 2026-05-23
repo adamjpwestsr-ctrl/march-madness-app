@@ -3,9 +3,16 @@
 import { useState, useEffect } from "react";
 import { saveOpeningRoundGames, loadOpeningRoundGames } from "./actions";
 
-export default function OpeningRoundEditor({ allTeams }: { allTeams: string[] }) {
+type Team = {
+  id: number;
+  name: string;
+  logo: string;
+  conference: string;
+};
+
+export default function OpeningRoundEditor({ allTeams }: { allTeams: Team[] }) {
   const [games, setGames] = useState(
-    Array.from({ length: 12 }, () => ({ team1: "", team2: "" }))
+    Array.from({ length: 12 }, () => ({ team1_id: null as number | null, team2_id: null as number | null }))
   );
   const [saving, setSaving] = useState(false);
 
@@ -14,18 +21,18 @@ export default function OpeningRoundEditor({ allTeams }: { allTeams: string[] })
       const existing = await loadOpeningRoundGames();
       if (existing.length > 0) {
         const mapped = existing.map((g: any) => ({
-          team1: g.team1 || "",
-          team2: g.team2 || "",
+          team1_id: g.team1_id || null,
+          team2_id: g.team2_id || null,
         }));
         setGames(mapped);
       }
     })();
   }, []);
 
-  const updateGame = (i: number, field: "team1" | "team2", value: string) => {
+  const updateGame = (i: number, field: "team1_id" | "team2_id", value: string) => {
     setGames((prev) => {
       const copy = [...prev];
-      copy[i][field] = value;
+      copy[i][field] = value ? Number(value) : null;
       return copy;
     });
   };
@@ -52,27 +59,27 @@ export default function OpeningRoundEditor({ allTeams }: { allTeams: string[] })
           }}
         >
           <select
-            value={g.team1}
-            onChange={(e) => updateGame(i, "team1", e.target.value)}
+            value={g.team1_id ?? ""}
+            onChange={(e) => updateGame(i, "team1_id", e.target.value)}
             style={dropdownStyle}
           >
             <option value="">Select Team 1</option>
             {allTeams.map((t) => (
-              <option key={t} value={t}>
-                {t}
+              <option key={t.id} value={t.id}>
+                {t.name}
               </option>
             ))}
           </select>
 
           <select
-            value={g.team2}
-            onChange={(e) => updateGame(i, "team2", e.target.value)}
+            value={g.team2_id ?? ""}
+            onChange={(e) => updateGame(i, "team2_id", e.target.value)}
             style={dropdownStyle}
           >
             <option value="">Select Team 2</option>
             {allTeams.map((t) => (
-              <option key={t} value={t}>
-                {t}
+              <option key={t.id} value={t.id}>
+                {t.name}
               </option>
             ))}
           </select>

@@ -2,7 +2,6 @@
 
 import { createSupabaseServerClient } from "../../../lib/supabaseServerClient";
 
-
 const REGIONS = ["East", "West", "South", "Midwest"] as const;
 type Region = (typeof REGIONS)[number];
 
@@ -35,7 +34,7 @@ export async function loadOpeningRoundGames() {
 
   const { data } = await supabase
     .from("tournament_games")
-    .select("id, game_number, team1, team2")
+    .select("id, game_number, team1_id, team2_id")
     .eq("round", 0)
     .order("game_number", { ascending: true });
 
@@ -43,7 +42,7 @@ export async function loadOpeningRoundGames() {
 }
 
 export async function saveOpeningRoundGames(
-  games: { team1: string; team2: string }[]
+  games: { team1_id: number | null; team2_id: number | null }[]
 ) {
   const supabase = await createSupabaseServerClient();
 
@@ -54,8 +53,8 @@ export async function saveOpeningRoundGames(
     round: 0,
     region: "Opening Round",
     game_number: idx + 1,
-    team1: g.team1 || null,
-    team2: g.team2 || null,
+    team1_id: g.team1_id,
+    team2_id: g.team2_id,
     winner: null,
     winner_to_game_id: null,
   }));
@@ -72,7 +71,7 @@ export async function loadRoundOf64Games(region: Region) {
 
   const { data } = await supabase
     .from("tournament_games")
-    .select("id, game_number, team1, team2")
+    .select("id, game_number, team1_id, team2_id, team1, team2")
     .eq("round", 1)
     .eq("region", region)
     .order("game_number", { ascending: true });
@@ -94,23 +93,33 @@ export async function saveRoundOf64Games(
     .eq("region", region);
 
   const normalize = (val: string | null) => {
-    if (!val) return null;
+    if (!val) return { team_id: null, text: null };
+
+    // Opening Round Winner (OR-#)
     if (val.startsWith("OR-")) {
-      const n = Number(val.split("-")[1]);
-      return `Opening Round Game ${n} Winner`;
+      return { team_id: null, text: val };
     }
-    return val;
+
+    // Regular team ID
+    return { team_id: Number(val), text: null };
   };
 
-  const rows = games.map((g, idx) => ({
-    round: 1,
-    region,
-    game_number: idx + 1,
-    team1: normalize(g.team1),
-    team2: normalize(g.team2),
-    winner: null,
-    winner_to_game_id: null,
-  }));
+  const rows = games.map((g, idx) => {
+    const t1 = normalize(g.team1);
+    const t2 = normalize(g.team2);
+
+    return {
+      round: 1,
+      region,
+      game_number: idx + 1,
+      team1_id: t1.team_id,
+      team2_id: t2.team_id,
+      team1: t1.text, // OR-# stored here
+      team2: t2.text, // OR-# stored here
+      winner: null,
+      winner_to_game_id: null,
+    };
+  });
 
   const { error } = await supabase.from("tournament_games").insert(rows);
   if (error) throw new Error("Failed to save Round of 64 games.");
@@ -164,16 +173,16 @@ export async function generateRemainingRounds() {
 
     // Round 2 (Round of 32)
     inserts.push(
-      { round: 2, region, game_number: 1, team1: null, team2: null },
-      { round: 2, region, game_number: 2, team1: null, team2: null },
-      { round: 2, region, game_number: 3, team1: null, team2: null },
-      { round: 2, region, game_number: 4, team1: null, team2: null }
+      { round: 2, region, game_number: 1, team1_id: null, team2_id: null },
+      { round: 2, region, game_number: 2, team1_id: null, team2_id: null },
+      { round: 2, region, game_number: 3, team1_id: null, team2_id: null },
+      { round: 2, region, game_number: 4, team1_id: null, team2_id: null }
     );
 
     // Round 3 (Sweet 16)
     inserts.push(
-      { round: 3, region, game_number: 1, team1: null, team2: null },
-      { round: 3, region, game_number: 2, team1: null, team2: null }
+      { round: 3, region, game_number: 1, team1_id: null, team2_id: null },
+      { round: 3, region, game_number: 2, team1_id: null, team2_id: null }
     );
 
     // Round 4 (Elite 8)
@@ -181,8 +190,8 @@ export async function generateRemainingRounds() {
       round: 4,
       region,
       game_number: 1,
-      team1: null,
-      team2: null,
+      team1_id: null,
+      team2_id: null,
     });
   }
 
@@ -192,15 +201,15 @@ export async function generateRemainingRounds() {
       round: 5,
       region: "Final Four",
       game_number: 1,
-      team1: null,
-      team2: null,
+      team1_id: null,
+      team2_id: null,
     },
     {
       round: 5,
       region: "Final Four",
       game_number: 2,
-      team1: null,
-      team2: null,
+      team1_id: null,
+      team2_id: null,
     }
   );
 
@@ -209,8 +218,8 @@ export async function generateRemainingRounds() {
     round: 6,
     region: "Championship",
     game_number: 1,
-    team1: null,
-    team2: null,
+    team1_id: null,
+    team2_id: null,
   });
 
   const { error } = await supabase.from("tournament_games").insert(inserts);
@@ -220,7 +229,7 @@ export async function generateRemainingRounds() {
 }
 
 // ------------------------------------------------------------
-// LEADERBOARD SUPPORT (NEW)
+// LEADERBOARD SUPPORT
 // ------------------------------------------------------------
 export async function getLeaderboardScores() {
   const supabase = await createSupabaseServerClient();

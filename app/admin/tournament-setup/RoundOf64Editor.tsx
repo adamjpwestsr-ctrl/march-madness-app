@@ -1,19 +1,19 @@
-// /app/admin/tournament-setup/RoundOf64Editor.tsx
 "use client";
 
 import { useState, useEffect } from "react";
 import { saveRoundOf64Games, loadRoundOf64Games } from "./actions";
 
+type Team = {
+  id: number;
+  name: string;
+  logo: string;
+  conference: string;
+};
+
 const REGIONS = ["East", "West", "South", "Midwest"] as const;
 
-export default function RoundOf64Editor({
-  allTeams,
-}: {
-  allTeams: string[];
-}) {
-  const [region, setRegion] = useState<"East" | "West" | "South" | "Midwest">(
-    "East"
-  );
+export default function RoundOf64Editor({ allTeams }: { allTeams: Team[] }) {
+  const [region, setRegion] = useState<"East" | "West" | "South" | "Midwest">("East");
   const [games, setGames] = useState(
     Array.from({ length: 8 }, () => ({ team1: "", team2: "" }))
   );
@@ -79,9 +79,13 @@ export default function RoundOf64Editor({
             style={dropdownStyle}
           >
             <option value="">Team 1</option>
+
             {allTeams.map((t) => (
-              <option key={t}>{t}</option>
+              <option key={t.id} value={t.id}>
+                {t.name}
+              </option>
             ))}
+
             {openingRoundOptions.map((o) => (
               <option key={o.value} value={o.value}>
                 {o.label}
@@ -95,9 +99,13 @@ export default function RoundOf64Editor({
             style={dropdownStyle}
           >
             <option value="">Team 2</option>
+
             {allTeams.map((t) => (
-              <option key={t}>{t}</option>
+              <option key={t.id} value={t.id}>
+                {t.name}
+              </option>
             ))}
+
             {openingRoundOptions.map((o) => (
               <option key={o.value} value={o.value}>
                 {o.label}

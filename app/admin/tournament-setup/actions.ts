@@ -1,6 +1,6 @@
 "use server";
 
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseServerClient } from "../../../lib/supabase/server";
 
 const REGIONS = ["East", "West", "South", "Midwest"] as const;
 type Region = (typeof REGIONS)[number];
@@ -216,6 +216,22 @@ export async function generateRemainingRounds() {
   if (error) throw new Error("Failed to generate remaining rounds.");
 
   return { message: "Remaining rounds generated successfully." };
+}
+
+// ------------------------------------------------------------
+// LEADERBOARD SUPPORT (NEW)
+// ------------------------------------------------------------
+export async function getLeaderboardScores() {
+  const supabase = await createSupabaseServerClient();
+
+  const { data, error } = await supabase
+    .from("leaderboard_with_rank_change")
+    .select("bracket_id, total_points, user_id, username")
+    .order("total_points", { ascending: false });
+
+  if (error || !data) return [];
+
+  return data;
 }
 
 // ------------------------------------------------------------

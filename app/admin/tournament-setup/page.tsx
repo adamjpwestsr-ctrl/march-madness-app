@@ -1,7 +1,7 @@
 // app/admin/tournament-setup/page.tsx
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import TournamentSetupClient from "./TournamentSetupClient";
+import TournamentSetupPageClient from "./TournamentSetupPage";
 
 export default async function TournamentSetupPage() {
   const cookieStore = await cookies();
@@ -28,7 +28,7 @@ export default async function TournamentSetupPage() {
         Admin · Tournament Setup
       </h1>
 
-      <TournamentSetupClient />
+      <TournamentSetupPageClient />
     </div>
   );
 }

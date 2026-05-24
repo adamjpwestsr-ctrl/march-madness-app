@@ -1,8 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import AdminGenerateBracketButton from "./components/AdminGenerateBracketButton";
-import AdminTrueSeedForm from "./components/AdminTrueSeedForm";
 
 export default function AdminClient({ adminEmail }: { adminEmail: string }) {
   const tools = [
@@ -18,16 +16,15 @@ export default function AdminClient({ adminEmail }: { adminEmail: string }) {
     { href: "/admin/snapshots", label: "Payout Snapshots" },
     { href: "/admin/pending-users", label: "Pending Users" },
 
-    // ⭐ NEW — Admin Tools Suite
+    // ⭐ Admin Tools Suite
     { href: "/admin/players", label: "Player Management" },
     { href: "/admin/scoring-audit", label: "Scoring Audit Log" },
-    { href: "/admin/tournaments/create", label: "Tournament Creator" },
-
+    // Removed Tournament Creator — no longer used
     { href: "/admin/tournament-setup", label: "Tournament Setup" },
     { href: "/admin/users", label: "User Management" },
     { href: "/admin/trivia", label: "Trivia Management" },
 
-    // ⭐ NEW — WEEKLY CHALLENGE ADMIN
+    // ⭐ Weekly Challenge Admin
     { href: "/admin/weekly-challenge", label: "Weekly Challenge Admin" },
   ];
 
@@ -101,40 +98,7 @@ export default function AdminClient({ adminEmail }: { adminEmail: string }) {
           </Link>
         ))}
       </div>
-
-      {/* ⭐ NEW — Bracket Generation Section */}
-      <div
-        style={{
-          marginTop: 40,
-          maxWidth: 1000,
-          marginLeft: "auto",
-          marginRight: "auto",
-          padding: 20,
-          background: "rgba(30,41,59,0.9)",
-          borderRadius: 12,
-          border: "1px solid rgba(148,163,184,0.35)",
-          boxShadow: "0 8px 20px rgba(0,0,0,0.35)",
-        }}
-      >
-        <h2
-          style={{
-            fontSize: 22,
-            fontWeight: 700,
-            marginBottom: 15,
-            textAlign: "center",
-          }}
-        >
-          Bracket Generation
-        </h2>
-
-        <div style={{ marginTop: 20 }}>
-          <AdminTrueSeedForm />
-        </div>
-
-        <div style={{ marginTop: 30, display: "flex", justifyContent: "center" }}>
-          <AdminGenerateBracketButton />
-        </div>
-      </div>
+      {/* Removed Bracket Generation / True Seed Input section */}
     </div>
   );
 }

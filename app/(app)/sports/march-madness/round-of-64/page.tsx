@@ -22,7 +22,7 @@ export default async function RoundOf64Page() {
 
   // Load Opening Round mappings
   const { data: slots } = await supabase
-    .from("opening_round_slots")
+    .from("tournament_games").eq("round", 1)
     .select("*");
 
   // Define regions

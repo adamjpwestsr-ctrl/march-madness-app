@@ -32,6 +32,7 @@ interface LeaderboardRow {
   points: number;
 }
 
+// ---- DROP 3 TYPES ----
 interface Streaks {
   current_streak: number;
   longest_streak: number;
@@ -81,7 +82,7 @@ export default function GolfWeeklyClient({
   const [historyOpen, setHistoryOpen] = useState(false);
   const [leaderboard, setLeaderboard] = useState<LeaderboardRow[]>([]);
 
-  // Spotlight
+  // Spotlight (Drop 2)
   const [spotlight, setSpotlight] = useState({
     mostPicked: "Scottie Scheffler",
     sleeper: "Sahith Theegala",
@@ -99,10 +100,10 @@ export default function GolfWeeklyClient({
   const [newBadge, setNewBadge] = useState<Badge | null>(null);
 
   // ----------------------
-  // INITIAL FETCHES (wired to /api/*)
-// ----------------------
+  // INITIAL FETCHES
+  // ----------------------
   useEffect(() => {
-    fetch("/api/golf/weekly/state")
+    fetch("/sports/golf/weekly/state")
       .then((res) => res.json())
       .then((data) => {
         setUserPicks(data.picks || []);
@@ -133,13 +134,15 @@ export default function GolfWeeklyClient({
 
   // Leaderboard fetch
   useEffect(() => {
-    fetch("/api/golf/weekly/leaderboard")
+    fetch("/sports/golf/weekly/leaderboard")
       .then((res) => res.json())
       .then((data) => setLeaderboard(data.leaderboard || []))
       .catch(() => {});
   }, []);
 
-  // Spotlight logic
+  // ----------------------
+  // SPOTLIGHT LOGIC (Drop 2)
+  // ----------------------
   useEffect(() => {
     if (userPicks.length < 5) {
       setSpotlight({
@@ -180,23 +183,25 @@ export default function GolfWeeklyClient({
     });
   }, [userPicks, players]);
 
-  // DROP 3 fetches
+  // ----------------------
+  // DROP 3 FETCHES
+  // ----------------------
   useEffect(() => {
-    fetch("/api/golf/weekly/streaks")
+    fetch("/sports/golf/weekly/streaks")
       .then((r) => r.json())
       .then((d) => setStreaks(d.streaks || null))
       .catch(() => {});
   }, []);
 
   useEffect(() => {
-    fetch("/api/golf/weekly/badges")
+    fetch("/sports/golf/weekly/badges")
       .then((r) => r.json())
       .then((d) => setBadges(d.badges || []))
       .catch(() => {});
   }, []);
 
   useEffect(() => {
-    fetch("/api/golf/weekly/achievements")
+    fetch("/sports/golf/weekly/achievements")
       .then((r) => r.json())
       .then((d) => setAchievements(d.achievements || []))
       .catch(() => {});
@@ -210,14 +215,14 @@ export default function GolfWeeklyClient({
   }, [newBadge]);
 
   // ----------------------
-  // PICK HANDLER
+  // PICK HANDLER (DROP 3)
   // ----------------------
   const handlePick = async () => {
     if (!selectedTournamentId || !pickedPlayerId) return;
 
     setLoadingPick(true);
     try {
-      const res = await fetch("/api/golf/weekly/pick", {
+      const res = await fetch("/sports/golf/weekly/pick", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -276,7 +281,7 @@ export default function GolfWeeklyClient({
       setStreaks(newStreaks);
 
       // Persist streaks
-      fetch("/api/golf/weekly/streaks", {
+      fetch("/sports/golf/weekly/streaks", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newStreaks),
@@ -295,7 +300,7 @@ export default function GolfWeeklyClient({
       toAward.forEach((id) => {
         const already = badges.find((b) => b.id === id && b.earned);
         if (!already) {
-          fetch("/api/golf/weekly/badges", {
+          fetch("/sports/golf/weekly/badges", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ badge_id: id }),
@@ -312,6 +317,7 @@ export default function GolfWeeklyClient({
         }
       });
 
+      // Badge unlock animation
       if (newlyEarned.length > 0) {
         setBadges((prev) =>
           prev.map((b) => newlyEarned.find((n) => n.id === b.id) ?? b)
@@ -331,6 +337,7 @@ export default function GolfWeeklyClient({
   // ----------------------
   // RENDER
   // ----------------------
+
   const pickedPlayerIds = new Set(userPicks.map((p) => p.player_id));
   const currentTournament = tournaments.find(
     (t) => t.id === selectedTournamentId
@@ -348,10 +355,11 @@ export default function GolfWeeklyClient({
   const weeksPicked = userPicks.length;
 
   return (
-    <div className="relative w-full min-h-screen bg-slate-950 text-white px-4 py-6 md:px-8 md:py-10 flex flex-col gap-8">
+    <div className="relative w-full min-h-screen bg-slate-950 text-white px-4 py-6 md:px-8 md:py-10 flex flex-col gap-8 overflow-x-hidden">
+
       {/* Background */}
       <div className="fixed inset-0 -z-10 bg-gradient-to-b from-slate-900 via-slate-950 to-black opacity-80" />
-      <div className="pointer-events-none fixed inset-0 -z-10 opacity-10 bg-[url('/noise.png')]" />
+      <div className="pointer-events-none fixed inset-0 -z-10 animate-pulse-slow opacity-10 bg-[url('/noise.png')]" />
 
       {/* Sticky Header */}
       {currentTournament && (
@@ -376,7 +384,7 @@ export default function GolfWeeklyClient({
       )}
 
       {/* Header */}
-      <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 animate-fadeIn">
         <div className="space-y-2">
           <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
             Golf Weekly Picks
@@ -419,9 +427,9 @@ export default function GolfWeeklyClient({
         </div>
       </header>
 
-      {/* Streak card */}
+      {/* ---- DROP 3 STREAK CARD ---- */}
       {streaks && (
-        <section>
+        <section className="animate-fadeIn">
           <div className="rounded-xl bg-slate-900/70 border border-emerald-500/40 p-4 shadow-lg flex items-center justify-between">
             <div>
               <div className="text-xs text-emerald-300 uppercase tracking-wide">
@@ -447,119 +455,97 @@ export default function GolfWeeklyClient({
         </section>
       )}
 
-      {/* Tournament Selector */}
-      <section className="space-y-3">
+      {/* Tournament Selector (Dropdown) */}
+      <section className="space-y-3 animate-fadeIn">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-wide">
-            Tournaments
+            Tournament
           </h2>
-          <span className="text-xs text-slate-500">
-            Scroll to view all events
-          </span>
         </div>
 
-        <div className="w-full overflow-x-auto no-scrollbar py-1">
-          <div className="flex gap-3 min-w-max">
-            {tournaments.map((t) => {
-              const isSelected = selectedTournamentId === t.id;
-              const label = premiumLabel(t);
-
-              return (
-                <button
-                  key={t.id}
-                  onClick={() => setSelectedTournamentId(t.id)}
-                  className={`
-                    flex items-center gap-2 px-4 py-2 rounded-full text-xs md:text-sm font-medium
-                    transition-all duration-200
-                    ${
-                      isSelected
-                        ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/30"
-                        : "bg-slate-900 text-slate-300 hover:bg-slate-800 border border-slate-700/60"
-                    }
-                  `}
-                >
-                  <span className="whitespace-nowrap">{t.name}</span>
-                  {label && (
-                    <span className="text-[9px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-300 border border-yellow-500/30">
-                      {label}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
+        <div className="w-full max-w-md">
+          <select
+            value={selectedTournamentId ?? ""}
+            onChange={(e) => setSelectedTournamentId(Number(e.target.value))}
+            className="w-full rounded-lg bg-slate-900 border border-slate-700 text-slate-200 px-3 py-2 text-sm"
+          >
+            {tournaments.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name} — {new Date(t.start_date).toLocaleDateString()}
+              </option>
+            ))}
+          </select>
         </div>
       </section>
 
-      {/* Spotlight + Hero + Leaderboard */}
-      <section className="w-full grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Spotlight + Tournament + Leaderboard + Achievements */}
+      <section className="w-full grid grid-cols-1 lg:grid-cols-4 gap-6 animate-fadeIn">
         {/* Spotlight */}
-        <div className="lg:col-span-1">
-          <div className="rounded-xl bg-slate-900/70 border border-white/10 p-5 shadow-xl flex flex-col gap-4">
-            <h3 className="text-lg font-semibold">Weekly Spotlight</h3>
+        <div className="rounded-xl bg-slate-900/70 border border-white/10 p-5 shadow-xl flex flex-col gap-4">
+          <h3 className="text-lg font-semibold">Weekly Spotlight</h3>
 
-            <div className="flex flex-col gap-3 text-sm">
-              <div>
-                <span className="text-slate-400">Most Picked:</span>{" "}
-                <span className="text-white font-medium">
-                  {spotlight.mostPicked}
-                </span>
-              </div>
-              <div>
-                <span className="text-slate-400">Sleeper Pick:</span>{" "}
-                <span className="text-white font-medium">
-                  {spotlight.sleeper}
-                </span>
-              </div>
-              <div>
-                <span className="text-slate-400">Trending:</span>{" "}
-                <span className="text-white font-medium">
-                  {spotlight.trending}
-                </span>
-              </div>
-              <div>
-                <span className="text-slate-400">Player to Watch:</span>{" "}
-                <span className="text-white font-medium">
-                  {spotlight.watch}
-                </span>
-              </div>
+          <div className="flex flex-col gap-3 text-sm">
+            <div>
+              <span className="text-slate-400">Most Picked:</span>{" "}
+              <span className="text-white font-medium">
+                {spotlight.mostPicked}
+              </span>
             </div>
-
-            {/* Badge row */}
-            <div className="flex flex-wrap gap-2 mt-3">
-              {badges
-                .filter((b) => b.earned)
-                .slice(0, 4)
-                .map((b) => (
-                  <button
-                    key={b.id}
-                    onClick={() => setBadgeModalOpen(true)}
-                    className="px-3 py-2 rounded-lg bg-white/5 border border-white/15 shadow-sm flex items-center gap-2 text-xs hover:border-emerald-400 transition"
-                  >
-                    <span className="text-base">{b.emoji}</span>
-                    <span className="text-slate-100">{b.name}</span>
-                  </button>
-                ))}
-
-              {badges.filter((b) => b.earned).length === 0 && (
-                <span className="text-xs text-slate-500">
-                  Earn badges by building streaks and hitting milestones.
-                </span>
-              )}
+            <div>
+              <span className="text-slate-400">Sleeper Pick:</span>{" "}
+              <span className="text-white font-medium">
+                {spotlight.sleeper}
+              </span>
             </div>
+            <div>
+              <span className="text-slate-400">Trending:</span>{" "}
+              <span className="text-white font-medium">
+                {spotlight.trending}
+              </span>
+            </div>
+            <div>
+              <span className="text-slate-400">Player to Watch:</span>{" "}
+              <span className="text-white font-medium">
+                {spotlight.watch}
+              </span>
+            </div>
+          </div>
+
+          {/* ---- BADGE ROW ---- */}
+          <div className="flex flex-wrap gap-2 mt-3">
+            {badges
+              .filter((b) => b.earned)
+              .slice(0, 4)
+              .map((b) => (
+                <button
+                  key={b.id}
+                  onClick={() => setBadgeModalOpen(true)}
+                  className="px-3 py-2 rounded-lg bg-white/5 border border-white/15 shadow-sm flex items-center gap-2 text-xs hover:border-emerald-400 transition"
+                >
+                  <span className="text-base">{b.emoji}</span>
+                  <span className="text-slate-100">{b.name}</span>
+                </button>
+              ))}
+
+            {badges.filter((b) => b.earned).length === 0 && (
+              <span className="text-xs text-slate-500">
+                Earn badges by building streaks and hitting milestones.
+              </span>
+            )}
           </div>
         </div>
 
-        {/* Hero */}
-        {currentTournament && (
-          <div className="lg:col-span-2">
-            <div className="w-full bg-gradient-to-r from-slate-900 to-slate-800 rounded-xl p-5 md:p-6 shadow-xl border border-white/10 flex flex-col gap-4">
+        {/* Tournament Selected */}
+        <div className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 border border-white/10 p-5 md:p-6 shadow-xl flex flex-col gap-4">
+          {currentTournament ? (
+            <>
               <div className="space-y-2">
                 <h2 className="text-2xl md:text-3xl font-bold text-white">
                   {currentTournament.name}
                 </h2>
                 <p className="text-slate-400 text-sm">
-                  {new Date(currentTournament.start_date).toLocaleDateString()} –{" "}
+                  {new Date(currentTournament.start_date).toLocaleDateString()}{" "}
+                  –{" "}
                   {new Date(currentTournament.end_date).toLocaleDateString()}
                 </p>
                 {premiumLabel(currentTournament) && (
@@ -573,15 +559,17 @@ export default function GolfWeeklyClient({
                 Lock in your pick for this event. You can&apos;t reuse this
                 player later in the season.
               </p>
-            </div>
-          </div>
-        )}
-      </section>
+            </>
+          ) : (
+            <p className="text-slate-500 text-sm">
+              No tournament selected yet.
+            </p>
+          )}
+        </div>
 
-      {/* Leaderboard */}
-      <section className="w-full">
+        {/* Leaderboard (Top 5) */}
         <div className="rounded-xl bg-slate-900/70 border border-white/10 p-5 shadow-xl flex flex-col gap-4">
-          <h3 className="text-lg font-semibold">Leaderboard</h3>
+          <h3 className="text-lg font-semibold">Leaderboard (Top 5)</h3>
 
           {leaderboard.length === 0 && (
             <div className="text-sm text-slate-500">
@@ -591,7 +579,7 @@ export default function GolfWeeklyClient({
 
           {leaderboard.length > 0 && (
             <div className="flex flex-col gap-3">
-              {leaderboard.map((row, index) => (
+              {leaderboard.slice(0, 5).map((row, index) => (
                 <div
                   key={row.user_id}
                   className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/10"
@@ -618,17 +606,15 @@ export default function GolfWeeklyClient({
             </div>
           )}
         </div>
-      </section>
 
-      {/* Achievements */}
-      <section className="w-full">
+        {/* Achievements (card) */}
         <div className="rounded-xl bg-slate-900/80 border border-white/10 p-5 shadow-xl flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold">Achievements</h3>
             <span className="text-xs text-slate-500">Season progress</span>
           </div>
 
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-3 max-h-72 overflow-y-auto pr-1">
             {achievements.length === 0 && (
               <div className="text-sm text-slate-500">
                 Achievements will appear as you play the season.
@@ -669,11 +655,11 @@ export default function GolfWeeklyClient({
       </section>
 
       {/* Player Grid */}
-      <section className="w-full">
+      <section className="w-full animate-fadeIn">
         <div className="rounded-xl bg-slate-900/70 border border-white/10 p-5 shadow-xl flex flex-col gap-4">
           <h3 className="text-lg font-semibold">Select Your Player</h3>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
             {players.map((player) => {
               const isPicked = pickedPlayerId === player.id;
               const alreadyUsed = pickedPlayerIds.has(player.id);
@@ -803,7 +789,7 @@ export default function GolfWeeklyClient({
         </div>
       )}
 
-      {/* Badge collection modal */}
+      {/* ---- BADGE COLLECTION MODAL ---- */}
       {badgeModalOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-xl z-50 flex items-center justify-center">
           <div className="w-full max-w-2xl bg-slate-900/90 border border-white/10 rounded-xl p-6 shadow-xl max-h-[80vh] overflow-y-auto">
@@ -859,10 +845,10 @@ export default function GolfWeeklyClient({
         </div>
       )}
 
-      {/* New badge toast */}
+      {/* ---- NEW BADGE TOAST ---- */}
       {newBadge && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50">
-          <div className="px-4 py-3 rounded-xl bg-slate-900/95 border border-emerald-400/60 shadow-xl flex items-center gap-3">
+          <div className="px-4 py-3 rounded-xl bg-slate-900/95 border border-emerald-400/60 shadow-xl flex items-center gap-3 animate-fadeIn">
             <span className="text-2xl">{newBadge.emoji}</span>
             <div className="flex flex-col">
               <span className="text-xs text-emerald-300 uppercase tracking-wide">
@@ -876,14 +862,16 @@ export default function GolfWeeklyClient({
         </div>
       )}
 
-      {/* Toast */}
+      {/* ---- TOAST ---- */}
       {toast && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
-          <div className="px-4 py-2 rounded-lg bg-slate-900/90 border border-white/10 shadow-xl text-sm text-white">
+          <div className="px-4 py-2 rounded-lg bg-slate-900/90 border border-white/10 shadow-xl text-sm text-white animate-fadeIn">
             {toast}
           </div>
         </div>
       )}
+
+      {/* end main wrapper */}
     </div>
   );
 }

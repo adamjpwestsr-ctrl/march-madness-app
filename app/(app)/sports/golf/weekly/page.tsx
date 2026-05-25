@@ -45,9 +45,10 @@ export default function GolfWeeklyDashboardPage() {
 
   return (
     <div className="relative min-h-screen bg-[url('/images/golf-bg.jpg')] bg-cover bg-center bg-fixed bg-no-repeat">
-      <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-black/70 pointer-events-none" />
+     <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-black/70 pointer-events-none z-0" />
 
-      <div className="relative backdrop-blur-sm bg-slate-950/70 min-h-screen p-8">
+	<div className="relative backdrop-blur-sm bg-slate-950/70 min-h-screen p-8 z-10">
+
         <Header tournament={tournament} />
         <SeasonProgress season={season} />
 

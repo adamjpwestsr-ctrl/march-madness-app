@@ -103,7 +103,7 @@ export default function GolfWeeklyClient({
   // INITIAL FETCHES
   // ----------------------
   useEffect(() => {
-    fetch("/sports/golf/weekly/state")
+    fetch("/api/golf/weekly/state")
       .then((res) => res.json())
       .then((data) => {
         setUserPicks(data.picks || []);
@@ -134,7 +134,7 @@ export default function GolfWeeklyClient({
 
   // Leaderboard fetch
   useEffect(() => {
-    fetch("/sports/golf/weekly/leaderboard")
+    fetch("/api/golf/weekly/leaderboard")
       .then((res) => res.json())
       .then((data) => setLeaderboard(data.leaderboard || []))
       .catch(() => {});
@@ -187,21 +187,21 @@ export default function GolfWeeklyClient({
   // DROP 3 FETCHES
   // ----------------------
   useEffect(() => {
-    fetch("/sports/golf/weekly/streaks")
+    fetch("/api/golf/weekly/streaks")
       .then((r) => r.json())
       .then((d) => setStreaks(d.streaks || null))
       .catch(() => {});
   }, []);
 
   useEffect(() => {
-    fetch("/sports/golf/weekly/badges")
+    fetch("/api/golf/weekly/badges")
       .then((r) => r.json())
       .then((d) => setBadges(d.badges || []))
       .catch(() => {});
   }, []);
 
   useEffect(() => {
-    fetch("/sports/golf/weekly/achievements")
+    fetch("/api/golf/weekly/achievements")
       .then((r) => r.json())
       .then((d) => setAchievements(d.achievements || []))
       .catch(() => {});
@@ -222,7 +222,7 @@ export default function GolfWeeklyClient({
 
     setLoadingPick(true);
     try {
-      const res = await fetch("/sports/golf/weekly/pick", {
+      const res = await fetch("/api/golf/weekly/pick", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -281,7 +281,7 @@ export default function GolfWeeklyClient({
       setStreaks(newStreaks);
 
       // Persist streaks
-      fetch("/sports/golf/weekly/streaks", {
+      fetch("/api/golf/weekly/streaks", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newStreaks),
@@ -300,7 +300,7 @@ export default function GolfWeeklyClient({
       toAward.forEach((id) => {
         const already = badges.find((b) => b.id === id && b.earned);
         if (!already) {
-          fetch("/sports/golf/weekly/badges", {
+          fetch("/api/golf/weekly/badges", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ badge_id: id }),

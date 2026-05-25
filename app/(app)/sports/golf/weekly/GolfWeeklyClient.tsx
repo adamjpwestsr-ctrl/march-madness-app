@@ -226,10 +226,10 @@ export default function GolfWeeklyClient({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          tournament_id: selectedTournamentId,
-          player_id: pickedPlayerId,
-        }),
-      });
+  		tournament_id: selectedTournamentId,
+  		golfer_id: pickedPlayerId,
+	}),
+     });
 
       const json = await res.json();
       if (!res.ok) {

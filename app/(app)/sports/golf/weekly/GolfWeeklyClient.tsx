@@ -69,7 +69,7 @@ export default function GolfWeeklyClient({
   players: Player[];
 }) {
   // ----------------------
-  // PHASE 1 + 2 STATE
+  // CORE STATE
   // ----------------------
   const [selectedTournamentId, setSelectedTournamentId] = useState<number | null>(
     tournaments[0]?.id ?? null
@@ -213,9 +213,8 @@ export default function GolfWeeklyClient({
     const t = setTimeout(() => setNewBadge(null), 3000);
     return () => clearTimeout(t);
   }, [newBadge]);
-
   // ----------------------
-  // PICK HANDLER (DROP 3)
+  // PICK HANDLER (UPDATED FOR golferId + tournament_id)
   // ----------------------
   const handlePick = async () => {
     if (!selectedTournamentId || !pickedPlayerId) return;
@@ -226,10 +225,10 @@ export default function GolfWeeklyClient({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-  		tournament_id: selectedTournamentId,
-  		golfer_id: pickedPlayerId,
-	}),
-     });
+          tournament_id: selectedTournamentId,
+          golferId: pickedPlayerId, // ⭐ FIXED — backend expects golferId
+        }),
+      });
 
       const json = await res.json();
       if (!res.ok) {
@@ -382,7 +381,6 @@ export default function GolfWeeklyClient({
           )}
         </div>
       )}
-
       {/* Header */}
       <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 animate-fadeIn">
         <div className="space-y-2">
@@ -607,7 +605,7 @@ export default function GolfWeeklyClient({
           )}
         </div>
 
-        {/* Achievements (card) */}
+        {/* Achievements */}
         <div className="rounded-xl bg-slate-900/80 border border-white/10 p-5 shadow-xl flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold">Achievements</h3>
@@ -653,7 +651,6 @@ export default function GolfWeeklyClient({
           </div>
         </div>
       </section>
-
       {/* Player Grid */}
       <section className="w-full animate-fadeIn">
         <div className="rounded-xl bg-slate-900/70 border border-white/10 p-5 shadow-xl flex flex-col gap-4">
@@ -871,7 +868,6 @@ export default function GolfWeeklyClient({
         </div>
       )}
 
-      {/* end main wrapper */}
     </div>
   );
 }

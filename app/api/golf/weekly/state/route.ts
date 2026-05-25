@@ -22,6 +22,7 @@ export async function GET() {
     }
   );
 
+  // ✅ Get authenticated user
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -32,22 +33,35 @@ export async function GET() {
 
   const userId = user.id;
 
-  // 1️⃣ Current tournament (safe fallback)
-  const { data: tournament } = await supabase
+  // ✅ Try to find the current tournament
+  let { data: tournament } = await supabase
     .from("golf_tournaments")
     .select("*")
     .eq("is_current", true)
     .maybeSingle();
 
+  // ✅ Fallback: if none marked as current, pick the next upcoming tournament
+  if (!tournament) {
+    const { data: nextTournament } = await supabase
+      .from("golf_tournaments")
+      .select("*")
+      .gte("start_date", new Date().toISOString().split("T")[0])
+      .order("start_date", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    tournament = nextTournament ?? null;
+  }
+
   const tournamentId = tournament?.id ?? null;
 
-  // 2️⃣ Golfers (always return array)
+  // ✅ Load golfers
   const { data: golfers } = await supabase
     .from("golf_players")
     .select("*")
     .order("name", { ascending: true });
 
-  // 3️⃣ User pick (safe fallback)
+  // ✅ Load user pick
   const { data: pick } = await supabase
     .from("golf_weekly_picks")
     .select("*")
@@ -55,20 +69,20 @@ export async function GET() {
     .eq("tournament_id", tournamentId)
     .maybeSingle();
 
-  // 4️⃣ History (safe fallback)
+  // ✅ Load recent history
   const { data: history } = await supabase
     .from("golf_weekly_history_view")
     .select("*")
     .order("tournament_id", { ascending: false })
     .limit(5);
 
-  // 5️⃣ Leaderboard (safe fallback)
+  // ✅ Load leaderboard
   const { data: leaderboard } = await supabase
     .from("golf_weekly_leaderboard_view")
     .select("*")
     .order("total_points", { ascending: false });
 
-  // 6️⃣ Season progress (safe fallback)
+  // ✅ Load season progress
   const { data: seasonRow } = await supabase
     .from("golf_season_progress")
     .select("*")
@@ -81,7 +95,7 @@ export async function GET() {
       }
     : { completed_events: 0, total_events: 0 };
 
-  // 7️⃣ Return SAFE JSON
+  // ✅ Return safe JSON (no undefined values)
   return Response.json({
     user_id: userId,
     tournament: tournament ?? null,

@@ -34,13 +34,14 @@ export default function GolfWeeklyDashboardPage() {
     );
   }
 
-  // 🔐 Safe fallbacks so child components never receive null
-  const tournament = state.tournament || null;
-  const golfers = state.golfers || [];
-  const history = state.history || [];
-  const leaderboard = state.leaderboard || [];
-  const season = state.season || null;
-  const userId = state.user_id;
+  // Safe fallbacks
+  const tournament = state.tournament ?? null;
+  const golfers = state.golfers ?? [];
+  const history = state.history ?? [];
+  const leaderboard = state.leaderboard ?? [];
+  const season = state.season ?? null;
+  const userId = state.user_id ?? null;
+  const userPick = state.pick ?? null;
 
   return (
     <div className="relative min-h-screen bg-[url('/images/golf-bg.jpg')] bg-cover bg-center bg-fixed bg-no-repeat">
@@ -53,7 +54,7 @@ export default function GolfWeeklyDashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
           <div className="space-y-8">
             <CurrentTournamentCard tournament={tournament} />
-            <QuickPickScroll golfers={golfers} userPick={state.pick} />
+            <QuickPickScroll golfers={golfers} userPick={userPick} />
           </div>
 
           <div className="space-y-8">
@@ -164,6 +165,14 @@ function CurrentTournamentCard({ tournament }: any) {
 }
 
 function QuickPickScroll({ golfers, userPick }: any) {
+  if (!golfers || golfers.length === 0) {
+    return (
+      <div className="rounded-xl border border-slate-800 bg-slate-900/60 backdrop-blur-md shadow-xl p-6 text-slate-400">
+        No golfers available.
+      </div>
+    );
+  }
+
   return (
     <div className="rounded-xl border border-slate-800 bg-slate-900/60 backdrop-blur-md shadow-xl p-6 transition-all duration-300 opacity-0 translate-y-4 animate-[fadeUp_0.6s_ease-out_forwards]">
       <h2 className="text-xl font-semibold text-white mb-4">Quick Pick</h2>
@@ -183,7 +192,11 @@ function QuickPickScroll({ golfers, userPick }: any) {
               }`}
             >
               {g.photo_url ? (
-                <img src={g.photo_url} className="w-10 h-10 rounded-full object-cover" />
+                <img
+                  src={g.photo_url}
+                  className="w-10 h-10 rounded-full object-cover"
+                  alt={g.name}
+                />
               ) : (
                 <div className="w-10 h-10 rounded-full bg-slate-700" />
               )}

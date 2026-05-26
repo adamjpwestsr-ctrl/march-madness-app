@@ -11,22 +11,26 @@ export async function GET(req: Request) {
   const week = Number(searchParams.get("week"));
   if (!week) return NextResponse.json({ error: "Missing week" }, { status: 400 });
 
-  const { data, error } = await supabase
-    .from("mlb_schedule")
-    .select(
-      `
-      series_id,
-      week_number,
-      start_date,
-      end_date,
-      series_length,
-      home_team_id,
-      away_team_id,
-      mlb_teams!mlb_schedule_home_team_id_fkey(name, abbreviation),
-      mlb_teams!mlb_schedule_away_team_id_fkey(name, abbreviation)
-      `
+const { data, error } = await supabase
+  .from("mlb_schedule")
+  .select(`
+    series_id,
+    week_number,
+    start_date,
+    end_date,
+    series_length,
+    home_team_id,
+    away_team_id,
+    home:mlb_teams!mlb_schedule_home_team_id_fkey (
+      name,
+      abbreviation
+    ),
+    away:mlb_teams!mlb_schedule_away_team_id_fkey (
+      name,
+      abbreviation
     )
-    .eq("week_number", week)
+  `)
+  .eq("week_number", week);
     .order("start_date", { ascending: true });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

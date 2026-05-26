@@ -20,23 +20,23 @@ export async function POST(req: Request) {
   // Score each pick
   for (const s of series) {
     const { data: picks } = await supabase
-      .from("mlb_challenge_selections")
-      .select("id, selected_team_id")
-      .eq("series_id", s.series_id)
-      .eq("week_number", week_number);
+  .from("mlb_challenge_selections")
+  .select("id, selected_team_id")
+  .eq("series_id", s.series_id)
+  .eq("week_number", week_number);
 
-    for (const p of picks) {
-      const correct =
-        s.is_draw ? false : p.selected_team_id === s.winner_team_id;
+if (!picks || picks.length === 0) continue; // ✅ skip if no picks
 
-      await supabase
-        .from("mlb_challenge_selections")
-        .update({
-          points_awarded: correct ? 1 : 0,
-        })
-        .eq("id", p.id);
-    }
-  }
+for (const p of picks) {
+  const correct =
+    s.is_draw ? false : p.selected_team_id === s.winner_team_id;
 
+  await supabase
+    .from("mlb_challenge_selections")
+    .update({
+      points_awarded: correct ? 1 : 0,
+    })
+    .eq("id", p.id);
+}
   return NextResponse.json({ success: true });
 }

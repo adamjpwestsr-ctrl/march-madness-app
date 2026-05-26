@@ -51,8 +51,7 @@ export default function MLBWeeklyClient({ week }: { week: number }) {
   };
 
   return (
-    <div className="w-full flex flex-col gap-6">
-
+    <div className="w-full flex flex-col gap-6 overflow-y-auto max-h-[80vh] px-1">
       {/* Series Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
         {series.map((s) => (
@@ -60,32 +59,44 @@ export default function MLBWeeklyClient({ week }: { week: number }) {
             key={s.series_id}
             className="rounded-xl bg-slate-900/70 border border-white/10 p-4 shadow-lg flex flex-col gap-3"
           >
+            {/* Team Logos + Names */}
             <div className="flex items-center justify-between">
-              <img
-                src={`/logos/mlb/${s.home_abbrev}.png`}
-                alt={s.home_name}
-                className={`w-12 h-12 cursor-pointer rounded-full ${
-                  picks[s.series_id] === s.home_team_id
-                    ? "ring-4 ring-emerald-500"
-                    : "opacity-70 hover:opacity-100"
-                }`}
-                onClick={() => handlePick(s.series_id, s.home_team_id)}
-              />
+              <div className="flex items-center gap-3 w-1/2 overflow-hidden">
+                <img
+                  src={`/logos/mlb/${s.home_abbrev}.png`}
+                  alt={s.home_name}
+                  className={`w-10 h-10 rounded-full object-contain cursor-pointer ${
+                    picks[s.series_id] === s.home_team_id
+                      ? "ring-4 ring-emerald-500"
+                      : "opacity-70 hover:opacity-100"
+                  }`}
+                  onClick={() => handlePick(s.series_id, s.home_team_id)}
+                />
+                <span className="truncate text-sm text-slate-300 font-medium">
+                  {s.home_name}
+                </span>
+              </div>
 
               <span className="text-slate-400 text-sm">vs</span>
 
-              <img
-                src={`/logos/mlb/${s.away_abbrev}.png`}
-                alt={s.away_name}
-                className={`w-12 h-12 cursor-pointer rounded-full ${
-                  picks[s.series_id] === s.away_team_id
-                    ? "ring-4 ring-emerald-500"
-                    : "opacity-70 hover:opacity-100"
-                }`}
-                onClick={() => handlePick(s.series_id, s.away_team_id)}
-              />
+              <div className="flex items-center gap-3 w-1/2 overflow-hidden justify-end">
+                <span className="truncate text-sm text-slate-300 font-medium">
+                  {s.away_name}
+                </span>
+                <img
+                  src={`/logos/mlb/${s.away_abbrev}.png`}
+                  alt={s.away_name}
+                  className={`w-10 h-10 rounded-full object-contain cursor-pointer ${
+                    picks[s.series_id] === s.away_team_id
+                      ? "ring-4 ring-emerald-500"
+                      : "opacity-70 hover:opacity-100"
+                  }`}
+                  onClick={() => handlePick(s.series_id, s.away_team_id)}
+                />
+              </div>
             </div>
 
+            {/* Series Info */}
             <div className="text-xs text-slate-400 text-center">
               {s.start_date} – {s.end_date} ({s.series_length} games)
             </div>

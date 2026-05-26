@@ -19,13 +19,15 @@ export default function AdminClient({ adminEmail }: { adminEmail: string }) {
     // ⭐ Admin Tools Suite
     { href: "/admin/players", label: "Player Management" },
     { href: "/admin/scoring-audit", label: "Scoring Audit Log" },
-    // Removed Tournament Creator — no longer used
     { href: "/admin/tournament-setup", label: "Tournament Setup" },
     { href: "/admin/users", label: "User Management" },
     { href: "/admin/trivia", label: "Trivia Management" },
 
     // ⭐ Weekly Challenge Admin
     { href: "/admin/weekly-challenge", label: "Weekly Challenge Admin" },
+
+    // ⚾ NEW — MLB Weekly Admin
+    { href: "/admin/mlb", label: "MLB Weekly Admin" },
   ];
 
   const sortedTools = tools.sort((a, b) =>
@@ -98,7 +100,6 @@ export default function AdminClient({ adminEmail }: { adminEmail: string }) {
           </Link>
         ))}
       </div>
-      {/* Removed Bracket Generation / True Seed Input section */}
     </div>
   );
 }

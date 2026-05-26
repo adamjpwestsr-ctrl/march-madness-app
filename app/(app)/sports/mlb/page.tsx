@@ -15,8 +15,8 @@ export default function MLBPage() {
   useEffect(() => {
     (async () => {
       try {
-        const lbRes = await fetch("/app/api/mlb/weekly/leaderboard");
-        const stRes = await fetch("/app/api/mlb/weekly/streaks");
+        const lbRes = await fetch("/api/mlb/weekly/leaderboard");
+        const stRes = await fetch("/api/mlb/weekly/streaks");
 
         const lbJson = await lbRes.json();
         const stJson = await stRes.json();

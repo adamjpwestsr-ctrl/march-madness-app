@@ -13,7 +13,7 @@ export default function MLBWeeklyClient({ week }: { week: number }) {
   useEffect(() => {
     if (!week) return;
     (async () => {
-      const res = await fetch(`/app/api/mlb/weekly/state?week=${week}`);
+      const res = await fetch(`/api/mlb/weekly/state?week=${week}`);
       const json = await res.json();
       setSeries(json.series || []);
     })();
@@ -26,7 +26,7 @@ export default function MLBWeeklyClient({ week }: { week: number }) {
   const handleSave = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/app/api/mlb/weekly/pick", {
+      const res = await fetch("/api/mlb/weekly/pick", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

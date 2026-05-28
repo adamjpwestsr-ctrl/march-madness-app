@@ -54,7 +54,12 @@ export async function POST(req: Request) {
     }
 
     // Optional: refresh leaderboard view if materialized
-    await supabase.rpc("refresh_mlb_leaderboard_view").catch(() => {});
+	try {
+  await supabase.rpc("refresh_mlb_leaderboard_view");
+} catch (_) {
+  // ignore if function doesn't exist
+}
+
 
     return NextResponse.json({ success: true, message: "Week scored successfully" });
   } catch (err: any) {

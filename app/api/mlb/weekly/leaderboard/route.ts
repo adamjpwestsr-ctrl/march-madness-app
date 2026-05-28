@@ -8,7 +8,6 @@ const supabase = createClient(
 
 export async function GET() {
   try {
-    // Run optimized join query directly
     const { data, error } = await supabase.rpc("get_mlb_leaderboard_with_usernames");
 
     if (error) throw error;

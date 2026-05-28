@@ -12,7 +12,7 @@ export default function MLBAdminPage() {
   useEffect(() => {
     if (!week) return;
     (async () => {
-      const res = await fetch(`/app/api/mlb/weekly/state?week=${week}`);
+      const res = await fetch(`/api/mlb/weekly/state?week=${week}`);   // ✅ FIXED
       const json = await res.json();
       setSeries(json.series || []);
     })();
@@ -20,7 +20,7 @@ export default function MLBAdminPage() {
 
   const setWinner = async (seriesId: number, winnerTeamId: number | null) => {
     try {
-      const res = await fetch("/app/api/admin/mlb/set-winner", {
+      const res = await fetch("/api/admin/mlb/set-winner", {            // ✅ FIXED
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -42,7 +42,7 @@ export default function MLBAdminPage() {
     if (!week) return;
     setLoading(true);
     try {
-      const res = await fetch("/app/api/admin/mlb/score-week", {
+      const res = await fetch("/api/admin/mlb/score-week", {            // ✅ FIXED
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ week_number: week }),

@@ -51,7 +51,7 @@ export default function MLBWeeklyClient({ week }: { week: number }) {
   };
 
   // Static asset path (no absolute URLs needed)
-  const logoPath = (abbrev: string) => `/logos/mlb/${abbrev}.png`;
+  const logoPath = (abbrev: string) => `/logos/mlb/${abbrev.toLowerCase()}.png`;
 
   // Prevent infinite fallback loops
   const handleLogoError = (e: React.SyntheticEvent<HTMLImageElement>) => {

@@ -33,6 +33,12 @@ export const CHALLENGES: ChallengeConfig[] = [
     href: "/sports/golf/weekly",
   },
   {
+    id: "mlb-weekly",
+    sport: "MLB",
+    description: "Pick winners for each weekly MLB series.",
+    href: "/sports/mlb",
+  },
+  {
     id: "nfl-weekly",
     title: "NFL Weekly",
     sport: "NFL",

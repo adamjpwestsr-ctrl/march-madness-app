@@ -7,14 +7,18 @@ const supabase = createClient(
 );
 
 export async function GET() {
-  const { data, error } = await supabase
-    .from("mlb_leaderboard_view")
-    .select("*")
-    .order("rank", { ascending: true });
+  try {
+    // Run optimized join query directly
+    const { data, error } = await supabase.rpc("get_mlb_leaderboard_with_usernames");
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) throw error;
+
+    return NextResponse.json({ leaderboard: data });
+  } catch (err: any) {
+    console.error("Leaderboard fetch error:", err);
+    return NextResponse.json(
+      { error: err.message || "Unknown error" },
+      { status: 500 }
+    );
   }
-
-  return NextResponse.json({ leaderboard: data });
 }

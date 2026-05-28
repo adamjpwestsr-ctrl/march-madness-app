@@ -23,16 +23,12 @@ export async function POST(req: Request) {
       .select("series_id, winner_team_id, is_draw")
       .eq("week_number", week_number);
 
-    if (seriesErr) {
-      return NextResponse.json({ error: seriesErr.message }, { status: 500 });
-    }
-
-    if (!series || series.length === 0) {
+    if (seriesErr) throw seriesErr;
+    if (!series?.length)
       return NextResponse.json(
         { error: "No series found for this week" },
         { status: 404 }
       );
-    }
 
     // Score each series
     for (const s of series) {
@@ -42,36 +38,27 @@ export async function POST(req: Request) {
         .eq("series_id", s.series_id)
         .eq("week_number", week_number);
 
-      if (picksErr) {
-        return NextResponse.json({ error: picksErr.message }, { status: 500 });
-      }
-
-      if (!picks || picks.length === 0) {
-        continue; // No picks for this series
-      }
+      if (picksErr) throw picksErr;
+      if (!picks?.length) continue;
 
       for (const p of picks) {
-        const correct =
-          s.is_draw ? false : p.selected_team_id === s.winner_team_id;
+        const correct = !s.is_draw && p.selected_team_id === s.winner_team_id;
 
         const { error: updateErr } = await supabase
           .from("mlb_challenge_selections")
-          .update({
-            points_awarded: correct ? 1 : 0,
-          })
+          .update({ points_awarded: correct ? 1 : 0 })
           .eq("id", p.id);
 
-        if (updateErr) {
-          return NextResponse.json(
-            { error: updateErr.message },
-            { status: 500 }
-          );
-        }
+        if (updateErr) throw updateErr;
       }
     }
 
-    return NextResponse.json({ success: true });
+    // Optional: refresh leaderboard view if materialized
+    await supabase.rpc("refresh_mlb_leaderboard_view").catch(() => {});
+
+    return NextResponse.json({ success: true, message: "Week scored successfully" });
   } catch (err: any) {
+    console.error("Score week error:", err);
     return NextResponse.json(
       { error: err.message || "Unknown error" },
       { status: 500 }

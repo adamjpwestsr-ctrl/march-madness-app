@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import MLBCalendar from "./components/MLBCalendar";
 import MLBWeeklyClient from "./components/MLBWeeklyClient";
 
@@ -62,7 +63,7 @@ export default function MLBPage() {
                   className="flex items-center justify-between bg-slate-800/40 px-3 py-2 rounded-lg"
                 >
                   <span className="text-slate-300 font-medium">
-                    {i + 1}. User {row.user_id.slice(0, 6)}
+                    {i + 1}. {row.username || `User ${row.user_id.slice(0, 6)}`}
                   </span>
                   <span className="text-emerald-400 font-bold">
                     {row.total_points} pts
@@ -92,7 +93,7 @@ export default function MLBPage() {
                     <img
                       src={t.logo_url}
                       alt={t.name}
-                      className="w-8 h-8 rounded-full"
+                      className="w-8 h-8 rounded-full transition-all duration-300 ease-in-out hover:scale-110 hover:shadow-lg hover:shadow-emerald-500/40"
                     />
                     <span className="text-slate-300">{t.abbreviation}</span>
                   </div>
@@ -112,6 +113,20 @@ export default function MLBPage() {
               ))}
             </div>
           )}
+
+          {/* My Picks Section */}
+          <div className="mt-6 border-t border-slate-800 pt-4">
+            <h3 className="text-lg font-semibold mb-2">My Picks</h3>
+            <p className="text-slate-400 text-sm mb-3">
+              View your selections for each week and track your accuracy.
+            </p>
+            <Link
+              href="/sports/mlb/history"
+              className="inline-block px-4 py-2 rounded-md bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium transition-all duration-300 ease-in-out hover:shadow-lg hover:shadow-emerald-500/40"
+            >
+              View MLB History
+            </Link>
+          </div>
         </div>
       </div>
 

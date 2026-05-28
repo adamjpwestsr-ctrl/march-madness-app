@@ -50,6 +50,10 @@ export default function MLBWeeklyClient({ week }: { week: number }) {
     }
   };
 
+  // ✅ Use absolute root path for logos (works in both dev and prod)
+  const logoPath = (abbrev: string) =>
+    `${process.env.NEXT_PUBLIC_BASE_URL || ""}/logos/mlb/${abbrev}.png`;
+
   return (
     <div className="w-full flex flex-col gap-6 overflow-y-auto max-h-[80vh] px-1">
       {/* Series Grid */}
@@ -63,8 +67,11 @@ export default function MLBWeeklyClient({ week }: { week: number }) {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3 w-1/2 overflow-hidden">
                 <img
-                  src={`/logos/mlb/${s.home_abbrev}.png`}
+                  src={logoPath(s.home_abbrev)}
                   alt={s.home_name}
+                  onError={(e) =>
+                    (e.currentTarget.src = "/logos/mlb/default.png")
+                  }
                   className={`w-10 h-10 rounded-full object-contain cursor-pointer ${
                     picks[s.series_id] === s.home_team_id
                       ? "ring-4 ring-emerald-500"
@@ -84,8 +91,11 @@ export default function MLBWeeklyClient({ week }: { week: number }) {
                   {s.away_name}
                 </span>
                 <img
-                  src={`/logos/mlb/${s.away_abbrev}.png`}
+                  src={logoPath(s.away_abbrev)}
                   alt={s.away_name}
+                  onError={(e) =>
+                    (e.currentTarget.src = "/logos/mlb/default.png")
+                  }
                   className={`w-10 h-10 rounded-full object-contain cursor-pointer ${
                     picks[s.series_id] === s.away_team_id
                       ? "ring-4 ring-emerald-500"

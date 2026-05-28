@@ -50,9 +50,16 @@ export default function MLBWeeklyClient({ week }: { week: number }) {
     }
   };
 
-  // ✅ Use absolute root path for logos (works in both dev and prod)
-  const logoPath = (abbrev: string) =>
-    `${process.env.NEXT_PUBLIC_BASE_URL || ""}/logos/mlb/${abbrev}.png`;
+  // Static asset path (no absolute URLs needed)
+  const logoPath = (abbrev: string) => `/logos/mlb/${abbrev}.png`;
+
+  // Prevent infinite fallback loops
+  const handleLogoError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const img = e.currentTarget;
+    if (!img.src.includes("default.png")) {
+      img.src = "/logos/mlb/default.png";
+    }
+  };
 
   return (
     <div className="w-full flex flex-col gap-6 overflow-y-auto max-h-[80vh] px-1">
@@ -69,10 +76,8 @@ export default function MLBWeeklyClient({ week }: { week: number }) {
                 <img
                   src={logoPath(s.home_abbrev)}
                   alt={s.home_name}
-                  onError={(e) =>
-                    (e.currentTarget.src = "/logos/mlb/default.png")
-                  }
-                  className={`w-10 h-10 rounded-full object-contain cursor-pointer ${
+                  onError={handleLogoError}
+                  className={`w-10 h-10 rounded-full object-contain cursor-pointer transition-all ${
                     picks[s.series_id] === s.home_team_id
                       ? "ring-4 ring-emerald-500"
                       : "opacity-70 hover:opacity-100"
@@ -93,10 +98,8 @@ export default function MLBWeeklyClient({ week }: { week: number }) {
                 <img
                   src={logoPath(s.away_abbrev)}
                   alt={s.away_name}
-                  onError={(e) =>
-                    (e.currentTarget.src = "/logos/mlb/default.png")
-                  }
-                  className={`w-10 h-10 rounded-full object-contain cursor-pointer ${
+                  onError={handleLogoError}
+                  className={`w-10 h-10 rounded-full object-contain cursor-pointer transition-all ${
                     picks[s.series_id] === s.away_team_id
                       ? "ring-4 ring-emerald-500"
                       : "opacity-70 hover:opacity-100"

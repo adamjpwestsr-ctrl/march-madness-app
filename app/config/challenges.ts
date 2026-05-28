@@ -32,12 +32,18 @@ export const CHALLENGES: ChallengeConfig[] = [
     status: "Open",
     href: "/sports/golf/weekly",
   },
+
+  // ✅ Correct MLB entry (only one, fully typed)
   {
     id: "mlb-weekly",
+    title: "MLB Weekly",
     sport: "MLB",
     description: "Pick winners for each weekly MLB series.",
+    difficulty: "Medium",
+    status: "Open",
     href: "/sports/mlb",
   },
+
   {
     id: "nfl-weekly",
     title: "NFL Weekly",
@@ -61,15 +67,6 @@ export const CHALLENGES: ChallengeConfig[] = [
     title: "NBA Daily",
     sport: "NBA",
     description: "Compete in daily and weekly basketball challenges.",
-    difficulty: "Medium",
-    status: "Coming Soon",
-    href: null,
-  },
-  {
-    id: "mlb-weekly",
-    title: "MLB Weekly",
-    sport: "MLB",
-    description: "Make your picks for the latest baseball matchups.",
     difficulty: "Medium",
     status: "Coming Soon",
     href: null,

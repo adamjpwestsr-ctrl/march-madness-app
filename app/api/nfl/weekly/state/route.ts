@@ -1,51 +1,86 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
 export async function GET(req: Request) {
-  const supabase = createClient(
+  // Create Supabase client with SSR cookie support
+  const cookieStore = cookies();
+  const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookies: cookieStore }
   );
 
+  // Get authenticated user
   const {
     data: { user },
+    error: authError,
   } = await supabase.auth.getUser();
+
+  if (authError) {
+    return NextResponse.json({ error: authError.message }, { status: 500 });
+  }
 
   if (!user) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
   // Determine active week
-  const { data: activeGames } = await supabase
+  const { data: activeGames, error: activeErr } = await supabase
     .from("nfl_schedule")
     .select("*")
     .order("week_number", { ascending: true });
 
-  const week = activeGames?.[0]?.week_number ?? 1;
+  if (activeErr || !activeGames || activeGames.length === 0) {
+    return NextResponse.json(
+      { error: "Unable to load schedule" },
+      { status: 500 }
+    );
+  }
+
+  const week = activeGames[0].week_number;
 
   // Load all games for the week
-  const { data: games } = await supabase
+  const { data: games, error: gamesErr } = await supabase
     .from("nfl_schedule")
     .select("*")
     .eq("week_number", week)
     .order("game_date", { ascending: true });
 
+  if (gamesErr) {
+    return NextResponse.json({ error: gamesErr.message }, { status: 500 });
+  }
+
   // Load teams
-  const { data: teams } = await supabase.from("nfl_teams").select("*");
+  const { data: teams, error: teamsErr } = await supabase
+    .from("nfl_teams")
+    .select("*");
+
+  if (teamsErr) {
+    return NextResponse.json({ error: teamsErr.message }, { status: 500 });
+  }
 
   // Load user pick
-  const { data: currentPick } = await supabase
+  const { data: currentPick, error: pickErr } = await supabase
     .from("nfl_challenge_selections")
     .select("*")
     .eq("user_id", user.id)
     .eq("week_number", week)
     .maybeSingle();
 
+  if (pickErr && pickErr.code !== "PGRST116") {
+    return NextResponse.json({ error: pickErr.message }, { status: 500 });
+  }
+
   // Load used teams
-  const { data: used } = await supabase
+  const { data: used, error: usedErr } = await supabase
     .from("nfl_challenge_selections")
     .select("selected_team_id")
     .eq("user_id", user.id);
+
+  if (usedErr) {
+    return NextResponse.json({ error: usedErr.message }, { status: 500 });
+  }
 
   const usedTeamIds = used?.map((u) => u.selected_team_id) ?? [];
 
@@ -61,6 +96,6 @@ export async function GET(req: Request) {
     usedTeams: teams
       ?.filter((t) => usedTeamIds.includes(t.id))
       .map((t) => t.name),
-    locked: false, // You can add lock logic later
+    locked: false, // lock logic can be added later
   });
 }

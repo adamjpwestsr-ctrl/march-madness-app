@@ -3,15 +3,28 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
 export async function GET(req: Request) {
-  // Create Supabase client with SSR cookie support
-  const cookieStore = cookies();
+  // Correct SSR cookie wrapper for your Supabase version
+  const cookieStore = await cookies();
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { cookies: cookieStore }
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+        set(name: string, value: string, options: any) {
+          cookieStore.set({ name, value, ...options });
+        },
+        remove(name: string, options: any) {
+          cookieStore.set({ name, value: "", ...options });
+        },
+      },
+    }
   );
 
-  // Get authenticated user
+  // Auth
   const {
     data: { user },
     error: authError,
@@ -96,6 +109,6 @@ export async function GET(req: Request) {
     usedTeams: teams
       ?.filter((t) => usedTeamIds.includes(t.id))
       .map((t) => t.name),
-    locked: false, // lock logic can be added later
+    locked: false,
   });
 }

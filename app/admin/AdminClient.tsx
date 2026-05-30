@@ -28,7 +28,12 @@ export default function AdminClient({ adminEmail }: { adminEmail: string }) {
 
     // ⚾ NEW — MLB Weekly Admin
     { href: "/admin/mlb", label: "MLB Weekly Admin" },
-  ];
+    
+    // New - NFL Weekly Admin
+    { href: "/admin/nfl-weekly", label: "NFL Weekly Admin" },
+  
+];
+
 
   const sortedTools = tools.sort((a, b) =>
     a.label.localeCompare(b.label, "en", { sensitivity: "base" })

@@ -1,14 +1,19 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-export async function GET() {
+export async function GET(req: Request) {
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
 
   try {
-    // Load schedule
+    const { searchParams } = new URL(req.url);
+    const requestedWeek = searchParams.get("week")
+      ? Number(searchParams.get("week"))
+      : null;
+
+    // Load full schedule
     const { data: schedule, error: scheduleErr } = await supabase
       .from("nfl_schedule")
       .select("*")
@@ -25,12 +30,15 @@ export async function GET() {
         week: null,
         games: [],
         teams: [],
+        locked: false,
+        lock_time: null,
       });
     }
 
-    const week = schedule[0].week_number;
+    // Determine active week
+    const week = requestedWeek ?? schedule[0].week_number;
 
-    // Load games for the week (NO game_date)
+    // Load games for selected week
     const { data: games, error: gamesErr } = await supabase
       .from("nfl_schedule")
       .select("*")
@@ -52,10 +60,19 @@ export async function GET() {
       return NextResponse.json({ error: teamsErr.message }, { status: 500 });
     }
 
+    // Load lock state
+    const { data: settings } = await supabase
+      .from("nfl_weekly_settings")
+      .select("*")
+      .eq("week_number", week)
+      .maybeSingle();
+
     return NextResponse.json({
       week,
       games,
       teams,
+      locked: settings?.is_locked ?? false,
+      lock_time: settings?.lock_time ?? null,
     });
 
   } catch (err: any) {

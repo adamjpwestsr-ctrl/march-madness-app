@@ -4,19 +4,30 @@ import AdminWeeklyClient from "./AdminWeeklyClient";
 export default async function AdminNFLWeeklyPage() {
   const supabase = await createClient();
 
-  // Load teams server-side
-  if (!supabase) return;
-    const { data: teams } = await supabase
+  // If supabase failed to initialize, show a safe fallback
+  if (!supabase) {
+    return <div className="text-red-500 p-6">Supabase client failed to load.</div>;
+  }
+
+  // Load teams
+  const { data: teams, error: teamsError } = await supabase
     .from("nfl_teams")
     .select("*")
     .order("name");
 
-  // Load weekly settings (lock time, etc.)
-  if (!supabase) return;
-    const { data: settings } = await supabase
+  if (teamsError) {
+    console.error("Teams error:", teamsError);
+  }
+
+  // Load weekly settings
+  const { data: settings, error: settingsError } = await supabase
     .from("nfl_weekly_settings")
     .select("*")
     .single();
+
+  if (settingsError) {
+    console.error("Settings error:", settingsError);
+  }
 
   return (
     <AdminWeeklyClient

@@ -41,6 +41,7 @@ export default function NFLWeeklyPage() {
   const [streaks, setStreaks] = useState<Streaks | null>(null);
   const [byeWeeks, setByeWeeks] = useState<ByeWeeks>({});
   const [locked, setLocked] = useState(false);
+  const [lockTime, setLockTime] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [byeOpen, setByeOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
@@ -49,26 +50,32 @@ export default function NFLWeeklyPage() {
     load();
   }, []);
 
-  async function load() {
+  async function load(selectedWeek?: number) {
     setLoading(true);
 
     // 1. Load user
     const { data: userData } = await supabase.auth.getUser();
     setUser(userData.user);
 
-    // 2. Load public NFL data
-    const stateRes = await fetch("/api/nfl/weekly/state");
+    // 2. Load weekly state (supports ?week=)
+    const queryWeek = selectedWeek ?? week;
+    const stateRes = await fetch(
+      `/api/nfl/weekly/state${queryWeek ? `?week=${queryWeek}` : ""}`
+    );
     const stateJson = await stateRes.json();
 
     setWeek(stateJson.week);
-    setTeams(stateJson.teams);
+    setTeams(stateJson.teams || []);
+    setLocked(stateJson.locked ?? false);
+    setLockTime(stateJson.lock_time ?? null);
 
     // Build matchups client-side
-    const built = stateJson.games.map((g: any) => ({
-      id: g.id,
-      home: stateJson.teams.find((t: Team) => t.id === g.home_team_id),
-      away: stateJson.teams.find((t: Team) => t.id === g.away_team_id),
-    }));
+    const built =
+      stateJson.games?.map((g: any) => ({
+        id: g.id,
+        home: stateJson.teams.find((t: Team) => t.id === g.home_team_id),
+        away: stateJson.teams.find((t: Team) => t.id === g.away_team_id),
+      })) ?? [];
 
     setMatchups(built);
 
@@ -111,9 +118,17 @@ export default function NFLWeeklyPage() {
   }
 
   async function submitPick(teamId: string, gameId: number) {
-    if (!user) return;
+    if (!user) {
+      alert("You must be logged in to make a pick.");
+      return;
+    }
 
-    await supabase.from("nfl_challenge_selections").upsert(
+    if (locked) {
+      alert("Picks are locked for this week.");
+      return;
+    }
+
+    const { error } = await supabase.from("nfl_challenge_selections").upsert(
       {
         user_id: user.id,
         week_number: week,
@@ -123,20 +138,77 @@ export default function NFLWeeklyPage() {
       { onConflict: "user_id,week_number" }
     );
 
-    load();
+    if (error) {
+      console.error(error);
+      alert("Failed to submit pick.");
+    } else {
+      await load();
+    }
+  }
+
+  function handleWeekChange(newWeek: number) {
+    setWeek(newWeek);
+    load(newWeek);
   }
 
   return (
     <div className="min-h-screen text-white flex flex-col gap-8">
-      {/* Header */}
+
+      {/* 🔒 LOCK BANNER */}
+      <section
+        className={`rounded-xl border px-4 py-3 text-sm md:text-base flex flex-col md:flex-row md:items-center md:justify-between ${
+          locked
+            ? "border-red-500/60 bg-red-950/40 text-red-200"
+            : "border-emerald-500/60 bg-emerald-950/40 text-emerald-100"
+        }`}
+      >
+        <div className="font-semibold">
+          {locked
+            ? "Week Locked — Picks are closed."
+            : "Lock in your pick before kickoff — don’t take the L."}
+        </div>
+
+        <div className="mt-2 md:mt-0 text-xs md:text-sm opacity-90">
+          {lockTime
+            ? `Picks lock at ${new Date(lockTime).toLocaleString("en-US", {
+                weekday: "long",
+                hour: "numeric",
+                minute: "2-digit",
+                timeZoneName: "short",
+              })}`
+            : "Lock time not set"}
+        </div>
+      </section>
+
+      {/* HEADER + WEEK SELECTOR */}
       <section className="flex flex-col gap-3">
-        <h1 className="text-3xl font-semibold tracking-tight">
-          NFL Weekly Challenge
-        </h1>
-        <p className="text-slate-400 max-w-2xl">
-          Pick one team each week. You can’t reuse teams from previous weeks.
-          Survive as long as you can and climb the leaderboard.
-        </p>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <div className="flex flex-col gap-2">
+            <h1 className="text-3xl font-semibold tracking-tight">
+              NFL Weekly Challenge
+            </h1>
+            <p className="text-slate-400 max-w-2xl">
+              Pick one team each week. You can’t reuse teams from previous
+              weeks. Survive as long as you can and climb the leaderboard.
+            </p>
+          </div>
+
+          {/* WEEK SELECTOR */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-slate-300">Week</span>
+            <select
+              value={week ?? 1}
+              onChange={(e) => handleWeekChange(Number(e.target.value))}
+              className="bg-slate-900 text-slate-100 border border-slate-700 rounded-md px-3 py-1 text-sm"
+            >
+              {[...Array(18)].map((_, i) => (
+                <option key={i + 1} value={i + 1}>
+                  Week {i + 1}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
 
         <div className="flex gap-3">
           <Link
@@ -162,10 +234,13 @@ export default function NFLWeeklyPage() {
         </div>
       </section>
 
-      {/* Main Grid */}
+      {/* MAIN GRID STARTS HERE — MATCHUPS + SIDE PANEL */}
+      {/* MAIN GRID */}
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Matchups */}
+
+        {/* MATCHUPS */}
         <div className="lg:col-span-2 rounded-xl bg-slate-900/60 border border-white/10 p-4 shadow-lg flex flex-col gap-4">
+
           <div className="flex items-center justify-between mb-1">
             <h2 className="text-xl font-semibold">
               {week ? `Week ${week} Matchups` : "Loading week…"}
@@ -186,7 +261,8 @@ export default function NFLWeeklyPage() {
           )}
 
           {!loading && matchups.length > 0 && (
-            <div className="flex flex-col gap-3">
+            <div className="max-w-3xl mx-auto flex flex-col gap-3">
+
               {matchups.map((m) => {
                 const homeUsed = usedTeamIds.includes(m.home.id);
                 const awayUsed = usedTeamIds.includes(m.away.id);
@@ -196,9 +272,11 @@ export default function NFLWeeklyPage() {
                     key={m.id}
                     className="flex flex-col gap-2 bg-slate-800/40 px-4 py-3 rounded-lg border border-slate-700/60"
                   >
+                    {/* TEAM ROW */}
                     <div className="flex items-center justify-between gap-4">
-                      {/* Home */}
-                      <div className="flex items-center gap-3">
+
+                      {/* HOME */}
+                      <div className="flex items-center gap-3 w-1/2 justify-end">
                         {m.home.logo_url && (
                           <img
                             src={m.home.logo_url}
@@ -206,7 +284,7 @@ export default function NFLWeeklyPage() {
                             className="w-9 h-9 rounded-full border border-slate-700 object-contain"
                           />
                         )}
-                        <div className="flex flex-col">
+                        <div className="flex flex-col items-end">
                           <span className="text-slate-100 text-sm font-medium">
                             {m.home.name}
                           </span>
@@ -218,8 +296,8 @@ export default function NFLWeeklyPage() {
 
                       <span className="text-slate-500 text-xs">vs</span>
 
-                      {/* Away */}
-                      <div className="flex items-center gap-3">
+                      {/* AWAY */}
+                      <div className="flex items-center gap-3 w-1/2 justify-start">
                         {m.away.logo_url && (
                           <img
                             src={m.away.logo_url}
@@ -227,7 +305,7 @@ export default function NFLWeeklyPage() {
                             className="w-9 h-9 rounded-full border border-slate-700 object-contain"
                           />
                         )}
-                        <div className="flex flex-col items-end">
+                        <div className="flex flex-col items-start">
                           <span className="text-slate-100 text-sm font-medium">
                             {m.away.name}
                           </span>
@@ -238,6 +316,7 @@ export default function NFLWeeklyPage() {
                       </div>
                     </div>
 
+                    {/* STATUS ROW */}
                     <div className="flex items-center justify-between text-[11px] text-slate-400">
                       <span>
                         {homeUsed && "Home team already used · "}
@@ -257,9 +336,9 @@ export default function NFLWeeklyPage() {
                       )}
                     </div>
 
-                    {/* Pick Buttons */}
+                    {/* PICK BUTTONS */}
                     {!locked && (
-                      <div className="flex gap-3 mt-2">
+                      <div className="flex gap-3 mt-2 justify-center">
                         <button
                           disabled={homeUsed}
                           onClick={() => submitPick(m.home.id, m.id)}
@@ -288,12 +367,14 @@ export default function NFLWeeklyPage() {
                   </div>
                 );
               })}
+
             </div>
           )}
         </div>
 
-        {/* Side Panel */}
+        {/* SIDE PANEL */}
         <div className="rounded-xl bg-slate-900/60 border border-white/10 p-4 shadow-lg flex flex-col gap-6">
+
           <h2 className="text-xl font-semibold">Challenge Overview</h2>
 
           <p className="text-slate-400 text-sm">
@@ -301,7 +382,7 @@ export default function NFLWeeklyPage() {
             them again in future weeks.
           </p>
 
-          {/* Stats */}
+          {/* STATS */}
           <div className="border-t border-slate-800 pt-4 flex flex-col gap-3 text-sm">
             <div className="flex items-center justify-between">
               <span className="text-slate-300">Current Week</span>
@@ -325,7 +406,7 @@ export default function NFLWeeklyPage() {
             </div>
           </div>
 
-          {/* Streaks */}
+          {/* STREAKS */}
           <div className="rounded-lg bg-slate-900/80 border border-slate-800 p-3">
             <h3 className="text-sm font-semibold mb-2">Your Streaks</h3>
 
@@ -343,7 +424,7 @@ export default function NFLWeeklyPage() {
             )}
           </div>
 
-          {/* Bye Weeks */}
+          {/* BYE WEEKS */}
           <div className="rounded-lg bg-slate-900/80 border border-slate-800 p-3">
             <button
               onClick={() => setByeOpen(!byeOpen)}
@@ -368,6 +449,7 @@ export default function NFLWeeklyPage() {
               </ul>
             )}
           </div>
+
         </div>
       </section>
     </div>

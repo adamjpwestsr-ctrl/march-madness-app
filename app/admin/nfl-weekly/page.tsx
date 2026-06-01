@@ -4,7 +4,6 @@ import AdminWeeklyClient from "./AdminWeeklyClient";
 export default async function AdminNFLWeeklyPage() {
   const supabase = await createClient();
 
-  // If supabase failed to initialize, show a safe fallback
   if (!supabase) {
     return <div className="text-red-500 p-6">Supabase client failed to load.</div>;
   }
@@ -19,11 +18,11 @@ export default async function AdminNFLWeeklyPage() {
     console.error("Teams error:", teamsError);
   }
 
-  // Load weekly settings
+  // Load ALL weekly settings
   const { data: settings, error: settingsError } = await supabase
     .from("nfl_weekly_settings")
     .select("*")
-    .single();
+    .order("week_number");
 
   if (settingsError) {
     console.error("Settings error:", settingsError);
@@ -32,7 +31,7 @@ export default async function AdminNFLWeeklyPage() {
   return (
     <AdminWeeklyClient
       teams={teams || []}
-      settings={settings || {}}
+      settings={settings || []}
     />
   );
 }

@@ -8,31 +8,27 @@ export async function POST(req: Request) {
   );
 
   try {
-    const { week, teamId, userId } = await req.json();
+    const { week, lock_time } = await req.json();
 
-    if (!week || !teamId || !userId) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    if (!week || !lock_time) {
+      return NextResponse.json({ error: "Missing week or lock_time" }, { status: 400 });
     }
 
     const { error } = await supabase
-      .from("nfl_challenge_selections")
+      .from("nfl_weekly_settings")
       .upsert(
-        {
-          user_id: userId,
-          week_number: week,
-          selected_team_id: teamId,
-        },
-        { onConflict: "user_id,week_number" }
+        { week_number: week, lock_time },
+        { onConflict: "week_number" }
       );
 
     if (error) {
-      console.error("Admin override error:", error);
+      console.error("Lock update error:", error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });
   } catch (err: any) {
-    console.error("Admin override fatal error:", err);
+    console.error("Lock route fatal error:", err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

@@ -1,13 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 
 const WEEKS = Array.from({ length: 17 }, (_, i) => i + 1);
 
-// ⭐ Added props interface (fixes Vercel TS error)
 interface AdminWeeklyProps {
   teams: any[];
-  settings: any;
+  settings: any[]; // now an array
 }
 
 export default function AdminWeeklyClient({ teams, settings }: AdminWeeklyProps) {
@@ -18,14 +17,25 @@ export default function AdminWeeklyClient({ teams, settings }: AdminWeeklyProps)
   const [overrideTeam, setOverrideTeam] = useState("");
   const [overrideWeek, setOverrideWeek] = useState(1);
 
-  // ⭐ Lock Time State (correct location)
-  const [lockTime, setLockTime] = useState(settings?.lock_time || "");
+  // Pick the correct week's settings
+  const weekSettings = useMemo(
+    () => settings.find((s) => s.week_number === currentWeek),
+    [settings, currentWeek]
+  );
 
-  // ⭐ Update Lock Time (correct location)
+  // Safe lockTime initialization
+  const [lockTime, setLockTime] = useState(
+    typeof weekSettings?.lock_time === "string" ? weekSettings.lock_time : ""
+  );
+
+  // Update lock time
   const updateLockTime = async () => {
     const res = await fetch("/api/admin/nfl/weekly/lock", {
       method: "POST",
-      body: JSON.stringify({ lock_time: lockTime }),
+      body: JSON.stringify({
+        week: currentWeek,
+        lock_time: lockTime,
+      }),
     });
 
     if (res.ok) {
@@ -35,7 +45,7 @@ export default function AdminWeeklyClient({ teams, settings }: AdminWeeklyProps)
     }
   };
 
-  // Load leaderboard on mount
+  // Load leaderboard
   useEffect(() => {
     loadLeaderboard();
   }, []);
@@ -47,11 +57,11 @@ export default function AdminWeeklyClient({ teams, settings }: AdminWeeklyProps)
   };
 
   const toggleWinner = (teamId: string) => {
-    if (winningTeams.includes(teamId)) {
-      setWinningTeams(winningTeams.filter((t) => t !== teamId));
-    } else {
-      setWinningTeams([...winningTeams, teamId]);
-    }
+    setWinningTeams((prev) =>
+      prev.includes(teamId)
+        ? prev.filter((t) => t !== teamId)
+        : [...prev, teamId]
+    );
   };
 
   const submitWinners = async () => {
@@ -112,7 +122,7 @@ export default function AdminWeeklyClient({ teams, settings }: AdminWeeklyProps)
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
 
-        {/* LEFT COLUMN — WEEK SELECTOR + WINNERS */}
+        {/* LEFT COLUMN */}
         <div className="lg:col-span-2 space-y-8">
 
           {/* Week Selector */}
@@ -126,6 +136,11 @@ export default function AdminWeeklyClient({ teams, settings }: AdminWeeklyProps)
                   onClick={() => {
                     setCurrentWeek(week);
                     setWinningTeams([]);
+                    setLockTime(
+                      typeof settings.find((s) => s.week_number === week)?.lock_time === "string"
+                        ? settings.find((s) => s.week_number === week)!.lock_time
+                        : ""
+                    );
                   }}
                   className={`
                     px-4 py-2 rounded-lg text-sm font-semibold
@@ -196,7 +211,7 @@ export default function AdminWeeklyClient({ teams, settings }: AdminWeeklyProps)
           </div>
         </div>
 
-        {/* RIGHT COLUMN — LEADERBOARD + OVERRIDES */}
+        {/* RIGHT COLUMN */}
         <div className="space-y-8">
 
           {/* Leaderboard */}
@@ -263,13 +278,13 @@ export default function AdminWeeklyClient({ teams, settings }: AdminWeeklyProps)
             </button>
           </div>
 
-          {/* ⭐ Weekly Lock Time */}
+          {/* Lock Time */}
           <div className="p-4 border border-slate-700 rounded-xl bg-slate-900/70">
             <h3 className="text-lg font-semibold mb-2">Weekly Lock Time</h3>
 
             <input
               type="datetime-local"
-              value={lockTime?.slice(0, 16)}
+              value={typeof lockTime === "string" ? lockTime.slice(0, 16) : ""}
               onChange={(e) => setLockTime(e.target.value)}
               className="bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm"
             />

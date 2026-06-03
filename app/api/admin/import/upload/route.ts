@@ -2,6 +2,17 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import Papa from "papaparse";
 
+// ⭐ Add a type for your CSV rows
+type ScheduleRow = {
+  sport: string;
+  week_number: number | string;
+  home_team_id: string;
+  away_team_id: string;
+  game_date: string;
+  season_year: number | string;
+  [key: string]: any;
+};
+
 export async function POST(req: Request) {
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -20,7 +31,8 @@ export async function POST(req: Request) {
 
   const text = await file.text();
 
-  const { data: rows, errors, meta } = Papa.parse(text, {
+  // ⭐ Tell PapaParse what type to return
+  const { data: rows, errors } = Papa.parse<ScheduleRow>(text, {
     header: true,
     skipEmptyLines: true,
   });
@@ -42,6 +54,7 @@ export async function POST(req: Request) {
     "season_year",
   ];
 
+  // ⭐ Now row[field] is valid because row is typed
   for (const row of rows) {
     for (const field of required) {
       if (!row[field]) {
@@ -69,7 +82,6 @@ export async function POST(req: Request) {
   const sport = rows[0].sport;
   const season_year = rows[0].season_year;
 
-  // Group by week
   const weeks: Record<number, string[]> = {};
 
   rows.forEach((row) => {
@@ -79,9 +91,9 @@ export async function POST(req: Request) {
   });
 
   const lockRows = Object.entries(weeks).map(([week, dates]) => {
-    const earliest = dates.sort()[0]; // earliest game
+    const earliest = dates.sort()[0];
     const lockTime = new Date(earliest);
-    lockTime.setHours(lockTime.getHours() - 1); // 1 hour before kickoff
+    lockTime.setHours(lockTime.getHours() - 1);
 
     return {
       sport,
@@ -91,7 +103,6 @@ export async function POST(req: Request) {
     };
   });
 
-  // Insert lock times
   const { error: lockError } = await supabase
     .from("sport_lock_times")
     .insert(lockRows);
@@ -103,7 +114,6 @@ export async function POST(req: Request) {
     );
   }
 
-  // Log the import
   await supabase.from("import_logs").insert({
     sport,
     action: "upload",

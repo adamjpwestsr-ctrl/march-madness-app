@@ -53,7 +53,7 @@ export default function AdminWeeklyClient({ teams, settings }: AdminWeeklyProps)
   const loadLeaderboard = async () => {
     const res = await fetch("/api/nfl/weekly/leaderboard");
     const data = await res.json();
-    setLeaderboard(data || []);
+    setLeaderboard(data.rows || []);
   };
 
   const toggleWinner = (teamId: string) => {

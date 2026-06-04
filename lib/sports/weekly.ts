@@ -1,5 +1,5 @@
 // lib/sports/weekly.ts
-import { createClient } from '@/utils/supabase/server';
+import { createSupabaseServerClient } from '@/lib/supabaseServerClient';
 
 export type WeeklyGame = {
   id: number;
@@ -28,7 +28,8 @@ export async function getWeeklyData(
   sport: 'NBA' | 'NHL',
   week: number,
 ): Promise<WeeklyData> {
-  const supabase = createClient();
+const supabase = await createSupabaseServerClient();
+
 
   const { data: games, error: gamesError } = await supabase
     .from('sport_schedule')

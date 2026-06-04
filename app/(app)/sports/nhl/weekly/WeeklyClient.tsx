@@ -21,8 +21,8 @@ export default function WeeklyClient({
   teamsById,
   lockTime,
 }: Props) {
-  const supabase = createClient();
-  const [picks, setPicks] = useState<PickMap>({});
+ const supabase = createSupabaseBrowserClient();
+ const [picks, setPicks] = useState<PickMap>({});
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);

@@ -53,65 +53,133 @@ export default function NFLWeeklyPage() {
   async function load(selectedWeek?: number) {
     setLoading(true);
 
-    // 1. Load user
     const { data: userData } = await supabase.auth.getUser();
     setUser(userData.user);
 
-    // 2. Load weekly state (supports ?week=)
-    const queryWeek = selectedWeek ?? week;
-    const stateRes = await fetch(
-      `/api/nfl/weekly/state${queryWeek ? `?week=${queryWeek}` : ""}`
+    const queryWeek = selectedWeek ?? week ?? 1;
+    setWeek(queryWeek);
+
+    // Load games from unified sport_schedule
+    const { data: games, error: gamesError } = await supabase
+      .from("sport_schedule")
+      .select(
+        "id,sport,week_number,home_team_id,away_team_id,game_date,season_year"
+      )
+      .eq("sport", "NFL")
+      .eq("week_number", queryWeek)
+      .order("game_date", { ascending: true });
+
+    if (gamesError) {
+      console.error(gamesError);
+      setMatchups([]);
+      setTeams([]);
+      setLockTime(null);
+      setLocked(false);
+      setLoading(false);
+      return;
+    }
+
+    const teamIds = Array.from(
+      new Set(
+        (games ?? []).flatMap((g) => [g.home_team_id, g.away_team_id])
+      )
     );
-    const stateJson = await stateRes.json();
 
-    setWeek(stateJson.week);
-    setTeams(stateJson.teams || []);
-    setLocked(stateJson.locked ?? false);
-    setLockTime(stateJson.lock_time ?? null);
+    const { data: teamRows, error: teamsError } = await supabase
+      .from("teams_sports")
+      .select("id,name,abbreviation,logo_url")
+      .in("id", teamIds);
 
-    // Build matchups client-side
-    const built =
-      stateJson.games?.map((g: any) => ({
+    if (teamsError) {
+      console.error(teamsError);
+      setTeams([]);
+      setMatchups([]);
+      setLockTime(null);
+      setLocked(false);
+      setLoading(false);
+      return;
+    }
+
+    const teamsMap: Record<string, Team> = {};
+    (teamRows ?? []).forEach((t) => {
+      teamsMap[t.id] = {
+        id: t.id,
+        name: t.name,
+        abbreviation: t.abbreviation ?? "",
+        logo_url: t.logo_url ?? null,
+      };
+    });
+
+    setTeams(Object.values(teamsMap));
+
+    const builtMatchups: Matchup[] =
+      games?.map((g: any) => ({
         id: g.id,
-        home: stateJson.teams.find((t: Team) => t.id === g.home_team_id),
-        away: stateJson.teams.find((t: Team) => t.id === g.away_team_id),
+        home: teamsMap[g.home_team_id],
+        away: teamsMap[g.away_team_id],
       })) ?? [];
 
-    setMatchups(built);
+    setMatchups(builtMatchups);
+
+    const lock =
+      games && games.length
+        ? games.reduce<string | null>((min, g) => {
+            const d = g.game_date as string;
+            if (!min) return d;
+            return new Date(d) < new Date(min) ? d : min;
+          }, null)
+        : null;
+
+    setLockTime(lock);
+    setLocked(lock ? new Date(lock) <= new Date() : false);
 
     if (userData.user) {
-      // 3. Load current pick
-      const { data: pick } = await supabase
-        .from("nfl_challenge_selections")
-        .select("*")
+      // Survivor picks from unified user_picks
+      const { data: picksRows, error: picksError } = await supabase
+        .from("user_picks")
+        .select("week_number,winner_team_id")
         .eq("user_id", userData.user.id)
-        .eq("week_number", stateJson.week)
-        .maybeSingle();
+        .eq("sport", "NFL");
 
-      setCurrentPick(pick?.selected_team_id ?? null);
+      if (picksError) {
+        console.error(picksError);
+      } else {
+        const current = picksRows?.find(
+          (p) => p.week_number === queryWeek
+        );
+        setCurrentPick(current?.winner_team_id ?? null);
 
-      // 4. Load used teams
-      const { data: used } = await supabase
-        .from("nfl_challenge_selections")
-        .select("selected_team_id")
-        .eq("user_id", userData.user.id);
+        const usedIds =
+          picksRows
+            ?.filter((p) => p.week_number < queryWeek)
+            .map((p) => p.winner_team_id) ?? [];
+        setUsedTeamIds(usedIds);
 
-      const usedIds = used?.map((u) => u.selected_team_id) ?? [];
-      setUsedTeamIds(usedIds);
+        setUsedTeams(
+          Object.values(teamsMap)
+            .filter((t) => usedIds.includes(t.id))
+            .map((t) => t.name)
+        );
+      }
 
-      setUsedTeams(
-        stateJson.teams
-          .filter((t: Team) => usedIds.includes(t.id))
-          .map((t: Team) => t.name)
-      );
+      // Keep existing streaks + bye weeks endpoints for now
+      try {
+        const streakRes = await fetch("/api/nfl/weekly/streaks");
+        if (streakRes.ok) {
+          setStreaks(await streakRes.json());
+        }
+      } catch (e) {
+        console.error(e);
+      }
 
-      // 5. Load streaks
-      const streakRes = await fetch("/api/nfl/weekly/streaks");
-      setStreaks(await streakRes.json());
-
-      // 6. Load bye weeks
-      const byeRes = await fetch("/api/nfl/weekly/byes");
-      setByeWeeks(await byeRes.json());
+      try {
+        const byeRes = await fetch("/api/nfl/weekly/byes");
+        if (byeRes.ok) {
+          setByeWeeks(await byeRes.json());
+        }
+      } catch (e) {
+        console.error(e);
+      }
     }
 
     setLoading(false);
@@ -128,14 +196,15 @@ export default function NFLWeeklyPage() {
       return;
     }
 
-    const { error } = await supabase.from("nfl_challenge_selections").upsert(
+    const { error } = await supabase.from("user_picks").upsert(
       {
         user_id: user.id,
+        sport: "NFL",
         week_number: week,
-        selected_team_id: teamId,
-        game_id: gameId,
+        game_id: null,
+        winner_team_id: teamId,
       },
-      { onConflict: "user_id,week_number" }
+      { onConflict: "user_id,sport,week_number" }
     );
 
     if (error) {
@@ -153,7 +222,6 @@ export default function NFLWeeklyPage() {
 
   return (
     <div className="min-h-screen text-white flex flex-col gap-8">
-
       {/* 🔒 LOCK BANNER */}
       <section
         className={`rounded-xl border px-4 py-3 text-sm md:text-base flex flex-col md:flex-row md:items-center md:justify-between ${
@@ -234,13 +302,10 @@ export default function NFLWeeklyPage() {
         </div>
       </section>
 
-      {/* MAIN GRID STARTS HERE — MATCHUPS + SIDE PANEL */}
       {/* MAIN GRID */}
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
         {/* MATCHUPS */}
         <div className="lg:col-span-2 rounded-xl bg-slate-900/60 border border-white/10 p-4 shadow-lg flex flex-col gap-4">
-
           <div className="flex items-center justify-between mb-1">
             <h2 className="text-xl font-semibold">
               {week ? `Week ${week} Matchups` : "Loading week…"}
@@ -262,7 +327,6 @@ export default function NFLWeeklyPage() {
 
           {!loading && matchups.length > 0 && (
             <div className="max-w-3xl mx-auto flex flex-col gap-3">
-
               {matchups.map((m) => {
                 const homeUsed = usedTeamIds.includes(m.home.id);
                 const awayUsed = usedTeamIds.includes(m.away.id);
@@ -274,7 +338,6 @@ export default function NFLWeeklyPage() {
                   >
                     {/* TEAM ROW */}
                     <div className="flex items-center justify-between gap-4">
-
                       {/* HOME */}
                       <div className="flex items-center gap-3 w-1/2 justify-end">
                         {m.home.logo_url && (
@@ -367,14 +430,12 @@ export default function NFLWeeklyPage() {
                   </div>
                 );
               })}
-
             </div>
           )}
         </div>
 
         {/* SIDE PANEL */}
         <div className="rounded-xl bg-slate-900/60 border border-white/10 p-4 shadow-lg flex flex-col gap-6">
-
           <h2 className="text-xl font-semibold">Challenge Overview</h2>
 
           <p className="text-slate-400 text-sm">
@@ -438,10 +499,10 @@ export default function NFLWeeklyPage() {
 
             {byeOpen && (
               <ul className="text-slate-400 text-xs space-y-1.5 max-h-64 overflow-y-auto pr-1">
-                {Object.entries(byeWeeks).map(([week, teams]) => (
-                  <li key={week}>
+                {Object.entries(byeWeeks).map(([weekLabel, teams]) => (
+                  <li key={weekLabel}>
                     <span className="text-slate-300 font-medium">
-                      Week {week}:
+                      Week {weekLabel}:
                     </span>{" "}
                     {teams.join(", ")}
                   </li>
@@ -449,7 +510,6 @@ export default function NFLWeeklyPage() {
               </ul>
             )}
           </div>
-
         </div>
       </section>
     </div>

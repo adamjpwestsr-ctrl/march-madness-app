@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import type { WeeklyGame, Team } from '@/lib/sports/weekly';
-import { createClient } from '@/lib/supabaseBrowserClient';
+import { createSupabaseBrowserClient } from '@/lib/supabaseBrowserClient';
 
 type Props = {
   sport: 'NBA' | 'NHL';

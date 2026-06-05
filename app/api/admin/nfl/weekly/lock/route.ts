@@ -2,9 +2,10 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
 export async function POST(req: Request) {
+  // Use service role key instead of anon key
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    process.env.SUPABASE_SERVICE_ROLE_KEY! // ✅ change here
   );
 
   try {
@@ -17,7 +18,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Normalize timestamp to full ISO format
     const parsedLockTime = new Date(lock_time);
     if (isNaN(parsedLockTime.getTime())) {
       return NextResponse.json(
@@ -27,6 +27,7 @@ export async function POST(req: Request) {
     }
 
     const season_year = new Date().getFullYear();
+    const isoLock = parsedLockTime.toISOString();
 
     const { error } = await supabase
       .from("sport_lock_times")
@@ -35,7 +36,7 @@ export async function POST(req: Request) {
           sport: "NFL",
           week_number: week,
           season_year,
-          lock_time: parsedLockTime.toISOString(), // ensures valid timestamptz
+          lock_time: isoLock,
         },
         { onConflict: "sport,season_year,week_number" }
       );

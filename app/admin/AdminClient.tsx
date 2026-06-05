@@ -12,6 +12,8 @@ import {
   FaUsers,
   FaQuestionCircle,
   FaExclamationTriangle,
+  FaBasketballBall,     // NBA replacement icon
+  FaHockeyPuck,    // NHL replacement icon
 } from "react-icons/fa";
 
 import { createClient } from "@supabase/supabase-js";

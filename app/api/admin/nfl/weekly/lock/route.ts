@@ -17,6 +17,15 @@ export async function POST(req: Request) {
       );
     }
 
+    // Normalize timestamp to full ISO format
+    const parsedLockTime = new Date(lock_time);
+    if (isNaN(parsedLockTime.getTime())) {
+      return NextResponse.json(
+        { error: "Invalid lock_time format" },
+        { status: 400 }
+      );
+    }
+
     const season_year = new Date().getFullYear();
 
     const { error } = await supabase
@@ -26,7 +35,7 @@ export async function POST(req: Request) {
           sport: "NFL",
           week_number: week,
           season_year,
-          lock_time,
+          lock_time: parsedLockTime.toISOString(), // ensures valid timestamptz
         },
         { onConflict: "sport,season_year,week_number" }
       );

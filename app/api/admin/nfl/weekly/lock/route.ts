@@ -11,14 +11,24 @@ export async function POST(req: Request) {
     const { week, lock_time } = await req.json();
 
     if (!week || !lock_time) {
-      return NextResponse.json({ error: "Missing week or lock_time" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Missing week or lock_time" },
+        { status: 400 }
+      );
     }
 
+    const season_year = new Date().getFullYear();
+
     const { error } = await supabase
-      .from("nfl_weekly_settings")
+      .from("sport_lock_times")
       .upsert(
-        { week_number: week, lock_time },
-        { onConflict: "week_number" }
+        {
+          sport: "NFL",
+          week_number: week,
+          season_year,
+          lock_time,
+        },
+        { onConflict: "sport,season_year,week_number" }
       );
 
     if (error) {

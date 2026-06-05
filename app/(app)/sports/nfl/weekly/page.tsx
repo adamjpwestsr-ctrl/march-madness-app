@@ -304,16 +304,88 @@ export default function NFLWeeklyPage() {
 
       {/* MAIN GRID */}
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* MATCHUPS */}
-        <div className="lg:col-span-2 rounded-xl bg-slate-900/60 border border-white/10 p-4 shadow-lg flex flex-col gap-4">
-          <div className="flex items-center justify-between mb-1">
-            <h2 className="text-xl font-semibold">
-              {week ? `Week ${week} Matchups` : "Loading week…"}
-            </h2>
-            <span className="text-xs px-2 py-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
-              {locked ? "Locked" : "Open for picks"}
+       
+	{/* MATCHUPS */}
+        {/* TEAM SELECTION GRID (REPLACES MATCHUPS SECTION) */}
+<div className="lg:col-span-2 rounded-xl bg-slate-900/60 border border-white/10 p-4 shadow-lg flex flex-col gap-6">
+
+  <div className="flex items-center justify-between mb-1">
+    <h2 className="text-xl font-semibold">
+      {week ? `Week ${week} — Pick Your Team` : "Loading week…"}
+    </h2>
+    <span className="text-xs px-2 py-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
+      {locked ? "Locked" : "Open for picks"}
+    </span>
+  </div>
+
+  {/* Current Pick Summary */}
+  {currentPick && (
+    <div className="rounded-lg bg-blue-950/40 border border-blue-700/40 px-4 py-3 text-sm text-blue-200">
+      You picked:{" "}
+      <span className="font-semibold">
+        {teams.find((t) => t.id === currentPick)?.name}
+      </span>
+    </div>
+  )}
+
+  {/* Team Grid */}
+  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+    {teams.map((team) => {
+      const isUsed = usedTeamIds.includes(team.id);
+      const isSelected = currentPick === team.id;
+
+      // Find opponent from matchups
+      const opponent = matchups
+        .flatMap((m) => [m.home, m.away])
+        .find(
+          (t) =>
+            t.id !== team.id &&
+            matchups.some(
+              (m) =>
+                (m.home.id === team.id && m.away.id === t.id) ||
+                (m.away.id === team.id && m.home.id === t.id)
+            )
+        );
+
+      return (
+        <button
+          key={team.id}
+          onClick={() => !locked && !isUsed && submitPick(team.id, 0)}
+          disabled={isUsed || locked}
+          className={[
+            "rounded-xl border p-4 flex flex-col items-center gap-2 transition",
+            isUsed
+              ? "opacity-40 cursor-not-allowed"
+              : "hover:bg-slate-800 hover:border-blue-600",
+            isSelected ? "border-blue-600 bg-blue-50 text-black" : "",
+          ].join(" ")}
+        >
+          {team.logo_url && (
+            <img
+              src={team.logo_url}
+              alt={team.name}
+              className="w-16 h-16 rounded-full object-contain"
+            />
+          )}
+
+          <span className="font-semibold text-center">{team.name}</span>
+
+          {opponent && (
+            <span className="text-xs text-slate-400">
+              vs {opponent.name}
             </span>
-          </div>
+          )}
+        </button>
+      );
+    })}
+  </div>
+
+  {teams.length === 0 && (
+    <p className="text-sm text-slate-400">
+      No teams found for Week {week}.
+    </p>
+  )}
+</div>
 
           {loading && (
             <p className="text-slate-400 text-sm">Loading matchups…</p>

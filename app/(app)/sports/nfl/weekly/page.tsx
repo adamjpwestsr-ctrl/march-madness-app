@@ -504,7 +504,6 @@ export default function NFLWeeklyPage() {
               })}
             </div>
           )}
-        </div>
 
         {/* SIDE PANEL */}
         <div className="rounded-xl bg-slate-900/60 border border-white/10 p-4 shadow-lg flex flex-col gap-6">

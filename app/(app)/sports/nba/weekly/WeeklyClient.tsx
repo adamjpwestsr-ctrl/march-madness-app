@@ -42,7 +42,7 @@ export default function WeeklyClient({
         .from("user_picks")
         .select("game_id, winner_team_id")
         .eq("user_id", user.id)
-        .eq("sport", sport)
+        .eq("sport", sport.toUpperCase())
         .eq("week_number", week);
 
       if (data) {

@@ -1,3 +1,4 @@
+// /app/admin/nfl-weelly/page.tsx
 import { createSupabaseServerClient as createClient } from "@/lib/supabaseServerClient";
 import AdminWeeklyClient from "./AdminWeeklyClient";
 

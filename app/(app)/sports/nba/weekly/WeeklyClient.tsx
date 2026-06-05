@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useState, useMemo } from 'react';
-import type { WeeklyGame, Team } from '@/lib/sports/weekly';
-import { createSupabaseBrowserClient } from '@/lib/supabaseBrowserClient';
+import { useState, useMemo, useEffect } from "react";
+import type { WeeklyGame, Team } from "@/lib/sports/weekly";
+import { createSupabaseBrowserClient } from "@/lib/supabaseBrowserClient";
 
 type Props = {
-  sport: 'NBA' | 'NHL';
+  sport: "NBA" | "NHL";
   week: number;
   games: WeeklyGame[];
   teamsById: Record<string, Team>;
@@ -21,7 +21,7 @@ export default function WeeklyClient({
   teamsById,
   lockTime,
 }: Props) {
-const supabase = createSupabaseBrowserClient();
+  const supabase = createSupabaseBrowserClient();
   const [picks, setPicks] = useState<PickMap>({});
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -32,23 +32,51 @@ const supabase = createSupabaseBrowserClient();
     return new Date(lockTime) <= new Date();
   }, [lockTime]);
 
+  // ⭐ Load existing picks for this sport + week
+  useEffect(() => {
+    async function loadExistingPicks() {
+      const user = (await supabase.auth.getUser()).data.user;
+      if (!user) return;
+
+      const { data } = await supabase
+        .from("user_picks")
+        .select("game_id, winner_team_id")
+        .eq("user_id", user.id)
+        .eq("sport", sport)
+        .eq("week_number", week);
+
+      if (data) {
+        const map: PickMap = {};
+        data.forEach((p) => {
+          map[p.game_id] = p.winner_team_id;
+        });
+        setPicks(map);
+      }
+    }
+
+    loadExistingPicks();
+  }, [sport, week]);
+
   const handlePick = (gameId: number, winnerId: string) => {
     if (isLocked) return;
-    setPicks(prev => ({ ...prev, [gameId]: winnerId }));
+    setPicks((prev) => ({ ...prev, [gameId]: winnerId }));
   };
 
   const handleSubmit = async () => {
     setError(null);
     setSuccess(null);
     setSubmitting(true);
+
     try {
       const user = (await supabase.auth.getUser()).data.user;
       if (!user) {
-        setError('You must be logged in to submit picks.');
+        setError("You must be logged in to submit picks.");
         return;
       }
 
+      // ⭐ Include user_id in payload
       const payload = Object.entries(picks).map(([gameId, winnerId]) => ({
+        user_id: user.id,
         game_id: Number(gameId),
         sport,
         week_number: week,
@@ -56,15 +84,15 @@ const supabase = createSupabaseBrowserClient();
       }));
 
       const { error: insertError } = await supabase
-        .from('user_picks')
+        .from("user_picks")
         .upsert(payload, {
-          onConflict: 'game_id,user_id,sport,week_number',
+          onConflict: "user_id,game_id,sport,week_number",
         });
 
       if (insertError) {
         setError(insertError.message);
       } else {
-        setSuccess('Picks saved successfully.');
+        setSuccess("Picks saved successfully.");
       }
     } finally {
       setSubmitting(false);
@@ -89,7 +117,7 @@ const supabase = createSupabaseBrowserClient();
           onClick={handleSubmit}
           disabled={isLocked || submitting || games.length === 0}
         >
-          {isLocked ? 'Locked' : submitting ? 'Saving…' : 'Submit Picks'}
+          {isLocked ? "Locked" : submitting ? "Saving…" : "Submit Picks"}
         </button>
       </header>
 
@@ -105,7 +133,7 @@ const supabase = createSupabaseBrowserClient();
       )}
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {games.map(game => {
+        {games.map((game) => {
           const home = teamsById[game.home_team_id];
           const away = teamsById[game.away_team_id];
           const selected = picks[game.id];
@@ -129,12 +157,12 @@ const supabase = createSupabaseBrowserClient();
                   type="button"
                   onClick={() => handlePick(game.id, home.id)}
                   className={[
-                    'flex items-center justify-between rounded-lg border px-3 py-2 text-left',
+                    "flex items-center justify-between rounded-lg border px-3 py-2 text-left",
                     selected === home.id
-                      ? 'border-blue-600 bg-blue-50'
-                      : 'border-muted',
-                    isLocked ? 'opacity-60 cursor-not-allowed' : '',
-                  ].join(' ')}
+                      ? "border-blue-600 bg-blue-50"
+                      : "border-muted",
+                    isLocked ? "opacity-60 cursor-not-allowed" : "",
+                  ].join(" ")}
                 >
                   <span className="font-medium">
                     {home?.name ?? game.home_team_id}
@@ -148,12 +176,12 @@ const supabase = createSupabaseBrowserClient();
                   type="button"
                   onClick={() => handlePick(game.id, away.id)}
                   className={[
-                    'flex items-center justify-between rounded-lg border px-3 py-2 text-left',
+                    "flex items-center justify-between rounded-lg border px-3 py-2 text-left",
                     selected === away.id
-                      ? 'border-blue-600 bg-blue-50'
-                      : 'border-muted',
-                    isLocked ? 'opacity-60 cursor-not-allowed' : '',
-                  ].join(' ')}
+                      ? "border-blue-600 bg-blue-50"
+                      : "border-muted",
+                    isLocked ? "opacity-60 cursor-not-allowed" : "",
+                  ].join(" ")}
                 >
                   <span className="font-medium">
                     {away?.name ?? game.away_team_id}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createSupabaseBrowserClient } from "@/lib/supabaseBrowserClient";
 
 type Team = {
   id: string;
@@ -15,60 +16,154 @@ type Matchup = {
   away: Team;
 };
 
-type WeeklyState = {
-  week: number;
-  matchups: Matchup[];
-  currentPick: { selected_team_id: string } | null;
-  usedTeamIds: string[];
-  usedTeams: string[];
-  locked: boolean;
-};
-
 export default function NFLWeeklyPicksPage() {
-  const [state, setState] = useState<WeeklyState | null>(null);
+  const supabase = createSupabaseBrowserClient();
+
+  const [week, setWeek] = useState<number | null>(null);
+  const [matchups, setMatchups] = useState<Matchup[]>([]);
+  const [currentPick, setCurrentPick] = useState<string | null>(null);
+  const [usedTeamIds, setUsedTeamIds] = useState<string[]>([]);
+  const [usedTeams, setUsedTeams] = useState<string[]>([]);
+  const [locked, setLocked] = useState(false);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
-    async function load() {
-      setLoading(true);
-      const res = await fetch("/api/nfl/weekly/state");
-      const data = await res.json();
-      setState(data);
-      setLoading(false);
-    }
     load();
   }, []);
 
-  async function submitPick(teamId: string) {
-    if (!state || state.locked) return;
-    setSubmitting(true);
+  async function load() {
+    setLoading(true);
 
-    await fetch("/api/nfl/weekly/pick", {
-      method: "POST",
-      body: JSON.stringify({ teamId }),
+    // Get user
+    const { data: userData } = await supabase.auth.getUser();
+    setUser(userData.user);
+
+    // Determine active week (same logic as NFLWeeklyPage)
+    const { data: activeWeek } = await supabase
+      .from("game_date")
+      .select("active_week")
+      .eq("sport", "NFL")
+      .single();
+
+    const w = activeWeek?.active_week ?? 1;
+    setWeek(w);
+
+    // Load matchups
+    const { data: games } = await supabase
+      .from("sport_schedule")
+      .select(
+        "id,home_team_id,away_team_id,game_date"
+      )
+      .eq("sport", "NFL")
+      .eq("week_number", w)
+      .order("game_date", { ascending: true });
+
+    if (!games || games.length === 0) {
+      setMatchups([]);
+      setLoading(false);
+      return;
+    }
+
+    // Load teams
+    const teamIds = Array.from(
+      new Set(games.flatMap((g) => [g.home_team_id, g.away_team_id]))
+    );
+
+    const { data: teamRows } = await supabase
+      .from("teams_sports")
+      .select("id,name,abbreviation,logo_url")
+      .in("id", teamIds);
+
+    const teamsMap: Record<string, Team> = {};
+    (teamRows ?? []).forEach((t) => {
+      teamsMap[t.id] = {
+        id: t.id,
+        name: t.name,
+        abbreviation: t.abbreviation ?? "",
+        logo_url: t.logo_url ?? null,
+      };
     });
 
-    const res = await fetch("/api/nfl/weekly/state");
-    const data = await res.json();
-    setState(data);
+    const builtMatchups: Matchup[] = games.map((g) => ({
+      id: g.id,
+      home: teamsMap[g.home_team_id],
+      away: teamsMap[g.away_team_id],
+    }));
+
+    setMatchups(builtMatchups);
+
+    // Lock logic
+    const lockTime = games.reduce<string | null>((min, g) => {
+      const d = g.game_date;
+      if (!min) return d;
+      return new Date(d) < new Date(min) ? d : min;
+    }, null);
+
+    setLocked(lockTime ? new Date(lockTime) <= new Date() : false);
+
+    // Load user picks
+    if (userData.user) {
+      const { data: picks } = await supabase
+        .from("user_picks")
+        .select("week_number,winner_team_id")
+        .eq("user_id", userData.user.id)
+        .eq("sport", "NFL");
+
+      const current = picks?.find((p) => p.week_number === w);
+      setCurrentPick(current?.winner_team_id ?? null);
+
+      const usedIds =
+        picks?.filter((p) => p.week_number < w).map((p) => p.winner_team_id) ??
+        [];
+      setUsedTeamIds(usedIds);
+
+      setUsedTeams(
+        Object.values(teamsMap)
+          .filter((t) => usedIds.includes(t.id))
+          .map((t) => t.name)
+      );
+    }
+
+    setLoading(false);
+  }
+
+  async function submitPick(teamId: string) {
+    if (!user || locked) return;
+
+    setSubmitting(true);
+
+    await supabase.from("user_picks").upsert(
+      {
+        user_id: user.id,
+        sport: "NFL",
+        week_number: week,
+        game_id: null,
+        winner_team_id: teamId,
+      },
+      { onConflict: "user_id,sport,week_number" }
+    );
+
+    await load();
     setSubmitting(false);
 
     const pickedTeam =
-      data.matchups
-        .flatMap((m: Matchup) => [m.home, m.away])
-        .find((t: Team) => t.id === teamId) || null;
+      matchups
+        .flatMap((m) => [m.home, m.away])
+        .find((t) => t.id === teamId) || null;
 
     setToast(
       pickedTeam
-        ? `You picked ${pickedTeam.name} for Week ${data.week}`
+        ? `You picked ${pickedTeam.name} for Week ${week}`
         : "Pick updated"
     );
+
     setTimeout(() => setToast(null), 2500);
   }
 
-  if (loading || !state) {
+  if (loading) {
     return <p className="text-slate-400 text-sm">Loading matchups…</p>;
   }
 
@@ -78,29 +173,26 @@ export default function NFLWeeklyPicksPage() {
       <section className="flex flex-col gap-2">
         <h1 className="text-3xl font-semibold mb-1">NFL Weekly Picks</h1>
         <p className="text-slate-400 text-sm max-w-2xl">
-          Choose one team for Week {state.week}. You cannot reuse teams from
-          previous weeks, and picks may lock before kickoff.
+          Choose one team for Week {week}. You cannot reuse teams from previous
+          weeks, and picks may lock before kickoff.
         </p>
         <div className="text-xs text-slate-500">
           Status:{" "}
           <span
             className={
-              state.locked ? "text-red-400 font-medium" : "text-emerald-400"
+              locked ? "text-red-400 font-medium" : "text-emerald-400"
             }
           >
-            {state.locked ? "Locked" : "Open for picks"}
+            {locked ? "Locked" : "Open for picks"}
           </span>
         </div>
       </section>
 
-      {/* Matchup Grid */}
+      {/* Matchups */}
       <section className="grid gap-6 md:grid-cols-2">
-        {state.matchups.map((m) => {
-          const homeUsed = state.usedTeamIds.includes(m.home.id);
-          const awayUsed = state.usedTeamIds.includes(m.away.id);
-          const currentId = state.currentPick?.selected_team_id ?? null;
-
-          const isCurrentPick = (teamId: string) => currentId === teamId;
+        {matchups.map((m) => {
+          const homeUsed = usedTeamIds.includes(m.home.id);
+          const awayUsed = usedTeamIds.includes(m.away.id);
 
           return (
             <div
@@ -149,12 +241,13 @@ export default function NFLWeeklyPicksPage() {
                 </div>
               </div>
 
+              {/* Buttons */}
               <div className="flex gap-3">
                 <button
-                  disabled={homeUsed || submitting || state.locked}
+                  disabled={homeUsed || submitting || locked}
                   onClick={() => submitPick(m.home.id)}
                   className={`flex-1 px-4 py-2 rounded-lg border text-xs font-semibold transition-all ${
-                    isCurrentPick(m.home.id)
+                    currentPick === m.home.id
                       ? "bg-emerald-600 border-emerald-500 text-white shadow-md shadow-emerald-500/40"
                       : "bg-slate-800 border-slate-700 hover:bg-slate-700 text-slate-200"
                   } ${homeUsed ? "opacity-40 cursor-not-allowed" : ""}`}
@@ -163,10 +256,10 @@ export default function NFLWeeklyPicksPage() {
                 </button>
 
                 <button
-                  disabled={awayUsed || submitting || state.locked}
+                  disabled={awayUsed || submitting || locked}
                   onClick={() => submitPick(m.away.id)}
                   className={`flex-1 px-4 py-2 rounded-lg border text-xs font-semibold transition-all ${
-                    isCurrentPick(m.away.id)
+                    currentPick === m.away.id
                       ? "bg-emerald-600 border-emerald-500 text-white shadow-md shadow-emerald-500/40"
                       : "bg-slate-800 border-slate-700 hover:bg-slate-700 text-slate-200"
                   } ${awayUsed ? "opacity-40 cursor-not-allowed" : ""}`}
@@ -194,8 +287,8 @@ export default function NFLWeeklyPicksPage() {
       <section className="rounded-xl border border-slate-800 p-6 bg-slate-900/50">
         <h2 className="text-xl font-semibold mb-3">Used Teams</h2>
         <p className="text-slate-400 text-sm">
-          {state.usedTeams.length
-            ? state.usedTeams.join(", ")
+          {usedTeams.length
+            ? usedTeams.join(", ")
             : "You haven't used any teams yet."}
         </p>
       </section>

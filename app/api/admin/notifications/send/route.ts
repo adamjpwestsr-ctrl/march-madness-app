@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
-import { supabaseServerClient } from "@/utils/supabase/server";
+import { createClient } from "@/utils/supabase/server";
 
 export async function POST(req: Request) {
   try {
-    const supabase = supabaseServerClient();
+    // Create SSR Supabase client (your actual export)
+    const supabase = await createClient();
 
     const body = await req.json();
     const { message, target } = body;
@@ -24,7 +25,6 @@ export async function POST(req: Request) {
         );
       }
 
-      // Normalize null → []
       recipients = data ?? [];
     } else {
       const { data, error } = await supabase
@@ -52,7 +52,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // Example: send SMS (replace with your actual integration)
+    // Replace with your SMS integration
     for (const r of recipients) {
       console.log("Sending SMS to:", r.phone_number, "Message:", message);
       // await sendSMS(r.phone_number, message);

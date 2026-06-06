@@ -3,11 +3,10 @@ import { createClient } from "@/utils/supabase/server";
 
 export async function POST(req: Request) {
   try {
-    // Create SSR Supabase client (your actual export)
     const supabase = await createClient();
 
     const body = await req.json();
-    const { message, target } = body;
+    const { message, target, userId } = body;
 
     let recipients: { phone_number: string }[] = [];
 
@@ -15,31 +14,35 @@ export async function POST(req: Request) {
       const { data, error } = await supabase
         .from("users")
         .select("phone_number")
+        .eq("push_notifications", true)
+        .eq("push_opt_in", true)
         .not("phone_number", "is", null);
 
       if (error) {
         console.error("Supabase error:", error);
-        return NextResponse.json(
-          { error: "Failed to fetch recipients" },
-          { status: 500 }
-        );
+        return NextResponse.json({ error: "Failed to fetch recipients" }, { status: 500 });
       }
 
       recipients = data ?? [];
-    } else {
+    }
+
+    if (target === "single") {
+      if (!userId) {
+        return NextResponse.json({ error: "Missing userId" }, { status: 400 });
+      }
+
       const { data, error } = await supabase
         .from("users")
         .select("phone_number")
-        .eq("id", target)
+        .eq("id", userId)
+        .eq("push_notifications", true)
+        .eq("push_opt_in", true)
         .not("phone_number", "is", null)
         .limit(1);
 
       if (error) {
         console.error("Supabase error:", error);
-        return NextResponse.json(
-          { error: "Failed to fetch recipient" },
-          { status: 500 }
-        );
+        return NextResponse.json({ error: "Failed to fetch recipient" }, { status: 500 });
       }
 
       recipients = data ?? [];
@@ -52,7 +55,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Replace with your SMS integration
     for (const r of recipients) {
       console.log("Sending SMS to:", r.phone_number, "Message:", message);
       // await sendSMS(r.phone_number, message);
@@ -68,9 +70,6 @@ export async function POST(req: Request) {
     );
   } catch (err) {
     console.error("Route error:", err);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

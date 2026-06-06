@@ -1,17 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@supabase/supabase-js";
 import { FaPhone } from "react-icons/fa";
 
 export default function NotificationsAdminPage() {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
-
   const [message, setMessage] = useState("");
   const [target, setTarget] = useState("all");
+  const [userId, setUserId] = useState("");
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState<string | null>(null);
 
@@ -22,7 +17,8 @@ export default function NotificationsAdminPage() {
     try {
       const res = await fetch("/api/admin/notifications/send", {
         method: "POST",
-        body: JSON.stringify({ message, target }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message, target, userId }),
       });
 
       const data = await res.json();
@@ -30,7 +26,7 @@ export default function NotificationsAdminPage() {
       if (data.success) {
         setResult(`Sent to ${data.count} recipients`);
       } else {
-        setResult(data.message || "Failed to send notifications");
+        setResult(data.message || data.error || "Failed to send notifications");
       }
     } catch (err) {
       console.error(err);
@@ -49,11 +45,9 @@ export default function NotificationsAdminPage() {
         </h1>
 
         <p className="opacity-80 mb-6">
-          Send SMS notifications to all users or a specific user.  
-          This tool uses your server‑side Supabase route for secure delivery.
+          Send SMS notifications to all users or a specific user.
         </p>
 
-        {/* Message Input */}
         <label className="block mb-2 font-semibold">Message</label>
         <textarea
           value={message}
@@ -63,7 +57,6 @@ export default function NotificationsAdminPage() {
           placeholder="Enter your notification message..."
         />
 
-        {/* Target Selector */}
         <label className="block mb-2 font-semibold">Target</label>
         <select
           value={target}
@@ -71,19 +64,19 @@ export default function NotificationsAdminPage() {
           className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-slate-200 mb-6"
         >
           <option value="all">All Users</option>
-          <option value="single">Single User (ID prompt below)</option>
+          <option value="single">Single User (ID below)</option>
         </select>
 
         {target === "single" && (
           <input
             type="text"
             placeholder="Enter User ID"
-            onChange={(e) => setTarget(e.target.value)}
+            value={userId}
+            onChange={(e) => setUserId(e.target.value)}
             className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-slate-200 mb-6"
           />
         )}
 
-        {/* Send Button */}
         <button
           onClick={sendNotification}
           disabled={sending || !message.trim()}
@@ -92,7 +85,6 @@ export default function NotificationsAdminPage() {
           {sending ? "Sending..." : "Send Notification"}
         </button>
 
-        {/* Result */}
         {result && (
           <p className="mt-6 text-center text-sky-400 font-semibold">
             {result}

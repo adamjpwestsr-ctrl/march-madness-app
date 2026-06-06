@@ -52,6 +52,32 @@ export default function SettingsPage() {
     await updateUserProfile(currentUserId, { [field]: value });
   }
 
+  // -----------------------------
+  // E.164 VALIDATION
+  // -----------------------------
+  function normalizePhone(num: string): string {
+    return num.trim();
+  }
+
+  function isValidE164(num: string): boolean {
+    return /^\+[1-9]\d{1,14}$/.test(num);
+  }
+
+  async function handlePhoneBlur() {
+    const normalized = normalizePhone(phoneNumber);
+
+    if (!normalized) return;
+
+    if (!isValidE164(normalized)) {
+      alert(
+        "Phone numbers must be in international format.\nExample: +12035551234"
+      );
+      return;
+    }
+
+    await saveField("phone_number", normalized);
+  }
+
   if (loading) {
     return <p className="text-slate-400">Loading settings...</p>;
   }
@@ -177,12 +203,16 @@ export default function SettingsPage() {
                 <p className="text-sm text-slate-400">Phone Number</p>
                 <input
                   type="tel"
-                  placeholder="Enter phone number"
+                  placeholder="+12035551234"
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
-                  onBlur={() => saveField("phone_number", phoneNumber)}
+                  onBlur={handlePhoneBlur}
                   className="bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm w-full"
                 />
+                <p className="text-xs text-slate-500 mt-1">
+                  Enter your number in international format (E.164).  
+                  Example: +1 for U.S., +44 for U.K.
+                </p>
               </div>
             )}
           </div>

@@ -8,7 +8,7 @@ export async function getUserProfile(userId: number) {
   const { data, error } = await supabase
     .from("users")
     .select(
-      "user_id, username, email, favorite_sport, theme, email_notifications, push_notifications"
+      "user_id, username, email, favorite_sport, theme, email_notifications, push_notifications, phone_number"
     )
     .eq("user_id", userId)
     .single();
@@ -26,6 +26,7 @@ export async function updateUserProfile(
     theme: string;
     email_notifications: boolean;
     push_notifications: boolean;
+    phone_number: string;
   }>
 ) {
   const supabase = await createSupabaseServerClient();
@@ -54,4 +55,16 @@ export async function initializeUsername(userId: number) {
 
   if (updateErr) throw new Error(updateErr.message);
   return prefix;
+}
+
+// Fetch badges from existing table
+export async function getUserBadges() {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("badges")
+    .select("badge_name, badge_icon, rule_type, threshold, tier, color_class")
+    .order("threshold", { ascending: true });
+
+  if (error) throw new Error(error.message);
+  return data;
 }

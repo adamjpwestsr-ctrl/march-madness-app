@@ -6,6 +6,7 @@ import {
   getUserProfile,
   updateUserProfile,
   initializeUsername,
+  getUserBadges,
 } from "./actions";
 
 export default function SettingsPage() {
@@ -13,31 +14,33 @@ export default function SettingsPage() {
 
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
 
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [pushNotifications, setPushNotifications] = useState(false);
   const [favoriteSport, setFavoriteSport] = useState("NBA");
   const [theme, setTheme] = useState("dark");
+  const [badges, setBadges] = useState<any[]>([]);
 
   // TODO: Replace with your actual auth user ID
   const currentUserId = 1;
 
-  // Load profile on mount
   useEffect(() => {
     async function loadProfile() {
       const profile = await getUserProfile(currentUserId);
-
-      // Auto-generate username if missing
       const finalUsername =
         profile.username || (await initializeUsername(currentUserId));
 
       setUsername(finalUsername);
       setEmail(profile.email);
-
+      setPhoneNumber(profile.phone_number ?? "");
       setEmailNotifications(profile.email_notifications);
       setPushNotifications(profile.push_notifications);
       setFavoriteSport(profile.favorite_sport);
       setTheme(profile.theme);
+
+      const badgeList = await getUserBadges();
+      setBadges(badgeList);
 
       setLoading(false);
     }
@@ -45,7 +48,6 @@ export default function SettingsPage() {
     loadProfile();
   }, []);
 
-  // Save helper
   async function saveField(field: string, value: any) {
     await updateUserProfile(currentUserId, { [field]: value });
   }
@@ -83,6 +85,31 @@ export default function SettingsPage() {
             <p className="text-sm text-slate-400">Email</p>
             <p className="text-lg font-medium">{email}</p>
           </div>
+
+          {/* Badges */}
+          <div>
+            <p className="text-sm text-slate-400 mb-2">Badges Earned</p>
+            {badges.length === 0 ? (
+              <p className="text-slate-500 text-sm">No badges earned yet.</p>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                {badges.map((badge) => (
+                  <div
+                    key={badge.badge_name}
+                    className={`flex flex-col items-center bg-slate-900 border border-slate-800 rounded-lg p-3 ${badge.color_class}`}
+                  >
+                    <span className="text-2xl mb-1">{badge.badge_icon}</span>
+                    <p className="text-sm font-medium">{badge.badge_name}</p>
+                    <p className="text-xs text-slate-500">
+                      {badge.rule_type === "total_points"
+                        ? `${badge.threshold} pts`
+                        : `${badge.threshold} contests`}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </SettingsSection>
 
@@ -117,90 +144,48 @@ export default function SettingsPage() {
           </div>
 
           {/* Push Notifications */}
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium">Push Notifications</p>
-              <p className="text-sm text-slate-400">
-                Alerts for live events and leaderboard changes.
-              </p>
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium">Push Notifications</p>
+                <p className="text-sm text-slate-400">
+                  Alerts for live events and leaderboard changes.
+                </p>
+              </div>
+
+              <button
+                onClick={() => {
+                  const newVal = !pushNotifications;
+                  setPushNotifications(newVal);
+                  saveField("push_notifications", newVal);
+                }}
+                className={`w-12 h-6 rounded-full transition ${
+                  pushNotifications ? "bg-emerald-600" : "bg-slate-700"
+                } relative`}
+              >
+                <span
+                  className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition ${
+                    pushNotifications ? "translate-x-6" : ""
+                  }`}
+                />
+              </button>
             </div>
 
-            <button
-              onClick={() => {
-                const newVal = !pushNotifications;
-                setPushNotifications(newVal);
-                saveField("push_notifications", newVal);
-              }}
-              className={`w-12 h-6 rounded-full transition ${
-                pushNotifications ? "bg-emerald-600" : "bg-slate-700"
-              } relative`}
-            >
-              <span
-                className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition ${
-                  pushNotifications ? "translate-x-6" : ""
-                }`}
-              />
-            </button>
+            {/* Phone Number */}
+            {pushNotifications && (
+              <div>
+                <p className="text-sm text-slate-400">Phone Number</p>
+                <input
+                  type="tel"
+                  placeholder="Enter phone number"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  onBlur={() => saveField("phone_number", phoneNumber)}
+                  className="bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm w-full"
+                />
+              </div>
+            )}
           </div>
         </div>
       </SettingsSection>
 
-      {/* Preferences */}
-      <SettingsSection title="Preferences">
-        <div className="space-y-6">
-          {/* Favorite Sport */}
-          <div>
-            <p className="font-medium mb-2">Favorite Sport</p>
-            <select
-              value={favoriteSport}
-              onChange={(e) => {
-                setFavoriteSport(e.target.value);
-                saveField("favorite_sport", e.target.value);
-              }}
-              className="bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm"
-            >
-              <option>NBA</option>
-              <option>NFL</option>
-              <option>MLB</option>
-              <option>NHL</option>
-            </select>
-          </div>
-
-          {/* Theme */}
-          <div>
-            <p className="font-medium mb-2">Theme</p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => {
-                  setTheme("dark");
-                  saveField("theme", "dark");
-                }}
-                className={`px-4 py-2 rounded-lg text-sm ${
-                  theme === "dark"
-                    ? "bg-slate-800"
-                    : "bg-slate-900 border border-slate-700"
-                }`}
-              >
-                Dark
-              </button>
-
-              <button
-                onClick={() => {
-                  setTheme("light");
-                  saveField("theme", "light");
-                }}
-                className={`px-4 py-2 rounded-lg text-sm ${
-                  theme === "light"
-                    ? "bg-slate-800"
-                    : "bg-slate-900 border border-slate-700"
-                }`}
-              >
-                Light
-              </button>
-            </div>
-          </div>
-        </div>
-      </SettingsSection>
-    </div>
-  );
-}

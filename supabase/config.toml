@@ -1,0 +1,11 @@
+[functions.send-sms]
+verify_jwt = false
+
+[functions.send-sms.cron]
+schedule = "*/5 * * * *" # every 5 minutes for testing
+
+[functions.process-scheduled]
+verify_jwt = false
+
+[functions.process-scheduled.cron]
+schedule = "* * * * *" # every minute

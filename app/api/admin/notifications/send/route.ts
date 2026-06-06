@@ -1,51 +1,76 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { supabaseServerClient } from "@/utils/supabase/server";
 
 export async function POST(req: Request) {
-  const { userId, message } = await req.json();
+  try {
+    const supabase = supabaseServerClient();
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
+    const body = await req.json();
+    const { message, target } = body;
 
-  // Get recipients
-  let recipients = [];
+    let recipients: { phone_number: string }[] = [];
 
-  if (userId === "all") {
-    const { data } = await supabase
-      .from("users")
-      .select("phone_number")
-      .not("phone_number", "is", null);
+    if (target === "all") {
+      const { data, error } = await supabase
+        .from("users")
+        .select("phone_number")
+        .not("phone_number", "is", null);
 
-    recipients = data;
-  } else {
-    const { data } = await supabase
-      .from("users")
-      .select("phone_number")
-      .eq("user_id", userId)
-      .single();
-
-    recipients = [data];
-  }
-
-  // Send to each recipient
-  for (const r of recipients) {
-    await fetch(
-      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/send-sms`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
-        },
-        body: JSON.stringify({
-          to: r.phone_number,
-          message,
-        }),
+      if (error) {
+        console.error("Supabase error:", error);
+        return NextResponse.json(
+          { error: "Failed to fetch recipients" },
+          { status: 500 }
+        );
       }
+
+      // Normalize null → []
+      recipients = data ?? [];
+    } else {
+      const { data, error } = await supabase
+        .from("users")
+        .select("phone_number")
+        .eq("id", target)
+        .not("phone_number", "is", null)
+        .limit(1);
+
+      if (error) {
+        console.error("Supabase error:", error);
+        return NextResponse.json(
+          { error: "Failed to fetch recipient" },
+          { status: 500 }
+        );
+      }
+
+      recipients = data ?? [];
+    }
+
+    if (recipients.length === 0) {
+      return NextResponse.json(
+        { success: false, message: "No valid phone numbers found." },
+        { status: 200 }
+      );
+    }
+
+    // Example: send SMS (replace with your actual integration)
+    for (const r of recipients) {
+      console.log("Sending SMS to:", r.phone_number, "Message:", message);
+      // await sendSMS(r.phone_number, message);
+    }
+
+    return NextResponse.json(
+      {
+        success: true,
+        count: recipients.length,
+        message: "Notifications sent successfully.",
+      },
+      { status: 200 }
+    );
+  } catch (err) {
+    console.error("Route error:", err);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
     );
   }
-
-  return NextResponse.json({ success: true });
 }

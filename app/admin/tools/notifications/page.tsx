@@ -2,8 +2,14 @@
 
 import { useState, useEffect } from "react";
 
+type AdminUser = {
+  user_id: number;
+  username: string;
+  phone_number: string | null;
+};
+
 export default function AdminNotificationsPage() {
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState<AdminUser[]>([]);
   const [selectedUser, setSelectedUser] = useState("all");
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);

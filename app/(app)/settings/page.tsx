@@ -189,3 +189,62 @@ export default function SettingsPage() {
         </div>
       </SettingsSection>
 
+      {/* Preferences */}
+      <SettingsSection title="Preferences">
+        <div className="space-y-6">
+          {/* Favorite Sport */}
+          <div>
+            <p className="font-medium mb-2">Favorite Sport</p>
+            <select
+              value={favoriteSport}
+              onChange={(e) => {
+                setFavoriteSport(e.target.value);
+                saveField("favorite_sport", e.target.value);
+              }}
+              className="bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm"
+            >
+              <option>NBA</option>
+              <option>NFL</option>
+              <option>MLB</option>
+              <option>NHL</option>
+            </select>
+          </div>
+
+          {/* Theme */}
+          <div>
+            <p className="font-medium mb-2">Theme</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setTheme("dark");
+                  saveField("theme", "dark");
+                }}
+                className={`px-4 py-2 rounded-lg text-sm ${
+                  theme === "dark"
+                    ? "bg-slate-800"
+                    : "bg-slate-900 border border-slate-700"
+                }`}
+              >
+                Dark
+              </button>
+
+              <button
+                onClick={() => {
+                  setTheme("light");
+                  saveField("theme", "light");
+                }}
+                className={`px-4 py-2 rounded-lg text-sm ${
+                  theme === "light"
+                    ? "bg-slate-800"
+                    : "bg-slate-900 border border-slate-700"
+                }`}
+              >
+                Light
+              </button>
+            </div>
+          </div>
+        </div>
+      </SettingsSection>
+    </div>
+  );
+}

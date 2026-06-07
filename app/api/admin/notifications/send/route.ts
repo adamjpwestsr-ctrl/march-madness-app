@@ -1,11 +1,10 @@
-import { NextResponse } from "next/server";
+	import { NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 
 // -----------------------------
 // E.164 VALIDATION
 // -----------------------------
 function isValidE164(number: string): boolean {
-  // + followed by 1–15 digits, cannot start with 0
   const e164Regex = /^\+[1-9]\d{1,14}$/;
   return e164Regex.test(number);
 }
@@ -87,7 +86,7 @@ export async function POST(req: Request) {
     }
 
     // -----------------------------
-    // SEND NOTIFICATIONS
+    // SEND NOTIFICATIONS (TEST SETUP)
     // -----------------------------
     const validRecipients: { user_id: string; phone_number: string }[] = [];
     const invalidRecipients: { user_id: string; phone_number: string }[] = [];
@@ -101,8 +100,26 @@ export async function POST(req: Request) {
 
       validRecipients.push(r);
 
-      console.log("Sending SMS to:", r.phone_number, "User:", r.user_id);
-      // await sendSMS(r.phone_number, message);
+      // ✅ TEST SETUP: Log message to Supabase table instead of sending SMS
+      const { error: insertError } = await supabase
+        .from("sent_notifications")
+        .insert({
+          user_id: r.user_id,
+          phone_number: r.phone_number,
+          message,
+          sent_at: new Date().toISOString(),
+        });
+
+      if (insertError) {
+        console.error("Failed to log notification:", insertError);
+      }
+
+      // When ready for real SMS, replace with Twilio or other provider:
+      // await twilioClient.messages.create({
+      //   to: r.phone_number,
+      //   from: process.env.TWILIO_PHONE_NUMBER,
+      //   body: message,
+      // });
     }
 
     return NextResponse.json(
@@ -111,7 +128,7 @@ export async function POST(req: Request) {
         count: validRecipients.length,
         recipients: validRecipients,
         invalid: invalidRecipients,
-        message: "Notifications sent successfully.",
+        message: "Notifications logged successfully (test mode).",
       },
       { status: 200 }
     );

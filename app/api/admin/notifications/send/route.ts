@@ -101,29 +101,30 @@ export async function POST(req: Request) {
         sendResults.sms = "Logged (test mode)";
       }
 
-      // ✅ Firebase Push
-      if (r.fcm_token) {
-        const payload = {
-          notification: {
-            title: "BracketBoss",
-            body: message,
-          },
-        };
+// ✅ Firebase Push
+if (r.fcm_token) {
+  try {
+    const response = await admin.messaging().send({
+      token: r.fcm_token!,
+      notification: {
+        title: "BracketBoss",
+        body: message,
+      },
+    });
 
-        try {
-          const response = await admin.messaging().sendToDevice(r.fcm_token, payload);
-          sendResults.push = response;
-          await supabase.from("sent_notifications").insert({
-            user_id: r.user_id,
-            phone_number: null,
-            message,
-            sent_at: new Date().toISOString(),
-          });
-        } catch (pushError) {
-          console.error("FCM send error:", pushError);
-          sendResults.pushError = pushError;
-        }
-      }
+    sendResults.push = response;
+
+    await supabase.from("sent_notifications").insert({
+      user_id: r.user_id,
+      phone_number: null,
+      message,
+      sent_at: new Date().toISOString(),
+    });
+  } catch (pushError) {
+    console.error("FCM send error:", pushError);
+    sendResults.pushError = pushError;
+  }
+}
 
       results.push(sendResults);
     }

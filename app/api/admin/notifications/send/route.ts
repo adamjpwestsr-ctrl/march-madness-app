@@ -1,5 +1,19 @@
-	import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
+import admin from "firebase-admin";
+
+// -----------------------------
+// Initialize Firebase Admin SDK
+// -----------------------------
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert({
+      projectId: process.env.FIREBASE_PROJECT_ID,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+    }),
+  });
+}
 
 // -----------------------------
 // E.164 VALIDATION
@@ -12,131 +26,116 @@ function isValidE164(number: string): boolean {
 export async function POST(req: Request) {
   try {
     const supabase = await createClient();
+    const { message, target, userId } = await req.json();
 
-    const body = await req.json();
-    const { message, target, userId } = body;
-
-    let recipients: { user_id: string; phone_number: string }[] = [];
+    let recipients: {
+      user_id: string;
+      phone_number: string | null;
+      fcm_token: string | null;
+    }[] = [];
 
     // -----------------------------
-    // ALL USERS
+    // FETCH RECIPIENTS
     // -----------------------------
     if (target === "all") {
       const { data, error } = await supabase
         .from("users")
-        .select("user_id, phone_number")
+        .select("user_id, phone_number, fcm_token")
         .eq("push_notifications", true)
-        .eq("push_opt_in", true)
-        .not("phone_number", "is", null);
+        .eq("push_opt_in", true);
 
       if (error) {
         console.error("Supabase error:", error);
-        return NextResponse.json(
-          { error: "Failed to fetch recipients" },
-          { status: 500 }
-        );
+        return NextResponse.json({ error: "Failed to fetch recipients" }, { status: 500 });
       }
 
       recipients = data ?? [];
     }
 
-    // -----------------------------
-    // SINGLE USER
-    // -----------------------------
     if (target === "single") {
       if (!userId) {
-        return NextResponse.json(
-          { error: "Missing userId" },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: "Missing userId" }, { status: 400 });
       }
 
       const { data, error } = await supabase
         .from("users")
-        .select("user_id, phone_number")
+        .select("user_id, phone_number, fcm_token")
         .eq("user_id", userId)
         .eq("push_notifications", true)
         .eq("push_opt_in", true)
-        .not("phone_number", "is", null)
         .limit(1);
 
       if (error) {
         console.error("Supabase error:", error);
-        return NextResponse.json(
-          { error: "Failed to fetch recipient" },
-          { status: 500 }
-        );
+        return NextResponse.json({ error: "Failed to fetch recipient" }, { status: 500 });
       }
 
       recipients = data ?? [];
     }
 
-    // -----------------------------
-    // NO RECIPIENTS FOUND
-    // -----------------------------
     if (recipients.length === 0) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "No valid phone numbers found.",
-          recipients: [],
-        },
-        { status: 200 }
-      );
+      return NextResponse.json({
+        success: false,
+        message: "No valid recipients found.",
+        recipients: [],
+      });
     }
 
     // -----------------------------
-    // SEND NOTIFICATIONS (TEST SETUP)
+    // SEND NOTIFICATIONS
     // -----------------------------
-    const validRecipients: { user_id: string; phone_number: string }[] = [];
-    const invalidRecipients: { user_id: string; phone_number: string }[] = [];
+    const results: any[] = [];
 
     for (const r of recipients) {
-      if (!isValidE164(r.phone_number)) {
-        console.warn("Invalid E.164 phone number:", r.phone_number);
-        invalidRecipients.push(r);
-        continue;
-      }
+      const sendResults: any = { user_id: r.user_id };
 
-      validRecipients.push(r);
-
-      // ✅ TEST SETUP: Log message to Supabase table instead of sending SMS
-      const { error: insertError } = await supabase
-        .from("sent_notifications")
-        .insert({
+      // ✅ SMS (Twilio or other provider)
+      if (r.phone_number && isValidE164(r.phone_number)) {
+        // Replace with real SMS provider later
+        await supabase.from("sent_notifications").insert({
           user_id: r.user_id,
           phone_number: r.phone_number,
           message,
           sent_at: new Date().toISOString(),
         });
-
-      if (insertError) {
-        console.error("Failed to log notification:", insertError);
+        sendResults.sms = "Logged (test mode)";
       }
 
-      // When ready for real SMS, replace with Twilio or other provider:
-      // await twilioClient.messages.create({
-      //   to: r.phone_number,
-      //   from: process.env.TWILIO_PHONE_NUMBER,
-      //   body: message,
-      // });
+      // ✅ Firebase Push
+      if (r.fcm_token) {
+        const payload = {
+          notification: {
+            title: "BracketBoss",
+            body: message,
+          },
+        };
+
+        try {
+          const response = await admin.messaging().sendToDevice(r.fcm_token, payload);
+          sendResults.push = response;
+          await supabase.from("sent_notifications").insert({
+            user_id: r.user_id,
+            phone_number: null,
+            message,
+            sent_at: new Date().toISOString(),
+          });
+        } catch (pushError) {
+          console.error("FCM send error:", pushError);
+          sendResults.pushError = pushError;
+        }
+      }
+
+      results.push(sendResults);
     }
 
-    return NextResponse.json(
-      {
-        success: true,
-        count: validRecipients.length,
-        recipients: validRecipients,
-        invalid: invalidRecipients,
-        message: "Notifications logged successfully (test mode).",
-      },
-      { status: 200 }
-    );
+    return NextResponse.json({
+      success: true,
+      count: recipients.length,
+      results,
+      message: "Hybrid notifications sent successfully.",
+    });
   } catch (err) {
     console.error("Route error:", err);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

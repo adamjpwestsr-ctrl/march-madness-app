@@ -13,8 +13,9 @@ export async function GET() {
       });
     }
 
+    // The Admin SDK exposes project ID via app.options
     const app = admin.app();
-    const projectId = app.options.credential.projectId;
+    const projectId = app.options.projectId;
 
     return NextResponse.json({
       success: true,

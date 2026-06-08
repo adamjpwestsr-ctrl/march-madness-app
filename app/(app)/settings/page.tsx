@@ -85,30 +85,37 @@ export default function SettingsPage() {
   // -----------------------------
   // 🔥 Step 7 + Step 9: Push Permission + FCM Token
   // -----------------------------
-  async function requestPushPermission() {
-    try {
-      const permission = await Notification.requestPermission();
+ async function requestPushPermission() {
+  try {
+    const permission = await Notification.requestPermission();
 
-      if (permission !== "granted") {
-        alert("Push notifications are blocked. Enable them in your browser settings.");
-        return;
-      }
-
-      const token = await getToken(messaging, {
-        vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY,
-      });
-
-      if (!token) {
-        alert("Unable to get device token.");
-        return;
-      }
-
-      await saveField("fcm_token", token);
-      console.log("FCM token saved:", token);
-    } catch (err) {
-      console.error("Error getting FCM token:", err);
+    if (permission !== "granted") {
+      alert("Push notifications are blocked. Enable them in your browser settings.");
+      return;
     }
+
+    // Messaging may be null on unsupported browsers
+    if (!messaging) {
+      console.warn("Firebase messaging is not supported in this browser.");
+      return;
+    }
+
+    const token = await getToken(messaging, {
+      vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY,
+    });
+
+    if (!token) {
+      alert("Unable to get device token.");
+      return;
+    }
+
+    await saveField("fcm_token", token);
+    console.log("FCM token saved:", token);
+  } catch (err) {
+    console.error("Error getting FCM token:", err);
   }
+}
+
 
   // Trigger token retrieval when user enables push notifications
   useEffect(() => {

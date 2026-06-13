@@ -122,8 +122,8 @@ export default function AdminClient({ adminEmail }: { adminEmail: string }) {
       title: "Sports Management",
       icon: <FaFootballBall className="text-emerald-400 mr-2" />,
       tools: [
-        { href: "/sports/golf/weekly/admin", label: "Golf Weekly — Score Entry", icon: <FaGolfBall /> },
-        { href: "/sports/golf/weekly/admin/metadata", label: "Golf Weekly — Tournament Metadata", icon: <FaGolfBall /> },
+{ href: "/admin/golf/score-entry", label: "Golf Weekly — Score Entry", icon: <FaGolfBall /> },
+{ href: "/admin/golf/tournament-metadata", label: "Golf Weekly — Tournament Metadata", icon: <FaGolfBall /> },
         { href: "/admin/mlb", label: "MLB Weekly Admin", icon: <FaBaseballBall /> },
         { href: "/admin/nfl-weekly", label: "NFL Weekly Admin", icon: <FaFootballBall /> },
 

@@ -27,7 +27,7 @@ export async function POST(req: Request) {
           final_score_relative_to_par,
           is_winner: !!is_winner,
         },
-        { onConflict: ["tournament_id", "player_id"] }
+{ onConflict: "tournament_id,player_id" }
       );
 
     if (error) {

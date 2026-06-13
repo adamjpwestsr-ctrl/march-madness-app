@@ -22,7 +22,7 @@ export async function GET() {
     }
   );
 
-  // ✅ Get authenticated user
+  // Get authenticated user
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -33,14 +33,13 @@ export async function GET() {
 
   const userId = user.id;
 
-  // ✅ Try to find the current tournament
+  // Current tournament
   let { data: tournament } = await supabase
     .from("golf_tournaments")
     .select("*")
     .eq("is_current", true)
     .maybeSingle();
 
-  // ✅ Fallback: if none marked as current, pick the next upcoming tournament
   if (!tournament) {
     const { data: nextTournament } = await supabase
       .from("golf_tournaments")
@@ -55,13 +54,19 @@ export async function GET() {
 
   const tournamentId = tournament?.id ?? null;
 
-  // ✅ Load golfers
+  // Load golfers
   const { data: golfers } = await supabase
     .from("golf_players")
     .select("*")
     .order("name", { ascending: true });
 
-  // ✅ Load user pick
+  // Load ALL user picks (FIX)
+  const { data: allPicks } = await supabase
+    .from("golf_weekly_picks")
+    .select("tournament_id, player_id")
+    .eq("user_id", userId);
+
+  // Load single pick for current tournament
   const { data: pick } = await supabase
     .from("golf_weekly_picks")
     .select("*")
@@ -69,20 +74,20 @@ export async function GET() {
     .eq("tournament_id", tournamentId)
     .maybeSingle();
 
-  // ✅ Load recent history
+  // Load history
   const { data: history } = await supabase
     .from("golf_weekly_history_view")
     .select("*")
     .order("tournament_id", { ascending: false })
     .limit(5);
 
-  // ✅ Load leaderboard
+  // Load leaderboard
   const { data: leaderboard } = await supabase
     .from("golf_weekly_leaderboard_view")
     .select("*")
     .order("total_points", { ascending: false });
 
-  // ✅ Load season progress
+  // Load season progress
   const { data: seasonRow } = await supabase
     .from("golf_season_progress")
     .select("*")
@@ -95,12 +100,12 @@ export async function GET() {
       }
     : { completed_events: 0, total_events: 0 };
 
-  // ✅ Return safe JSON (no undefined values)
   return Response.json({
     user_id: userId,
     tournament: tournament ?? null,
     golfers: golfers ?? [],
     pick: pick ?? null,
+    picks: allPicks ?? [],   // ⭐ FIXED — UI now receives all picks
     history: history ?? [],
     leaderboard: leaderboard ?? [],
     season,

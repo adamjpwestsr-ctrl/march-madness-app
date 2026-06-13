@@ -2,26 +2,27 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
 export async function POST(req: Request) {
-  const cookieStore = await cookies(); // Next.js 16 requires await
+  const cookieStore = await cookies();
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get: (name: string) => {
+        get(name: string) {
           return cookieStore.get(name)?.value;
         },
-        set: (name: string, value: string, options: any) => {
+        set(name: string, value: string, options: any) {
           cookieStore.set({ name, value, ...options });
         },
-        remove: (name: string, options: any) => {
+        remove(name: string, options: any) {
           cookieStore.set({ name, value: "", ...options });
         },
       },
     }
   );
 
+  // Get authenticated user
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -38,38 +39,35 @@ export async function POST(req: Request) {
     return Response.json({ error: "Missing golferId" }, { status: 400 });
   }
 
-  const { data: tournament } = await supabase
+  // Get current tournament
+  const { data: tournament, error: tErr } = await supabase
     .from("golf_tournaments")
     .select("*")
     .eq("is_current", true)
-    .single();
+    .maybeSingle();
 
-  if (!tournament) {
+  if (tErr || !tournament) {
     return Response.json({ error: "No active tournament" }, { status: 400 });
   }
 
-  const { data: existingPick } = await supabase
+  const tournamentId = tournament.id;
+
+  // UPSERT pick (correct conflict target)
+  const { error } = await supabase
     .from("golf_weekly_picks")
-    .select("*")
-    .eq("user_id", userId)
-    .eq("tournament_id", tournament.id)
-    .maybeSingle();
+    .upsert(
+      {
+        user_id: userId,
+        tournament_id: tournamentId,
+        player_id: golferId,
+      },
+      {
+        onConflict: "user_id,tournament_id", // ⭐ Correct conflict target
+      }
+    );
 
-  if (existingPick) {
-    const { error } = await supabase
-      .from("golf_weekly_picks")
-      .update({ player_id: golferId })
-      .eq("id", existingPick.id);
-
-    if (error) return Response.json({ error }, { status: 500 });
-  } else {
-    const { error } = await supabase.from("golf_weekly_picks").insert({
-      user_id: userId,
-      tournament_id: tournament.id,
-      player_id: golferId,
-    });
-
-    if (error) return Response.json({ error }, { status: 500 });
+  if (error) {
+    return Response.json({ error: error.message }, { status: 500 });
   }
 
   return Response.json({ success: true });

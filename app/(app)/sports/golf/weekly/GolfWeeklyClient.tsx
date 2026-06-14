@@ -141,47 +141,14 @@ export default function GolfWeeklyClient({
   }, []);
 
   // ----------------------
-  // SPOTLIGHT LOGIC (Drop 2)
+  // SPOTLIGHT LOGIC (NEW)
   // ----------------------
-  useEffect(() => {
-    if (userPicks.length < 5) {
-      setSpotlight({
-        mostPicked: "Scottie Scheffler",
-        sleeper: "Sahith Theegala",
-        trending: "Ludvig Åberg",
-        watch: "Xander Schauffele",
-      });
-      return;
-    }
-
-    const counts: Record<number, number> = {};
-    userPicks.forEach((p) => {
-      counts[p.player_id] = (counts[p.player_id] || 0) + 1;
-    });
-
-    const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-    const mostPickedId = Number(sorted[0]?.[0]);
-    const mostPickedName =
-      players.find((p) => p.id === mostPickedId)?.name || "Scottie Scheffler";
-
-    const top20 = players.slice(0, 20);
-    const sleeper = top20.reduce(
-      (acc, p) =>
-        (counts[p.id] || 0) < (counts[acc.id] || 0) ? p : acc,
-      top20[0]
-    );
-
-    const trending =
-      players[Math.floor(Math.random() * players.length)]?.name ||
-      "Ludvig Åberg";
-
-    setSpotlight({
-      mostPicked: mostPickedName,
-      sleeper: sleeper.name,
-      trending,
-      watch: "Xander Schauffele",
-    });
-  }, [userPicks, players]);
+useEffect(() => {
+  fetch("/api/golf/weekly/spotlight")
+    .then((res) => res.json())
+    .then((data) => setSpotlight(data.spotlight))
+    .catch(() => {});
+}, []);
 
   // ----------------------
   // DROP 3 FETCHES

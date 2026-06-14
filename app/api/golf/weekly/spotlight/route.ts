@@ -2,6 +2,9 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
 export async function GET() {
+  // -----------------------------
+  // 0. Supabase SSR Client (Next.js 14+ best practice)
+  // -----------------------------
   const cookieStore = await cookies();
 
   const supabase = createServerClient(
@@ -13,20 +16,20 @@ export async function GET() {
   );
 
   // -----------------------------
-  // 1. Get current tournament
+  // 1. Current Tournament
   // -----------------------------
-  const { data: tournament } = await supabase
+  const { data: tournament, error: tournamentError } = await supabase
     .from("golf_tournaments")
     .select("id, name")
     .eq("is_current", true)
     .maybeSingle();
 
-  if (!tournament) {
+  if (tournamentError || !tournament) {
     return Response.json({ error: "No active tournament" }, { status: 400 });
   }
 
   // -----------------------------
-  // 2. Get pick counts for this tournament
+  // 2. Pick Counts
   // -----------------------------
   const { data: pickCounts } = await supabase
     .from("golf_weekly_pick_counts")
@@ -35,11 +38,18 @@ export async function GET() {
     .order("pick_count", { ascending: false });
 
   // -----------------------------
-  // 3. Get player performance summary
+  // 3. Performance Summary
   // -----------------------------
   const { data: performance } = await supabase
     .from("golf_player_performance_summary")
     .select("*");
+
+  if (!performance) {
+    return Response.json(
+      { error: "Performance summary unavailable" },
+      { status: 500 }
+    );
+  }
 
   // -----------------------------
   // 4. Default Spotlight Values
@@ -53,19 +63,16 @@ export async function GET() {
   // 5. MOST PICKED + SLEEPER
   // -----------------------------
   if (pickCounts && pickCounts.length > 0) {
-    // Most Picked
     const mostPickedPlayerId = pickCounts[0].player_id;
     mostPicked =
-      performance.find((p) => p.player_id === mostPickedPlayerId)?.name ||
+      performance.find((p) => p.player_id === mostPickedPlayerId)?.name ??
       "Currently no selections made";
 
-    // Sleeper (least picked)
     const leastPickedPlayerId = pickCounts[pickCounts.length - 1].player_id;
     sleeper =
-      performance.find((p) => p.player_id === leastPickedPlayerId)?.name ||
+      performance.find((p) => p.player_id === leastPickedPlayerId)?.name ??
       "Random selection";
   } else {
-    // No picks yet → random sleeper
     const { data: randomPlayer } = await supabase
       .from("golf_players")
       .select("name")
@@ -73,35 +80,35 @@ export async function GET() {
       .limit(1)
       .maybeSingle();
 
-    sleeper = randomPlayer?.name || "Random selection";
+    sleeper = randomPlayer?.name ?? "Random selection";
   }
 
-// -----------------------------
-// 6. PLAYER TO WATCH (Most Top‑10s, tie-break by recent form)
-// -----------------------------
-if (performance && performance.length > 0) {
-  const top10Leader = [...performance]
-    .filter((p) => p.top_10s > 0)
-    .sort((a, b) => {
-      // 1. More top‑10s first
-      if (b.top_10s !== a.top_10s) return b.top_10s - a.top_10s;
-      // 2. Better recent form wins ties
-      return a.recent_avg_finish - b.recent_avg_finish;
-    })[0];
+  // -----------------------------
+  // 6. PLAYER TO WATCH
+  //    Most Top‑10s, tie‑break by recent form
+  // -----------------------------
+  if (performance.length > 0) {
+    const top10Leader = [...performance]
+      .filter((p) => p.top_10s > 0)
+      .sort((a, b) => {
+        if (b.top_10s !== a.top_10s) return b.top_10s - a.top_10s;
+        return a.recent_avg_finish - b.recent_avg_finish;
+      })[0];
 
-  watch = top10Leader?.name || "Xander Schauffele";
-}
+    watch = top10Leader?.name ?? "Xander Schauffele";
+  }
 
-// -----------------------------
-// 7. TRENDING (Recent 3‑tournament performance)
-// -----------------------------
-const trendingCandidates = performance
-  .filter((p) => p.recent_avg_finish <= 15) // good recent form
-  .sort((a, b) => a.recent_avg_finish - b.recent_avg_finish);
+  // -----------------------------
+  // 7. TRENDING
+  //    Best recent_avg_finish (no 3‑tournament requirement)
+  // -----------------------------
+  const trendingCandidates = performance
+    .filter((p) => p.recent_avg_finish <= 15)
+    .sort((a, b) => a.recent_avg_finish - b.recent_avg_finish);
 
-if (trendingCandidates.length > 0) {
-  trending = trendingCandidates[0]?.name || "Ludvig Åberg";
-}
+  if (trendingCandidates.length > 0) {
+    trending = trendingCandidates[0]?.name ?? "Ludvig Åberg";
+  }
 
   // -----------------------------
   // 8. Return Spotlight
@@ -112,7 +119,7 @@ if (trendingCandidates.length > 0) {
       mostPicked,
       sleeper,
       trending,
-      watch,
-    },
+      watch
+    }
   });
 }

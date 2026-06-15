@@ -5,7 +5,7 @@ export async function GET() {
   const supabase = await createSupabaseServerClient();
 
   const { data: question, error } = await supabase
-    .from("trivia_daily_questions")
+    .from("trivia_questions")   // ⭐ FIXED
     .select("*")
     .order("random()")
     .limit(1)

@@ -18,6 +18,21 @@ export async function POST(req: Request) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
+    // Fetch tournament to get season_year
+    const { data: tournament, error: tErr } = await supabase
+      .from("golf_tournaments")
+      .select("season_year")
+      .eq("id", tournament_id)
+      .single();
+
+    if (tErr || !tournament) {
+      return NextResponse.json(
+        { error: "Tournament not found" },
+        { status: 400 }
+      );
+    }
+
+    // UPSERT result WITH season_year
     const { error } = await supabase
       .from("golf_weekly_results")
       .upsert(
@@ -26,8 +41,11 @@ export async function POST(req: Request) {
           player_id,
           final_score_relative_to_par,
           is_winner: !!is_winner,
+          season_year: tournament.season_year   // ⭐ REQUIRED FIX
         },
-{ onConflict: "tournament_id,player_id" }
+        {
+          onConflict: "tournament_id,player_id"
+        }
       );
 
     if (error) {

@@ -1,86 +1,72 @@
-import Link from "next/link";
-import WeeklyBanner from "@/app/components/WeeklyBanner";
-import TodayTrivia from "@/app/components/TodayTrivia";
-import FeaturedSports from "@/app/components/FeaturedSports";
-import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
+"use client";
 
-export default async function HomePage() {
-  const supabase = await createSupabaseServerClient();
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { createBrowserClient } from "@supabase/ssr";
 
-  // Get the current authenticated user
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+export default function LoginPage() {
+  const router = useRouter();
 
-  // Fetch the correct record from your custom users table
-  const { data: profile } = await supabase
-    .from("users")
-    .select("username, email, name")
-    .eq("email", user?.email)
-    .order("user_id", { ascending: false }) // ensure newest record
-    .limit(1)
-    .single();
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
 
-  // Display priority:
-  // 1. name (only if user explicitly set it)
-  // 2. username (auto-created from email)
-  // 3. email prefix
-  const displayName =
-    profile?.name?.trim() ||
-    profile?.username ||
-    profile?.email?.split("@")[0] ||
-    "Player";
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      setError(error.message);
+      return;
+    }
+
+    router.push("/home");
+  };
 
   return (
-    <div className="space-y-10">
-      {/* Hero / Welcome */}
-      <section>
-        <div className="rounded-2xl border border-slate-800 bg-gradient-to-br from-slate-900/80 via-slate-900/40 to-emerald-700/30 p-6 md:p-8 shadow-lg shadow-emerald-900/30">
-          <p className="text-sm uppercase tracking-[0.2em] text-emerald-400 mb-2">
-            Welcome back
-          </p>
-          <h1 className="text-2xl md:text-3xl font-semibold mb-3">
-            {displayName}, your next sports challenge is waiting.
-          </h1>
-          <p className="text-slate-300 max-w-2xl">
-            Play brackets, weekly picks, and trivia across your favorite
-            sports—all in one place, all year long.
-          </p>
-        </div>
-      </section>
+    <div className="min-h-screen flex items-center justify-center bg-black text-white">
+      <div className="bg-slate-900 p-8 rounded-xl border border-slate-700 w-full max-w-md space-y-6">
+        <h1 className="text-3xl font-bold">Log In</h1>
 
-      {/* Top row: Weekly + Today’s Trivia */}
-      <section className="grid gap-6 md:grid-cols-2">
-        <Link href="/challenges" className="block">
-          <WeeklyBanner />
-        </Link>
+        <form onSubmit={handleLogin} className="space-y-4">
+          <input
+            type="email"
+            placeholder="Email"
+            className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-600"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
 
-        <Link href="/trivia" className="block">
-          <TodayTrivia />
-        </Link>
-      </section>
+          <input
+            type="password"
+            placeholder="Password"
+            className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-600"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
 
-      {/* Featured Sports / Challenges */}
-      <section>
-        <Link href="/sports" className="block">
-          <FeaturedSports />
-        </Link>
-      </section>
+          {error && (
+            <p className="text-red-400 text-sm">{error}</p>
+          )}
 
-      {/* Footer / Branding */}
-      <section className="border-t border-slate-800 pt-6 mt-4">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h2 className="text-sm font-semibold text-slate-300">
-              Powered by BracketBoss: Built for fans who never want the season to end.
-            </h2>
-          </div>
-          <div className="text-xs text-slate-500">
-            <span className="text-slate-400">Sponsor space:</span>{" "}
-            Non-intrusive partner logos can live here.
-          </div>
-        </div>
-      </section>
+          <button
+            type="submit"
+            className="w-full bg-emerald-600 py-2 rounded-lg hover:bg-emerald-500"
+          >
+            Log In
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

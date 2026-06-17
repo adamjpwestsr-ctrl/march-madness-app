@@ -1,77 +1,159 @@
 "use client";
+console.log("🔥 LOGIN PAGE LOADED");
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { createBrowserClient } from "@supabase/ssr";
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
+import { useState, useEffect } from "react";
+import LoginForm from "@/app/login/LoginForm";
 
 export default function LoginPage() {
-  const router = useRouter();
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  const [showAbout, setShowAbout] = useState(false);
+  const [currentStep, setCurrentStep] = useState<"email" | "admin">("email");
+  const [highlightIndex, setHighlightIndex] = useState(0);
+  const [fatalError, setFatalError] = useState<string | null>(null);
 
-  const [email, setEmail] = useState("");
-  const [error, setError] = useState("");
+  const highlights = [
+    "🏆 Build your March Madness Bracket",
+    "🏈 Make Weekly NFL Picks",
+    "⛳ Compete in Golf Weekly",
+    "🧠 Play Sports Trivia Blitz",
+    "📊 Track your leaderboard climb",
+  ];
 
-  const handleContinue = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setHighlightIndex((i) => (i + 1) % highlights.length);
+    }, 2200);
+    return () => clearInterval(interval);
+  }, []);
 
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { shouldCreateUser: true },
-    });
+  const labelText = currentStep === "email" ? "Enter your email" : "Admin Code";
 
-    if (error) {
-      setError("Something went wrong.");
-      return;
-    }
-
-    router.push("/welcome-name");
-  };
+  // Error boundary fallback
+  if (fatalError) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-black text-white">
+        <div className="text-center space-y-4">
+          <h1 className="text-3xl font-bold">⚠️ Unexpected Error</h1>
+          <p className="text-slate-300">{fatalError}</p>
+          <button
+            onClick={() => setFatalError(null)}
+            className="bg-emerald-500 px-4 py-2 rounded-lg hover:bg-emerald-400"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center bg-[url('/background-icons.png')] bg-cover bg-center text-white"
-    >
-      <div className="relative bg-[#0b1220] p-8 rounded-2xl border border-emerald-700 shadow-[0_0_25px_5px_rgba(16,185,129,0.4)] w-full max-w-md space-y-6">
-        <div className="text-center space-y-2">
-          <div className="text-xs text-emerald-400 font-semibold">NEW: Trivia Blitz</div>
-          <h1 className="text-2xl font-bold">Welcome to BracketBoss</h1>
-          <p className="text-emerald-300 text-sm">Play Sports Trivia Blitz</p>
-          <p className="text-slate-400 text-xs">Your sports. Your picks. Your glory.</p>
+    <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-black">
+      {/* STATIC FADED TEAM LOGO COLLAGE */}
+      <div
+        className="absolute inset-0 bg-cover bg-center opacity-10 grayscale"
+        style={{ backgroundImage: "url('/sports-logos.png')" }}
+      />
+
+      {/* STATIONARY HERO SPOTLIGHT */}
+      <div className="absolute inset-0 pointer-events-none hero-spotlight opacity-40" />
+
+      {/* Leaderboard link */}
+      <a
+        href="/leaderboard"
+        className="absolute top-6 right-6 text-emerald-400 hover:text-emerald-300 font-semibold z-20"
+      >
+        Leaderboard
+      </a>
+
+      {/* LOGIN CARD */}
+      <div
+        className="
+        relative z-10 w-full max-w-md
+        bg-slate-900/80 backdrop-blur-xl
+        border border-slate-700/60
+        rounded-2xl shadow-[0_0_40px_rgba(0,0,0,0.6)]
+        p-10 animate-fade-in
+        neon-glow
+      "
+      >
+        {/* NEW BADGE */}
+        <div className="absolute -top-3 left-4 bg-emerald-500 text-black text-xs font-bold px-3 py-1 rounded-full shadow-md tracking-wide">
+          🔥 NEW: Trivia Blitz
         </div>
 
-        <form onSubmit={handleContinue} className="space-y-4">
-          <label className="block text-sm font-medium text-slate-300">
-            Enter your email
-          </label>
-          <input
-            type="email"
-            placeholder="you@example.com"
-            className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-600 text-white"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
+        <h1 className="text-white text-4xl font-extrabold text-center drop-shadow-lg mb-3">
+          Welcome to BracketBoss
+        </h1>
 
-          {error && <p className="text-red-400 text-sm">{error}</p>}
+        <p className="text-center text-emerald-300 text-sm font-semibold h-5 mb-6 transition-opacity duration-500">
+          {highlights[highlightIndex]}
+        </p>
+
+        <p className="text-slate-300 text-center mb-8 text-sm">
+          Your sports. Your picks. Your glory.
+        </p>
+
+        <div className="flex justify-between items-center w-full mb-2">
+          <label className="text-white text-lg font-semibold">
+            {labelText}
+          </label>
 
           <button
-            type="submit"
-            className="w-full bg-emerald-600 py-2 rounded-lg hover:bg-emerald-500 font-semibold"
+            onClick={() => setShowAbout(true)}
+            className="text-emerald-400 text-sm hover:text-emerald-300 underline"
           >
-            Continue
+            About BracketBoss
           </button>
-        </form>
+        </div>
 
-        <div className="flex justify-between text-xs text-slate-400 pt-2">
-          <a href="/about" className="hover:text-emerald-400">About BracketBoss</a>
-          <a href="mailto:commissioners@bracketboss.com" className="hover:text-emerald-400">
-            Email the Commissioners
+        {/* ⭐ CLEANED LoginForm usage */}
+        <LoginForm
+          onStepChange={(step) => {
+            console.log("🔄 Step changed:", step);
+            try {
+              setCurrentStep(step);
+            } catch (err) {
+              console.error("Fatal render error:", err);
+              setFatalError("Something went wrong rendering the login form.");
+            }
+          }}
+        />
+
+        <div className="text-center mt-6">
+          <a
+            href="mailto:commissioners@yourdomain.com"
+            className="text-slate-400 hover:text-slate-300 underline text-sm"
+          >
+            Email the Commissioners
           </a>
         </div>
       </div>
+
+      {/* ABOUT MODAL */}
+      {showAbout && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 animate-fade-in">
+          <div className="bg-slate-800 p-6 rounded-xl max-w-lg w-full text-white shadow-xl border border-slate-700">
+            <h2 className="text-2xl font-bold mb-4">About BracketBoss</h2>
+
+            <ul className="space-y-3 text-sm leading-relaxed">
+              <li><strong>Multiple Brackets:</strong> Create up to 5 brackets — all you need is your email.</li>
+              <li><strong>Leaderboard:</strong> Track your rank in real time.</li>
+              <li><strong>Password‑Free Login:</strong> Your email is your key — simple and secure.</li>
+              <li><strong>Mulligans:</strong> Undo your pick if your team loses early.</li>
+              <li><strong>Prizes:</strong> Win bragging rights… and sometimes cash.</li>
+            </ul>
+
+            <button
+              onClick={() => setShowAbout(false)}
+              className="mt-6 w-full bg-emerald-500 py-2 rounded-lg hover:bg-emerald-400"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

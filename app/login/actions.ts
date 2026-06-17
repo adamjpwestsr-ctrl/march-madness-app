@@ -92,6 +92,12 @@ export async function loginWithEmail(formData: FormData) {
     return { status: "needsAdminCode", email };
   }
 
+  // ⭐ NEW — runtime safety guard (fixes TS error)
+  if (!userRecord) {
+    console.error("Unexpected null userRecord");
+    return { status: "error" };
+  }
+
   // Set session cookie
   const cookieStore = await cookies();
   cookieStore.set(

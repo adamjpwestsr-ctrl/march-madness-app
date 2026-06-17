@@ -11,7 +11,7 @@ type LoginFormProps = {
 export default function LoginForm({ onStepChange }: LoginFormProps) {
   const [email, setEmail] = useState("");
   const [adminCode, setAdminCode] = useState("");
-  const [step, setStep] = useState<"email" | "admin" | "options">("email");
+  const [step, setStep] = useState<"email" | "admin">("email");
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
@@ -33,9 +33,9 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
         return;
       }
 
-      if (res.status === "magicLinkSent") {
-        setStep("options");
-        onStepChange?.("options");
+      if (res.status === "success") {
+        // Regular user: cookie already set server-side
+        router.push("/home");
         return;
       }
 
@@ -61,7 +61,7 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
       console.log("verifyAdminCode response:", res);
 
       if (res.status === "success") {
-        // Admin: cookie is set server-side, so we can navigate
+        // Admin: cookie already set server-side
         router.push("/home");
         return;
       }
@@ -83,13 +83,6 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
 
       setError("Something went wrong.");
     });
-  };
-
-  const handleNormalUserContinue = () => {
-    // Magic link has been sent; user completes auth via email.
-    // We just reset the UI to the email step.
-    setStep("email");
-    onStepChange?.("email");
   };
 
   return (
@@ -171,26 +164,6 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
             Back
           </button>
         </form>
-      )}
-
-      {step === "options" && (
-        <div className="space-y-4 mt-6">
-          <p className="text-slate-300 text-sm text-center">
-            We’ve sent a magic link to <span className="font-semibold">{email}</span>.  
-            Check your email to finish signing in.
-          </p>
-
-          <button
-            onClick={handleNormalUserContinue}
-            className="
-              w-full bg-emerald-600 text-white py-2 rounded-lg
-              hover:bg-emerald-500 hover:shadow-lg
-              transition-all duration-200
-            "
-          >
-            Back to login
-          </button>
-        </div>
       )}
     </div>
   );

@@ -1,7 +1,7 @@
 "use client";
 
 export const dynamic = "force-dynamic";
-export const runtime = "nodejs";
+export const runtime = "nodejs"; // 👈 forces Node runtime instead of Edge
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";

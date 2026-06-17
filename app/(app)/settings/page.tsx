@@ -26,7 +26,7 @@ export default async function SettingsPage() {
   const finalUsername =
   profile.username || (await initializeUsername(userId));
 
-  const badges = await getUserBadges(userId);
+ const badges = await getUserBadges();
 
   return (
     <SettingsClient

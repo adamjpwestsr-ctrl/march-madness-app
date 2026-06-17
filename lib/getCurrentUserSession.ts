@@ -6,8 +6,11 @@ export type MmSession = {
   isAdmin: boolean;
 };
 
-export function getCurrentUserSession(): MmSession | null {
-  const cookie = cookies().get("mm_session");
+export async function getCurrentUserSession(): Promise<MmSession | null> {
+  // Next.js 16: cookies() returns a Promise
+  const cookieStore = await cookies();
+  const cookie = cookieStore.get("mm_session");
+
   if (!cookie) return null;
 
   try {

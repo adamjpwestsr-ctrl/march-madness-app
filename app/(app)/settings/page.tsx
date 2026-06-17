@@ -9,7 +9,7 @@ import { getCurrentUserSession } from "@/lib/getCurrentUserSession";
 import SettingsClient from "./SettingsClient";
 
 export default async function SettingsPage() {
-  const session = getCurrentUserSession();
+ const session = await getCurrentUserSession();
 
   if (!session) {
     // Not logged in; you can redirect to /login if you prefer

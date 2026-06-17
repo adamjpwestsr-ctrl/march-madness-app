@@ -1,11 +1,20 @@
 import Link from "next/link";
-
 import WeeklyBanner from "@/app/components/WeeklyBanner";
 import TodayTrivia from "@/app/components/TodayTrivia";
 import FeaturedSports from "@/app/components/FeaturedSports";
+import { createClient } from "@supabase/supabase-js";
 
-export default function HomePage() {
-  const displayName = "Adam";
+export default async function HomePage() {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const displayName = user?.user_metadata?.display_name || user?.email || "Player";
 
   return (
     <div className="space-y-10">
@@ -48,7 +57,7 @@ export default function HomePage() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <h2 className="text-sm font-semibold text-slate-300">
-              Powered by BracketBoss
+              Powered by BracketBoss and a love for all sports
             </h2>
             <p className="text-xs text-slate-500">
               Built for fans who never want the season to end.

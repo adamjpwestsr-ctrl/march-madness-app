@@ -10,7 +10,7 @@ import LoginForm from "@/app/login/LoginForm";
 
 export default function LoginPage() {
   const [showAbout, setShowAbout] = useState(false);
-  const [currentStep, setCurrentStep] = useState("email");
+  const [currentStep, setCurrentStep] = useState<"email" | "admin">("email");
   const [highlightIndex, setHighlightIndex] = useState(0);
 
   const router = useRouter();
@@ -19,9 +19,7 @@ export default function LoginPage() {
   const labelText =
     currentStep === "email"
       ? "Enter your email"
-      : currentStep === "admin"
-      ? "Admin Code"
-      : "Choose an option";
+      : "Admin Code";
 
   const highlights = [
     "🏆 Build your March Madness Bracket",

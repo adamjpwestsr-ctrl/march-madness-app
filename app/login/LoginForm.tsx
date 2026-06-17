@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { loginWithEmail, verifyAdminCode } from "./actions";
 
 type LoginFormProps = {
-  onStepChange?: (step: string) => void;
+  onStepChange?: (step: "email" | "admin") => void;
 };
 
 export default function LoginForm({ onStepChange }: LoginFormProps) {

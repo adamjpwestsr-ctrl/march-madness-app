@@ -38,27 +38,6 @@ export default function LoginPage() {
     return () => clearInterval(interval);
   }, []);
 
-  // ⭐ FINAL AUTH STEP: Called by LoginForm after successful validation
-  function handleAuthenticatedLogin(email: string, name: string, role: string) {
-    const session = {
-      user: {
-        id: crypto.randomUUID(),
-        email,
-        name,
-        role,
-      },
-    };
-
-    // Set session cookie (7 days)
-    document.cookie = `mm_session=${JSON.stringify(
-      session
-    )}; path=/; max-age=604800; SameSite=Lax`;
-
-    // Redirect to intended page or home
-    const redirectTo = params.get("redirect") || "/home";
-    router.push(redirectTo);
-  }
-
   return (
     <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-black">
 
@@ -80,14 +59,16 @@ export default function LoginPage() {
       </a>
 
       {/* LOGIN CARD */}
-      <div className="
+      <div
+        className="
         relative z-10 w-full max-w-md
         bg-slate-900/80 backdrop-blur-xl
         border border-slate-700/60
         rounded-2xl shadow-[0_0_40px_rgba(0,0,0,0.6)]
         p-10 animate-fade-in
         neon-glow
-      ">
+      "
+      >
 
         {/* NEW BADGE */}
         <div className="absolute -top-3 left-4 bg-emerald-500 text-black text-xs font-bold px-3 py-1 rounded-full shadow-md tracking-wide">
@@ -119,11 +100,8 @@ export default function LoginPage() {
           </button>
         </div>
 
-        {/* ⭐ Pass the new callback to LoginForm */}
-        <LoginForm
-          onStepChange={setCurrentStep}
-          onAuthenticatedLogin={handleAuthenticatedLogin}
-        />
+        {/* ⭐ CLEANED LoginForm usage */}
+        <LoginForm onStepChange={setCurrentStep} />
 
         <div className="text-center mt-6">
           <a

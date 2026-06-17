@@ -6,66 +6,71 @@ import { createBrowserClient } from "@supabase/ssr";
 
 export default function LoginPage() {
   const router = useRouter();
-
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
 
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleContinue = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { error } = await supabase.auth.signInWithOtp({
       email,
-      password,
+      options: { shouldCreateUser: true },
     });
 
     if (error) {
-      setError(error.message);
+      setError("Something went wrong.");
       return;
     }
 
-    router.push("/home");
+    router.push("/welcome-name");
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black text-white">
-      <div className="bg-slate-900 p-8 rounded-xl border border-slate-700 w-full max-w-md space-y-6">
-        <h1 className="text-3xl font-bold">Log In</h1>
+    <div
+      className="min-h-screen flex items-center justify-center bg-[url('/background-icons.png')] bg-cover bg-center text-white"
+    >
+      <div className="relative bg-[#0b1220] p-8 rounded-2xl border border-emerald-700 shadow-[0_0_25px_5px_rgba(16,185,129,0.4)] w-full max-w-md space-y-6">
+        <div className="text-center space-y-2">
+          <div className="text-xs text-emerald-400 font-semibold">NEW: Trivia Blitz</div>
+          <h1 className="text-2xl font-bold">Welcome to BracketBoss</h1>
+          <p className="text-emerald-300 text-sm">Play Sports Trivia Blitz</p>
+          <p className="text-slate-400 text-xs">Your sports. Your picks. Your glory.</p>
+        </div>
 
-        <form onSubmit={handleLogin} className="space-y-4">
+        <form onSubmit={handleContinue} className="space-y-4">
+          <label className="block text-sm font-medium text-slate-300">
+            Enter your email
+          </label>
           <input
             type="email"
-            placeholder="Email"
-            className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-600"
+            placeholder="you@example.com"
+            className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-600 text-white"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
 
-          <input
-            type="password"
-            placeholder="Password"
-            className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-600"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-
-          {error && (
-            <p className="text-red-400 text-sm">{error}</p>
-          )}
+          {error && <p className="text-red-400 text-sm">{error}</p>}
 
           <button
             type="submit"
-            className="w-full bg-emerald-600 py-2 rounded-lg hover:bg-emerald-500"
+            className="w-full bg-emerald-600 py-2 rounded-lg hover:bg-emerald-500 font-semibold"
           >
-            Log In
+            Continue
           </button>
         </form>
+
+        <div className="flex justify-between text-xs text-slate-400 pt-2">
+          <a href="/about" className="hover:text-emerald-400">About BracketBoss</a>
+          <a href="mailto:commissioners@bracketboss.com" className="hover:text-emerald-400">
+            Email the Commissioners
+          </a>
+        </div>
       </div>
     </div>
   );

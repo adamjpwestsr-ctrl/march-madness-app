@@ -2,19 +2,29 @@ import Link from "next/link";
 import WeeklyBanner from "@/app/components/WeeklyBanner";
 import TodayTrivia from "@/app/components/TodayTrivia";
 import FeaturedSports from "@/app/components/FeaturedSports";
-import { createClient } from "@supabase/supabase-js";
+import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 
 export default async function HomePage() {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  const supabase = await createSupabaseServerClient();
 
+  // Get the current authenticated user
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const displayName = user?.user_metadata?.display_name || user?.email || "Player";
+  // Fetch the corresponding record from your custom users table
+  const { data: profile } = await supabase
+    .from("users")
+    .select("username, email, name")
+    .eq("email", user?.email)
+    .single();
+
+  // Determine display name priority
+  const displayName =
+    profile?.name ||
+    profile?.username ||
+    profile?.email?.split("@")[0] ||
+    "Player";
 
   return (
     <div className="space-y-10">
@@ -57,11 +67,8 @@ export default async function HomePage() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <h2 className="text-sm font-semibold text-slate-300">
-              Powered by BracketBoss and a love for all sports
+              Powered by BracketBoss: Built for fans who never want the season to end.
             </h2>
-            <p className="text-xs text-slate-500">
-              Built for fans who never want the season to end.
-            </p>
           </div>
           <div className="text-xs text-slate-500">
             <span className="text-slate-400">Sponsor space:</span>{" "}

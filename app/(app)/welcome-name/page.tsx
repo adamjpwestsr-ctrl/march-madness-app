@@ -1,12 +1,10 @@
 "use client";
 
-export const dynamic = "force-dynamic";
-export const runtime = "nodejs"; // 👈 forces Node runtime instead of Edge
-
+import { Suspense } from "react";
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-export default function WelcomeNamePage() {
+function NameForm() {
   const router = useRouter();
   const params = useSearchParams();
   const email = params.get("email");
@@ -58,5 +56,13 @@ export default function WelcomeNamePage() {
         </button>
       </div>
     </div>
+  );
+}
+
+export default function WelcomeNamePage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <NameForm />
+    </Suspense>
   );
 }

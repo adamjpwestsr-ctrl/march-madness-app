@@ -1,159 +1,86 @@
-"use client";
-console.log("🔥 LOGIN PAGE LOADED");
+import Link from "next/link";
+import WeeklyBanner from "@/app/components/WeeklyBanner";
+import TodayTrivia from "@/app/components/TodayTrivia";
+import FeaturedSports from "@/app/components/FeaturedSports";
+import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 
-export const dynamic = "force-dynamic";
-export const runtime = "nodejs";
+export default async function HomePage() {
+  const supabase = await createSupabaseServerClient();
 
-import { useState, useEffect } from "react";
-import LoginForm from "@/app/login/LoginForm";
+  // Get the current authenticated user
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-export default function LoginPage() {
-  const [showAbout, setShowAbout] = useState(false);
-  const [currentStep, setCurrentStep] = useState<"email" | "admin">("email");
-  const [highlightIndex, setHighlightIndex] = useState(0);
-  const [fatalError, setFatalError] = useState<string | null>(null);
+  // Fetch the correct record from your custom users table
+  const { data: profile } = await supabase
+    .from("users")
+    .select("username, email, name")
+    .eq("email", user?.email)
+    .order("user_id", { ascending: false }) // ensure newest record
+    .limit(1)
+    .single();
 
-  const highlights = [
-    "🏆 Build your March Madness Bracket",
-    "🏈 Make Weekly NFL Picks",
-    "⛳ Compete in Golf Weekly",
-    "🧠 Play Sports Trivia Blitz",
-    "📊 Track your leaderboard climb",
-  ];
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setHighlightIndex((i) => (i + 1) % highlights.length);
-    }, 2200);
-    return () => clearInterval(interval);
-  }, []);
-
-  const labelText = currentStep === "email" ? "Enter your email" : "Admin Code";
-
-  // Error boundary fallback
-  if (fatalError) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-black text-white">
-        <div className="text-center space-y-4">
-          <h1 className="text-3xl font-bold">⚠️ Unexpected Error</h1>
-          <p className="text-slate-300">{fatalError}</p>
-          <button
-            onClick={() => setFatalError(null)}
-            className="bg-emerald-500 px-4 py-2 rounded-lg hover:bg-emerald-400"
-          >
-            Try Again
-          </button>
-        </div>
-      </div>
-    );
-  }
+  // Display priority:
+  // 1. name (only if user explicitly set it)
+  // 2. username (auto-created from email)
+  // 3. email prefix
+  const displayName =
+    profile?.name?.trim() ||
+    profile?.username ||
+    profile?.email?.split("@")[0] ||
+    "Player";
 
   return (
-    <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-black">
-      {/* STATIC FADED TEAM LOGO COLLAGE */}
-      <div
-        className="absolute inset-0 bg-cover bg-center opacity-10 grayscale"
-        style={{ backgroundImage: "url('/sports-logos.png')" }}
-      />
-
-      {/* STATIONARY HERO SPOTLIGHT */}
-      <div className="absolute inset-0 pointer-events-none hero-spotlight opacity-40" />
-
-      {/* Leaderboard link */}
-      <a
-        href="/leaderboard"
-        className="absolute top-6 right-6 text-emerald-400 hover:text-emerald-300 font-semibold z-20"
-      >
-        Leaderboard
-      </a>
-
-      {/* LOGIN CARD */}
-      <div
-        className="
-        relative z-10 w-full max-w-md
-        bg-slate-900/80 backdrop-blur-xl
-        border border-slate-700/60
-        rounded-2xl shadow-[0_0_40px_rgba(0,0,0,0.6)]
-        p-10 animate-fade-in
-        neon-glow
-      "
-      >
-        {/* NEW BADGE */}
-        <div className="absolute -top-3 left-4 bg-emerald-500 text-black text-xs font-bold px-3 py-1 rounded-full shadow-md tracking-wide">
-          🔥 NEW: Trivia Blitz
+    <div className="space-y-10">
+      {/* Hero / Welcome */}
+      <section>
+        <div className="rounded-2xl border border-slate-800 bg-gradient-to-br from-slate-900/80 via-slate-900/40 to-emerald-700/30 p-6 md:p-8 shadow-lg shadow-emerald-900/30">
+          <p className="text-sm uppercase tracking-[0.2em] text-emerald-400 mb-2">
+            Welcome back
+          </p>
+          <h1 className="text-2xl md:text-3xl font-semibold mb-3">
+            {displayName}, your next sports challenge is waiting.
+          </h1>
+          <p className="text-slate-300 max-w-2xl">
+            Play brackets, weekly picks, and trivia across your favorite
+            sports—all in one place, all year long.
+          </p>
         </div>
+      </section>
 
-        <h1 className="text-white text-4xl font-extrabold text-center drop-shadow-lg mb-3">
-          Welcome to BracketBoss
-        </h1>
+      {/* Top row: Weekly + Today’s Trivia */}
+      <section className="grid gap-6 md:grid-cols-2">
+        <Link href="/challenges" className="block">
+          <WeeklyBanner />
+        </Link>
 
-        <p className="text-center text-emerald-300 text-sm font-semibold h-5 mb-6 transition-opacity duration-500">
-          {highlights[highlightIndex]}
-        </p>
+        <Link href="/trivia" className="block">
+          <TodayTrivia />
+        </Link>
+      </section>
 
-        <p className="text-slate-300 text-center mb-8 text-sm">
-          Your sports. Your picks. Your glory.
-        </p>
+      {/* Featured Sports / Challenges */}
+      <section>
+        <Link href="/sports" className="block">
+          <FeaturedSports />
+        </Link>
+      </section>
 
-        <div className="flex justify-between items-center w-full mb-2">
-          <label className="text-white text-lg font-semibold">
-            {labelText}
-          </label>
-
-          <button
-            onClick={() => setShowAbout(true)}
-            className="text-emerald-400 text-sm hover:text-emerald-300 underline"
-          >
-            About BracketBoss
-          </button>
-        </div>
-
-        {/* ⭐ CLEANED LoginForm usage */}
-        <LoginForm
-          onStepChange={(step) => {
-            console.log("🔄 Step changed:", step);
-            try {
-              setCurrentStep(step);
-            } catch (err) {
-              console.error("Fatal render error:", err);
-              setFatalError("Something went wrong rendering the login form.");
-            }
-          }}
-        />
-
-        <div className="text-center mt-6">
-          <a
-            href="mailto:commissioners@yourdomain.com"
-            className="text-slate-400 hover:text-slate-300 underline text-sm"
-          >
-            Email the Commissioners
-          </a>
-        </div>
-      </div>
-
-      {/* ABOUT MODAL */}
-      {showAbout && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 animate-fade-in">
-          <div className="bg-slate-800 p-6 rounded-xl max-w-lg w-full text-white shadow-xl border border-slate-700">
-            <h2 className="text-2xl font-bold mb-4">About BracketBoss</h2>
-
-            <ul className="space-y-3 text-sm leading-relaxed">
-              <li><strong>Multiple Brackets:</strong> Create up to 5 brackets — all you need is your email.</li>
-              <li><strong>Leaderboard:</strong> Track your rank in real time.</li>
-              <li><strong>Password‑Free Login:</strong> Your email is your key — simple and secure.</li>
-              <li><strong>Mulligans:</strong> Undo your pick if your team loses early.</li>
-              <li><strong>Prizes:</strong> Win bragging rights… and sometimes cash.</li>
-            </ul>
-
-            <button
-              onClick={() => setShowAbout(false)}
-              className="mt-6 w-full bg-emerald-500 py-2 rounded-lg hover:bg-emerald-400"
-            >
-              Close
-            </button>
+      {/* Footer / Branding */}
+      <section className="border-t border-slate-800 pt-6 mt-4">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h2 className="text-sm font-semibold text-slate-300">
+              Powered by BracketBoss: Built for fans who never want the season to end.
+            </h2>
+          </div>
+          <div className="text-xs text-slate-500">
+            <span className="text-slate-400">Sponsor space:</span>{" "}
+            Non-intrusive partner logos can live here.
           </div>
         </div>
-      )}
+      </section>
     </div>
   );
 }

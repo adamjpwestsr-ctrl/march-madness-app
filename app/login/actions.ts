@@ -5,7 +5,6 @@ import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 
 /**
  * Sends a welcome email using Supabase's built-in template.
- * This does NOT create a session — it only triggers your onboarding email.
  */
 async function sendWelcomeEmail(email: string) {
   try {
@@ -14,7 +13,7 @@ async function sendWelcomeEmail(email: string) {
     await supabase.auth.signInWithOtp({
       email,
       options: {
-        shouldCreateUser: false, // prevents auth session creation
+        shouldCreateUser: false,
         emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/login`,
       },
     });
@@ -34,11 +33,16 @@ export async function loginWithEmail(formData: FormData) {
 
   const supabase = await createSupabaseServerClient();
 
-  // Look up user
+  // Always generate username from email
+  const username = email.split("@")[0];
+
+  // Fetch the most recent user record (prevents stale duplicates)
   const { data: dbUser, error: userError } = await supabase
     .from("users")
-    .select("user_id, email, is_admin")
+    .select("user_id, email, username, name, is_admin")
     .eq("email", email)
+    .order("user_id", { ascending: false })
+    .limit(1)
     .maybeSingle();
 
   if (userError) {
@@ -50,8 +54,6 @@ export async function loginWithEmail(formData: FormData) {
 
   // Create user if not found
   if (!dbUser) {
-    const username = email.split("@")[0];
-
     const { data: newUser, error: insertError } = await supabase
       .from("users")
       .insert({
@@ -72,6 +74,17 @@ export async function loginWithEmail(formData: FormData) {
 
     // Send welcome email asynchronously
     await sendWelcomeEmail(email);
+
+    // ⭐ NEW — redirect brand‑new users to name setup
+    return { status: "needsName", email };
+  }
+
+  // If user exists but username is null, fix it
+  if (dbUser && !dbUser.username) {
+    await supabase
+      .from("users")
+      .update({ username })
+      .eq("user_id", dbUser.user_id);
   }
 
   // Admins must enter admin code
@@ -79,13 +92,7 @@ export async function loginWithEmail(formData: FormData) {
     return { status: "needsAdminCode", email };
   }
 
-  // TS safety: ensure userRecord exists
-  if (!userRecord) {
-    console.error("Unexpected null userRecord after lookup/creation");
-    return { status: "error" };
-  }
-
-  // Set session cookie for immediate access
+  // Set session cookie
   const cookieStore = await cookies();
   cookieStore.set(
     "mm_session",
@@ -116,11 +123,13 @@ export async function verifyAdminCode(formData: FormData) {
 
   const supabase = await createSupabaseServerClient();
 
-  // Validate admin
+  // Fetch most recent admin record
   const { data: dbUser, error: userError } = await supabase
     .from("users")
-    .select("user_id, email, is_admin, admin_code")
+    .select("user_id, email, username, is_admin, admin_code")
     .eq("email", email)
+    .order("user_id", { ascending: false })
+    .limit(1)
     .maybeSingle();
 
   if (userError || !dbUser?.is_admin) {
@@ -140,6 +149,15 @@ export async function verifyAdminCode(formData: FormData) {
   if (authError) {
     console.error("Admin login error:", authError);
     return { status: "invalidCredentials" };
+  }
+
+  // Ensure admin has a username
+  const username = email.split("@")[0];
+  if (!dbUser.username) {
+    await supabase
+      .from("users")
+      .update({ username })
+      .eq("user_id", dbUser.user_id);
   }
 
   // Set session cookie

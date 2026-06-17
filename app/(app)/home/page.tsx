@@ -12,16 +12,21 @@ export default async function HomePage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Fetch the corresponding record from your custom users table
+  // Fetch the correct record from your custom users table
   const { data: profile } = await supabase
     .from("users")
     .select("username, email, name")
     .eq("email", user?.email)
+    .order("user_id", { ascending: false }) // ensure newest record
+    .limit(1)
     .single();
 
-  // Determine display name priority
+  // Determine display name priority:
+  // 1. name (only if user explicitly set it)
+  // 2. username (auto-created from email)
+  // 3. email prefix
   const displayName =
-    profile?.name ||
+    profile?.name?.trim() ||
     profile?.username ||
     profile?.email?.split("@")[0] ||
     "Player";

@@ -33,6 +33,11 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
         return;
       }
 
+	if (res.status === "needsName") {
+	  router.push(`/welcome-name?email=${encodeURIComponent(email)}`);
+	  return;
+	}
+
       if (res.status === "success") {
         console.log("✅ Regular user login success — redirecting");
         router.push("/home");

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { loginWithEmail, verifyAdminCode } from "./actions";
 
 type LoginFormProps = {
@@ -13,6 +14,7 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
   const [step, setStep] = useState<"email" | "admin" | "options">("email");
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
 
   const handleEmailSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,6 +25,7 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
       formData.append("email", email);
 
       const res = await loginWithEmail(formData);
+      console.log("loginWithEmail response:", res);
 
       if (res.status === "needsAdminCode") {
         setStep("admin");
@@ -55,11 +58,11 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
       formData.append("adminCode", adminCode);
 
       const res = await verifyAdminCode(formData);
+      console.log("verifyAdminCode response:", res);
 
       if (res.status === "success") {
-        // Admin still uses magic link / callback; no local identity here
-        setStep("options");
-        onStepChange?.("options");
+        // Admin: cookie is set server-side, so we can navigate
+        router.push("/home");
         return;
       }
 
@@ -73,12 +76,18 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
         return;
       }
 
+      if (res.status === "invalidCredentials") {
+        setError("Invalid admin credentials.");
+        return;
+      }
+
       setError("Something went wrong.");
     });
   };
 
   const handleNormalUserContinue = () => {
-    // At this point magic link has been sent; user completes auth via email
+    // Magic link has been sent; user completes auth via email.
+    // We just reset the UI to the email step.
     setStep("email");
     onStepChange?.("email");
   };
@@ -166,6 +175,11 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
 
       {step === "options" && (
         <div className="space-y-4 mt-6">
+          <p className="text-slate-300 text-sm text-center">
+            We’ve sent a magic link to <span className="font-semibold">{email}</span>.  
+            Check your email to finish signing in.
+          </p>
+
           <button
             onClick={handleNormalUserContinue}
             className="
@@ -174,17 +188,7 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
               transition-all duration-200
             "
           >
-            Continue to Sports Hub
-          </button>
-
-          <button
-            onClick={() => {
-              setStep("email");
-              onStepChange?.("email");
-            }}
-            className="w-full text-sm text-gray-400 underline"
-          >
-            Back
+            Back to login
           </button>
         </div>
       )}

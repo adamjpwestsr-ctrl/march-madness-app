@@ -5,19 +5,15 @@ import { loginWithEmail, verifyAdminCode } from "./actions";
 
 type LoginFormProps = {
   onStepChange?: (step: string) => void;
-  onAuthenticatedLogin?: (email: string, name: string, role: string) => void;
 };
 
-export default function LoginForm({ onStepChange, onAuthenticatedLogin }: LoginFormProps) {
+export default function LoginForm({ onStepChange }: LoginFormProps) {
   const [email, setEmail] = useState("");
   const [adminCode, setAdminCode] = useState("");
   const [step, setStep] = useState<"email" | "admin" | "options">("email");
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
 
-  // -----------------------------
-  // STEP 1 — EMAIL SUBMIT
-  // -----------------------------
   const handleEmailSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -35,7 +31,6 @@ export default function LoginForm({ onStepChange, onAuthenticatedLogin }: LoginF
       }
 
       if (res.status === "magicLinkSent") {
-        // Move to options screen
         setStep("options");
         onStepChange?.("options");
         return;
@@ -50,9 +45,6 @@ export default function LoginForm({ onStepChange, onAuthenticatedLogin }: LoginF
     });
   };
 
-  // -----------------------------
-  // STEP 2 — ADMIN CODE SUBMIT
-  // -----------------------------
   const handleAdminCodeSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -65,8 +57,9 @@ export default function LoginForm({ onStepChange, onAuthenticatedLogin }: LoginF
       const res = await verifyAdminCode(formData);
 
       if (res.status === "success") {
-        // ⭐ FINAL AUTH: Admin login
-        onAuthenticatedLogin?.(email, "Admin User", "admin");
+        // Admin still uses magic link / callback; no local identity here
+        setStep("options");
+        onStepChange?.("options");
         return;
       }
 
@@ -84,21 +77,14 @@ export default function LoginForm({ onStepChange, onAuthenticatedLogin }: LoginF
     });
   };
 
-  // -----------------------------
-  // STEP 3 — OPTIONS (Normal User)
-  // -----------------------------
   const handleNormalUserContinue = () => {
-    // ⭐ FINAL AUTH: Normal user login
-    onAuthenticatedLogin?.(email, "User", "user");
+    // At this point magic link has been sent; user completes auth via email
+    setStep("email");
+    onStepChange?.("email");
   };
 
-  // -----------------------------
-  // RENDER
-  // -----------------------------
   return (
     <div className="space-y-4">
-
-      {/* STEP 1 — EMAIL */}
       {step === "email" && (
         <form onSubmit={handleEmailSubmit} className="space-y-4">
           <input
@@ -132,7 +118,6 @@ export default function LoginForm({ onStepChange, onAuthenticatedLogin }: LoginF
         </form>
       )}
 
-      {/* STEP 2 — ADMIN CODE */}
       {step === "admin" && (
         <form onSubmit={handleAdminCodeSubmit} className="space-y-4">
           <input
@@ -179,11 +164,8 @@ export default function LoginForm({ onStepChange, onAuthenticatedLogin }: LoginF
         </form>
       )}
 
-      {/* STEP 3 — OPTIONS */}
       {step === "options" && (
         <div className="space-y-4 mt-6">
-
-          {/* ⭐ FINAL AUTH: Normal user login */}
           <button
             onClick={handleNormalUserContinue}
             className="

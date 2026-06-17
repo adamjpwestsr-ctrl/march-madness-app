@@ -12,7 +12,6 @@ export async function GET(request: Request) {
 
   const supabase = await createSupabaseServerClient();
 
-  // Exchange code for session
   const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
   if (error || !data?.session) {
@@ -27,26 +26,63 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/login`);
   }
 
-  // Load user from DB
+  // Look up user by email
   const { data: dbUser, error: dbError } = await supabase
     .from("users")
-    .select("user_id, email, is_admin")
+    .select("*")
     .eq("email", email)
     .maybeSingle();
 
-  if (dbError || !dbUser) {
-    console.error("DB user lookup error:", dbError);
+  if (dbError) {
+    console.error("DB lookup error:", dbError);
     return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/login`);
   }
 
-  // SET APP SESSION COOKIE
+  let userRecord = dbUser;
+
+  // If user doesn't exist, create one
+  if (!dbUser) {
+    const username = email.split("@")[0];
+
+    const { data: newUser, error: insertError } = await supabase
+      .from("users")
+      .insert({
+        email,
+        username,
+        name: null,
+        is_active: true,
+      })
+      .select()
+      .single();
+
+    if (insertError) {
+      console.error("User insert error:", insertError);
+      return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/login`);
+    }
+
+    userRecord = newUser;
+  }
+
+  // If user exists but has no username, generate one
+  if (userRecord && !userRecord.username) {
+    const username = email.split("@")[0];
+
+    await supabase
+      .from("users")
+      .update({ username })
+      .eq("user_id", userRecord.user_id);
+
+    userRecord.username = username;
+  }
+
+  // Set session cookie
   const cookieStore = await cookies();
   cookieStore.set(
     "mm_session",
     JSON.stringify({
-      userId: dbUser.user_id,
-      email: dbUser.email,
-      isAdmin: dbUser.is_admin ?? false,
+      userId: userRecord.user_id,
+      email: userRecord.email,
+      isAdmin: userRecord.is_admin ?? false,
     }),
     {
       httpOnly: true,

@@ -5,19 +5,17 @@ import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 
 /**
  * Sends a welcome email using Supabase's built-in template.
- * You can customize this template in your Supabase dashboard under Authentication → Email Templates.
+ * This does NOT create a session — it only triggers your onboarding email.
  */
 async function sendWelcomeEmail(email: string) {
   try {
     const supabase = await createSupabaseServerClient();
 
-    // Trigger a "magic link" style email purely for onboarding — not for login.
-    // This uses your existing template but does NOT require the user to click it.
     await supabase.auth.signInWithOtp({
       email,
       options: {
         shouldCreateUser: false, // prevents auth session creation
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/login`, // harmless redirect
+        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/login`,
       },
     });
 
@@ -53,6 +51,7 @@ export async function loginWithEmail(formData: FormData) {
   // Create user if not found
   if (!dbUser) {
     const username = email.split("@")[0];
+
     const { data: newUser, error: insertError } = await supabase
       .from("users")
       .insert({
@@ -78,6 +77,12 @@ export async function loginWithEmail(formData: FormData) {
   // Admins must enter admin code
   if (userRecord?.is_admin) {
     return { status: "needsAdminCode", email };
+  }
+
+  // TS safety: ensure userRecord exists
+  if (!userRecord) {
+    console.error("Unexpected null userRecord after lookup/creation");
+    return { status: "error" };
   }
 
   // Set session cookie for immediate access
@@ -127,7 +132,7 @@ export async function verifyAdminCode(formData: FormData) {
   }
 
   // Login using admin code as password
-  const { data, error: authError } = await supabase.auth.signInWithPassword({
+  const { error: authError } = await supabase.auth.signInWithPassword({
     email,
     password: adminCode,
   });

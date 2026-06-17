@@ -34,7 +34,7 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
       }
 
       if (res.status === "success") {
-        // Regular user: cookie already set server-side
+        console.log("✅ Regular user login success — redirecting");
         router.push("/home");
         return;
       }
@@ -44,6 +44,7 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
         return;
       }
 
+      console.error("❌ Login failed:", res);
       setError("Something went wrong.");
     });
   };
@@ -61,7 +62,7 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
       console.log("verifyAdminCode response:", res);
 
       if (res.status === "success") {
-        // Admin: cookie already set server-side
+        console.log("✅ Admin login success — redirecting");
         router.push("/home");
         return;
       }
@@ -81,6 +82,7 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
         return;
       }
 
+      console.error("❌ Admin login failed:", res);
       setError("Something went wrong.");
     });
   };

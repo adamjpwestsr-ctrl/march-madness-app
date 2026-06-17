@@ -5,21 +5,13 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
 import LoginForm from "@/app/login/LoginForm";
 
 export default function LoginPage() {
   const [showAbout, setShowAbout] = useState(false);
   const [currentStep, setCurrentStep] = useState<"email" | "admin">("email");
   const [highlightIndex, setHighlightIndex] = useState(0);
-
-  const router = useRouter();
-  const params = useSearchParams();
-
-  const labelText =
-    currentStep === "email"
-      ? "Enter your email"
-      : "Admin Code";
+  const [fatalError, setFatalError] = useState<string | null>(null);
 
   const highlights = [
     "🏆 Build your March Madness Bracket",
@@ -36,9 +28,28 @@ export default function LoginPage() {
     return () => clearInterval(interval);
   }, []);
 
+  const labelText = currentStep === "email" ? "Enter your email" : "Admin Code";
+
+  // Error boundary fallback
+  if (fatalError) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-black text-white">
+        <div className="text-center space-y-4">
+          <h1 className="text-3xl font-bold">⚠️ Unexpected Error</h1>
+          <p className="text-slate-300">{fatalError}</p>
+          <button
+            onClick={() => setFatalError(null)}
+            className="bg-emerald-500 px-4 py-2 rounded-lg hover:bg-emerald-400"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-black">
-
       {/* STATIC FADED TEAM LOGO COLLAGE */}
       <div
         className="absolute inset-0 bg-cover bg-center opacity-10 grayscale"
@@ -67,7 +78,6 @@ export default function LoginPage() {
         neon-glow
       "
       >
-
         {/* NEW BADGE */}
         <div className="absolute -top-3 left-4 bg-emerald-500 text-black text-xs font-bold px-3 py-1 rounded-full shadow-md tracking-wide">
           🔥 NEW: Trivia Blitz
@@ -99,7 +109,17 @@ export default function LoginPage() {
         </div>
 
         {/* ⭐ CLEANED LoginForm usage */}
-        <LoginForm onStepChange={setCurrentStep} />
+        <LoginForm
+          onStepChange={(step) => {
+            console.log("🔄 Step changed:", step);
+            try {
+              setCurrentStep(step);
+            } catch (err) {
+              console.error("Fatal render error:", err);
+              setFatalError("Something went wrong rendering the login form.");
+            }
+          }}
+        />
 
         <div className="text-center mt-6">
           <a

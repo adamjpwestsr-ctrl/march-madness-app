@@ -30,7 +30,6 @@ export default function LoginPage() {
 
   const labelText = currentStep === "email" ? "Enter your email" : "Admin Code";
 
-  // Error boundary fallback
   if (fatalError) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-black text-white">
@@ -108,7 +107,7 @@ export default function LoginPage() {
           </button>
         </div>
 
-        {/* ⭐ CLEANED LoginForm usage */}
+        {/* ⭐ Updated LoginForm usage */}
         <LoginForm
           onStepChange={(step) => {
             console.log("🔄 Step changed:", step);

@@ -2,9 +2,8 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
 export async function POST(req: Request) {
-  const cookieStore = cookies();
+  const cookieStore = cookies(); // ❗ NO await
 
-  // ✅ Modern cookie handling
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -20,13 +19,11 @@ export async function POST(req: Request) {
     }
   );
 
-  // ✅ Get authenticated user
   const {
     data: { user },
-    error: userError,
   } = await supabase.auth.getUser();
 
-  if (userError || !user) {
+  if (!user) {
     return Response.json({ error: "Not authenticated" }, { status: 401 });
   }
 
@@ -38,7 +35,6 @@ export async function POST(req: Request) {
     return Response.json({ error: "Missing golferId" }, { status: 400 });
   }
 
-  // ✅ Get current tournament
   const { data: tournament, error: tErr } = await supabase
     .from("golf_tournaments")
     .select("*")
@@ -51,7 +47,6 @@ export async function POST(req: Request) {
 
   const tournamentId = tournament.id;
 
-  // ✅ Upsert pick using auth_id (not user_id)
   const { error: upsertErr } = await supabase
     .from("golf_weekly_picks")
     .upsert(

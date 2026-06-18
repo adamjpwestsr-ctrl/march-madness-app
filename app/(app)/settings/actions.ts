@@ -60,8 +60,14 @@ export async function initializeUsername(authId: string) {
     .maybeSingle();
 
   if (error) throw new Error(error.message);
-  if (data?.username) return data.username;
 
+  // If no row found, bail out safely
+  if (!data) return "user";
+
+  // If username already exists, return it
+  if (data.username) return data.username;
+
+  // Safe email prefix extraction
   const prefix = data.email?.split("@")[0] ?? "user";
 
   const { error: updateErr } = await supabase

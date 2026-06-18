@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
 export async function GET() {
-const cookieStore = cookies();
+  const cookieStore = cookies(); // ✔ correct — no await
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -13,10 +13,18 @@ const cookieStore = cookies();
           return cookieStore.get(name)?.value;
         },
         set(name: string, value: string, options: any) {
-          cookieStore.set({ name, value, ...options });
+          try {
+            cookieStore.set(name, value, options);
+          } catch (e) {
+            console.error("Cookie set error:", e);
+          }
         },
         remove(name: string, options: any) {
-          cookieStore.set({ name, value: "", ...options });
+          try {
+            cookieStore.set(name, "", options);
+          } catch (e) {
+            console.error("Cookie remove error:", e);
+          }
         },
       },
     }
@@ -31,7 +39,7 @@ const cookieStore = cookies();
     return Response.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const userId = user.id;
+  const authId = user.id;
 
   // Current tournament
   let { data: tournament } = await supabase
@@ -60,17 +68,17 @@ const cookieStore = cookies();
     .select("*")
     .order("name", { ascending: true });
 
-  // Load ALL user picks (FIX)
+  // Load ALL picks for this user
   const { data: allPicks } = await supabase
     .from("golf_weekly_picks")
     .select("tournament_id, player_id")
-    .eq("user_id", userId);
+    .eq("auth_id", authId);
 
-  // Load single pick for current tournament
+  // Load pick for current tournament
   const { data: pick } = await supabase
     .from("golf_weekly_picks")
     .select("*")
-    .eq("user_id", userId)
+    .eq("auth_id", authId)
     .eq("tournament_id", tournamentId)
     .maybeSingle();
 
@@ -101,11 +109,11 @@ const cookieStore = cookies();
     : { completed_events: 0, total_events: 0 };
 
   return Response.json({
-    user_id: userId,
+    user_id: authId,
     tournament: tournament ?? null,
     golfers: golfers ?? [],
     pick: pick ?? null,
-    picks: allPicks ?? [],   // ⭐ FIXED — UI now receives all picks
+    picks: allPicks ?? [],
     history: history ?? [],
     leaderboard: leaderboard ?? [],
     season,

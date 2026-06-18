@@ -5,7 +5,7 @@ export async function GET() {
   // -----------------------------
   // 0. Supabase SSR Client (Next.js 14+ best practice)
   // -----------------------------
-  const cookieStore = await cookies();
+const cookieStore = cookies();
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

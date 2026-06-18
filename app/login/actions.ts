@@ -59,16 +59,23 @@ export async function loginWithEmail(formData: FormData) {
 
   // Create user if not found
   if (!dbUser) {
-    const { data: newUser, error: insertError } = await supabase
-      .from("users")
-      .insert({
-        email,
-        username,
-        name: null,
-        is_active: true,
-      })
-      .select()
-      .single();
+  // Get the Supabase Auth user
+  const {
+    data: { user: authUser },
+  } = await supabase.auth.getUser();
+
+  const { data: newUser, error: insertError } = await supabase
+    .from("users")
+    .insert({
+      auth_id: authUser?.id,   // ✅ NEW
+      email,
+      username,
+      name: null,
+      is_active: true,
+    })
+    .select()
+    .single();
+
 
     if (insertError) {
       console.error("User insert error:", insertError);

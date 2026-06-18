@@ -1,10 +1,12 @@
 "use server";
 
+import { createBrowserClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 
 /**
  * Sends a welcome email using Supabase's built-in template.
+ * Uses the BROWSER client to avoid cookie-write errors in server actions.
  */
 async function sendWelcomeEmail(email: string) {
   try {
@@ -78,7 +80,7 @@ export async function loginWithEmail(formData: FormData) {
     // Send welcome email asynchronously
     await sendWelcomeEmail(email);
 
-    // ⭐ NEW — redirect brand‑new users to name setup
+    // Redirect brand‑new users to name setup
     return { status: "needsName", email };
   }
 
@@ -95,7 +97,7 @@ export async function loginWithEmail(formData: FormData) {
     return { status: "needsAdminCode", email };
   }
 
-  // ⭐ NEW — runtime safety guard (fixes TS error)
+  // Runtime safety guard
   if (!userRecord) {
     console.error("Unexpected null userRecord");
     return { status: "error" };

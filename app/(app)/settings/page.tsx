@@ -1,18 +1,19 @@
-import SettingsSection from "@/app/components/SettingsSection";
-import {
-  getUserProfile,
-  updateUserProfile,
-  initializeUsername,
-  getUserBadges,
-} from "./actions";
-import { getCurrentUserSession } from "@/lib/getCurrentUserSession";
 import SettingsClient from "./SettingsClient";
+import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
+import {
+  getUserBadges,
+  initializeUsername,
+} from "./actions";
 
 export default async function SettingsPage() {
- const session = await getCurrentUserSession();
+  const supabase = await createSupabaseServerClient();
 
-  if (!session) {
-    // Not logged in; you can redirect to /login if you prefer
+  // Get current authenticated user
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
     return (
       <p className="text-slate-400">
         You need to be logged in to manage your settings.
@@ -20,24 +21,37 @@ export default async function SettingsPage() {
     );
   }
 
-  const userId = session.userId;
+  // Fetch profile using auth_id
+  const { data: profile, error } = await supabase
+    .from("users")
+    .select(
+      "user_id, auth_id, username, email, phone_number, email_notifications, push_notifications, favorite_sport, theme"
+    )
+    .eq("auth_id", user.id)
+    .maybeSingle();
 
-  const profile = await getUserProfile(userId);
+  if (error) {
+    console.error("Settings page error:", error);
+    throw new Error("Failed to load settings");
+  }
+
+  // Initialize username if missing
   const finalUsername =
-  profile.username || (await initializeUsername(userId));
+    profile?.username || (await initializeUsername(profile?.auth_id));
 
- const badges = await getUserBadges();
+  // Fetch badges
+  const badges = await getUserBadges();
 
   return (
     <SettingsClient
-      userId={userId}
+      userId={profile?.auth_id}          // ⭐ now passing auth_id
       initialUsername={finalUsername}
-      initialEmail={profile.email}
-      initialPhoneNumber={profile.phone_number ?? ""}
-      initialEmailNotifications={profile.email_notifications}
-      initialPushNotifications={profile.push_notifications}
-      initialFavoriteSport={profile.favorite_sport}
-      initialTheme={profile.theme}
+      initialEmail={profile?.email}
+      initialPhoneNumber={profile?.phone_number ?? ""}
+      initialEmailNotifications={profile?.email_notifications}
+      initialPushNotifications={profile?.push_notifications}
+      initialFavoriteSport={profile?.favorite_sport}
+      initialTheme={profile?.theme}
       initialBadges={badges}
     />
   );

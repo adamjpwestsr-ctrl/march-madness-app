@@ -13,13 +13,13 @@ export default async function HomePage() {
   } = await supabase.auth.getUser();
 
   // Fetch the correct record from your custom users table
-  const { data: profile } = await supabase
-    .from("users")
-    .select("username, email, name")
-    .eq("email", user?.email)
-    .order("user_id", { ascending: false }) // ensure newest record
-    .limit(1)
-    .single();
+const { data: profile } = await supabase
+  .from("users")
+  .select("username, email, name")
+  .eq("auth_id", user?.id) // ✅ use auth_id instead of email
+  .order("user_id", { ascending: false })
+  .limit(1)
+  .single();
 
   // Determine display name priority:
   // 1. name (only if user explicitly set it)

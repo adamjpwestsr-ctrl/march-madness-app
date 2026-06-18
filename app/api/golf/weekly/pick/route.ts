@@ -2,36 +2,35 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
 export async function POST(req: Request) {
-  const cookieStore = await cookies();
+  const cookieStore = cookies();
 
+  // ✅ Modern cookie handling
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value;
-        },
-        set(name: string, value: string, options: any) {
-          cookieStore.set({ name, value, ...options });
-        },
-        remove(name: string, options: any) {
-          cookieStore.set({ name, value: "", ...options });
+        getAll: () => cookieStore.getAll(),
+        setAll: (cookiesToSet) => {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            cookieStore.set(name, value, options)
+          );
         },
       },
     }
   );
 
-  // Get authenticated user
+  // ✅ Get authenticated user
   const {
     data: { user },
+    error: userError,
   } = await supabase.auth.getUser();
 
-  if (!user) {
+  if (userError || !user) {
     return Response.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const userId = user.id;
+  const authId = user.id;
   const body = await req.json();
   const golferId = body.golferId;
 
@@ -39,7 +38,7 @@ export async function POST(req: Request) {
     return Response.json({ error: "Missing golferId" }, { status: 400 });
   }
 
-  // Get current tournament
+  // ✅ Get current tournament
   const { data: tournament, error: tErr } = await supabase
     .from("golf_tournaments")
     .select("*")
@@ -52,22 +51,22 @@ export async function POST(req: Request) {
 
   const tournamentId = tournament.id;
 
-  // UPSERT pick (correct conflict target)
-  const { error } = await supabase
+  // ✅ Upsert pick using auth_id (not user_id)
+  const { error: upsertErr } = await supabase
     .from("golf_weekly_picks")
     .upsert(
       {
-        user_id: userId,
+        auth_id: authId,
         tournament_id: tournamentId,
         player_id: golferId,
       },
       {
-        onConflict: "user_id,tournament_id", // ⭐ Correct conflict target
+        onConflict: "auth_id,tournament_id",
       }
     );
 
-  if (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+  if (upsertErr) {
+    return Response.json({ error: upsertErr.message }, { status: 500 });
   }
 
   return Response.json({ success: true });

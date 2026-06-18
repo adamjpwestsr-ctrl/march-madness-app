@@ -7,22 +7,34 @@ import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 export default async function HomePage() {
   const supabase = await createSupabaseServerClient();
 
-  // Get the current authenticated user
+  // Get the current authenticated user (Supabase Auth)
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Fetch the correct record from your custom users table
-const { data: profile } = await supabase
-  .from("users")
-  .select("username, email, name")
-  .eq("auth_id", user?.id) // ✅ use auth_id instead of email
-  .order("user_id", { ascending: false })
-  .limit(1)
-  .single();
+  // If no user session exists, redirect to login
+  if (!user) {
+    return (
+      <div className="text-white p-10 text-center">
+        <p>You are not logged in.</p>
+        <a href="/login" className="text-emerald-400 underline">
+          Go to Login
+        </a>
+      </div>
+    );
+  }
+
+  // Fetch the correct record from your custom users table using auth_id
+  const { data: profile } = await supabase
+    .from("users")
+    .select("username, email, name")
+    .eq("auth_id", user.id) // ⭐ FIXED: use auth_id instead of email
+    .order("user_id", { ascending: false })
+    .limit(1)
+    .maybeSingle();
 
   // Determine display name priority:
-  // 1. name (only if user explicitly set it)
+  // 1. name (if user set it)
   // 2. username (auto-created from email)
   // 3. email prefix
   const displayName =

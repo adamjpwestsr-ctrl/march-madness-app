@@ -7,7 +7,7 @@ import { messaging } from "@/utils/firebase";
 import { getToken } from "firebase/messaging";
 
 type SettingsClientProps = {
-  userId: number;
+  userId: string;  // ← FIXED
   initialUsername: string;
   initialEmail: string;
   initialPhoneNumber: string;

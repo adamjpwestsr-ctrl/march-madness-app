@@ -2,13 +2,20 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
 export async function POST(req: Request) {
-  const cookieStore = cookies();
+  const cookieStore = await cookies(); // 👈 async version
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
-      cookies: cookieStore
+      cookies: {
+        get: (name: string) => cookieStore.get(name)?.value,
+        getAll: () => cookieStore.getAll(),
+        set: (name: string, value: string, options: any) =>
+          cookieStore.set(name, value, options),
+        remove: (name: string, options: any) =>
+          cookieStore.set(name, "", options),
+      },
     }
   );
 

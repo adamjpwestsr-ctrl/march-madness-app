@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { supabaseServerClient } from "@/lib/supabaseServerClient";
 
 export async function POST(req: Request) {
-  const supabase = supabaseServerClient();
+  const supabase = await supabaseServerClient();
   const { questionIds, weekStart } = await req.json();
 
   if (!Array.isArray(questionIds) || questionIds.length !== 10) {

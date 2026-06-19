@@ -3,7 +3,7 @@
 import { supabaseServerClient } from "@/lib/supabaseServerClient";
 
 export async function importQuestions(file: File) {
-  const supabase = supabaseServerClient();
+  const supabase = await supabaseServerClient();
 
   const text = await file.text();
   const lines = text.split(/\r?\n/).filter((line) => line.trim().length > 0);

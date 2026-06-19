@@ -6,7 +6,7 @@ import FeaturedSports from "@/app/components/FeaturedSports";
 import { supabaseServerClient } from "@/lib/supabaseServerClient";
 
 export default async function HomePage() {
-  const supabase = supabaseServerClient();
+  const supabase = await supabaseServerClient();
 
   // Get the current authenticated user (Supabase Auth)
   const {

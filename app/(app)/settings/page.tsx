@@ -7,7 +7,7 @@ import {
 } from "./actions";
 
 export default async function SettingsPage() {
-  const supabase = supabaseServerClient();
+  const supabase = await supabaseServerClient();
 
   // Get current authenticated user
   const {

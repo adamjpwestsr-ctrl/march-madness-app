@@ -7,7 +7,7 @@ export const fetchCache = "force-no-store";
 export const revalidate = 0;
 
 export default async function TriviaAdminPage() {
-  const supabase = supabaseServerClient();
+  const supabase = await supabaseServerClient();
 
   const {
     data: { user },

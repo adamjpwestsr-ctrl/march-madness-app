@@ -4,7 +4,7 @@ import { supabaseServerClient } from "@/lib/supabaseServerClient";
 
 // Toggle ACTIVE
 export async function toggleActive(id: number) {
-  const supabase = supabaseServerClient();
+  const supabase = await supabaseServerClient();
 
   const { data: row, error } = await supabase
     .from("user_challenge_status")
@@ -25,7 +25,7 @@ export async function toggleActive(id: number) {
 
 // Toggle PAID
 export async function togglePaid(id: number) {
-  const supabase = supabaseServerClient();
+  const supabase = await supabaseServerClient();
 
   const { data: row, error } = await supabase
     .from("user_challenge_status")
@@ -52,7 +52,7 @@ export async function addUserToContest(
   userId: string,
   contestIds: string[]
 ) {
-  const supabase = supabaseServerClient();
+  const supabase = await supabaseServerClient();
 
   const numericUserId = Number(userId);
   if (!numericUserId || contestIds.length === 0) return;

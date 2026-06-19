@@ -3,7 +3,7 @@
 import { supabaseServerClient } from "@/lib/supabaseServerClient";
 
 export async function clearLeaderboard() {
-  const supabase = supabaseServerClient();
+  const supabase = await supabaseServerClient();
 
   const { error } = await supabase.from("trivia_rounds").delete().neq("id", 0);
 

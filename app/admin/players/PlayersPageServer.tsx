@@ -3,7 +3,7 @@ import { supabaseServerClient } from "@/lib/supabaseServerClient";
 import PlayersPageClient from "./PlayersPageClient";
 
 export default async function PlayersPageServer() {
-  const supabase = supabaseServerClient();
+  const supabase = await supabaseServerClient();
 
   // 1) Fetch active contests
   if (!supabase) return;

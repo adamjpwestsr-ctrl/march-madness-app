@@ -4,7 +4,7 @@ import AdminSettingsForm from "./settingsForm";
 export const dynamic = "force-dynamic";
 
 export default async function AdminSettingsPage() {
-  const supabase = supabaseServerClient();
+  const supabase = await supabaseServerClient();
 
   if (!supabase) return;
     const { data: admins, error } = await supabase

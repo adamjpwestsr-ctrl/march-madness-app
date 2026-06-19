@@ -11,7 +11,7 @@ function getWeekStart() {
 }
 
 export async function GET() {
-  const supabase = supabaseServerClient();
+  const supabase = await supabaseServerClient();
   const weekStart = getWeekStart();
 
   try {

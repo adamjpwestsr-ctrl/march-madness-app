@@ -36,7 +36,7 @@ export async function loginWithEmail(formData: FormData) {
   const email = formData.get("email")?.toString().trim().toLowerCase();
   if (!email) return { status: "missingEmail" };
 
-  const supabase = supabaseServerClient();
+  const supabase = await supabaseServerClient();
 
   // Always generate username from email
   const username = email.split("@")[0];
@@ -124,7 +124,7 @@ export async function verifyAdminCode(formData: FormData) {
 
   if (!email || !adminCode) return { status: "missingFields" };
 
-  const supabase = supabaseServerClient();
+  const supabase = await supabaseServerClient();
 
   // Fetch most recent admin record
   const { data: dbUser, error: userError } = await supabase

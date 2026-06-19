@@ -7,7 +7,7 @@ import AdminClient from "./AdminClient";
 
 export default async function AdminPage() {
   try {
-    const supabase = supabaseServerClient();
+    const supabase = await supabaseServerClient();
 
     // 1) Get logged-in user
     const {

@@ -28,7 +28,7 @@ export async function getWeeklyData(
   sport: 'NBA' | 'NHL',
   week: number,
 ): Promise<WeeklyData> {
-const supabase = supabaseServerClient();
+const supabase = await supabaseServerClient();
 
 
   const { data: games, error: gamesError } = await supabase

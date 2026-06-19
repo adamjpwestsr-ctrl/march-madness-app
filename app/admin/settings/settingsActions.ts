@@ -3,7 +3,7 @@
 import { supabaseServerClient } from "@/lib/supabaseServerClient";
 
 export async function updateAdminCode(email: string, newCode: string) {
-  const supabase = supabaseServerClient();
+  const supabase = await supabaseServerClient();
 
   const { error } = await supabase
     .from("users")

@@ -20,7 +20,7 @@ export async function GET(request: Request) {
 
   // Initialize Supabase client
   console.log("🔧 Initializing Supabase client...");
-  const supabase = supabaseServerClient();
+  const supabase = await supabaseServerClient();
 
   // Attempt to exchange code for session
   console.log("🔄 Exchanging code for session...");

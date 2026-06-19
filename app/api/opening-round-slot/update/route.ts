@@ -5,7 +5,7 @@ import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 export async function POST(req: Request) {
   const form = await req.formData();
 
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const supabase = createRouteHandlerClient({ cookies });
 
   const { error } = await supabase
@@ -24,4 +24,5 @@ export async function POST(req: Request) {
 
   return NextResponse.redirect("/admin/opening-round");
 }
+
 

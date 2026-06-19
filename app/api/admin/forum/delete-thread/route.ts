@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 
 export async function POST(req: Request) {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const supabase = createRouteHandlerClient({ cookies });
 
   const sessionCookie = cookieStore.get("mm_session");
@@ -29,4 +29,5 @@ export async function POST(req: Request) {
 
   return NextResponse.json({ success: true });
 }
+
 

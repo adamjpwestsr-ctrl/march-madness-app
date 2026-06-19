@@ -5,7 +5,7 @@ import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 export async function POST(req: Request) {
   const body = await req.json();
 
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const supabase = createRouteHandlerClient({ cookies });
 
   const { error } = await supabase.from("opening_round_slots").insert({
@@ -23,4 +23,5 @@ export async function POST(req: Request) {
 
   return NextResponse.json({ success: true });
 }
+
 

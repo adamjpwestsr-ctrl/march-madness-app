@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 
 export async function GET() {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const supabase = createRouteHandlerClient({ cookies });
 
   // Get authenticated user
@@ -94,4 +94,5 @@ export async function GET() {
     season,
   });
 }
+
 

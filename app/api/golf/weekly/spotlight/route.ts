@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 
 export async function GET() {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const supabase = createRouteHandlerClient({ cookies });
 
   // 1. Current Tournament
@@ -95,4 +95,5 @@ export async function GET() {
     },
   });
 }
+
 

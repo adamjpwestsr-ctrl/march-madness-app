@@ -1,18 +1,8 @@
-import { createServerClient } from "@supabase/ssr";
+import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 
 export async function POST(req: Request) {
-  // Still read cookies so Supabase can read the auth token from headers
-  const cookieStore = cookies();
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      // ⭐ DO NOT PASS A COOKIE ADAPTER
-      // Supabase will read the auth cookie from the request headers automatically
-    }
-  );
+  const supabase = createRouteHandlerClient({ cookies });
 
   const {
     data: { user },

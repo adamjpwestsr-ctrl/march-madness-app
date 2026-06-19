@@ -2,21 +2,11 @@ export const runtime = "edge";
 
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { createServerClient } from "@supabase/ssr";
-import type { ReadonlyRequestCookies } from "next/dist/server/web/spec-extension/adapters/request-cookies";
-
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-function getServerClient(cookieStore: ReadonlyRequestCookies) {
-  return createServerClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
-    cookies: cookieStore,
-  });
-}
+import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 
 export async function GET(req: Request) {
-  const cookieStore = await cookies();   // ⭐ REQUIRED IN YOUR ENVIRONMENT
-  const supabase = getServerClient(cookieStore);
+  const cookieStore = cookies();
+  const supabase = createRouteHandlerClient({ cookies: cookieStore });
 
   const { searchParams } = new URL(req.url);
   const threadId = searchParams.get("threadId");
@@ -50,8 +40,8 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const cookieStore = await cookies();   // ⭐ REQUIRED IN YOUR ENVIRONMENT
-  const supabase = getServerClient(cookieStore);
+  const cookieStore = cookies();
+  const supabase = createRouteHandlerClient({ cookies: cookieStore });
 
   const sessionCookie = cookieStore.get("mm_session");
   if (!sessionCookie) {

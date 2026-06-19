@@ -2,14 +2,11 @@ export const runtime = "edge";
 
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { createServerClient } from "@supabase/ssr";
-import type { ReadonlyRequestCookies } from "next/dist/server/web/spec-extension/adapters/request-cookies";
-
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 
 export async function POST(req: Request) {
-  const cookieStore: ReadonlyRequestCookies = await cookies(); // ⭐ async required
+  const cookieStore = cookies();
+  const supabase = createRouteHandlerClient({ cookies: cookieStore });
 
   const sessionCookie = cookieStore.get("mm_session");
   if (!sessionCookie) {
@@ -33,17 +30,13 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Missing fields" }, { status: 400 });
   }
 
-  const supabase = createServerClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
-    cookies: cookieStore,
-  });
-
   const { error } = await supabase.from("forum_reactions").insert({
     post_id: postId,
     email,
     emoji,
   });
 
-  if (error) {
+    if (error) {
     console.error("Reaction error:", error);
     return NextResponse.json({ error: "Failed to react" }, { status: 500 });
   }

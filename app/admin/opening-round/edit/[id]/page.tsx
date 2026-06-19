@@ -1,21 +1,18 @@
-import { createServerClient } from "@supabase/auth-helpers-nextjs";
+import { cookies } from "next/headers";
+import { createServerClient } from "@supabase/ssr";
 
 export default async function EditOpeningRoundSlot({
   params,
 }: {
   params: { id: string };
 }) {
+  const cookieStore = cookies();
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
-      cookies: {
-        get() {
-          return undefined;
-        },
-        set() {},
-        remove() {},
-      },
+      cookies: cookieStore
     }
   );
 

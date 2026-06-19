@@ -1,20 +1,14 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { createServerClient } from "@supabase/ssr";
-
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-function adminClient(cookieStore: any) {
-  return createServerClient(SUPABASE_URL, SERVICE_ROLE_KEY, { cookies: cookieStore });
-}
+import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 
 export async function POST(req: Request) {
-  const cookieStore = await cookies();
-  const supabase = adminClient(cookieStore);
+  const cookieStore = cookies();
+  const supabase = createRouteHandlerClient({ cookies: cookieStore });
 
   const sessionCookie = cookieStore.get("mm_session");
-  if (!sessionCookie) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!sessionCookie)
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const session = JSON.parse(sessionCookie.value);
   if (session.email !== "adamjwester@gmail.com")

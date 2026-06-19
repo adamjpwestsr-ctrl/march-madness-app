@@ -1,23 +1,11 @@
-import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 
 export async function GET() {
-  // -----------------------------
-  // 0. Supabase SSR Client (Next.js 14+ best practice)
-  // -----------------------------
-const cookieStore = cookies();
+  const cookieStore = cookies();
+  const supabase = createRouteHandlerClient({ cookies: cookieStore });
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: cookieStore
-    }
-  );
-
-  // -----------------------------
   // 1. Current Tournament
-  // -----------------------------
   const { data: tournament, error: tournamentError } = await supabase
     .from("golf_tournaments")
     .select("id, name")
@@ -28,18 +16,14 @@ const cookieStore = cookies();
     return Response.json({ error: "No active tournament" }, { status: 400 });
   }
 
-  // -----------------------------
   // 2. Pick Counts
-  // -----------------------------
   const { data: pickCounts } = await supabase
     .from("golf_weekly_pick_counts")
     .select("*")
     .eq("tournament_id", tournament.id)
     .order("pick_count", { ascending: false });
 
-  // -----------------------------
   // 3. Performance Summary
-  // -----------------------------
   const { data: performance } = await supabase
     .from("golf_player_performance_summary")
     .select("*");
@@ -51,17 +35,13 @@ const cookieStore = cookies();
     );
   }
 
-  // -----------------------------
-  // 4. Default Spotlight Values
-  // -----------------------------
+  // 4. Defaults
   let mostPicked = "Currently no selections made";
   let sleeper = "Random selection";
   let trending = "Ludvig Åberg";
   let watch = "Xander Schauffele";
 
-  // -----------------------------
   // 5. MOST PICKED + SLEEPER
-  // -----------------------------
   if (pickCounts && pickCounts.length > 0) {
     const mostPickedPlayerId = pickCounts[0].player_id;
     mostPicked =
@@ -83,10 +63,7 @@ const cookieStore = cookies();
     sleeper = randomPlayer?.name ?? "Random selection";
   }
 
-  // -----------------------------
   // 6. PLAYER TO WATCH
-  //    Most Top‑10s, tie‑break by recent form
-  // -----------------------------
   if (performance.length > 0) {
     const top10Leader = [...performance]
       .filter((p) => p.top_10s > 0)
@@ -98,10 +75,7 @@ const cookieStore = cookies();
     watch = top10Leader?.name ?? "Xander Schauffele";
   }
 
-  // -----------------------------
   // 7. TRENDING
-  //    Best recent_avg_finish (no 3‑tournament requirement)
-  // -----------------------------
   const trendingCandidates = performance
     .filter((p) => p.recent_avg_finish <= 15)
     .sort((a, b) => a.recent_avg_finish - b.recent_avg_finish);
@@ -110,16 +84,14 @@ const cookieStore = cookies();
     trending = trendingCandidates[0]?.name ?? "Ludvig Åberg";
   }
 
-  // -----------------------------
   // 8. Return Spotlight
-  // -----------------------------
   return Response.json({
     tournament: tournament.name,
     spotlight: {
       mostPicked,
       sleeper,
       trending,
-      watch
-    }
+      watch,
+    },
   });
 }

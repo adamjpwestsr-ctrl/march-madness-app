@@ -1,35 +1,7 @@
 import Link from "next/link";
-import { createServerClient } from "@supabase/auth-helpers-nextjs";
+import { cookies } from "next/headers";
+import { createServerClient } from "@supabase/ssr";
 import BadgeLegend from "./BadgeLegend";
-
-/**
- * Expected Supabase schema:
- *
- * TABLE: contests
- *  - id
- *  - name
- *  - slug
- *  - sport_type
- *  - tagline
- *  - status
- *  - players
- *  - icon
- *
- * VIEW: leaderboard_all_challenges
- *  - user_id
- *  - username
- *  - total_points
- *  - contests_played
- *
- * TABLE: badges
- *  - id
- *  - badge_name
- *  - badge_icon
- *  - rule_type ('contests_played' | 'total_points')
- *  - threshold
- *  - tier
- *  - color_class
- */
 
 type Contest = {
   id: string;
@@ -64,21 +36,15 @@ type PlayerWithBadges = LeaderboardRow & {
 };
 
 export default async function LeaderboardHub() {
-  // --- NO-OP COOKIE ADAPTER (Next.js 16 compatible) ---
+  const cookieStore = cookies();
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
-      cookies: {
-        get() {
-          return undefined;
-        },
-        set() {},
-        remove() {}
-      }
+      cookies: cookieStore
     }
   );
-  // ----------------------------------------------------
 
   // Fetch all contests (sports)
   const { data: sports } = await supabase
@@ -119,7 +85,6 @@ export default async function LeaderboardHub() {
 
   return (
     <div className="px-6 pb-20 space-y-16">
-
       {/* HERO SECTION */}
       <section className="w-full py-12 text-center bg-gradient-to-b from-slate-900 to-slate-950 rounded-xl">
         <h1 className="text-4xl font-bold tracking-tight">Bracket Boss</h1>
@@ -149,7 +114,6 @@ export default async function LeaderboardHub() {
 
       {/* CROSS-SPORT LEADERBOARD WITH BADGES + LEGEND */}
       <section>
-
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-2xl font-bold">Top Players Across All Sports</h2>
           <BadgeLegend badges={badgeRules ?? []} />
@@ -201,7 +165,6 @@ export default async function LeaderboardHub() {
   );
 }
 
-/* SPORT CARD COMPONENT */
 function SportCard({ sport }: { sport: Contest }) {
   return (
     <div className="rounded-xl p-6 bg-slate-800/40 backdrop-blur border border-slate-700/40 hover:bg-slate-800/60 transition">

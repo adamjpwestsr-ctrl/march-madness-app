@@ -1,17 +1,16 @@
-import { createServerClient } from "@supabase/auth-helpers-nextjs";
+import { cookies } from "next/headers";
+import { createServerClient } from "@supabase/ssr";
 import { OpeningRoundAdmin } from "./OpeningRoundAdmin";
 import { OpeningRoundSlotEditor } from "./OpeningRoundSlotEditor";
 
 export default async function OpeningRoundAdminPage() {
+  const cookieStore = cookies();
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
-      cookies: {
-        get() { return undefined },
-        set() {},
-        remove() {}
-      }
+      cookies: cookieStore
     }
   );
 
@@ -34,7 +33,6 @@ export default async function OpeningRoundAdminPage() {
     .from("teams")
     .select("*");
 
-  // FIX: Normalize null → []
   const safeR64Games = r64Games ?? [];
   const safeAllTeams = allTeams ?? [];
 

@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // /app/admin/nfl-weelly/page.tsx
 import { supabaseServerClient as createClient } from "@/lib/supabaseServerClient";
 import AdminWeeklyClient from "./AdminWeeklyClient";

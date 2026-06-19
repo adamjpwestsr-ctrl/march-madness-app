@@ -30,6 +30,7 @@ async function sendWelcomeEmail(email: string) {
 
 /**
  * Regular user login — instant access, no magic link required.
+ * This DOES NOT rely on Supabase Auth session; it uses email as app identity.
  */
 export async function loginWithEmail(formData: FormData) {
   const email = formData.get("email")?.toString().trim().toLowerCase();
@@ -40,22 +41,13 @@ export async function loginWithEmail(formData: FormData) {
   // Always generate username from email
   const username = email.split("@")[0];
 
-  // Get the authenticated Supabase user
-  const {
-    data: { user: authUser },
-    error: authError,
-  } = await supabase.auth.getUser();
-
-  if (authError || !authUser) {
-    console.error("Auth user not found:", authError);
-    return { status: "error" };
-  }
-
-  // Fetch user record by auth_id (not email)
+  // Look up user purely by email
   const { data: dbUser, error: userError } = await supabase
     .from("users")
-    .select("user_id, auth_id, email, username, name, is_admin")
-    .eq("auth_id", authUser.id)
+    .select("user_id, email, username, name, is_admin")
+    .eq("email", email)
+    .order("user_id", { ascending: false })
+    .limit(1)
     .maybeSingle();
 
   if (userError) {
@@ -70,7 +62,6 @@ export async function loginWithEmail(formData: FormData) {
     const { data: newUser, error: insertError } = await supabase
       .from("users")
       .insert({
-        auth_id: authUser.id,
         email,
         username,
         name: null,
@@ -116,7 +107,7 @@ export async function loginWithEmail(formData: FormData) {
 }
 
 /**
- * Admin login — verifies admin code and sets session cookie.
+ * Admin login — verifies admin code and sets Supabase Auth session.
  */
 export async function verifyAdminCode(formData: FormData) {
   const email = formData.get("email")?.toString().trim().toLowerCase();
@@ -126,22 +117,13 @@ export async function verifyAdminCode(formData: FormData) {
 
   const supabase = await supabaseServerClient();
 
-  // Get authenticated Supabase user
-  const {
-    data: { user: authUser },
-    error: authError,
-  } = await supabase.auth.getUser();
-
-  if (authError || !authUser) {
-    console.error("Auth user not found:", authError);
-    return { status: "error" };
-  }
-
-  // Fetch admin record by auth_id
+  // Fetch admin record by email
   const { data: dbUser, error: userError } = await supabase
     .from("users")
-    .select("user_id, auth_id, email, username, is_admin, admin_code")
-    .eq("auth_id", authUser.id)
+    .select("user_id, email, username, is_admin, admin_code")
+    .eq("email", email)
+    .order("user_id", { ascending: false })
+    .limit(1)
     .maybeSingle();
 
   if (userError || !dbUser?.is_admin) {
@@ -152,14 +134,14 @@ export async function verifyAdminCode(formData: FormData) {
     return { status: "invalidAdminCode" };
   }
 
-  // Login using admin code as password
-  const { error: authError2 } = await supabase.auth.signInWithPassword({
+  // Login using admin code as password (this sets the Supabase Auth session)
+  const { error: authError } = await supabase.auth.signInWithPassword({
     email,
     password: adminCode,
   });
 
-  if (authError2) {
-    console.error("Admin login error:", authError2);
+  if (authError) {
+    console.error("Admin login error:", authError);
     return { status: "invalidCredentials" };
   }
 

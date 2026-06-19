@@ -63,3 +63,4 @@ export default function AdminSettingsForm({ admins }: { admins: Admin[] }) {
     </div>
   );
 }
+

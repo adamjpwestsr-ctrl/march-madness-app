@@ -52,3 +52,4 @@ export default function MLBCalendar({
     </div>
   );
 }
+

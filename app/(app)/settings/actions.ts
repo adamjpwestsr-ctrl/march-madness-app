@@ -1,12 +1,12 @@
 "use server";
 
-import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
+import { supabaseServerClient } from "@/lib/supabaseServerClient";
 
 /**
  * Fetch user profile by auth_id (Supabase Auth user ID)
  */
 export async function getUserProfile(authId: string) {
-  const supabase = await createSupabaseServerClient();
+  const supabase = supabaseServerClient();
 
   const { data, error } = await supabase
     .from("users")
@@ -35,7 +35,7 @@ export async function updateUserProfile(
     fcm_token: string;
   }>
 ) {
-  const supabase = await createSupabaseServerClient();
+  const supabase = supabaseServerClient();
 
   const { error } = await supabase
     .from("users")
@@ -51,7 +51,7 @@ export async function updateUserProfile(
  * Auto‑generate username from email prefix if missing
  */
 export async function initializeUsername(authId: string) {
-  const supabase = await createSupabaseServerClient();
+  const supabase = supabaseServerClient();
 
   const { data, error } = await supabase
     .from("users")
@@ -84,7 +84,7 @@ export async function initializeUsername(authId: string) {
  * Fetch badges (not user‑specific)
  */
 export async function getUserBadges() {
-  const supabase = await createSupabaseServerClient();
+  const supabase = supabaseServerClient();
 
   const { data, error } = await supabase
     .from("badges")
@@ -97,3 +97,4 @@ export async function getUserBadges() {
 
   return data;
 }
+

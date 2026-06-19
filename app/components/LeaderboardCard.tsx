@@ -11,3 +11,4 @@ export default function LeaderboardCard({ title, value }: LeaderboardCardProps) 
     </div>
   );
 }
+

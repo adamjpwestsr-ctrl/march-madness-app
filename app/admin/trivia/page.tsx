@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
+import { supabaseServerClient } from "@/lib/supabaseServerClient";
 import TriviaAdminServer from "./TriviaAdminServer";
 
 export const dynamic = "force-dynamic";
@@ -7,7 +7,7 @@ export const fetchCache = "force-no-store";
 export const revalidate = 0;
 
 export default async function TriviaAdminPage() {
-  const supabase = await createSupabaseServerClient();
+  const supabase = supabaseServerClient();
 
   const {
     data: { user },
@@ -29,3 +29,4 @@ export default async function TriviaAdminPage() {
 
   return <TriviaAdminServer />;
 }
+

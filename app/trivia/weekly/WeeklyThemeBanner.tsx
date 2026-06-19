@@ -81,3 +81,4 @@ export default function WeeklyThemeBanner({ weekStart, overrideThemeId = null }:
     </div>
   );
 }
+

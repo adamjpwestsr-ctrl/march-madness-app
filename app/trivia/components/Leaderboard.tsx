@@ -119,3 +119,4 @@ export default function Leaderboard({ entries, loading }: Props) {
     </div>
   );
 }
+

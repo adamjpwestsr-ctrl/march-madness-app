@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
+import { supabaseServerClient } from "@/lib/supabaseServerClient";
 
 function getWeekStart() {
   const now = new Date();
@@ -11,7 +11,7 @@ function getWeekStart() {
 }
 
 export async function GET() {
-  const supabase = await createSupabaseServerClient();
+  const supabase = supabaseServerClient();
   const weekStart = getWeekStart();
 
   try {
@@ -104,5 +104,6 @@ export async function GET() {
     );
   }
 }
+
 
 

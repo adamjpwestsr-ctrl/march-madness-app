@@ -302,3 +302,4 @@ export default function AdminWeeklyClient({ teams, settings }: AdminWeeklyProps)
     </div>
   );
 }
+

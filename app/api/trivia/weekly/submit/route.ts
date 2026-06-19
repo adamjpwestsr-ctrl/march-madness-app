@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
+import { supabaseServerClient } from "@/lib/supabaseServerClient";
 
 export async function POST(req: Request) {
-  const supabase = await createSupabaseServerClient();
+  const supabase = supabaseServerClient();
   const body = await req.json();
 
   const {
@@ -49,5 +49,6 @@ export async function POST(req: Request) {
 
   return NextResponse.json({ success: true });
 }
+
 
 

@@ -163,3 +163,4 @@ const handleApplyMulligan = (gameId: number, newTeam: string) => {
     />
   );
 }
+

@@ -31,3 +31,4 @@ export const autoAliases: Record<string, string> = {
   "UT Martin": "UT Martin",
   "UT Arlington": "UT Arlington"
 }
+

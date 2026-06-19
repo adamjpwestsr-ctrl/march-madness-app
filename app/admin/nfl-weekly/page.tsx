@@ -1,5 +1,5 @@
 // /app/admin/nfl-weelly/page.tsx
-import { createSupabaseServerClient as createClient } from "@/lib/supabaseServerClient";
+import { supabaseServerClient as createClient } from "@/lib/supabaseServerClient";
 import AdminWeeklyClient from "./AdminWeeklyClient";
 
 export default async function AdminNFLWeeklyPage() {
@@ -36,3 +36,4 @@ export default async function AdminNFLWeeklyPage() {
     />
   );
 }
+

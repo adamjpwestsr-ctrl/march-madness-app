@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
+import { supabaseServerClient } from "@/lib/supabaseServerClient";
 
 export async function GET() {
-  const supabase = await createSupabaseServerClient();
+  const supabase = supabaseServerClient();
 
   const { data } = await supabase
     .from("trivia_questions")
@@ -11,5 +11,6 @@ export async function GET() {
 
   return NextResponse.json(data);
 }
+
 
 

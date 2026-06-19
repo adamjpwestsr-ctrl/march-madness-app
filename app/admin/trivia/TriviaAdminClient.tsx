@@ -121,3 +121,4 @@ export default function TriviaAdminClient({ questionCount, roundsCount }: Props)
     </div>
   );
 }
+

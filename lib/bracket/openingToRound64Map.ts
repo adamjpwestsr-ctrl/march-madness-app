@@ -12,3 +12,4 @@ export const openingToRound64Map = {
   11: 25,
   12: 30
 };
+

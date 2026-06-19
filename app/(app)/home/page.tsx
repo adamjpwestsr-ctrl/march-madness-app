@@ -2,10 +2,10 @@ import Link from "next/link";
 import WeeklyBanner from "@/app/components/WeeklyBanner";
 import TodayTrivia from "@/app/components/TodayTrivia";
 import FeaturedSports from "@/app/components/FeaturedSports";
-import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
+import { supabaseServerClient } from "@/lib/supabaseServerClient";
 
 export default async function HomePage() {
-  const supabase = await createSupabaseServerClient();
+  const supabase = supabaseServerClient();
 
   // Get the current authenticated user (Supabase Auth)
   const {
@@ -96,3 +96,4 @@ export default async function HomePage() {
     </div>
   );
 }
+

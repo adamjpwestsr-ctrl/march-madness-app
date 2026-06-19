@@ -98,3 +98,4 @@ export default function AddUserToContest({ users, contests }: AddUserToContestPr
     </div>
   );
 }
+

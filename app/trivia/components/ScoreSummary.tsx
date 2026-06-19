@@ -50,3 +50,4 @@ export default function ScoreSummary({ score, correct, wrong, passed }: Props) {
     </div>
   );
 }
+

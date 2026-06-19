@@ -46,3 +46,4 @@ export async function denyUser(formData: FormData) {
 
   await supabase.from("pending_users").delete().eq("email", email);
 }
+

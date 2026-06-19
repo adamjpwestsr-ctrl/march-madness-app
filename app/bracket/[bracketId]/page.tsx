@@ -1,6 +1,6 @@
 // app/bracket/[bracketId]/page.tsx
 import { notFound } from "next/navigation";
-import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
+import { supabaseServerClient } from "@/lib/supabaseServerClient";
 import { buildBracketView, BracketView } from "../buildBracketView";
 import BracketViewerClient from "../BracketViewerClient";
 
@@ -9,7 +9,7 @@ type PageProps = {
 };
 
 export default async function BracketPage({ params }: PageProps) {
-  const supabase = await createSupabaseServerClient();
+  const supabase = supabaseServerClient();
   const bracketId = params.bracketId;
 
   // Load bracket

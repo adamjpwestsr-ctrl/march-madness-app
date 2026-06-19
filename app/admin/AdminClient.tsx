@@ -275,3 +275,4 @@ export default function AdminClient({ adminEmail }: { adminEmail: string }) {
     </div>
   );
 }
+

@@ -20,3 +20,4 @@ export default function BracketWrapper(props: any) {
   // Always render the new bracket system
   return <MobileBracket {...props} />;
 }
+

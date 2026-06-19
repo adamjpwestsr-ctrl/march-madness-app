@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
+import { supabaseServerClient } from "@/lib/supabaseServerClient";
 
 export async function POST(req: Request) {
-  const supabase = await createSupabaseServerClient();
+  const supabase = supabaseServerClient();
   const { questionIds, weekStart } = await req.json();
 
   if (!Array.isArray(questionIds) || questionIds.length !== 10) {
@@ -21,5 +21,6 @@ export async function POST(req: Request) {
 
   return NextResponse.json({ success: true });
 }
+
 
 

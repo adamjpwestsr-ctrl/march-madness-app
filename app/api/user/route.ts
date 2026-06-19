@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
+import { supabaseServerClient } from "@/lib/supabaseServerClient";
 
 export const runtime = "edge";
 
 export async function GET() {
-  const supabase = await createSupabaseServerClient();
+  const supabase = supabaseServerClient();
 
   // Get the authenticated user from Supabase Auth
   const {
@@ -39,5 +39,6 @@ export async function GET() {
     is_admin: profile?.is_admin ?? false,
   });
 }
+
 
 

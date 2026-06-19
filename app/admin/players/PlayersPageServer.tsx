@@ -1,9 +1,9 @@
 // app/admin/players/PlayersPageServer.tsx
-import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
+import { supabaseServerClient } from "@/lib/supabaseServerClient";
 import PlayersPageClient from "./PlayersPageClient";
 
 export default async function PlayersPageServer() {
-  const supabase = await createSupabaseServerClient();
+  const supabase = supabaseServerClient();
 
   // 1) Fetch active contests
   if (!supabase) return;
@@ -59,3 +59,4 @@ export default async function PlayersPageServer() {
     />
   );
 }
+

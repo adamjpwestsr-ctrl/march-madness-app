@@ -22,3 +22,4 @@ export async function getSession(): Promise<Session | null> {
     return null;
   }
 }
+

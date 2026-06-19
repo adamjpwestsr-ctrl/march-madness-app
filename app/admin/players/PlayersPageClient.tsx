@@ -28,3 +28,4 @@ export default function PlayersPageClient({ initialData }: PlayersPageClientProp
     </ToastProvider>
   );
 }
+

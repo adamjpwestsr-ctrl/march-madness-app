@@ -25,3 +25,4 @@ export function getTeamStrength(conference: string) {
 
   return { label: 'Unknown', emoji: '❔' };
 }
+

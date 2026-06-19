@@ -824,3 +824,4 @@ function AdminBracketEditor({
     </div>
   )
 }
+

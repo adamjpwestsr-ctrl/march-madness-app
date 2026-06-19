@@ -36,3 +36,4 @@ export default function Timer({ duration, onExpire }: Props) {
     </div>
   );
 }
+

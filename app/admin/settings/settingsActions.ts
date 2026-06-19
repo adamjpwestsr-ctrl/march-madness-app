@@ -1,9 +1,9 @@
 "use server";
 
-import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
+import { supabaseServerClient } from "@/lib/supabaseServerClient";
 
 export async function updateAdminCode(email: string, newCode: string) {
-  const supabase = await createSupabaseServerClient();
+  const supabase = supabaseServerClient();
 
   const { error } = await supabase
     .from("users")
@@ -17,3 +17,4 @@ export async function updateAdminCode(email: string, newCode: string) {
 
   return { status: "success" };
 }
+

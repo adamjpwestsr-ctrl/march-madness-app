@@ -134,3 +134,4 @@ export default function BracketViewerClient({ view }: Props) {
     </div>
   );
 }
+

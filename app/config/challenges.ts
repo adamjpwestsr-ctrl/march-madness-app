@@ -90,3 +90,4 @@ export const CHALLENGES: ChallengeConfig[] = [
     href: null,
   },
 ];
+

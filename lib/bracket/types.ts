@@ -25,3 +25,4 @@ export interface BracketState {
   final4: Game[];
   championship: Game[];
 }
+

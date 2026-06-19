@@ -128,3 +128,4 @@ export interface Game {
 
   final_score: number | null;
 }
+

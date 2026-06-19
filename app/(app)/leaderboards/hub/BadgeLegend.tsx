@@ -66,3 +66,4 @@ export default function BadgeLegend({ badges }: BadgeLegendProps) {
     </>
   );
 }
+

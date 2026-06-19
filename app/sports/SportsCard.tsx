@@ -11,3 +11,4 @@ export default function SportsCard({ sport, description }: SportsCardProps) {
     </div>
   );
 }
+

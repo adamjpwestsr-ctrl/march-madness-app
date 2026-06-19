@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
+import { supabaseServerClient } from "@/lib/supabaseServerClient";
 
 export async function GET() {
-  const supabase = await createSupabaseServerClient();
+  const supabase = supabaseServerClient();
 
   const { data: games, error } = await supabase
     .from("games")
@@ -20,3 +20,4 @@ export async function GET() {
     games: games ?? [],
   });
 }
+

@@ -18,3 +18,4 @@ export function createGames(teams: Team[], count: number): Game[] {
 
   return games;
 }
+

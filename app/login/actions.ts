@@ -2,7 +2,7 @@
 
 import { createBrowserClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
-import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
+import { supabaseServerClient } from "@/lib/supabaseServerClient";
 
 /**
  * Sends a welcome email using Supabase's built-in template.
@@ -36,7 +36,7 @@ export async function loginWithEmail(formData: FormData) {
   const email = formData.get("email")?.toString().trim().toLowerCase();
   if (!email) return { status: "missingEmail" };
 
-  const supabase = await createSupabaseServerClient();
+  const supabase = supabaseServerClient();
 
   // Always generate username from email
   const username = email.split("@")[0];
@@ -59,23 +59,22 @@ export async function loginWithEmail(formData: FormData) {
 
   // Create user if not found
   if (!dbUser) {
-  // Get the Supabase Auth user
-  const {
-    data: { user: authUser },
-  } = await supabase.auth.getUser();
+    // Get the Supabase Auth user
+    const {
+      data: { user: authUser },
+    } = await supabase.auth.getUser();
 
-  const { data: newUser, error: insertError } = await supabase
-    .from("users")
-    .insert({
-      auth_id: authUser?.id,   // ✅ NEW
-      email,
-      username,
-      name: null,
-      is_active: true,
-    })
-    .select()
-    .single();
-
+    const { data: newUser, error: insertError } = await supabase
+      .from("users")
+      .insert({
+        auth_id: authUser?.id,
+        email,
+        username,
+        name: null,
+        is_active: true,
+      })
+      .select()
+      .single();
 
     if (insertError) {
       console.error("User insert error:", insertError);
@@ -110,22 +109,8 @@ export async function loginWithEmail(formData: FormData) {
     return { status: "error" };
   }
 
-  // Set session cookie
-  const cookieStore = await cookies();
-  cookieStore.set(
-    "mm_session",
-    JSON.stringify({
-      userId: userRecord.user_id,
-      email: userRecord.email,
-      isAdmin: userRecord.is_admin ?? false,
-    }),
-    {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-    }
-  );
+  // ❌ Removed manual cookieStore.set()
+  // Supabase now handles session cookies automatically
 
   return { status: "success" };
 }
@@ -139,7 +124,7 @@ export async function verifyAdminCode(formData: FormData) {
 
   if (!email || !adminCode) return { status: "missingFields" };
 
-  const supabase = await createSupabaseServerClient();
+  const supabase = supabaseServerClient();
 
   // Fetch most recent admin record
   const { data: dbUser, error: userError } = await supabase
@@ -178,22 +163,8 @@ export async function verifyAdminCode(formData: FormData) {
       .eq("user_id", dbUser.user_id);
   }
 
-  // Set session cookie
-  const cookieStore = await cookies();
-  cookieStore.set(
-    "mm_session",
-    JSON.stringify({
-      userId: dbUser.user_id,
-      email: dbUser.email,
-      isAdmin: true,
-    }),
-    {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-    }
-  );
+  // ❌ Removed manual cookieStore.set()
+  // Supabase now handles session cookies automatically
 
   return { status: "success" };
 }

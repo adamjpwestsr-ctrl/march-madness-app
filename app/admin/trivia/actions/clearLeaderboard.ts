@@ -1,9 +1,9 @@
 "use server";
 
-import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
+import { supabaseServerClient } from "@/lib/supabaseServerClient";
 
 export async function clearLeaderboard() {
-  const supabase = await createSupabaseServerClient();
+  const supabase = supabaseServerClient();
 
   const { error } = await supabase.from("trivia_rounds").delete().neq("id", 0);
 
@@ -13,3 +13,4 @@ export async function clearLeaderboard() {
 
   return { ok: true, message: "Leaderboard cleared." };
 }
+

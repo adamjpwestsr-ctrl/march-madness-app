@@ -103,3 +103,4 @@ export const WEEKLY_THEMES: Record<WeeklyThemeId, WeeklyTheme> = {
     gradient: "linear-gradient(135deg, #0f172a, #020617)",
   },
 };
+

@@ -95,3 +95,4 @@ export default function DailyChallenge({ displayName }: { displayName: string })
     </div>
   );
 }
+

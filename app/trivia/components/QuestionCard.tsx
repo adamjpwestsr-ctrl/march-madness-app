@@ -76,3 +76,4 @@ export default function QuestionCard({ question, onSelectChoice, onPass }: Props
     </div>
   );
 }
+

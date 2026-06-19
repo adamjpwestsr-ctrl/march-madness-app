@@ -1,10 +1,10 @@
-import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
+import { supabaseServerClient } from "@/lib/supabaseServerClient";
 import AdminSettingsForm from "./settingsForm";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminSettingsPage() {
-  const supabase = await createSupabaseServerClient();
+  const supabase = supabaseServerClient();
 
   if (!supabase) return;
     const { data: admins, error } = await supabase
@@ -25,3 +25,4 @@ export default async function AdminSettingsPage() {
     </div>
   );
 }
+

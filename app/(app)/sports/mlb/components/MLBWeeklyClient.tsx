@@ -141,3 +141,4 @@ export default function MLBWeeklyClient({ week }: { week: number }) {
     </div>
   );
 }
+

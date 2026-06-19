@@ -15,3 +15,4 @@ export const teamNameAliases: Record<string, string> = {
   // Auto-generated common aliases
   ...autoAliases
 }
+

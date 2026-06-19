@@ -1,9 +1,9 @@
 "use server";
 
-import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
+import { supabaseServerClient } from "@/lib/supabaseServerClient";
 
 export async function importQuestions(file: File) {
-  const supabase = await createSupabaseServerClient();
+  const supabase = supabaseServerClient();
 
   const text = await file.text();
   const lines = text.split(/\r?\n/).filter((line) => line.trim().length > 0);
@@ -84,3 +84,4 @@ export async function importQuestions(file: File) {
 
   return { ok: true, message: `Imported ${rows.length} questions.` };
 }
+

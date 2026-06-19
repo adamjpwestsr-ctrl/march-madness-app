@@ -1,12 +1,12 @@
 import SettingsClient from "./SettingsClient";
-import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
+import { supabaseServerClient } from "@/lib/supabaseServerClient";
 import {
   getUserBadges,
   initializeUsername,
 } from "./actions";
 
 export default async function SettingsPage() {
-  const supabase = await createSupabaseServerClient();
+  const supabase = supabaseServerClient();
 
   // Get current authenticated user
   const {
@@ -56,3 +56,4 @@ export default async function SettingsPage() {
     />
   );
 }
+

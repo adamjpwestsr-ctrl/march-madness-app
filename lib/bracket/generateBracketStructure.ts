@@ -75,3 +75,4 @@ export function generateBracketStructure(teams: Team[]): BracketState {
     championship: championshipGames,
   };
 }
+

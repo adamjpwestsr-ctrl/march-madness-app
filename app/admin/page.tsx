@@ -2,12 +2,12 @@ export const runtime = "edge";
 export const dynamic = "force-dynamic";
 
 import { redirect } from "next/navigation";
-import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
+import { supabaseServerClient } from "@/lib/supabaseServerClient";
 import AdminClient from "./AdminClient";
 
 export default async function AdminPage() {
   try {
-    const supabase = await createSupabaseServerClient();
+    const supabase = supabaseServerClient();
 
     // 1) Get logged-in user
     const {
@@ -55,3 +55,4 @@ export default async function AdminPage() {
     );
   }
 }
+

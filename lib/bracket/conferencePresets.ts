@@ -9,3 +9,4 @@ export const conferencePresets: Record<string, string> = {
   Yale: "Ivy League",
   // Add more as needed
 };
+

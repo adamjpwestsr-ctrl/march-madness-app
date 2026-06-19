@@ -157,3 +157,4 @@ const fallbackLogoStyle: React.CSSProperties = {
   fontSize: 10,
   color: "#e5e7eb",
 };
+

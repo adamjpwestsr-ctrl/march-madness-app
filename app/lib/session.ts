@@ -23,3 +23,4 @@ export async function getSession(): Promise<SessionResult> {
     return null;
   }
 }
+

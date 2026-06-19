@@ -77,3 +77,4 @@ Play now: https://bracketboss-theta.vercel.app/trivia
     </div>
   );
 }
+

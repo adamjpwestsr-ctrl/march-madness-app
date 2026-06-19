@@ -77,3 +77,4 @@ export default function UserRow({ user }: UserRowProps) {
     </tr>
   );
 }
+

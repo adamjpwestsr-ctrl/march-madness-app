@@ -9,3 +9,4 @@ export function getWinners(
     return teams.find(t => t.id === game.winner_id) ?? null;
   });
 }
+

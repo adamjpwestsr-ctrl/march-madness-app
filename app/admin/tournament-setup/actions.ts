@@ -1,6 +1,6 @@
 "use server";
 
-import { createSupabaseServerClient } from "../../../lib/supabaseServerClient";
+import { supabaseServerClient } from "../../../lib/supabaseServerClient";
 
 const REGIONS = ["East", "West", "South", "Midwest"] as const;
 type Region = (typeof REGIONS)[number];
@@ -9,7 +9,7 @@ type Region = (typeof REGIONS)[number];
 // LOAD ALL TEAMS (for dropdowns)
 // ------------------------------------------------------------
 export async function loadAllTeams() {
-  const supabase = await createSupabaseServerClient();
+  const supabase = supabaseServerClient();
 
   const { data, error } = await supabase
     .from("teams")
@@ -30,7 +30,7 @@ export async function loadAllTeams() {
 // OPENING ROUND (ROUND 0)
 // ------------------------------------------------------------
 export async function loadOpeningRoundGames() {
-  const supabase = await createSupabaseServerClient();
+  const supabase = supabaseServerClient();
 
   const { data } = await supabase
     .from("tournament_games")
@@ -44,7 +44,7 @@ export async function loadOpeningRoundGames() {
 export async function saveOpeningRoundGames(
   games: { team1_id: number | null; team2_id: number | null }[]
 ) {
-  const supabase = await createSupabaseServerClient();
+  const supabase = supabaseServerClient();
 
   // Clear existing Opening Round
   await supabase.from("tournament_games").delete().eq("round", 0);
@@ -67,7 +67,7 @@ export async function saveOpeningRoundGames(
 // ROUND OF 64 (ROUND 1)
 // ------------------------------------------------------------
 export async function loadRoundOf64Games(region: Region) {
-  const supabase = await createSupabaseServerClient();
+  const supabase = supabaseServerClient();
 
   const { data } = await supabase
     .from("tournament_games")
@@ -83,7 +83,7 @@ export async function saveRoundOf64Games(
   region: Region,
   games: { team1: string; team2: string }[]
 ) {
-  const supabase = await createSupabaseServerClient();
+  const supabase = supabaseServerClient();
 
   // Clear existing region games
   await supabase
@@ -129,7 +129,7 @@ export async function saveRoundOf64Games(
 // GENERATE REMAINING ROUNDS (2–6)
 // ------------------------------------------------------------
 export async function generateRemainingRounds() {
-  const supabase = await createSupabaseServerClient();
+  const supabase = supabaseServerClient();
 
   // Remove previously generated rounds
   await supabase.from("tournament_games").delete().gte("round", 2);
@@ -232,7 +232,7 @@ export async function generateRemainingRounds() {
 // LEADERBOARD SUPPORT
 // ------------------------------------------------------------
 export async function getLeaderboardScores() {
-  const supabase = await createSupabaseServerClient();
+  const supabase = supabaseServerClient();
 
   const { data, error } = await supabase
     .from("leaderboard_with_rank_change")
@@ -248,7 +248,7 @@ export async function getLeaderboardScores() {
 // LOCK TIME + PUBLISH
 // ------------------------------------------------------------
 export async function updateLockTime(lockTime: string) {
-  const supabase = await createSupabaseServerClient();
+  const supabase = supabaseServerClient();
 
   await supabase
     .from("tournament_settings")
@@ -257,7 +257,7 @@ export async function updateLockTime(lockTime: string) {
 }
 
 export async function publishTournament() {
-  const supabase = await createSupabaseServerClient();
+  const supabase = supabaseServerClient();
 
   const { data: games } = await supabase
     .from("tournament_games")
@@ -293,3 +293,4 @@ export async function publishTournament() {
 
   return { message: "Tournament published successfully!" };
 }
+

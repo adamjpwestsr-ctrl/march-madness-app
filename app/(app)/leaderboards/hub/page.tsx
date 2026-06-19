@@ -189,3 +189,4 @@ function SportCard({ sport }: { sport: Contest }) {
     </div>
   );
 }
+

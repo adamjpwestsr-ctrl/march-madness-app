@@ -29,3 +29,4 @@ export function useWeeklyTheme({
     return WEEKLY_THEMES[WeeklyThemeId.DEFAULT];
   }, [overrideThemeId, weekStart]);
 }
+

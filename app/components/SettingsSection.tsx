@@ -11,3 +11,4 @@ export default function SettingsSection({ title, children }: SettingsSectionProp
     </section>
   );
 }
+

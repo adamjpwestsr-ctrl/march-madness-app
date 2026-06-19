@@ -9,3 +9,4 @@ export default async function LeaderboardPage() {
     <LiveLeaderboardClient initialScores={initialScores} />
   );
 }
+

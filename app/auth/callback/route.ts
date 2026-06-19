@@ -3,7 +3,7 @@
 
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
+import { supabaseServerClient } from "@/lib/supabaseServerClient";
 
 export async function GET(request: Request) {
   console.log("🔥 CALLBACK ROUTE HIT");
@@ -20,7 +20,7 @@ export async function GET(request: Request) {
 
   // Initialize Supabase client
   console.log("🔧 Initializing Supabase client...");
-  const supabase = await createSupabaseServerClient();
+  const supabase = supabaseServerClient();
 
   // Attempt to exchange code for session
   console.log("🔄 Exchanging code for session...");
@@ -126,3 +126,4 @@ export async function GET(request: Request) {
 
   return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/bracket`);
 }
+

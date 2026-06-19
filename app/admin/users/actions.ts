@@ -24,3 +24,4 @@ export async function togglePaid(formData: FormData) {
 
   await supabase.rpc("toggle_user_paid", { input_user_id: userId });
 }
+

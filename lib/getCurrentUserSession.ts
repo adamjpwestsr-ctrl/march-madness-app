@@ -24,3 +24,4 @@ export async function getCurrentUserSession(): Promise<MmSession | null> {
     return null;
   }
 }
+

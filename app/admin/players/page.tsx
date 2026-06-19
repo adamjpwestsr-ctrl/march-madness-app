@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
+import { supabaseServerClient } from "@/lib/supabaseServerClient";
 import PlayersPageServer from "./PlayersPageServer";
 
 export const fetchCache = "force-no-store";
@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 export const runtime = "edge";
 
 export default async function PlayersPage() {
-  const supabase = await createSupabaseServerClient();
+  const supabase = supabaseServerClient();
 
   // 1) Auth
   const {
@@ -33,3 +33,4 @@ export default async function PlayersPage() {
   // ⭐ NEW: Server wrapper handles all data fetching
   return <PlayersPageServer />;
 }
+

@@ -36,3 +36,4 @@ export function OpeningRoundAdmin({ game }: { game: any }) {
     </div>
   );
 }
+

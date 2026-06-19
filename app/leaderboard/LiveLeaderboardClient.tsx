@@ -161,3 +161,4 @@ export default function LiveLeaderboardClient({
     </div>
   );
 }
+

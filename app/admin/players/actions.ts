@@ -1,10 +1,10 @@
 "use server";
 
-import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
+import { supabaseServerClient } from "@/lib/supabaseServerClient";
 
 // Toggle ACTIVE
 export async function toggleActive(id: number) {
-  const supabase = await createSupabaseServerClient();
+  const supabase = supabaseServerClient();
 
   const { data: row, error } = await supabase
     .from("user_challenge_status")
@@ -25,7 +25,7 @@ export async function toggleActive(id: number) {
 
 // Toggle PAID
 export async function togglePaid(id: number) {
-  const supabase = await createSupabaseServerClient();
+  const supabase = supabaseServerClient();
 
   const { data: row, error } = await supabase
     .from("user_challenge_status")
@@ -52,7 +52,7 @@ export async function addUserToContest(
   userId: string,
   contestIds: string[]
 ) {
-  const supabase = await createSupabaseServerClient();
+  const supabase = supabaseServerClient();
 
   const numericUserId = Number(userId);
   if (!numericUserId || contestIds.length === 0) return;
@@ -89,3 +89,4 @@ export async function addUserToContest(
     console.error("addUserToContest: insert error", insertError);
   }
 }
+

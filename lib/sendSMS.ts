@@ -13,3 +13,4 @@ export async function sendSMS(to: string, message: string) {
 
   return res.json();
 }
+

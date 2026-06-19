@@ -11,7 +11,7 @@ type PageProps = {
 };
 
 export default async function BracketPage({ params }: PageProps) {
-  const supabase = supabaseServerClient();
+  const supabase = await supabaseServerClient();   // ✅ FIXED
   const bracketId = params.bracketId;
 
   // Load bracket

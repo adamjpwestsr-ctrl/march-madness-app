@@ -6,13 +6,20 @@ export default async function EditOpeningRoundSlot({
 }: {
   params: { id: string };
 }) {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();   // ✅ FIXED
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
-      cookies: cookieStore
+      cookies: {
+        getAll: () => cookieStore.getAll(),   // ✅ FIXED
+        setAll: (cookiesToSet) => {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            cookieStore.set(name, value, options);   // ✅ FIXED
+          });
+        },
+      },
     }
   );
 

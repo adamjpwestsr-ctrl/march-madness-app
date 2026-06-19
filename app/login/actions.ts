@@ -1,7 +1,6 @@
 "use server";
 
 import { createBrowserClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
 import { supabaseServerClient } from "@/lib/supabaseServerClient";
 
 /**
@@ -41,13 +40,22 @@ export async function loginWithEmail(formData: FormData) {
   // Always generate username from email
   const username = email.split("@")[0];
 
-  // Fetch the most recent user record (prevents stale duplicates)
+  // Get the authenticated Supabase user
+  const {
+    data: { user: authUser },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !authUser) {
+    console.error("Auth user not found:", authError);
+    return { status: "error" };
+  }
+
+  // Fetch user record by auth_id (not email)
   const { data: dbUser, error: userError } = await supabase
     .from("users")
-    .select("user_id, email, username, name, is_admin")
-    .eq("email", email)
-    .order("user_id", { ascending: false })
-    .limit(1)
+    .select("user_id, auth_id, email, username, name, is_admin")
+    .eq("auth_id", authUser.id)
     .maybeSingle();
 
   if (userError) {
@@ -59,15 +67,10 @@ export async function loginWithEmail(formData: FormData) {
 
   // Create user if not found
   if (!dbUser) {
-    // Get the Supabase Auth user
-    const {
-      data: { user: authUser },
-    } = await supabase.auth.getUser();
-
     const { data: newUser, error: insertError } = await supabase
       .from("users")
       .insert({
-        auth_id: authUser?.id,
+        auth_id: authUser.id,
         email,
         username,
         name: null,
@@ -109,9 +112,6 @@ export async function loginWithEmail(formData: FormData) {
     return { status: "error" };
   }
 
-  // ❌ Removed manual cookieStore.set()
-  // Supabase now handles session cookies automatically
-
   return { status: "success" };
 }
 
@@ -126,13 +126,22 @@ export async function verifyAdminCode(formData: FormData) {
 
   const supabase = await supabaseServerClient();
 
-  // Fetch most recent admin record
+  // Get authenticated Supabase user
+  const {
+    data: { user: authUser },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !authUser) {
+    console.error("Auth user not found:", authError);
+    return { status: "error" };
+  }
+
+  // Fetch admin record by auth_id
   const { data: dbUser, error: userError } = await supabase
     .from("users")
-    .select("user_id, email, username, is_admin, admin_code")
-    .eq("email", email)
-    .order("user_id", { ascending: false })
-    .limit(1)
+    .select("user_id, auth_id, email, username, is_admin, admin_code")
+    .eq("auth_id", authUser.id)
     .maybeSingle();
 
   if (userError || !dbUser?.is_admin) {
@@ -144,13 +153,13 @@ export async function verifyAdminCode(formData: FormData) {
   }
 
   // Login using admin code as password
-  const { error: authError } = await supabase.auth.signInWithPassword({
+  const { error: authError2 } = await supabase.auth.signInWithPassword({
     email,
     password: adminCode,
   });
 
-  if (authError) {
-    console.error("Admin login error:", authError);
+  if (authError2) {
+    console.error("Admin login error:", authError2);
     return { status: "invalidCredentials" };
   }
 
@@ -162,9 +171,6 @@ export async function verifyAdminCode(formData: FormData) {
       .update({ username })
       .eq("user_id", dbUser.user_id);
   }
-
-  // ❌ Removed manual cookieStore.set()
-  // Supabase now handles session cookies automatically
 
   return { status: "success" };
 }

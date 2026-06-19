@@ -140,3 +140,4 @@ if (r.fcm_token) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
+

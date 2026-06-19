@@ -3,7 +3,7 @@ import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 
 export async function GET() {
   const cookieStore = cookies();
-  const supabase = createRouteHandlerClient({ cookies: cookieStore });
+  const supabase = createRouteHandlerClient({ cookies });
 
   // Get authenticated user
   const {
@@ -94,3 +94,4 @@ export async function GET() {
     season,
   });
 }
+

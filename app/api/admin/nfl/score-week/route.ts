@@ -38,3 +38,4 @@ export async function POST(req: Request) {
     message: "NFL week scored successfully",
   });
 }
+

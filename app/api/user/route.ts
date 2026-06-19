@@ -39,3 +39,4 @@ export async function GET() {
     is_admin: profile?.is_admin ?? false,
   });
 }
+

@@ -6,7 +6,7 @@ export async function POST(req: Request) {
   const form = await req.formData();
 
   const cookieStore = cookies();
-  const supabase = createRouteHandlerClient({ cookies: cookieStore });
+  const supabase = createRouteHandlerClient({ cookies });
 
   const { error } = await supabase
     .from("opening_round_slots")
@@ -24,3 +24,4 @@ export async function POST(req: Request) {
 
   return NextResponse.redirect("/admin/opening-round");
 }
+

@@ -40,3 +40,4 @@ export async function GET() {
     perfectWeeks: rows?.filter((r) => r.perfect_week).length ?? 0,
   });
 }
+

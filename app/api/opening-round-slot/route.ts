@@ -6,7 +6,7 @@ export async function POST(req: Request) {
   const body = await req.json();
 
   const cookieStore = cookies();
-  const supabase = createRouteHandlerClient({ cookies: cookieStore });
+  const supabase = createRouteHandlerClient({ cookies });
 
   const { error } = await supabase.from("opening_round_slots").insert({
     opening_round_game_id: body.opening_round_game_id,
@@ -23,3 +23,4 @@ export async function POST(req: Request) {
 
   return NextResponse.json({ success: true });
 }
+

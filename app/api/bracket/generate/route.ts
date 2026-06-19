@@ -105,3 +105,4 @@ const supabase = await createClient();
     gamesInserted: bracket.length,
   });
 }
+

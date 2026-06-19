@@ -1,6 +1,7 @@
 "use server";
 
 import { createBrowserClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 import { supabaseServerClient } from "@/lib/supabaseServerClient";
 
 /**
@@ -35,6 +36,12 @@ async function sendWelcomeEmail(email: string) {
 export async function loginWithEmail(formData: FormData) {
   const email = formData.get("email")?.toString().trim().toLowerCase();
   if (!email) return { status: "missingEmail" };
+
+  // ⭐ CRITICAL: wipe any existing Supabase session
+  const cookieStore = await cookies();
+  cookieStore.delete("sb-access-token");
+  cookieStore.delete("sb-refresh-token");
+  cookieStore.delete("supabase-auth-token");
 
   const supabase = await supabaseServerClient();
 

@@ -1,4 +1,6 @@
 // app/leaderboard/page.tsx
+export const dynamic = "force-dynamic";
+
 import { getLeaderboardScores } from "../admin/tournament-setup/actions";
 import LiveLeaderboardClient from "./LiveLeaderboardClient";
 
@@ -9,4 +11,3 @@ export default async function LeaderboardPage() {
     <LiveLeaderboardClient initialScores={initialScores} />
   );
 }
-

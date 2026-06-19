@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 // app/bracket/[bracketId]/page.tsx
 import { notFound } from "next/navigation";
 import { supabaseServerClient } from "@/lib/supabaseServerClient";

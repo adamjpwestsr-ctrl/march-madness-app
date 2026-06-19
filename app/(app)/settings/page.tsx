@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import SettingsClient from "./SettingsClient";
 import { supabaseServerClient } from "@/lib/supabaseServerClient";
 import {

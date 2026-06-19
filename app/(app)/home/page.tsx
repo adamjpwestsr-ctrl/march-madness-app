@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import Link from "next/link";
 import WeeklyBanner from "@/app/components/WeeklyBanner";
 import TodayTrivia from "@/app/components/TodayTrivia";

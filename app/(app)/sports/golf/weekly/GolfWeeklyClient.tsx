@@ -235,18 +235,18 @@ async function handlePick() {
     }
 
     // Update local picks
-    setUserPicks((prev) => {
-      const filtered = prev.filter(
-        (p) => p.tournament_id !== selectedTournamentId
-      );
-      return [
-        ...filtered,
-        {
-          tournament_id: selectedTournamentId,
-          golferId: pickedPlayerId,
-        },
-      ];
-    });
+setUserPicks((prev) => {
+  const filtered = prev.filter(
+    (p) => p.tournament_id !== selectedTournamentId
+  );
+  return [
+    ...filtered,
+    {
+      tournament_id: selectedTournamentId,
+      player_id: pickedPlayerId, // ✅ revert to match UserPick
+    },
+  ];
+});
 
     // Confetti celebration
     confetti({

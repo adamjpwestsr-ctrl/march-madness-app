@@ -119,9 +119,10 @@ export default function GolfWeeklyClient({
   // ----------------------
   // Derived
   // ----------------------
-  const isPastTournament =
-    selectedTournamentId &&
-    pastTournaments.some((t) => t.id === selectedTournamentId);
+  const isPastTournament = !!(
+  selectedTournamentId &&
+  pastTournaments.some((t) => t.id === selectedTournamentId)
+  );
 
   // ----------------------
   // Initial Fetches
@@ -430,7 +431,7 @@ export default function GolfWeeklyClient({
                 <button
                   key={player.id}
                   onClick={() => setPickedPlayerId(player.id)}
-                  disabled={isPastTournament}
+                  disabled={Boolean(isPastTournament)}
                   className={`
                     p-3 rounded-lg border text-sm text-left transition-all
                     ${

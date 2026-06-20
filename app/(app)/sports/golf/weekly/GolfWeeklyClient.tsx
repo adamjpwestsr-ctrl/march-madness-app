@@ -210,6 +210,61 @@ export default function GolfWeeklyClient({
     return "Premium";
   };
 
+// ----------------------
+// Save Pick Handler
+// ----------------------
+async function handlePick() {
+  if (!selectedTournamentId || !pickedPlayerId) return;
+
+  try {
+    setLoadingPick(true);
+
+    const res = await fetch("/api/golf/weekly/pick", {
+      method: "POST",
+      body: JSON.stringify({
+        tournament_id: selectedTournamentId,
+        player_id: pickedPlayerId,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (data.error) {
+      setToast(data.error);
+      return;
+    }
+
+    // Update local picks
+    setUserPicks((prev) => {
+      const filtered = prev.filter(
+        (p) => p.tournament_id !== selectedTournamentId
+      );
+      return [
+        ...filtered,
+        {
+          tournament_id: selectedTournamentId,
+          player_id: pickedPlayerId,
+        },
+      ];
+    });
+
+    // Confetti celebration
+    confetti({
+      particleCount: 80,
+      spread: 60,
+      origin: { y: 0.7 },
+    });
+
+    setToast("Pick saved!");
+  } catch (err) {
+    setToast("Something went wrong.");
+  } finally {
+    setLoadingPick(false);
+  }
+}
+
+
+
   // ----------------------
   // Render
   // ----------------------

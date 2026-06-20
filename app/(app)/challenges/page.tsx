@@ -24,44 +24,52 @@ export default function ChallengesHub() {
         </Link>
       </section>
 
-      {/* ⭐ Challenge Cards Grid */}
-      <section className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {CHALLENGES.map((c) => {
-          // ⭐ Special override: Golf Weekly uses the new dynamic card
-          if (c.id === "golf-weekly") {
-            return (
-              <div key={c.id} className="block">
-                <GolfWeeklyCard />
-              </div>
-            );
-          }
+{/* ⭐ Challenge Cards Grid */}
+<section
+  className="
+    grid
+    gap-6
+    md:grid-cols-2
+    lg:grid-cols-3
+    auto-rows-[1fr]          /* ⭐ Ensures all rows match height */
+  "
+>
+  {CHALLENGES.map((c) => {
+    // ⭐ Special override: Golf Weekly uses the new dynamic card
+    if (c.id === "golf-weekly") {
+      return (
+        <div key={c.id} className="h-full">
+          <GolfWeeklyCard />
+        </div>
+      );
+    }
 
-          // ⭐ Default behavior for all other challenges
-          return c.href ? (
-            <Link key={c.id} href={c.href} className="block">
-              <ChallengeCard
-                sport={c.sport}
-                title={c.title}
-                difficulty={c.difficulty}
-                status={c.status}
-              />
-            </Link>
-          ) : (
-            <div
-              key={c.id}
-              className="opacity-60 cursor-not-allowed"
-              title="Coming Soon"
-            >
-              <ChallengeCard
-                sport={c.sport}
-                title={c.title}
-                difficulty={c.difficulty}
-                status={c.status}
-              />
-            </div>
-          );
-        })}
-      </section>
+    // ⭐ Default behavior for all other challenges
+    return c.href ? (
+      <Link key={c.id} href={c.href} className="h-full block">
+        <ChallengeCard
+          sport={c.sport}
+          title={c.title}
+          difficulty={c.difficulty}
+          status={c.status}
+        />
+      </Link>
+    ) : (
+      <div
+        key={c.id}
+        className="h-full opacity-60 cursor-not-allowed"
+        title="Coming Soon"
+      >
+        <ChallengeCard
+          sport={c.sport}
+          title={c.title}
+          difficulty={c.difficulty}
+          status={c.status}
+        />
+      </div>
+    );
+  })}
+</section>
 
       {/* Bottom Section */}
       <section className="grid gap-6 md:grid-cols-2">

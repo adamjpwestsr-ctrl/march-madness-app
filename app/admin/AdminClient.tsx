@@ -14,10 +14,11 @@ import {
   FaExclamationTriangle,
   FaBasketballBall,
   FaHockeyPuck,
-  FaPhone, // ⭐ NEW ICON
+  FaPhone,
 } from "react-icons/fa";
 
 import { createClient } from "@supabase/supabase-js";
+import AdminSetCurrentTournament from "./components/AdminSetCurrentTournament"; // ⭐ NEW IMPORT
 
 export default function AdminClient({ adminEmail }: { adminEmail: string }) {
   const supabase = createClient(
@@ -122,17 +123,12 @@ export default function AdminClient({ adminEmail }: { adminEmail: string }) {
       title: "Sports Management",
       icon: <FaFootballBall className="text-emerald-400 mr-2" />,
       tools: [
-{ href: "/admin/golf/score-entry", label: "Golf Weekly — Score Entry", icon: <FaGolfBall /> },
-{ href: "/admin/golf/tournament-metadata", label: "Golf Weekly — Tournament Metadata", icon: <FaGolfBall /> },
+        { href: "/admin/golf/score-entry", label: "Golf Weekly — Score Entry", icon: <FaGolfBall /> },
+        { href: "/admin/golf/tournament-metadata", label: "Golf Weekly — Tournament Metadata", icon: <FaGolfBall /> },
         { href: "/admin/mlb", label: "MLB Weekly Admin", icon: <FaBaseballBall /> },
         { href: "/admin/nfl-weekly", label: "NFL Weekly Admin", icon: <FaFootballBall /> },
-
-        // ⭐ NEW — NBA Weekly Admin
         { href: "/admin/nba-weekly", label: "NBA Weekly Admin", icon: <FaBasketballBall /> },
-
-        // ⭐ NEW — NHL Weekly Admin
         { href: "/admin/nhl-weekly", label: "NHL Weekly Admin", icon: <FaHockeyPuck /> },
-
         { href: "/admin/weekly-challenge", label: "Weekly Challenge Admin", icon: <FaChartLine /> },
         { href: "/admin/tournament-setup", label: "Tournament Setup", icon: <FaTools /> },
       ],
@@ -146,8 +142,6 @@ export default function AdminClient({ adminEmail }: { adminEmail: string }) {
         { href: "/admin/mulligans", label: "Mulligan Approvals", icon: <FaTools /> },
         { href: "/admin/snapshots", label: "Payout Snapshots", icon: <FaChartLine /> },
         { href: "/admin/import", label: "Season Import Tool", icon: <FaTools /> },
-
-        // ⭐ NEW — Push Notifications Tool
         { href: "/admin/notifications", label: "Push Notifications", icon: <FaPhone /> },
       ],
     },
@@ -236,6 +230,11 @@ export default function AdminClient({ adminEmail }: { adminEmail: string }) {
           onChange={(e) => setSearch(e.target.value)}
           className="w-full px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-slate-200 focus:outline-none focus:border-sky-500"
         />
+      </div>
+
+      {/* ⭐ NEW: Set Current Tournament Tool */}
+      <div className="max-w-3xl mx-auto mb-12">
+        <AdminSetCurrentTournament />
       </div>
 
       {/* Sections */}

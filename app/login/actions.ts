@@ -103,7 +103,6 @@ export async function loginWithEmail(formData: FormData) {
 
   // Admins must enter admin code
   if (userRecord?.is_admin) {
-    // Set cookie so admin flow knows which email is active
     const cookieStore = await cookies();
     cookieStore.set("user_email", email, {
       httpOnly: true,
@@ -132,7 +131,8 @@ export async function loginWithEmail(formData: FormData) {
 }
 
 /**
- * Admin login — verifies admin code and sets Supabase Auth session.
+ * Admin login — verifies admin code WITHOUT Supabase Auth.
+ * No more AuthSessionMissingError.
  */
 export async function verifyAdminCode(formData: FormData) {
   const email = formData.get("email")?.toString().trim().toLowerCase();
@@ -142,22 +142,11 @@ export async function verifyAdminCode(formData: FormData) {
 
   const supabase = await supabaseServerClient();
 
-  // Get authenticated Supabase user (admin flow still uses Supabase Auth)
-  const {
-    data: { user: authUser },
-    error: authError,
-  } = await supabase.auth.getUser();
-
-  if (authError || !authUser) {
-    console.error("Auth user not found:", authError);
-    return { status: "error" };
-  }
-
-  // Fetch admin record by auth_id
+  // 🔥 Look up admin directly by email (no Supabase Auth session required)
   const { data: dbUser, error: userError } = await supabase
     .from("users")
-    .select("user_id, auth_id, email, username, is_admin, admin_code")
-    .eq("auth_id", authUser.id)
+    .select("user_id, email, username, is_admin, admin_code")
+    .eq("email", email)
     .maybeSingle();
 
   if (userError || !dbUser?.is_admin) {
@@ -168,16 +157,13 @@ export async function verifyAdminCode(formData: FormData) {
     return { status: "invalidAdminCode" };
   }
 
-  // Login using admin code as password (this sets the Supabase Auth session)
-  const { error: authError2 } = await supabase.auth.signInWithPassword({
-    email,
-    password: adminCode,
+  // Set cookie for admin
+  const cookieStore = await cookies();
+  cookieStore.set("user_email", email, {
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/",
   });
-
-  if (authError2) {
-    console.error("Admin login error:", authError2);
-    return { status: "invalidCredentials" };
-  }
 
   // Ensure admin has a username
   const username = email.split("@")[0];
@@ -187,14 +173,6 @@ export async function verifyAdminCode(formData: FormData) {
       .update({ username })
       .eq("user_id", dbUser.user_id);
   }
-
-  // Set cookie for admin as well
-  const cookieStore = await cookies();
-  cookieStore.set("user_email", email, {
-    httpOnly: true,
-    sameSite: "lax",
-    path: "/",
-  });
 
   return { status: "success" };
 }

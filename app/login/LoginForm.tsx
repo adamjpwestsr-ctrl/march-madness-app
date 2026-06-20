@@ -1,14 +1,9 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { loginWithEmail, verifyAdminCode } from "./actions";
-import ClientLogout from "@/app/components/ClientLogout";  // ⭐ ADD THIS
-
-export default function LoginForm({ onStepChange }: LoginFormProps) {
-  return (
-    <>
-      <ClientLogout />   {/* ⭐ Clears Supabase browser session immediately */}
+import { createBrowserClient } from "@supabase/ssr";
 
 type LoginFormProps = {
   onStepChange?: (step: "email" | "admin") => void;
@@ -21,6 +16,15 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
+
+  // ⭐ CLIENT-SIDE LOGOUT — clears stale Supabase session
+  useEffect(() => {
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+    supabase.auth.signOut();
+  }, []);
 
   const handleEmailSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,13 +43,12 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
         return;
       }
 
-	if (res.status === "needsName") {
-	  router.push(`/welcome-name?email=${encodeURIComponent(email)}`);
-	  return;
-	}
+      if (res.status === "needsName") {
+        router.push(`/welcome-name?email=${encodeURIComponent(email)}`);
+        return;
+      }
 
       if (res.status === "success") {
-        console.log("✅ Regular user login success — redirecting");
         router.push("/home");
         return;
       }
@@ -55,7 +58,6 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
         return;
       }
 
-      console.error("❌ Login failed:", res);
       setError("Something went wrong.");
     });
   };
@@ -73,7 +75,6 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
       console.log("verifyAdminCode response:", res);
 
       if (res.status === "success") {
-        console.log("✅ Admin login success — redirecting");
         router.push("/home");
         return;
       }
@@ -93,7 +94,6 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
         return;
       }
 
-      console.error("❌ Admin login failed:", res);
       setError("Something went wrong.");
     });
   };
@@ -181,4 +181,3 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
     </div>
   );
 }
-

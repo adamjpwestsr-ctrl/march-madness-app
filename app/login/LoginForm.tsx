@@ -3,6 +3,12 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { loginWithEmail, verifyAdminCode } from "./actions";
+import ClientLogout from "@/app/components/ClientLogout";  // ⭐ ADD THIS
+
+export default function LoginForm({ onStepChange }: LoginFormProps) {
+  return (
+    <>
+      <ClientLogout />   {/* ⭐ Clears Supabase browser session immediately */}
 
 type LoginFormProps = {
   onStepChange?: (step: "email" | "admin") => void;

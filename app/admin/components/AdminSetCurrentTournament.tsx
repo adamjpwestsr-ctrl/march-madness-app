@@ -8,8 +8,16 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
+// ⭐ Strong typing for tournament rows
+interface TournamentRow {
+  id: number;
+  name: string;
+  start_date: string;
+  is_current: boolean;
+}
+
 export default function AdminSetCurrentTournament() {
-  const [tournaments, setTournaments] = useState([]);
+  const [tournaments, setTournaments] = useState<TournamentRow[]>([]);
   const [currentId, setCurrentId] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
@@ -20,20 +28,33 @@ export default function AdminSetCurrentTournament() {
         .from("golf_tournaments")
         .select("id, name, start_date, is_current")
         .order("start_date", { ascending: true });
+
       if (!error && data) {
         setTournaments(data);
         const current = data.find((t) => t.is_current);
         setCurrentId(current?.id ?? null);
       }
     };
+
     fetchTournaments();
   }, []);
 
   const handleSetCurrent = async (id: number) => {
     setLoading(true);
+
     try {
-      await supabase.from("golf_tournaments").update({ is_current: false }).neq("id", id);
-      await supabase.from("golf_tournaments").update({ is_current: true }).eq("id", id);
+      // Set all tournaments to false except the selected one
+      await supabase
+        .from("golf_tournaments")
+        .update({ is_current: false })
+        .neq("id", id);
+
+      // Set selected tournament to true
+      await supabase
+        .from("golf_tournaments")
+        .update({ is_current: true })
+        .eq("id", id);
+
       setCurrentId(id);
       setToast("Current tournament updated successfully!");
     } catch {

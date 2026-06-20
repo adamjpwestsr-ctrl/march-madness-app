@@ -1,20 +1,21 @@
 export const dynamic = "force-dynamic";
+
 import Link from "next/link";
 import WeeklyBanner from "@/app/components/WeeklyBanner";
 import TodayTrivia from "@/app/components/TodayTrivia";
 import FeaturedSports from "@/app/components/FeaturedSports";
 import { supabaseServerClient } from "@/lib/supabaseServerClient";
+import { cookies } from "next/headers";
 
 export default async function HomePage() {
   const supabase = await supabaseServerClient();
+  const cookieStore = await cookies();
 
-  // Get the current authenticated user (Supabase Auth)
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Read our custom session cookie (email‑only auth)
+  const email = cookieStore.get("user_email")?.value;
 
-  // If no user session exists, redirect to login
-  if (!user) {
+  // If no email cookie exists, show not logged in
+  if (!email) {
     return (
       <div className="text-white p-10 text-center">
         <p>You are not logged in.</p>
@@ -25,11 +26,11 @@ export default async function HomePage() {
     );
   }
 
-  // Fetch the correct record from your custom users table using auth_id
+  // Fetch user profile from your custom users table using email
   const { data: profile } = await supabase
     .from("users")
     .select("username, email, name")
-    .eq("auth_id", user.id) // ⭐ FIXED: use auth_id instead of email
+    .eq("email", email)
     .order("user_id", { ascending: false })
     .limit(1)
     .maybeSingle();
@@ -85,7 +86,8 @@ export default async function HomePage() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <h2 className="text-sm font-semibold text-slate-300">
-              Powered by BracketBoss: Built for fans who never want the season to end.
+              Powered by BracketBoss: Built for fans who never want the season
+              to end.
             </h2>
           </div>
           <div className="text-xs text-slate-500">
@@ -97,4 +99,3 @@ export default async function HomePage() {
     </div>
   );
 }
-

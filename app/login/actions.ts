@@ -2,6 +2,7 @@
 
 import { createBrowserClient } from "@supabase/ssr";
 import { supabaseServerClient } from "@/lib/supabaseServerClient";
+import { cookies } from "next/headers";
 
 /**
  * Sends a welcome email using Supabase's built-in template.
@@ -29,8 +30,8 @@ async function sendWelcomeEmail(email: string) {
 }
 
 /**
- * Regular user login — instant access, no magic link required.
- * This flow does NOT rely on Supabase Auth session.
+ * Regular user login — password‑free, email‑only.
+ * No Supabase Auth session; we use a custom cookie + users table.
  */
 export async function loginWithEmail(formData: FormData) {
   const email = formData.get("email")?.toString().trim().toLowerCase();
@@ -41,7 +42,6 @@ export async function loginWithEmail(formData: FormData) {
   // Always generate username from email
   const username = email.split("@")[0];
 
-  // 🔥 Removed Supabase Auth session lookup — not needed for regular login
   // Look up user purely by email
   const { data: dbUser, error: userError } = await supabase
     .from("users")
@@ -81,6 +81,14 @@ export async function loginWithEmail(formData: FormData) {
     // Send welcome email asynchronously
     await sendWelcomeEmail(email);
 
+    // Set cookie for new user
+    const cookieStore = await cookies();
+    cookieStore.set("user_email", email, {
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+    });
+
     // Redirect brand‑new users to name setup
     return { status: "needsName", email };
   }
@@ -95,6 +103,14 @@ export async function loginWithEmail(formData: FormData) {
 
   // Admins must enter admin code
   if (userRecord?.is_admin) {
+    // Set cookie so admin flow knows which email is active
+    const cookieStore = await cookies();
+    cookieStore.set("user_email", email, {
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+    });
+
     return { status: "needsAdminCode", email };
   }
 
@@ -103,6 +119,14 @@ export async function loginWithEmail(formData: FormData) {
     console.error("Unexpected null userRecord");
     return { status: "error" };
   }
+
+  // Set cookie for regular user
+  const cookieStore = await cookies();
+  cookieStore.set("user_email", email, {
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/",
+  });
 
   return { status: "success" };
 }
@@ -118,7 +142,7 @@ export async function verifyAdminCode(formData: FormData) {
 
   const supabase = await supabaseServerClient();
 
-  // Get authenticated Supabase user
+  // Get authenticated Supabase user (admin flow still uses Supabase Auth)
   const {
     data: { user: authUser },
     error: authError,
@@ -163,6 +187,14 @@ export async function verifyAdminCode(formData: FormData) {
       .update({ username })
       .eq("user_id", dbUser.user_id);
   }
+
+  // Set cookie for admin as well
+  const cookieStore = await cookies();
+  cookieStore.set("user_email", email, {
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/",
+  });
 
   return { status: "success" };
 }

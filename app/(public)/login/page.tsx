@@ -107,7 +107,6 @@ export default function LoginPage() {
           </button>
         </div>
 
-        {/* ⭐ Updated LoginForm usage */}
         <LoginForm
           onStepChange={(step) => {
             console.log("🔄 Step changed:", step);
@@ -137,11 +136,25 @@ export default function LoginPage() {
             <h2 className="text-2xl font-bold mb-4">About BracketBoss</h2>
 
             <ul className="space-y-3 text-sm leading-relaxed">
-              <li><strong>Multiple Brackets:</strong> Create up to 5 brackets — all you need is your email.</li>
-              <li><strong>Leaderboard:</strong> Track your rank in real time.</li>
-              <li><strong>Password‑Free Login:</strong> Your email is your key — simple and secure.</li>
-              <li><strong>Mulligans:</strong> Undo your pick if your team loses early.</li>
-              <li><strong>Prizes:</strong> Win bragging rights… and sometimes cash.</li>
+              <li>
+                <strong>Multiple Brackets:</strong> Create up to 5 brackets —
+                all you need is your email.
+              </li>
+              <li>
+                <strong>Leaderboard:</strong> Track your rank in real time.
+              </li>
+              <li>
+                <strong>Password‑Free Login:</strong> Your email is your key —
+                simple and secure.
+              </li>
+              <li>
+                <strong>Mulligans:</strong> Undo your pick if your team loses
+                early.
+              </li>
+              <li>
+                <strong>Prizes:</strong> Win bragging rights… and sometimes
+                cash.
+              </li>
             </ul>
 
             <button
@@ -156,4 +169,3 @@ export default function LoginPage() {
     </div>
   );
 }
-

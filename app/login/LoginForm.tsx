@@ -17,7 +17,7 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
-  // ⭐ CLIENT-SIDE LOGOUT — clears stale Supabase session
+  // ⭐ CLIENT-SIDE LOGOUT — clears stale Supabase Auth session (for admins)
   useEffect(() => {
     const supabase = createBrowserClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,

@@ -5,6 +5,9 @@ import TriviaModeCard from "@/app/components/TriviaModeCard";
 import LeaderboardCard from "@/app/components/LeaderboardCard";
 import { CHALLENGES } from "@/app/config/challenges";
 
+// ⭐ New import for the dynamic Golf Weekly card
+import GolfWeeklyCard from "@/app/components/GolfWeeklyCard";
+
 export default function ChallengesHub() {
   return (
     <div className="space-y-10">
@@ -21,9 +24,20 @@ export default function ChallengesHub() {
         </Link>
       </section>
 
+      {/* ⭐ Challenge Cards Grid */}
       <section className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {CHALLENGES.map((c) =>
-          c.href ? (
+        {CHALLENGES.map((c) => {
+          // ⭐ Special override: Golf Weekly uses the new dynamic card
+          if (c.id === "golf-weekly") {
+            return (
+              <div key={c.id} className="block">
+                <GolfWeeklyCard />
+              </div>
+            );
+          }
+
+          // ⭐ Default behavior for all other challenges
+          return c.href ? (
             <Link key={c.id} href={c.href} className="block">
               <ChallengeCard
                 sport={c.sport}
@@ -45,10 +59,11 @@ export default function ChallengesHub() {
                 status={c.status}
               />
             </div>
-          )
-        )}
+          );
+        })}
       </section>
 
+      {/* Bottom Section */}
       <section className="grid gap-6 md:grid-cols-2">
         <div className="rounded-xl border border-slate-800 p-6 bg-slate-900/40">
           <h2 className="text-xl font-semibold mb-4">Your Progress</h2>

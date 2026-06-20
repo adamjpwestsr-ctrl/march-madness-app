@@ -23,12 +23,13 @@ export const CHALLENGES: ChallengeConfig[] = [
     status: "Open",
     href: "/trivia",
   },
-  {
+
+{
     id: "golf-weekly",
     title: "Golf Weekly",
     sport: "Golf",
     description: "Pick winners for this week's PGA event.",
-    difficulty: "Medium",
+   difficulty: "Medium",
     status: "Open",
     href: "/sports/golf/weekly",
   },

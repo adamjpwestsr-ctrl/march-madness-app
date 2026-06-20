@@ -223,7 +223,7 @@ async function handlePick() {
       method: "POST",
       body: JSON.stringify({
         tournament_id: selectedTournamentId,
-        player_id: pickedPlayerId,
+        golferId: pickedPlayerId,
       }),
     });
 
@@ -243,7 +243,7 @@ async function handlePick() {
         ...filtered,
         {
           tournament_id: selectedTournamentId,
-          player_id: pickedPlayerId,
+          golferId: pickedPlayerId,
         },
       ];
     });

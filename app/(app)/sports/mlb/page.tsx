@@ -2,15 +2,27 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+
 import MLBCalendar from "./components/MLBCalendar";
 import MLBWeeklyClient from "./components/MLBWeeklyClient";
+
+import DerbyCard from "./components/DerbyCard";
+import DerbyModal from "./components/DerbyModal";
+import MyDerbyPicks from "./components/MyDerbyPicks";
+import PlayoffsCard from "./components/PlayoffsCard";
 
 export default function MLBPage() {
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [streaks, setStreaks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [overlayOpen, setOverlayOpen] = useState(false);
+
+  // Weekly overlay
+  const [weeklyOverlayOpen, setWeeklyOverlayOpen] = useState(false);
   const [selectedWeek, setSelectedWeek] = useState<number | null>(null);
+
+  // Derby modal
+  const [derbyModalOpen, setDerbyModalOpen] = useState(false);
+  const [derbyResultsOpen, setDerbyResultsOpen] = useState(false);
 
   // Fetch leaderboard + streaks
   useEffect(() => {
@@ -23,7 +35,7 @@ export default function MLBPage() {
         const stJson = await stRes.json();
 
         setLeaderboard(lbJson.leaderboard || []);
-        setStreaks(stJson.streaks || []);
+        setStreaks((stJson.streaks || []).slice(0, 8)); // limit to 8 streaking teams
       } catch (err) {
         console.error("MLB main page fetch error:", err);
       } finally {
@@ -36,19 +48,11 @@ export default function MLBPage() {
     <div className="min-h-screen bg-slate-950 text-white px-6 py-8 flex flex-col gap-8">
       <h1 className="text-3xl font-bold tracking-tight">MLB Challenge</h1>
 
-      {/* Calendar + Leaderboard + Streaks */}
+      {/* NEW 3×2 GRID LAYOUT */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-        {/* Calendar */}
-        <MLBCalendar
-          onWeekSelect={(week: number) => {
-            setSelectedWeek(week);
-            setOverlayOpen(true);
-          }}
-        />
-
-        {/* Leaderboard */}
-        <div className="rounded-xl bg-slate-900/70 border border-white/10 p-4 shadow-lg">
+        {/* Compact Leaderboard */}
+        <div className="rounded-xl bg-slate-900/70 border border-white/10 p-4 shadow-lg h-fit">
           <h2 className="text-xl font-semibold mb-4">Leaderboard</h2>
 
           {loading ? (
@@ -56,7 +60,7 @@ export default function MLBPage() {
           ) : leaderboard.length === 0 ? (
             <p className="text-slate-400 text-sm">No leaderboard data yet.</p>
           ) : (
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-3 max-h-[260px] overflow-y-auto pr-1">
               {leaderboard.map((row, i) => (
                 <div
                   key={row.user_id}
@@ -73,6 +77,20 @@ export default function MLBPage() {
             </div>
           )}
         </div>
+
+        {/* Calendar */}
+        <MLBCalendar
+          onWeekSelect={(week: number) => {
+            setSelectedWeek(week);
+            setWeeklyOverlayOpen(true);
+          }}
+        />
+
+        {/* Derby Card */}
+        <DerbyCard
+          onOpenPicks={() => setDerbyModalOpen(true)}
+          onOpenResults={() => setDerbyResultsOpen(true)}
+        />
 
         {/* Streaking Teams */}
         <div className="rounded-xl bg-slate-900/70 border border-white/10 p-4 shadow-lg">
@@ -113,39 +131,23 @@ export default function MLBPage() {
               ))}
             </div>
           )}
-
-          {/* My Picks Section */}
-          <div className="mt-6 border-t border-slate-800 pt-4">
-            <h3 className="text-lg font-semibold mb-2">My Picks</h3>
-            <p className="text-slate-400 text-sm mb-3">
-              View your selections for each week and track your accuracy.
-            </p>
-            <Link
-              href="/sports/mlb/history"
-              className="inline-block px-4 py-2 rounded-md bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium transition-all duration-300 ease-in-out hover:shadow-lg hover:shadow-emerald-500/40"
-            >
-              View MLB History
-            </Link>
-          </div>
         </div>
+
+        {/* My Derby Picks */}
+        <MyDerbyPicks />
+
+        {/* Playoffs Card */}
+        <PlayoffsCard />
       </div>
 
-      {/* Playoff Bracket Button */}
-      <button
-        disabled={true}
-        className="mt-8 px-6 py-3 rounded-lg bg-slate-800 text-slate-400 cursor-not-allowed"
-      >
-        MLB Playoff Bracket
-      </button>
-
       {/* Weekly Overlay */}
-      {overlayOpen && selectedWeek && (
+      {weeklyOverlayOpen && selectedWeek && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-slate-900 border border-white/10 rounded-xl p-6 w-full max-w-3xl shadow-2xl">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">Week {selectedWeek}</h2>
               <button
-                onClick={() => setOverlayOpen(false)}
+                onClick={() => setWeeklyOverlayOpen(false)}
                 className="text-slate-400 hover:text-white"
               >
                 ✕
@@ -155,6 +157,16 @@ export default function MLBPage() {
             <MLBWeeklyClient week={selectedWeek} />
           </div>
         </div>
+      )}
+
+      {/* Derby Modal */}
+      {derbyModalOpen && (
+        <DerbyModal onClose={() => setDerbyModalOpen(false)} />
+      )}
+
+      {/* Derby Results Modal (reuses DerbyModal for now) */}
+      {derbyResultsOpen && (
+        <DerbyModal onClose={() => setDerbyResultsOpen(false)} />
       )}
     </div>
   );

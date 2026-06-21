@@ -72,11 +72,7 @@ export default function GolfWeeklyClient({
   // ----------------------
   const today = new Date();
 
-  const currentTournament = tournaments.find(
-    (t) =>
-      new Date(t.start_date) <= today &&
-      new Date(t.end_date) >= today
-  );
+ const currentTournament = tournaments.find((t) => t.is_current);
 
   const pastTournaments = tournaments.filter(
     (t) => new Date(t.end_date) < today

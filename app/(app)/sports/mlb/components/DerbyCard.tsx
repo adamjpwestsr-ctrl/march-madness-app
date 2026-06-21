@@ -64,7 +64,7 @@ export default function DerbyCard({
       </div>
 
       {loading ? (
-        <p classname="text-slate-400 text-sm">Loading Derby info…</p>
+	<p className="text-slate-400 text-sm">Loading Derby info…</p>
       ) : !event ? (
         <p className="text-slate-400 text-sm">No Derby event created yet.</p>
       ) : (

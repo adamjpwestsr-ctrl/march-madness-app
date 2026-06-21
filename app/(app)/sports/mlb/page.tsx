@@ -5,7 +5,6 @@ import Link from "next/link";
 
 import MLBCalendar from "./components/MLBCalendar";
 import MLBWeeklyClient from "./components/MLBWeeklyClient";
-
 import DerbyCard from "./components/DerbyCard";
 import DerbyModal from "./components/DerbyModal";
 import MyDerbyPicks from "./components/MyDerbyPicks";
@@ -16,15 +15,12 @@ export default function MLBPage() {
   const [streaks, setStreaks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Weekly overlay
   const [weeklyOverlayOpen, setWeeklyOverlayOpen] = useState(false);
   const [selectedWeek, setSelectedWeek] = useState<number | null>(null);
 
-  // Derby modal
   const [derbyModalOpen, setDerbyModalOpen] = useState(false);
   const [derbyResultsOpen, setDerbyResultsOpen] = useState(false);
 
-  // Fetch leaderboard + streaks
   useEffect(() => {
     (async () => {
       try {
@@ -48,48 +44,14 @@ export default function MLBPage() {
     <div className="min-h-screen bg-slate-950 text-white px-6 py-8 flex flex-col gap-8">
       <h1 className="text-3xl font-bold tracking-tight">MLB Challenge</h1>
 
-      {/* NEW 3×2 GRID LAYOUT */}
+      {/* TOP ROW: Calendar | Streaking Teams | Leaderboard */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-        {/* Compact Leaderboard */}
-        <div className="rounded-xl bg-slate-900/70 border border-white/10 p-4 shadow-lg h-fit">
-          <h2 className="text-xl font-semibold mb-4">Leaderboard</h2>
-
-          {loading ? (
-            <p className="text-slate-400 text-sm">Loading leaderboard…</p>
-          ) : leaderboard.length === 0 ? (
-            <p className="text-slate-400 text-sm">No leaderboard data yet.</p>
-          ) : (
-            <div className="flex flex-col gap-3 max-h-[260px] overflow-y-auto pr-1">
-              {leaderboard.map((row, i) => (
-                <div
-                  key={row.user_id}
-                  className="flex items-center justify-between bg-slate-800/40 px-3 py-2 rounded-lg"
-                >
-                  <span className="text-slate-300 font-medium">
-                    {i + 1}. {row.username || `User ${row.user_id.slice(0, 6)}`}
-                  </span>
-                  <span className="text-emerald-400 font-bold">
-                    {row.total_points} pts
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
         {/* Calendar */}
         <MLBCalendar
           onWeekSelect={(week: number) => {
             setSelectedWeek(week);
             setWeeklyOverlayOpen(true);
           }}
-        />
-
-        {/* Derby Card */}
-        <DerbyCard
-          onOpenPicks={() => setDerbyModalOpen(true)}
-          onOpenResults={() => setDerbyResultsOpen(true)}
         />
 
         {/* Streaking Teams */}
@@ -133,10 +95,46 @@ export default function MLBPage() {
           )}
         </div>
 
+        {/* Leaderboard */}
+        <div className="rounded-xl bg-slate-900/70 border border-white/10 p-4 shadow-lg h-fit">
+          <h2 className="text-xl font-semibold mb-4">Leaderboard</h2>
+
+          {loading ? (
+            <p className="text-slate-400 text-sm">Loading leaderboard…</p>
+          ) : leaderboard.length === 0 ? (
+            <p className="text-slate-400 text-sm">No leaderboard data yet.</p>
+          ) : (
+            <div className="flex flex-col gap-3 max-h-[260px] overflow-y-auto pr-1">
+              {leaderboard.map((row, i) => (
+                <div
+                  key={row.user_id}
+                  className="flex items-center justify-between bg-slate-800/40 px-3 py-2 rounded-lg"
+                >
+                  <span className="text-slate-300 font-medium">
+                    {i + 1}. {row.username || `User ${row.user_id.slice(0, 6)}`}
+                  </span>
+                  <span className="text-emerald-400 font-bold">
+                    {row.total_points} pts
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* BOTTOM ROW: Homerun Derby | My Derby Picks | MLB Playoffs Challenge */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Homerun Derby */}
+        <DerbyCard
+          onOpenPicks={() => setDerbyModalOpen(true)}
+          onOpenResults={() => setDerbyResultsOpen(true)}
+        />
+
         {/* My Derby Picks */}
         <MyDerbyPicks />
 
-        {/* Playoffs Card */}
+        {/* MLB Playoffs Challenge */}
         <PlayoffsCard />
       </div>
 
@@ -160,14 +158,10 @@ export default function MLBPage() {
       )}
 
       {/* Derby Modal */}
-      {derbyModalOpen && (
-        <DerbyModal onClose={() => setDerbyModalOpen(false)} />
-      )}
+      {derbyModalOpen && <DerbyModal onClose={() => setDerbyModalOpen(false)} />}
 
       {/* Derby Results Modal (reuses DerbyModal for now) */}
-      {derbyResultsOpen && (
-        <DerbyModal onClose={() => setDerbyResultsOpen(false)} />
-      )}
+      {derbyResultsOpen && <DerbyModal onClose={() => setDerbyResultsOpen(false)} />}
     </div>
   );
 }

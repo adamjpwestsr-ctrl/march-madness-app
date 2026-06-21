@@ -18,7 +18,7 @@ import {
 } from "react-icons/fa";
 
 import { createClient } from "@supabase/supabase-js";
-import AdminSetCurrentTournament from "./components/AdminSetCurrentTournament"; // ⭐ NEW IMPORT
+import AdminSetCurrentTournament from "./components/AdminSetCurrentTournament";
 
 export default function AdminClient({ adminEmail }: { adminEmail: string }) {
   const supabase = createClient(
@@ -52,31 +52,26 @@ export default function AdminClient({ adminEmail }: { adminEmail: string }) {
           .toISOString();
         const currentYear = now.getFullYear();
 
-        // 1. Active Users (last 30 days)
         const { count: activeUsers } = await supabase
           .from("profiles")
           .select("*", { count: "exact", head: true })
           .gte("last_login", thirtyDaysAgo);
 
-        // 2. Pending Users
         const { count: pendingUsers } = await supabase
           .from("profiles")
           .select("*", { count: "exact", head: true })
           .eq("status", "pending");
 
-        // 3. Open Weekly Challenges
         const { count: openChallenges } = await supabase
           .from("sport_lock_times")
           .select("*", { count: "exact", head: true })
           .gt("lock_time", now.toISOString());
 
-        // 4. Total Picks This Week
         const { count: totalPicks } = await supabase
           .from("weekly_picks")
           .select("*", { count: "exact", head: true })
           .eq("week_number", 1);
 
-        // 5. Active Sports
         const { data: sportsData } = await supabase
           .from("sport_schedule")
           .select("sport")
@@ -86,7 +81,6 @@ export default function AdminClient({ adminEmail }: { adminEmail: string }) {
           ? new Set(sportsData.map((d) => d.sport)).size
           : 0;
 
-        // 6. Open Forum Reports
         const { count: openReports } = await supabase
           .from("forum_reports")
           .select("*", { count: "exact", head: true })
@@ -125,7 +119,15 @@ export default function AdminClient({ adminEmail }: { adminEmail: string }) {
       tools: [
         { href: "/admin/golf/score-entry", label: "Golf Weekly — Score Entry", icon: <FaGolfBall /> },
         { href: "/admin/golf/tournament-metadata", label: "Golf Weekly — Tournament Metadata", icon: <FaGolfBall /> },
+
+        // ⭐ NEW: Golf Weekly Current Tournament (moved from floating block)
+        { href: "/admin/golf/current-tournament", label: "Golf Weekly — Current Tournament", icon: <FaGolfBall /> },
+
         { href: "/admin/mlb", label: "MLB Weekly Admin", icon: <FaBaseballBall /> },
+
+        // ⭐ NEW: MLB Derby Admin
+        { href: "/admin/mlb/derby", label: "MLB Derby Admin", icon: <FaBaseballBall /> },
+
         { href: "/admin/nfl-weekly", label: "NFL Weekly Admin", icon: <FaFootballBall /> },
         { href: "/admin/nba-weekly", label: "NBA Weekly Admin", icon: <FaBasketballBall /> },
         { href: "/admin/nhl-weekly", label: "NHL Weekly Admin", icon: <FaHockeyPuck /> },
@@ -230,11 +232,6 @@ export default function AdminClient({ adminEmail }: { adminEmail: string }) {
           onChange={(e) => setSearch(e.target.value)}
           className="w-full px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-slate-200 focus:outline-none focus:border-sky-500"
         />
-      </div>
-
-      {/* ⭐ NEW: Set Current Tournament Tool */}
-      <div className="max-w-3xl mx-auto mb-12">
-        <AdminSetCurrentTournament />
       </div>
 
       {/* Sections */}

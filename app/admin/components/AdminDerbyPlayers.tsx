@@ -15,7 +15,7 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { v4 as uuid } from "uuid";
+const uuid = () => crypto.randomUUID();
 
 interface DerbyEvent {
   id: number;

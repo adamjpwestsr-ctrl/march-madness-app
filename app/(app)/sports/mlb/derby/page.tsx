@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import DerbyParticipantsManager from "@/app/(app)/sports/mlb/components/DerbyParticipantsManager";
-
 
 export default function MLBHomeRunDerbyPage() {
   const [event, setEvent] = useState<any | null>(null);

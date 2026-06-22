@@ -12,7 +12,7 @@ export async function GET(req: Request) {
   }
 
   const { data, error } = await supabase
-    .from("mlb_derby_participants")
+    .from("mlb_derby_players")
     .select("*")
     .eq("event_id", eventId)
     .order("id", { ascending: true });
@@ -32,7 +32,7 @@ export async function POST(req: Request) {
   }
 
   const { data, error } = await supabase
-    .from("mlb_derby_participants")
+    .from("mlb_derby_players")
     .insert([{ event_id, name, team, hr_count: hr_count || 0, image_url }])
     .select()
     .single();
@@ -49,7 +49,7 @@ export async function DELETE(req: Request) {
 
   if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
 
-  const { error } = await supabase.from("mlb_derby_participants").delete().eq("id", id);
+  const { error } = await supabase.from("mlb_derby_players").delete().eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   return NextResponse.json({ success: true });

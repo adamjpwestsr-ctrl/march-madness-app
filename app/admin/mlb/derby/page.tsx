@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import DerbyParticipantsManager from "@/app/(app)/sports/mlb/components/DerbyParticipantsManager";
 
 interface DerbyEvent {
   id: number;

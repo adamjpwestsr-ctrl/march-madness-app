@@ -14,10 +14,13 @@ export async function GET(req: Request) {
   const { data, error } = await supabase
     .from("mlb_derby_players")
     .select("*")
-    .eq("event_id", eventId)
-    .order("id", { ascending: true });
+    .eq("event_id", Number(eventId))
+    .order("order_index", { ascending: true });
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
   return NextResponse.json({ participants: data });
 }
 
@@ -25,19 +28,42 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   const supabase = await createSupabaseServerClient();
   const body = await req.json();
-  const { event_id, name, team, hr_count, image_url } = body;
 
-  if (!event_id || !name || !team) {
-    return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+  const {
+    event_id,
+    player_name,
+    team_name,
+    hr_count = 0,
+    image_url = null,
+    order_index = 0,
+  } = body;
+
+  if (!event_id || !player_name || !team_name) {
+    return NextResponse.json(
+      { error: "Missing required fields: event_id, player_name, team_name" },
+      { status: 400 }
+    );
   }
 
   const { data, error } = await supabase
     .from("mlb_derby_players")
-    .insert([{ event_id, name, team, hr_count: hr_count || 0, image_url }])
+    .insert([
+      {
+        event_id: Number(event_id),
+        player_name,
+        team_name,
+        hr_count: Number(hr_count),
+        image_url,
+        order_index: Number(order_index),
+      },
+    ])
     .select()
     .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
   return NextResponse.json({ participant: data }, { status: 201 });
 }
 
@@ -47,10 +73,18 @@ export async function DELETE(req: Request) {
   const { searchParams } = new URL(req.url);
   const id = searchParams.get("id");
 
-  if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
+  if (!id) {
+    return NextResponse.json({ error: "Missing id" }, { status: 400 });
+  }
 
-  const { error } = await supabase.from("mlb_derby_players").delete().eq("id", id);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  const { error } = await supabase
+    .from("mlb_derby_players")
+    .delete()
+    .eq("id", Number(id));
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 
   return NextResponse.json({ success: true });
 }

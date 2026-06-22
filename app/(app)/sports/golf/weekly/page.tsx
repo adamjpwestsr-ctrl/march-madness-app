@@ -8,6 +8,7 @@ interface Tournament {
   end_date: string;
   category: string | null;
   is_premium_event: boolean | null;
+  is_current: boolean | null; // ⭐ added
 }
 
 interface Player {
@@ -36,7 +37,7 @@ export default async function GolfWeeklyPage() {
     } = await supabase
       .from("golf_tournaments")
       .select(
-        "id, name, start_date, end_date, category, is_premium_event"
+        "id, name, start_date, end_date, category, is_premium_event, is_current" // ⭐ added is_current
       )
       .order("start_date");
 

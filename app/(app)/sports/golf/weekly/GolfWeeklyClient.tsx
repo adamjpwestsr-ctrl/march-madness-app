@@ -13,6 +13,7 @@ interface Tournament {
   end_date: string;
   category: string | null;
   is_premium_event: boolean | null;
+  is_current: boolean | null; // ⭐ added
 }
 
 interface Player {
@@ -72,7 +73,8 @@ export default function GolfWeeklyClient({
   // ----------------------
   const today = new Date();
 
- const currentTournament = tournaments.find((t) => t.is_current);
+  // ⭐ strict admin control
+  const currentTournament = tournaments.find((t) => t.is_current);
 
   const pastTournaments = tournaments.filter(
     (t) => new Date(t.end_date) < today
@@ -116,8 +118,8 @@ export default function GolfWeeklyClient({
   // Derived
   // ----------------------
   const isPastTournament = !!(
-  selectedTournamentId &&
-  pastTournaments.some((t) => t.id === selectedTournamentId)
+    selectedTournamentId &&
+    pastTournaments.some((t) => t.id === selectedTournamentId)
   );
 
   // ----------------------
@@ -206,60 +208,58 @@ export default function GolfWeeklyClient({
     return "Premium";
   };
 
-// ----------------------
-// Save Pick Handler
-// ----------------------
-async function handlePick() {
-  if (!selectedTournamentId || !pickedPlayerId) return;
+  // ----------------------
+  // Save Pick Handler
+  // ----------------------
+  async function handlePick() {
+    if (!selectedTournamentId || !pickedPlayerId) return;
 
-  try {
-    setLoadingPick(true);
+    try {
+      setLoadingPick(true);
 
-    const res = await fetch("/api/golf/weekly/pick", {
-      method: "POST",
-      body: JSON.stringify({
-        tournament_id: selectedTournamentId,
-        golferId: pickedPlayerId,
-      }),
-    });
+      const res = await fetch("/api/golf/weekly/pick", {
+        method: "POST",
+        body: JSON.stringify({
+          tournament_id: selectedTournamentId,
+          golferId: pickedPlayerId,
+        }),
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    if (data.error) {
-      setToast(data.error);
-      return;
+      if (data.error) {
+        setToast(data.error);
+        return;
+      }
+
+      // Update local picks
+      setUserPicks((prev) => {
+        const filtered = prev.filter(
+          (p) => p.tournament_id !== selectedTournamentId
+        );
+        return [
+          ...filtered,
+          {
+            tournament_id: selectedTournamentId,
+            player_id: pickedPlayerId,
+          },
+        ];
+      });
+
+      // Confetti celebration
+      confetti({
+        particleCount: 80,
+        spread: 60,
+        origin: { y: 0.7 },
+      });
+
+      setToast("Pick saved!");
+    } catch (err) {
+      setToast("Something went wrong.");
+    } finally {
+      setLoadingPick(false);
     }
-
-    // Update local picks
-setUserPicks((prev) => {
-  const filtered = prev.filter(
-    (p) => p.tournament_id !== selectedTournamentId
-  );
-  return [
-    ...filtered,
-    {
-      tournament_id: selectedTournamentId,
-      player_id: pickedPlayerId, // ✅ revert to match UserPick
-    },
-  ];
-});
-
-    // Confetti celebration
-    confetti({
-      particleCount: 80,
-      spread: 60,
-      origin: { y: 0.7 },
-    });
-
-    setToast("Pick saved!");
-  } catch (err) {
-    setToast("Something went wrong.");
-  } finally {
-    setLoadingPick(false);
   }
-}
-
-
 
   // ----------------------
   // Render
@@ -304,9 +304,7 @@ setUserPicks((prev) => {
         </div>
       </header>
 
-      {/* ---------------------- */}
       {/* Spotlight + Upcoming Event */}
-      {/* ---------------------- */}
       <section className="w-full grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fadeIn">
         {/* Spotlight */}
         <div className="rounded-xl bg-slate-900/70 border border-white/10 p-5 shadow-xl flex flex-col gap-4">
@@ -404,9 +402,8 @@ setUserPicks((prev) => {
           )}
         </div>
       </section>
-      {/* ---------------------- */}
+
       {/* Current Tournament */}
-      {/* ---------------------- */}
       <section className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 border border-white/10 p-5 md:p-6 shadow-xl flex flex-col gap-4 animate-fadeIn">
         {currentTournament ? (
           <>
@@ -415,7 +412,8 @@ setUserPicks((prev) => {
                 {currentTournament.name}
               </h2>
               <p className="text-slate-400 text-sm">
-                {new Date(currentTournament.start_date).toLocaleDateString()} –{" "}
+                {new Date(currentTournament.start_date).toLocaleDateString()}{" "}
+                –{" "}
                 {new Date(currentTournament.end_date).toLocaleDateString()}
               </p>
 
@@ -436,9 +434,7 @@ setUserPicks((prev) => {
         )}
       </section>
 
-      {/* ---------------------- */}
       {/* Past Tournament Dropdown */}
-      {/* ---------------------- */}
       <section className="space-y-3 animate-fadeIn">
         <h3 className="text-sm font-semibold text-slate-300 uppercase tracking-wide">
           Past Tournaments
@@ -467,9 +463,7 @@ setUserPicks((prev) => {
         )}
       </section>
 
-      {/* ---------------------- */}
       {/* Player Grid */}
-      {/* ---------------------- */}
       <section className="w-full animate-fadeIn">
         <div className="rounded-xl bg-slate-900/70 border border-white/10 p-5 shadow-xl flex flex-col gap-4">
           <h3 className="text-lg font-semibold">Select Your Player</h3>
@@ -524,9 +518,7 @@ setUserPicks((prev) => {
         </div>
       </section>
 
-      {/* ---------------------- */}
       {/* Player Picks Sidebar */}
-      {/* ---------------------- */}
       <button
         onClick={() => setSidebarOpen(true)}
         className="fixed bottom-6 right-6 z-40 bg-slate-900/80 backdrop-blur-xl border border-white/10 px-4 py-2 rounded-full text-sm text-slate-300 hover:text-white shadow-lg"
@@ -570,9 +562,7 @@ setUserPicks((prev) => {
         </div>
       )}
 
-      {/* ---------------------- */}
       {/* Pick History Modal */}
-      {/* ---------------------- */}
       {historyOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xl">
           <div className="w-full max-w-lg bg-slate-900 border border-white/10 rounded-xl p-6 shadow-xl max-h-[80vh] overflow-y-auto">
@@ -612,9 +602,7 @@ setUserPicks((prev) => {
         </div>
       )}
 
-      {/* ---------------------- */}
       {/* Badge Collection Modal */}
-      {/* ---------------------- */}
       {badgeModalOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-xl z-50 flex items-center justify-center">
           <div className="w-full max-w-2xl bg-slate-900/90 border border-white/10 rounded-xl p-6 shadow-xl max-h-[80vh] overflow-y-auto">
@@ -670,9 +658,7 @@ setUserPicks((prev) => {
         </div>
       )}
 
-      {/* ---------------------- */}
       {/* New Badge Toast */}
-      {/* ---------------------- */}
       {newBadge && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50">
           <div className="px-4 py-3 rounded-xl bg-slate-900/95 border border-emerald-400/60 shadow-xl flex items-center gap-3 animate-fadeIn">
@@ -689,9 +675,7 @@ setUserPicks((prev) => {
         </div>
       )}
 
-      {/* ---------------------- */}
       {/* Save Toast */}
-      {/* ---------------------- */}
       {toast && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
           <div className="px-4 py-2 rounded-lg bg-slate-900/90 border border-white/10 shadow-xl text-sm text-white animate-fadeIn">

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import DerbyParticipantsManager from "@/app/(app)/admin/mlb/components/DerbyParticipantsManager";
+import DerbyParticipantsManager from "@/app/(app)/sports/mlb/components/DerbyParticipantsManager";
 
 
 export default function MLBHomeRunDerbyPage() {

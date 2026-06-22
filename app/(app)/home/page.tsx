@@ -2,18 +2,17 @@ import Link from "next/link";
 import WeeklyBanner from "@/app/components/WeeklyBanner";
 import TodayTrivia from "@/app/components/TodayTrivia";
 import FeaturedSports from "@/app/components/FeaturedSports";
-import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
-import { getUserProfile, initializeUsername } from "@/app/(app)/settings/actions";
+import { getCurrentUserSession } from "@/lib/getCurrentUserSession";
+import {
+  getUserProfile,
+  initializeUsername,
+} from "@/app/(app)/settings/actions";
 
 export default async function HomePage() {
-  const supabase = await createSupabaseServerClient();
+  // ✅ Use the same session helper as Settings
+  const session = await getCurrentUserSession();
 
-  // Get the current authenticated user (Supabase Auth)
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
+  if (!session) {
     return (
       <div className="text-white p-10 text-center">
         <p>You are not logged in.</p>
@@ -24,32 +23,16 @@ export default async function HomePage() {
     );
   }
 
-  // ⭐ FIRST: Look up internal user record using auth_id
-  const { data: internal } = await supabase
-    .from("users")
-    .select("user_id, email")
-    .eq("auth_id", user.id)
-    .maybeSingle();
+  const userId = session.userId;
 
-  if (!internal?.user_id) {
-    return (
-      <div className="text-white p-10 text-center">
-        <p>Profile not found.</p>
-      </div>
-    );
-  }
-
-  const internalUserId: number = internal.user_id;
-
-  // ⭐ Use the same logic as SettingsPage
-  const profile = await getUserProfile(internalUserId);
+  // ✅ Same profile + username logic as SettingsPage
+  const profile = await getUserProfile(userId);
   const finalUsername =
-    profile.username || (await initializeUsername(internalUserId));
+    profile.username || (await initializeUsername(userId));
 
-  // ⭐ Display name priority (no profile.name — it does not exist)
   const displayName =
     finalUsername?.trim() ||
-    internal?.email?.split("@")[0] ||
+    profile.email?.split("@")[0] ||
     "Player";
 
   return (
@@ -70,7 +53,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Top row */}
+      {/* Top row: Weekly + Today’s Trivia */}
       <section className="grid gap-6 md:grid-cols-2">
         <Link href="/challenges" className="block">
           <WeeklyBanner />
@@ -81,14 +64,14 @@ export default async function HomePage() {
         </Link>
       </section>
 
-      {/* Featured Sports */}
+      {/* Featured Sports / Challenges */}
       <section>
         <Link href="/sports" className="block">
           <FeaturedSports />
         </Link>
       </section>
 
-      {/* Footer */}
+      {/* Footer / Branding */}
       <section className="border-t border-slate-800 pt-6 mt-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>

@@ -90,7 +90,7 @@ export default function ChallengeCard({
       <p className="text-sm text-slate-400 mb-4">Difficulty: {difficulty}</p>
 
       {/* Premium Pill */}
-      {label && (
+      {label ? (
         <span
           className={`inline-flex items-center gap-2 mb-3 px-3 py-1 text-[11px] uppercase tracking-wide rounded-full ${categoryColor(
             category
@@ -100,6 +100,9 @@ export default function ChallengeCard({
           &nbsp;&nbsp;
           {categoryIcon(category)}
         </span>
+      ) : (
+        // 🩶 Fallback for non‑premium cards
+        <span className="text-xs text-slate-500 mb-3">Standard Challenge</span>
       )}
 
       {/* Status */}

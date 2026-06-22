@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import confetti from "canvas-confetti";
+import { FaTrophy, FaFlagCheckered, FaGolfBall } from "react-icons/fa";
 
 // ----------------------
 // Types
@@ -13,7 +14,7 @@ interface Tournament {
   end_date: string;
   category: string | null;
   is_premium_event: boolean | null;
-  is_current: boolean | null; // ⭐ added
+  is_current: boolean | null;
 }
 
 interface Player {
@@ -68,29 +69,16 @@ export default function GolfWeeklyClient({
   tournaments: Tournament[];
   players: Player[];
 }) {
-  // ----------------------
-  // Tournament grouping
-  // ----------------------
   const today = new Date();
 
-  // ⭐ strict admin control
+  // Strict admin control
   const currentTournament = tournaments.find((t) => t.is_current);
+  const pastTournaments = tournaments.filter((t) => new Date(t.end_date) < today);
+  const upcomingTournament = tournaments.find((t) => new Date(t.start_date) > today);
 
-  const pastTournaments = tournaments.filter(
-    (t) => new Date(t.end_date) < today
-  );
-
-  const upcomingTournament = tournaments.find(
-    (t) => new Date(t.start_date) > today
-  );
-
-  // ----------------------
-  // Core State
-  // ----------------------
   const [selectedTournamentId, setSelectedTournamentId] = useState<number | null>(
     currentTournament?.id ?? null
   );
-
   const [pickedPlayerId, setPickedPlayerId] = useState<number | null>(null);
   const [userPicks, setUserPicks] = useState<UserPick[]>([]);
   const [loadingPick, setLoadingPick] = useState(false);
@@ -98,46 +86,37 @@ export default function GolfWeeklyClient({
   const [toast, setToast] = useState<string | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [leaderboard, setLeaderboard] = useState<LeaderboardRow[]>([]);
-
-  // Spotlight
   const [spotlight, setSpotlight] = useState({
     mostPicked: "Scottie Scheffler",
     sleeper: "Sahith Theegala",
     trending: "Ludvig Åberg",
     watch: "Xander Schauffele",
   });
-
-  // Drop 3: Streaks, Badges, Achievements
   const [streaks, setStreaks] = useState<Streaks | null>(null);
   const [badges, setBadges] = useState<Badge[]>([]);
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [badgeModalOpen, setBadgeModalOpen] = useState(false);
   const [newBadge, setNewBadge] = useState<Badge | null>(null);
 
-  // ----------------------
-  // Derived
-  // ----------------------
   const isPastTournament = !!(
     selectedTournamentId &&
     pastTournaments.some((t) => t.id === selectedTournamentId)
   );
 
   // ----------------------
-  // Initial Fetches
+  // Fetches
   // ----------------------
   useEffect(() => {
     fetch("/api/golf/weekly/state")
       .then((res) => res.json())
       .then((data) => {
         setUserPicks(data.picks || []);
-
         if (selectedTournamentId) {
           const existing = (data.picks || []).find(
             (p: UserPick) => p.tournament_id === selectedTournamentId
           );
           setPickedPlayerId(existing?.player_id ?? null);
         }
-
         setLeaderboard(data.leaderboard || []);
       })
       .catch(() => {});
@@ -145,13 +124,10 @@ export default function GolfWeeklyClient({
 
   useEffect(() => {
     if (!selectedTournamentId) return;
-    const existing = userPicks.find(
-      (p) => p.tournament_id === selectedTournamentId
-    );
+    const existing = userPicks.find((p) => p.tournament_id === selectedTournamentId);
     setPickedPlayerId(existing?.player_id ?? null);
   }, [selectedTournamentId, userPicks]);
 
-  // Spotlight fetch
   useEffect(() => {
     fetch("/api/golf/weekly/spotlight")
       .then((res) => res.json())
@@ -159,7 +135,6 @@ export default function GolfWeeklyClient({
       .catch(() => {});
   }, []);
 
-  // Streaks
   useEffect(() => {
     fetch("/api/golf/weekly/streaks")
       .then((r) => r.json())
@@ -167,7 +142,6 @@ export default function GolfWeeklyClient({
       .catch(() => {});
   }, []);
 
-  // Badges
   useEffect(() => {
     fetch("/api/golf/weekly/badges")
       .then((r) => r.json())
@@ -175,7 +149,6 @@ export default function GolfWeeklyClient({
       .catch(() => {});
   }, []);
 
-  // Achievements
   useEffect(() => {
     fetch("/api/golf/weekly/achievements")
       .then((r) => r.json())
@@ -183,14 +156,12 @@ export default function GolfWeeklyClient({
       .catch(() => {});
   }, []);
 
-  // Toast auto-hide
   useEffect(() => {
     if (!toast) return;
     const t = setTimeout(() => setToast(null), 2500);
     return () => clearTimeout(t);
   }, [toast]);
 
-  // Badge popup auto-hide
   useEffect(() => {
     if (!newBadge) return;
     const t = setTimeout(() => setNewBadge(null), 3000);
@@ -198,7 +169,7 @@ export default function GolfWeeklyClient({
   }, [newBadge]);
 
   // ----------------------
-  // Premium label helper
+  // Label + Color + Icon helpers
   // ----------------------
   const premiumLabel = (t: Tournament) => {
     if (!t.is_premium_event) return null;
@@ -208,59 +179,29 @@ export default function GolfWeeklyClient({
     return "Premium";
   };
 
-  // ----------------------
-  // Save Pick Handler
-  // ----------------------
-  async function handlePick() {
-    if (!selectedTournamentId || !pickedPlayerId) return;
-
-    try {
-      setLoadingPick(true);
-
-      const res = await fetch("/api/golf/weekly/pick", {
-        method: "POST",
-        body: JSON.stringify({
-          tournament_id: selectedTournamentId,
-          golferId: pickedPlayerId,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (data.error) {
-        setToast(data.error);
-        return;
-      }
-
-      // Update local picks
-      setUserPicks((prev) => {
-        const filtered = prev.filter(
-          (p) => p.tournament_id !== selectedTournamentId
-        );
-        return [
-          ...filtered,
-          {
-            tournament_id: selectedTournamentId,
-            player_id: pickedPlayerId,
-          },
-        ];
-      });
-
-      // Confetti celebration
-      confetti({
-        particleCount: 80,
-        spread: 60,
-        origin: { y: 0.7 },
-      });
-
-      setToast("Pick saved!");
-    } catch (err) {
-      setToast("Something went wrong.");
-    } finally {
-      setLoadingPick(false);
+  const categoryColor = (category: string | null) => {
+    switch (category) {
+      case "major":
+        return "bg-emerald-500/10 text-emerald-300 border border-emerald-500/40";
+      case "fedex":
+        return "bg-violet-500/10 text-violet-300 border border-violet-500/40";
+      case "signature":
+        return "bg-yellow-500/10 text-yellow-300 border border-yellow-500/40";
+      default:
+        return "bg-yellow-500/10 text-yellow-300 border border-yellow-500/40";
     }
-  }
+  };
 
+  const categoryIcon = (category: string | null) => {
+    switch (category) {
+      case "major":
+        return <FaTrophy className="text-emerald-300 text-xs" />;
+      case "fedex":
+        return <FaFlagCheckered className="text-violet-300 text-xs" />;
+      default:
+        return <FaGolfBall className="text-yellow-300 text-xs" />;
+    }
+  };
   // ----------------------
   // Render
   // ----------------------
@@ -379,9 +320,14 @@ export default function GolfWeeklyClient({
               </div>
 
               {premiumLabel(upcomingTournament) && (
-                <span className="inline-flex items-center gap-1 px-3 py-1 text-[11px] uppercase tracking-wide rounded-full bg-yellow-500/10 text-yellow-300 border border-yellow-500/40">
-                  <span className="w-1.5 h-1.5 rounded-full bg-yellow-400" />
+                <span
+                  className={`inline-flex items-center gap-2 px-3 py-1 text-[11px] uppercase tracking-wide rounded-full ${categoryColor(
+                    upcomingTournament.category
+                  )}`}
+                >
                   {premiumLabel(upcomingTournament)}
+                  &nbsp;&nbsp;
+                  {categoryIcon(upcomingTournament.category)}
                 </span>
               )}
 
@@ -418,9 +364,14 @@ export default function GolfWeeklyClient({
               </p>
 
               {premiumLabel(currentTournament) && (
-                <span className="inline-flex items-center gap-1 mt-2 px-3 py-1 text-[11px] uppercase tracking-wide rounded-full bg-yellow-500/10 text-yellow-300 border border-yellow-500/40">
-                  <span className="w-1.5 h-1.5 rounded-full bg-yellow-400" />
+                <span
+                  className={`inline-flex items-center gap-2 mt-2 px-3 py-1 text-[11px] uppercase tracking-wide rounded-full ${categoryColor(
+                    currentTournament.category
+                  )}`}
+                >
                   {premiumLabel(currentTournament)}
+                  &nbsp;&nbsp;
+                  {categoryIcon(currentTournament.category)}
                 </span>
               )}
             </div>
@@ -517,7 +468,6 @@ export default function GolfWeeklyClient({
           </button>
         </div>
       </section>
-
       {/* Player Picks Sidebar */}
       <button
         onClick={() => setSidebarOpen(true)}

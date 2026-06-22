@@ -202,6 +202,96 @@ export default function GolfWeeklyClient({
         return <FaGolfBall className="text-yellow-300 text-xs" />;
     }
   };
+
+  // ----------------------
+  // Handle Pick
+  // ----------------------
+  const handlePick = async () => {
+    if (!selectedTournamentId || !pickedPlayerId) return;
+
+    try {
+      setLoadingPick(true);
+
+      const res = await fetch("/api/golf/weekly/pick", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tournament_id: selectedTournamentId,
+          player_id: pickedPlayerId,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setToast(data.error || "Failed to save pick");
+        return;
+      }
+
+      // Update user picks
+      setUserPicks((prev) => {
+        const existing = prev.find(
+          (p) => p.tournament_id === selectedTournamentId
+        );
+
+        if (existing) {
+          return prev.map((p) =>
+            p.tournament_id === selectedTournamentId
+              ? { ...p, player_id: pickedPlayerId }
+              : p
+          );
+        }
+
+        return [
+          ...prev,
+          {
+            tournament_id: selectedTournamentId,
+            player_id: pickedPlayerId,
+          },
+        ];
+      });
+
+      // Confetti celebration
+      confetti({
+        particleCount: 80,
+        spread: 60,
+        origin: { y: 0.7 },
+      });
+
+      // Toast
+      setToast("Pick saved!");
+
+      // Refresh leaderboard
+      fetch("/api/golf/weekly/state")
+        .then((r) => r.json())
+        .then((d) => setLeaderboard(d.leaderboard || []));
+
+      // Refresh streaks
+      fetch("/api/golf/weekly/streaks")
+        .then((r) => r.json())
+        .then((d) => setStreaks(d.streaks || null));
+
+      // Refresh badges
+      fetch("/api/golf/weekly/badges")
+        .then((r) => r.json())
+        .then((d) => {
+          setBadges(d.badges || []);
+
+          const newlyEarned = (d.badges || []).find(
+            (b: Badge) => b.earned && !badges.find((x) => x.id === b.id)
+          );
+
+          if (newlyEarned) {
+            setNewBadge(newlyEarned);
+          }
+        });
+    } catch (err) {
+      setToast("Error saving pick");
+    } finally {
+      setLoadingPick(false);
+    }
+  };
+
   // ----------------------
   // Render
   // ----------------------

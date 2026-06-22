@@ -115,26 +115,22 @@ export default function AdminDerbyPage() {
         </details>
       </section>
 
-      {/* Participants */}
-      <section className="bg-slate-900 border border-slate-700 rounded-xl shadow-lg">
-        <details open className="p-6">
-          <summary className="cursor-pointer text-xl font-semibold text-white mb-4">
-            Participants (8 Players)
-          </summary>
+{/* Participants */}
+<section className="bg-slate-900 border border-slate-700 rounded-xl shadow-lg">
+  <details open className="p-6">
+    <summary className="cursor-pointer text-xl font-semibold text-white mb-4">
+      Participants (8 Players)
+    </summary>
 
-          {loading ? (
-            <p className="text-slate-400 text-sm">Loading participants…</p>
-          ) : !event ? (
-            <p className="text-slate-400 text-sm">
-              No Derby event found. Create an event first.
-            </p>
-          ) : (
-            <p className="text-slate-400 text-sm">
-              Player management UI coming soon.
-            </p>
-          )}
-        </details>
-      </section>
+    {!event ? (
+      <p className="text-slate-400 text-sm">
+        No Derby event found. Create an event first.
+      </p>
+    ) : (
+      <DerbyParticipantsManager eventId={event.id} />
+    )}
+  </details>
+</section>
 
       {/* Results Posting */}
       <section className="bg-slate-900 border border-slate-700 rounded-xl shadow-lg">

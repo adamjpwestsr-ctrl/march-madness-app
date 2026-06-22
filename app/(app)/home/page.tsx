@@ -13,7 +13,6 @@ export default async function HomePage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // If no user session exists, redirect to login
   if (!user) {
     return (
       <div className="text-white p-10 text-center">
@@ -25,12 +24,29 @@ export default async function HomePage() {
     );
   }
 
-  // ✅ Use the same logic as SettingsPage
-  const userId = user.id;
-  const profile = await getUserProfile(userId);
-  const finalUsername = profile.username || (await initializeUsername(userId));
+  // ⭐ FIRST: Look up internal user record using auth_id
+  const { data: internal } = await supabase
+    .from("users")
+    .select("user_id")
+    .eq("auth_id", user.id)
+    .maybeSingle();
 
-  // Display name priority: username → name → email prefix
+  if (!internal?.user_id) {
+    return (
+      <div className="text-white p-10 text-center">
+        <p>Profile not found.</p>
+      </div>
+    );
+  }
+
+  const internalUserId: number = internal.user_id;
+
+  // ⭐ NOW call the same helpers Settings uses
+  const profile = await getUserProfile(internalUserId);
+  const finalUsername =
+    profile.username || (await initializeUsername(internalUserId));
+
+  // Display name priority
   const displayName =
     finalUsername?.trim() ||
     profile?.name?.trim() ||
@@ -55,7 +71,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Top row: Weekly + Today’s Trivia */}
+      {/* Top row */}
       <section className="grid gap-6 md:grid-cols-2">
         <Link href="/challenges" className="block">
           <WeeklyBanner />
@@ -66,14 +82,14 @@ export default async function HomePage() {
         </Link>
       </section>
 
-      {/* Featured Sports / Challenges */}
+      {/* Featured Sports */}
       <section>
         <Link href="/sports" className="block">
           <FeaturedSports />
         </Link>
       </section>
 
-      {/* Footer / Branding */}
+      {/* Footer */}
       <section className="border-t border-slate-800 pt-6 mt-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>

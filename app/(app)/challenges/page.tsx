@@ -5,12 +5,13 @@ import TriviaModeCard from "@/app/components/TriviaModeCard";
 import LeaderboardCard from "@/app/components/LeaderboardCard";
 import { CHALLENGES } from "@/app/config/challenges";
 
-// ⭐ New import for the dynamic Golf Weekly card
+// ⭐ Dynamic Golf Weekly card
 import GolfWeeklyCard from "@/app/components/GolfWeeklyCard";
 
 export default function ChallengesHub() {
   return (
     <div className="space-y-10">
+      {/* Header */}
       <section>
         <h1 className="text-3xl font-semibold mb-2">Challenges</h1>
         <p className="text-slate-400">
@@ -18,58 +19,63 @@ export default function ChallengesHub() {
         </p>
       </section>
 
+      {/* Weekly Banner */}
       <section>
         <Link href="/challenges/weekly" className="block">
           <WeeklyBanner />
         </Link>
       </section>
 
-{/* ⭐ Challenge Cards Grid */}
-<section
-  className="
-    grid
-    gap-6
-    md:grid-cols-2
-    lg:grid-cols-3
-    auto-rows-[1fr]          /* ⭐ Ensures all rows match height */
-  "
->
-  {CHALLENGES.map((c) => {
-    // ⭐ Special override: Golf Weekly uses the new dynamic card
-    if (c.id === "golf-weekly") {
-      return (
-        <div key={c.id} className="h-full">
-          <GolfWeeklyCard />
-        </div>
-      );
-    }
-
-    // ⭐ Default behavior for all other challenges
-    return c.href ? (
-      <Link key={c.id} href={c.href} className="h-full block">
-        <ChallengeCard
-          sport={c.sport}
-          title={c.title}
-          difficulty={c.difficulty}
-          status={c.status}
-        />
-      </Link>
-    ) : (
-      <div
-        key={c.id}
-        className="h-full opacity-60 cursor-not-allowed"
-        title="Coming Soon"
+      {/* ⭐ Challenge Cards Grid */}
+      <section
+        className="
+          grid
+          gap-6
+          md:grid-cols-2
+          lg:grid-cols-3
+          auto-rows-[1fr]
+        "
       >
-        <ChallengeCard
-          sport={c.sport}
-          title={c.title}
-          difficulty={c.difficulty}
-          status={c.status}
-        />
-      </div>
-    );
-  })}
-</section>
+        {CHALLENGES.map((c) => {
+          // ⭐ Special override: Golf Weekly uses the dynamic card
+          if (c.id === "golf-weekly") {
+            return (
+              <div key={c.id} className="h-full">
+                <GolfWeeklyCard />
+              </div>
+            );
+          }
+
+          // ⭐ Default behavior for all other challenges
+          return c.href ? (
+            <Link key={c.id} href={c.href} className="h-full block">
+              <ChallengeCard
+                sport={c.sport}
+                title={c.title}
+                difficulty={c.difficulty}
+                status={c.status}
+                category={c.category}                // ⭐ NEW
+                is_premium_event={c.is_premium_event} // ⭐ NEW
+              />
+            </Link>
+          ) : (
+            <div
+              key={c.id}
+              className="h-full opacity-60 cursor-not-allowed"
+              title="Coming Soon"
+            >
+              <ChallengeCard
+                sport={c.sport}
+                title={c.title}
+                difficulty={c.difficulty}
+                status={c.status}
+                category={c.category}                // ⭐ NEW
+                is_premium_event={c.is_premium_event} // ⭐ NEW
+              />
+            </div>
+          );
+        })}
+      </section>
 
       {/* Bottom Section */}
       <section className="grid gap-6 md:grid-cols-2">

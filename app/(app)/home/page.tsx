@@ -27,7 +27,7 @@ export default async function HomePage() {
   // ⭐ FIRST: Look up internal user record using auth_id
   const { data: internal } = await supabase
     .from("users")
-    .select("user_id")
+    .select("user_id, email")
     .eq("auth_id", user.id)
     .maybeSingle();
 
@@ -41,16 +41,15 @@ export default async function HomePage() {
 
   const internalUserId: number = internal.user_id;
 
-  // ⭐ NOW call the same helpers Settings uses
+  // ⭐ Use the same logic as SettingsPage
   const profile = await getUserProfile(internalUserId);
   const finalUsername =
     profile.username || (await initializeUsername(internalUserId));
 
-  // Display name priority
+  // ⭐ Display name priority (no profile.name — it does not exist)
   const displayName =
     finalUsername?.trim() ||
-    profile?.name?.trim() ||
-    profile?.email?.split("@")[0] ||
+    internal?.email?.split("@")[0] ||
     "Player";
 
   return (

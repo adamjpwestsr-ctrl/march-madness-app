@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { FaTrophy, FaFlagCheckered, FaGolfBall } from "react-icons/fa";
 
 interface Tournament {
   id: number;
@@ -32,12 +33,36 @@ export default function GolfWeeklyCard() {
     return "Premium";
   };
 
+  const categoryColor = (category: string | null) => {
+    switch (category) {
+      case "major":
+        return "bg-emerald-500/10 text-emerald-300 border border-emerald-500/40";
+      case "fedex":
+        return "bg-violet-500/10 text-violet-300 border border-violet-500/40";
+      case "signature":
+        return "bg-yellow-500/10 text-yellow-300 border border-yellow-500/40";
+      default:
+        return "bg-yellow-500/10 text-yellow-300 border border-yellow-500/40";
+    }
+  };
+
+  const categoryIcon = (category: string | null) => {
+    switch (category) {
+      case "major":
+        return <FaTrophy className="text-emerald-300 text-xs" />;
+      case "fedex":
+        return <FaFlagCheckered className="text-violet-300 text-xs" />;
+      default:
+        return <FaGolfBall className="text-yellow-300 text-xs" />;
+    }
+  };
+
   return (
     <Link href="/sports/golf/weekly">
       <div
         className="
-          h-[190px]                     /* ⭐ Match ChallengeCard height */
-          flex flex-col justify-between /* ⭐ Even vertical spacing */
+          h-[190px]
+          flex flex-col justify-between
           rounded-xl
           border border-slate-800
           bg-slate-900
@@ -74,9 +99,14 @@ export default function GolfWeeklyCard() {
               </p>
 
               {premiumLabel(tournament) && (
-                <span className="inline-flex items-center gap-1 px-2 py-1 text-[10px] uppercase tracking-wide rounded-full bg-yellow-500/10 text-yellow-300 border border-yellow-500/40">
-                  <span className="w-1.5 h-1.5 rounded-full bg-yellow-400" />
+                <span
+                  className={`inline-flex items-center gap-2 px-3 py-1 text-[11px] uppercase tracking-wide rounded-full ${categoryColor(
+                    tournament.category
+                  )}`}
+                >
                   {premiumLabel(tournament)}
+                  &nbsp;&nbsp;
+                  {categoryIcon(tournament.category)}
                 </span>
               )}
             </>

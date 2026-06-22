@@ -1,118 +1,87 @@
-import { FaTrophy, FaFlagCheckered, FaGolfBall } from "react-icons/fa";
+import Link from "next/link";
+import ChallengeCard from "@/app/components/ChallengeCard";
+import WeeklyBanner from "@/app/components/WeeklyBanner";
+import TriviaModeCard from "@/app/components/TriviaModeCard";
+import LeaderboardCard from "@/app/components/LeaderboardCard";
+import { CHALLENGES } from "@/app/config/challenges";
 
-export type ChallengeStatus = "Open" | "Coming Soon";
+// ⭐ New import for the dynamic Golf Weekly card
+import GolfWeeklyCard from "@/app/components/GolfWeeklyCard";
 
-export interface ChallengeCardProps {
-  sport: string;
-  title: string;
-  difficulty: string;
-  status: ChallengeStatus;
-
-  // ⭐ NEW props
-  category?: "major" | "signature" | "fedex" | "standard" | null;
-  is_premium_event?: boolean | null;
-}
-
-const sportColors: Record<string, string> = {
-  NBA: "from-orange-500 to-red-600",
-  NFL: "from-blue-600 to-blue-800",
-  MLB: "from-red-500 to-red-700",
-  NHL: "from-gray-500 to-gray-700",
-  Golf: "from-green-600 to-green-800",
-};
-
-// ----------------------
-// Premium Label
-// ----------------------
-const premiumLabel = (category: string | null, isPremium: boolean | null) => {
-  if (!isPremium) return null;
-  if (category === "major") return "Major";
-  if (category === "signature") return "Signature";
-  if (category === "fedex") return "FedEx Cup";
-  return "Premium";
-};
-
-// ----------------------
-// Pill Colors
-// ----------------------
-const categoryColor = (category: string | null) => {
-  switch (category) {
-    case "major":
-      return "bg-emerald-500/10 text-emerald-300 border border-emerald-500/40";
-    case "fedex":
-      return "bg-violet-500/10 text-violet-300 border border-violet-500/40";
-    case "signature":
-      return "bg-yellow-500/10 text-yellow-300 border border-yellow-500/40";
-    default:
-      return "bg-yellow-500/10 text-yellow-300 border border-yellow-500/40";
-  }
-};
-
-// ----------------------
-// Icons (Option A, icon AFTER label, B1 spacing)
-// ----------------------
-const categoryIcon = (category: string | null) => {
-  switch (category) {
-    case "major":
-      return <FaTrophy className="text-emerald-300 text-xs" />;
-    case "fedex":
-      return <FaFlagCheckered className="text-violet-300 text-xs" />;
-    default:
-      return <FaGolfBall className="text-yellow-300 text-xs" />;
-  }
-};
-
-export default function ChallengeCard({
-  sport,
-  title,
-  difficulty,
-  status,
-  category = null,
-  is_premium_event = null,
-}: ChallengeCardProps) {
-  const label = premiumLabel(category, is_premium_event);
-
+export default function ChallengesHub() {
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900 p-6 shadow hover:scale-[1.02] transition cursor-pointer h-full flex flex-col justify-between">
-      {/* Sport Badge */}
+    <div className="space-y-10">
+      <section>
+        <h1 className="text-3xl font-semibold mb-2">Challenges</h1>
+        <p className="text-slate-400">
+          Weekly picks, trivia, and sports challenges — all in one place.
+        </p>
+      </section>
+
+      <section>
+        <Link href="/challenges/weekly" className="block">
+          <WeeklyBanner />
+        </Link>
+      </section>
+
+{/* ⭐ Challenge Cards Grid */}
+<section
+  className="
+    grid
+    gap-6
+    md:grid-cols-2
+    lg:grid-cols-3
+    auto-rows-[1fr]          /* ⭐ Ensures all rows match height */
+  "
+>
+  {CHALLENGES.map((c) => {
+    // ⭐ Special override: Golf Weekly uses the new dynamic card
+    if (c.id === "golf-weekly") {
+      return (
+        <div key={c.id} className="h-full">
+          <GolfWeeklyCard />
+        </div>
+      );
+    }
+
+    // ⭐ Default behavior for all other challenges
+    return c.href ? (
+      <Link key={c.id} href={c.href} className="h-full block">
+        <ChallengeCard
+          sport={c.sport}
+          title={c.title}
+          difficulty={c.difficulty}
+          status={c.status}
+        />
+      </Link>
+    ) : (
       <div
-        className={`inline-block px-3 py-1 rounded-full text-xs font-semibold text-white bg-gradient-to-br ${
-          sportColors[sport] || "from-slate-600 to-slate-800"
-        } mb-4`}
+        key={c.id}
+        className="h-full opacity-60 cursor-not-allowed"
+        title="Coming Soon"
       >
-        {sport}
+        <ChallengeCard
+          sport={c.sport}
+          title={c.title}
+          difficulty={c.difficulty}
+          status={c.status}
+        />
       </div>
+    );
+  })}
+</section>
 
-      {/* Title */}
-      <h3 className="text-lg font-semibold mb-2">{title}</h3>
+      {/* Bottom Section */}
+      <section className="grid gap-6 md:grid-cols-2">
+        <div className="rounded-xl border border-slate-800 p-6 bg-slate-900/40">
+          <h2 className="text-xl font-semibold mb-4">Your Progress</h2>
+          <p className="text-slate-400">Progress tracking coming soon.</p>
+        </div>
 
-      {/* Difficulty */}
-      <p className="text-sm text-slate-400 mb-4">Difficulty: {difficulty}</p>
-
-      {/* Premium Pill */}
-      {label ? (
-        <span
-          className={`inline-flex items-center gap-2 mb-3 px-3 py-1 text-[11px] uppercase tracking-wide rounded-full ${categoryColor(
-            category
-          )}`}
-        >
-          {label}
-          &nbsp;&nbsp;
-          {categoryIcon(category)}
-        </span>
-      ) : (
-        // 🩶 Fallback for non‑premium cards
-        <span className="text-xs text-slate-500 mb-3">Standard Challenge</span>
-      )}
-
-      {/* Status */}
-      <div
-        className={`text-sm font-medium ${
-          status === "Open" ? "text-emerald-400" : "text-slate-500"
-        }`}
-      >
-        {status}
-      </div>
+        <Link href="/leaderboard" className="block">
+          <LeaderboardCard title="Leaderboard" value="View Rankings" />
+        </Link>
+      </section>
     </div>
   );
 }

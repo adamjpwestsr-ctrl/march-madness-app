@@ -1,111 +1,91 @@
-import { FaTrophy, FaFlagCheckered, FaGolfBall } from "react-icons/fa";
+import { createClient } from "@/utils/supabase/server";
+import GolfWeeklyClient from "./GolfWeeklyClient";
 
-interface ChallengeCardProps {
-  sport: string;
-  title: string;
-  difficulty: string;
-  status: "Open" | "Coming Soon";
-  category?: "major" | "signature" | "fedex" | "standard" | null;
-  is_premium_event?: boolean | null;
+interface Tournament {
+  id: number;
+  name: string;
+  start_date: string;
+  end_date: string;
+  category: string | null;
+  is_premium_event: boolean | null;
+  is_current: boolean | null; // ⭐ added
 }
 
-const sportColors: Record<string, string> = {
-  NBA: "from-orange-500 to-red-600",
-  NFL: "from-blue-600 to-blue-800",
-  MLB: "from-red-500 to-red-700",
-  NHL: "from-gray-500 to-gray-700",
-  Golf: "from-green-600 to-green-800",
-};
+interface Player {
+  id: number;
+  name: string;
+  country?: string | null;
+  photo_url?: string | null;
+}
 
-// ----------------------
-// Premium Label
-// ----------------------
-const premiumLabel = (category: string | null, isPremium: boolean | null) => {
-  if (!isPremium) return null;
-  if (category === "major") return "Major";
-  if (category === "signature") return "Signature";
-  if (category === "fedex") return "FedEx Cup";
-  return "Premium";
-};
+export default async function GolfWeeklyPage() {
+  try {
+    const supabase = await createClient();
+    if (!supabase) {
+      console.error("Supabase client failed to initialize");
+      return (
+        <div className="p-10 text-red-400">
+          Server error: Supabase client not initialized
+        </div>
+      );
+    }
 
-// ----------------------
-// Pill Colors
-// ----------------------
-const categoryColor = (category: string | null) => {
-  switch (category) {
-    case "major":
-      return "bg-emerald-500/10 text-emerald-300 border border-emerald-500/40";
-    case "fedex":
-      return "bg-violet-500/10 text-violet-300 border border-violet-500/40";
-    case "signature":
-      return "bg-yellow-500/10 text-yellow-300 border border-yellow-500/40";
-    default:
-      return "bg-yellow-500/10 text-yellow-300 border border-yellow-500/40";
-  }
-};
+    // Fetch tournaments
+    const {
+      data: tournaments,
+      error: tErr,
+    } = await supabase
+      .from("golf_tournaments")
+      .select(
+        "id, name, start_date, end_date, category, is_premium_event, is_current" // ⭐ added is_current
+      )
+      .order("start_date");
 
-// ----------------------
-// Icons (Option A, icon AFTER label, B1 spacing)
-// ----------------------
-const categoryIcon = (category: string | null) => {
-  switch (category) {
-    case "major":
-      return <FaTrophy className="text-emerald-300 text-xs" />;
-    case "fedex":
-      return <FaFlagCheckered className="text-violet-300 text-xs" />;
-    default:
-      return <FaGolfBall className="text-yellow-300 text-xs" />;
-  }
-};
+    if (tErr) {
+      console.error("Tournament fetch error:", tErr);
+      return (
+        <div className="p-10 text-red-400">
+          Server error loading tournaments: {tErr.message}
+        </div>
+      );
+    }
 
-export default function ChallengeCard({
-  sport,
-  title,
-  difficulty,
-  status,
-  category = null,
-  is_premium_event = null,
-}: ChallengeCardProps) {
-  const label = premiumLabel(category, is_premium_event);
+    // Fetch players
+    const {
+      data: players,
+      error: pErr,
+    } = await supabase
+      .from("golf_players")
+      .select("id, name, country, photo_url")
+      .order("name");
 
-  return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900 p-6 shadow hover:scale-[1.02] transition cursor-pointer">
-      {/* Sport Badge */}
-      <div
-        className={`inline-block px-3 py-1 rounded-full text-xs font-semibold text-white bg-gradient-to-br ${
-          sportColors[sport] || "from-slate-600 to-slate-800"
-        } mb-4`}
-      >
-        {sport}
+    if (pErr) {
+      console.error("Player fetch error:", pErr);
+      return (
+        <div className="p-10 text-red-400">
+          Server error loading players: {pErr.message}
+        </div>
+      );
+    }
+
+    // Defensive defaults
+    const safeTournaments = Array.isArray(tournaments)
+      ? tournaments
+      : [];
+    const safePlayers = Array.isArray(players) ? players : [];
+
+    return (
+      <GolfWeeklyClient
+        tournaments={safeTournaments}
+        players={safePlayers}
+      />
+    );
+  } catch (err: any) {
+    console.error("GolfWeeklyPage fatal error:", err);
+    return (
+      <div className="p-10 text-red-400">
+        Server crashed: {String(err?.message || err)}
       </div>
-
-      {/* Title */}
-      <h3 className="text-lg font-semibold mb-2">{title}</h3>
-
-      {/* Difficulty */}
-      <p className="text-sm text-slate-400 mb-4">Difficulty: {difficulty}</p>
-
-      {/* Premium Pill */}
-      {label && (
-        <span
-          className={`inline-flex items-center gap-2 mb-3 px-3 py-1 text-[11px] uppercase tracking-wide rounded-full ${categoryColor(
-            category
-          )}`}
-        >
-          {label}
-          &nbsp;&nbsp;
-          {categoryIcon(category)}
-        </span>
-      )}
-
-      {/* Status */}
-      <div
-        className={`text-sm font-medium ${
-          status === "Open" ? "text-emerald-400" : "text-slate-500"
-        }`}
-      >
-        {status}
-      </div>
-    </div>
-  );
+    );
+  }
 }

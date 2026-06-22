@@ -29,16 +29,22 @@ export async function POST(req: Request) {
   const supabase = await createSupabaseServerClient();
   const body = await req.json();
 
+  // Accept both schema-style and UI-style field names
   const {
     event_id,
     player_name,
     team_name,
+    name,
+    team,
     hr_count = 0,
     image_url = null,
     order_index = 0,
   } = body;
 
-  if (!event_id || !player_name || !team_name) {
+  const finalPlayerName = player_name ?? name;
+  const finalTeamName = team_name ?? team;
+
+  if (!event_id || !finalPlayerName || !finalTeamName) {
     return NextResponse.json(
       { error: "Missing required fields: event_id, player_name, team_name" },
       { status: 400 }
@@ -50,8 +56,8 @@ export async function POST(req: Request) {
     .insert([
       {
         event_id: Number(event_id),
-        player_name,
-        team_name,
+        player_name: finalPlayerName,
+        team_name: finalTeamName,
         hr_count: Number(hr_count),
         image_url,
         order_index: Number(order_index),

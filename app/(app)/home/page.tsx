@@ -28,18 +28,15 @@ export default async function HomePage() {
   const { data: profile } = await supabase
     .from("users")
     .select("username, email, name")
-    .eq("auth_id", user.id) // ⭐ FIXED: use auth_id instead of email
+    .eq("auth_id", user.id)
     .order("user_id", { ascending: false })
     .limit(1)
     .maybeSingle();
 
-  // Determine display name priority:
-  // 1. name (if user set it)
-  // 2. username (auto-created from email)
-  // 3. email prefix
+  // ✅ FIX: Always prefer username for display
   const displayName =
+    profile?.username?.trim() ||
     profile?.name?.trim() ||
-    profile?.username ||
     profile?.email?.split("@")[0] ||
     "Player";
 

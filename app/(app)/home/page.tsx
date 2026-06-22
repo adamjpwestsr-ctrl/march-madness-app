@@ -3,6 +3,7 @@ import WeeklyBanner from "@/app/components/WeeklyBanner";
 import TodayTrivia from "@/app/components/TodayTrivia";
 import FeaturedSports from "@/app/components/FeaturedSports";
 import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
+import { getUserProfile, initializeUsername } from "@/app/(app)/settings/actions";
 
 export default async function HomePage() {
   const supabase = await createSupabaseServerClient();
@@ -24,18 +25,14 @@ export default async function HomePage() {
     );
   }
 
-  // Fetch the correct record from your custom users table using auth_id
-  const { data: profile } = await supabase
-    .from("users")
-    .select("username, email, name")
-    .eq("auth_id", user.id)
-    .order("user_id", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  // ✅ Use the same logic as SettingsPage
+  const userId = user.id;
+  const profile = await getUserProfile(userId);
+  const finalUsername = profile.username || (await initializeUsername(userId));
 
-  // ✅ FIX: Always prefer username for display
+  // Display name priority: username → name → email prefix
   const displayName =
-    profile?.username?.trim() ||
+    finalUsername?.trim() ||
     profile?.name?.trim() ||
     profile?.email?.split("@")[0] ||
     "Player";

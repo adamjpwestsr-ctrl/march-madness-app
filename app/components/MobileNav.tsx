@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
+
+// UI icons
 import {
   Menu,
   X,
@@ -14,12 +16,25 @@ import {
   LogOut,
   ChevronDown,
   ChevronRight,
+} from "lucide-react";
+
+// Sports icons
+import {
   Golf,
   Baseball,
   Football,
   Basketball,
   IceCream,
-} from "lucide-react";
+} from "@lucide/icons";
+
+export default function MobileNav() {
+  const [open, setOpen] = useState(false);
+  const [openChallenges, setOpenChallenges] = useState(false);
+  const router = useRouter();
+  const pathname = usePathname();
+
+  /* ...rest of your file unchanged... */
+}
 
 export default function MobileNav() {
   const [open, setOpen] = useState(false);

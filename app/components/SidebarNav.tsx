@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
+
+// UI icons
 import {
   Home,
   Trophy,
@@ -12,12 +14,25 @@ import {
   LogOut,
   ChevronDown,
   ChevronRight,
+} from "lucide-react";
+
+// Sports icons
+import {
   Golf,
   Baseball,
   Football,
   Basketball,
   IceCream,
-} from "lucide-react";
+} from "@lucide/icons";
+
+export default function SidebarNav() {
+  const pathname = usePathname();
+  const router = useRouter();
+  const [openChallenges, setOpenChallenges] = useState(false);
+
+  /* ...rest of your file unchanged... */
+}
+
 
 export default function SidebarNav() {
   const pathname = usePathname();

@@ -1,15 +1,31 @@
 import Link from "next/link";
+
+// UI icons stay in lucide-react
 import {
   Trophy,
   Brain,
+  ListChecks,
+  ChevronDown,
+  ChevronRight,
+} from "lucide-react";
+
+// Sports & specialty icons come from @lucide/icons
+import {
   Golf,
   Baseball,
   Football,
   Basketball,
   IceCream,
   Sparkles,
-} from "lucide-react";
+} from "@lucide/icons";
 
+export default function ChallengesHub() {
+  return (
+    <div className="space-y-12 animate-fadeIn">
+      {/* ...rest of your file unchanged... */}
+    </div>
+  );
+}
 export default function ChallengesHub() {
   return (
     <div className="space-y-12 animate-fadeIn">

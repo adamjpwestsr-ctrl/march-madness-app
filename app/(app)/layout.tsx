@@ -1,5 +1,4 @@
 // app/(app)/layout.tsx
-
 /* Layout version Update v6.2.3 */
 
 export const runtime = "nodejs";
@@ -22,7 +21,10 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         </div>
 
         {/* Center: App title or logo */}
-        <Header />
+        {/* Temporarily hidden header */}
+        <div className="hidden">
+          <Header />
+        </div>
 
         {/* Right side: (optional future profile menu) */}
         <div className="hidden lg:block">{/* profile, icons, etc */}</div>

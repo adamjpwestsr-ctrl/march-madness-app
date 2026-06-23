@@ -42,13 +42,6 @@ export default function ChallengesHub() {
           />
 
           <ChallengeItem
-            href="/sports/mlb/derby"
-            icon={<Flag size={22} />}
-            title="MLB Derby"
-            desc="Predict home run leaders in a derby-style challenge."
-          />
-
-          <ChallengeItem
             href="/sports/nfl/weekly"
             icon={<Target size={22} />}
             title="NFL Weekly"
@@ -84,6 +77,13 @@ export default function ChallengesHub() {
             icon={<Trophy size={22} />}
             title="March Madness"
             desc="Build your bracket and compete for the top spot."
+          />
+
+          <ChallengeItem
+            href="/sports/mlb/derby"
+            icon={<Flag size={22} />}
+            title="MLB Derby"
+            desc="Predict home run leaders in a derby-style challenge."
           />
         </div>
       </section>

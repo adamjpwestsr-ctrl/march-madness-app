@@ -1,31 +1,13 @@
 import Link from "next/link";
-
-// UI icons stay in lucide-react
 import {
   Trophy,
   Brain,
-  ListChecks,
-  ChevronDown,
-  ChevronRight,
+  Star,
+  Flag,
+  Target,
+  Medal,
 } from "lucide-react";
 
-// Sports & specialty icons come from @lucide/icons
-import {
-  Golf,
-  Baseball,
-  Football,
-  Basketball,
-  IceCream,
-  Sparkles,
-} from "@lucide/icons";
-
-export default function ChallengesHub() {
-  return (
-    <div className="space-y-12 animate-fadeIn">
-      {/* ...rest of your file unchanged... */}
-    </div>
-  );
-}
 export default function ChallengesHub() {
   return (
     <div className="space-y-12 animate-fadeIn">
@@ -40,49 +22,49 @@ export default function ChallengesHub() {
       {/* Weekly Challenges */}
       <section className="space-y-4">
         <h2 className="text-xl font-semibold text-slate-200 flex items-center gap-2">
-          <Sparkles size={18} className="text-emerald-400" />
+          <Star size={18} className="text-emerald-400" />
           Weekly Challenges
         </h2>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <ChallengeItem
             href="/sports/golf/weekly"
-            icon={<Golf size={22} />}
+            icon={<Target size={22} />}
             title="Golf Weekly"
             desc="Pick a golfer each week and track your streak."
           />
 
           <ChallengeItem
             href="/sports/mlb"
-            icon={<Baseball size={22} />}
+            icon={<Flag size={22} />}
             title="MLB Weekly"
             desc="Choose your top hitter and follow weekly performance."
           />
 
           <ChallengeItem
             href="/sports/mlb/derby"
-            icon={<Baseball size={22} />}
+            icon={<Flag size={22} />}
             title="MLB Derby"
             desc="Predict home run leaders in a derby-style challenge."
           />
 
           <ChallengeItem
             href="/sports/nfl/weekly"
-            icon={<Football size={22} />}
+            icon={<Target size={22} />}
             title="NFL Weekly"
             desc="Pick a player each week and build your streak."
           />
 
           <ChallengeItem
             href="/sports/nba/weekly"
-            icon={<Basketball size={22} />}
+            icon={<Target size={22} />}
             title="NBA Weekly"
             desc="Choose a standout performer each week."
           />
 
           <ChallengeItem
             href="/sports/nhl/weekly"
-            icon={<IceCream size={22} />}
+            icon={<Target size={22} />}
             title="NHL Weekly"
             desc="Track weekly picks across the NHL season."
           />

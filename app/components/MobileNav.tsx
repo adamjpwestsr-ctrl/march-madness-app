@@ -3,8 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-
-// UI icons
 import {
   Menu,
   X,
@@ -16,25 +14,10 @@ import {
   LogOut,
   ChevronDown,
   ChevronRight,
+  Star,
+  Flag,
+  Target,
 } from "lucide-react";
-
-// Sports icons
-import {
-  Golf,
-  Baseball,
-  Football,
-  Basketball,
-  IceCream,
-} from "@lucide/icons";
-
-export default function MobileNav() {
-  const [open, setOpen] = useState(false);
-  const [openChallenges, setOpenChallenges] = useState(false);
-  const router = useRouter();
-  const pathname = usePathname();
-
-  /* ...rest of your file unchanged... */
-}
 
 export default function MobileNav() {
   const [open, setOpen] = useState(false);
@@ -103,7 +86,6 @@ export default function MobileNav() {
             )}
           </button>
 
-          {/* ▼▼▼ Animated Expandable Section ▼▼▼ */}
           <div
             className={`
               flex flex-col bg-slate-900/80
@@ -133,7 +115,7 @@ export default function MobileNav() {
                   : "text-slate-300"
               }`}
             >
-              <Golf size={16} />
+              <Target size={16} />
               Golf Weekly
             </Link>
 
@@ -147,7 +129,7 @@ export default function MobileNav() {
                   : "text-slate-300"
               }`}
             >
-              <Baseball size={16} />
+              <Flag size={16} />
               MLB Weekly
             </Link>
 
@@ -160,7 +142,7 @@ export default function MobileNav() {
                   : "text-slate-300"
               }`}
             >
-              <Baseball size={16} />
+              <Flag size={16} />
               MLB Derby
             </Link>
 
@@ -173,7 +155,7 @@ export default function MobileNav() {
                   : "text-slate-300"
               }`}
             >
-              <Football size={16} />
+              <Target size={16} />
               NFL Weekly
             </Link>
 
@@ -186,7 +168,7 @@ export default function MobileNav() {
                   : "text-slate-300"
               }`}
             >
-              <Basketball size={16} />
+              <Target size={16} />
               NBA Weekly
             </Link>
 
@@ -199,11 +181,10 @@ export default function MobileNav() {
                   : "text-slate-300"
               }`}
             >
-              <IceCream size={16} />
+              <Target size={16} />
               NHL Weekly
             </Link>
           </div>
-          {/* ▲▲▲ Animated Expandable Section ▲▲▲ */}
 
           {link("/trivia", "Trivia", Brain)}
           {link("/leaderboard", "Leaderboard", Trophy)}

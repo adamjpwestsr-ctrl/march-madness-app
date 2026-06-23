@@ -3,8 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-
-// UI icons
 import {
   Home,
   Trophy,
@@ -14,25 +12,10 @@ import {
   LogOut,
   ChevronDown,
   ChevronRight,
+  Star,
+  Flag,
+  Target,
 } from "lucide-react";
-
-// Sports icons
-import {
-  Golf,
-  Baseball,
-  Football,
-  Basketball,
-  IceCream,
-} from "@lucide/icons";
-
-export default function SidebarNav() {
-  const pathname = usePathname();
-  const router = useRouter();
-  const [openChallenges, setOpenChallenges] = useState(false);
-
-  /* ...rest of your file unchanged... */
-}
-
 
 export default function SidebarNav() {
   const pathname = usePathname();
@@ -77,7 +60,6 @@ export default function SidebarNav() {
         )}
       </button>
 
-      {/* ▼▼▼ Animated Expandable Section ▼▼▼ */}
       <div
         className={`
           ml-8 flex flex-col gap-1
@@ -101,7 +83,7 @@ export default function SidebarNav() {
           href="/sports/golf/weekly"
           className="flex items-center gap-2 px-3 py-1 text-sm text-slate-400 hover:bg-slate-800 rounded-md"
         >
-          <Golf size={16} />
+          <Target size={16} />
           Golf Weekly
         </Link>
 
@@ -109,7 +91,7 @@ export default function SidebarNav() {
           href="/sports/mlb"
           className="flex items-center gap-2 px-3 py-1 text-sm text-slate-400 hover:bg-slate-800 rounded-md"
         >
-          <Baseball size={16} />
+          <Flag size={16} />
           MLB Weekly
         </Link>
 
@@ -117,7 +99,7 @@ export default function SidebarNav() {
           href="/sports/mlb/derby"
           className="flex items-center gap-2 px-3 py-1 text-sm text-slate-400 hover:bg-slate-800 rounded-md"
         >
-          <Baseball size={16} />
+          <Flag size={16} />
           MLB Derby
         </Link>
 
@@ -125,7 +107,7 @@ export default function SidebarNav() {
           href="/sports/nfl/weekly"
           className="flex items-center gap-2 px-3 py-1 text-sm text-slate-400 hover:bg-slate-800 rounded-md"
         >
-          <Football size={16} />
+          <Target size={16} />
           NFL Weekly
         </Link>
 
@@ -133,7 +115,7 @@ export default function SidebarNav() {
           href="/sports/nba/weekly"
           className="flex items-center gap-2 px-3 py-1 text-sm text-slate-400 hover:bg-slate-800 rounded-md"
         >
-          <Basketball size={16} />
+          <Target size={16} />
           NBA Weekly
         </Link>
 
@@ -141,11 +123,10 @@ export default function SidebarNav() {
           href="/sports/nhl/weekly"
           className="flex items-center gap-2 px-3 py-1 text-sm text-slate-400 hover:bg-slate-800 rounded-md"
         >
-          <IceCream size={16} />
+          <Target size={16} />
           NHL Weekly
         </Link>
       </div>
-      {/* ▲▲▲ Animated Expandable Section ▲▲▲ */}
 
       {link("/trivia", "Trivia", Brain)}
       {link("/leaderboard", "Leaderboard", Trophy)}

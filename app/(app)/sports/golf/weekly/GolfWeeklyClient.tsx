@@ -168,40 +168,40 @@ export default function GolfWeeklyClient({
     return () => clearTimeout(t);
   }, [newBadge]);
 
-  // ----------------------
-  // Label + Color + Icon helpers
-  // ----------------------
-  const premiumLabel = (t: Tournament) => {
-    if (!t.is_premium_event) return null;
-    if (t.category === "major") return "Major";
-    if (t.category === "signature") return "Signature";
-    if (t.category === "fedex") return "FedEx Cup";
-    return "Premium";
-  };
+// ----------------------
+// Label + Color + Icon helpers
+// ----------------------
+const premiumLabel = (t: Tournament) => {
+  if (!t.is_premium_event) return null;
+  if (t.category === "major") return "Major";
+  if (t.category === "signature") return "Signature";
+  if (t.category === "fedex") return "FedEx Cup";
+  return "Premium";
+};
 
-  const categoryColor = (category: string | null) => {
-    switch (category) {
-      case "major":
-        return "bg-emerald-500/10 text-emerald-300 border border-emerald-500/40";
-      case "fedex":
-        return "bg-violet-500/10 text-violet-300 border border-violet-500/40";
-      case "signature":
-        return "bg-yellow-500/10 text-yellow-300 border border-yellow-500/40";
-      default:
-        return "bg-yellow-500/10 text-yellow-300 border border-yellow-500/40";
-    }
-  };
+const categoryColor = (category: string | null) => {
+  switch (category) {
+    case "major":
+      return "bg-emerald-500/10 text-emerald-300 border border-emerald-500/40";
+    case "fedex":
+      return "bg-violet-500/10 text-violet-300 border border-violet-500/40";
+    case "signature":
+      return "bg-yellow-500/10 text-yellow-300 border border-yellow-500/40";
+    default:
+      return "bg-yellow-500/10 text-yellow-300 border border-yellow-500/40";
+  }
+};
 
-  const categoryIcon = (category: string | null) => {
-    switch (category) {
-      case "major":
-        return <FaTrophy className="text-emerald-300 text-xs" />;
-      case "fedex":
-        return <FaFlagCheckered className="text-violet-300 text-xs" />;
-      default:
-        return <FaGolfBall className="text-yellow-300 text-xs" />;
-    }
-  };
+const categoryIcon = (category: string | null) => {
+  switch (category) {
+    case "major":
+      return <FaTrophy className="text-emerald-300 text-xs" />;
+    case "fedex":
+      return <FaFlagCheckered className="text-violet-300 text-xs" />;
+    default:
+      return <FaGolfBall className="text-yellow-300 text-xs" />;
+  }
+};
 
   // ----------------------
   // Handle Pick
@@ -335,145 +335,153 @@ export default function GolfWeeklyClient({
         </div>
       </header>
 
-      {/* Spotlight + Upcoming Event */}
-      <section className="w-full grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fadeIn">
-        {/* Spotlight */}
-        <div className="rounded-xl bg-slate-900/70 border border-white/10 p-5 shadow-xl flex flex-col gap-4">
-          <h3 className="text-lg font-semibold">Weekly Spotlight</h3>
+{/* Spotlight + Upcoming Event */}
+<section className="w-full grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fadeIn">
+  {/* Spotlight */}
+  <div className="rounded-xl bg-slate-900/70 border border-white/10 p-5 shadow-xl flex flex-col gap-4">
+    <h3 className="text-lg font-semibold">Weekly Spotlight</h3>
 
-          <div className="flex flex-col gap-3 text-sm">
-            <div>
-              <span className="text-slate-400">Most Picked:</span>{" "}
-              <span className="text-white font-medium">
-                {spotlight.mostPicked}
-              </span>
-            </div>
-            <div>
-              <span className="text-slate-400">Sleeper Pick:</span>{" "}
-              <span className="text-white font-medium">
-                {spotlight.sleeper}
-              </span>
-            </div>
-            <div>
-              <span className="text-slate-400">Trending:</span>{" "}
-              <span className="text-white font-medium">
-                {spotlight.trending}
-              </span>
-            </div>
-            <div>
-              <span className="text-slate-400">Player to Watch:</span>{" "}
-              <span className="text-white font-medium">
-                {spotlight.watch}
-              </span>
-            </div>
+    <div className="flex flex-col gap-3 text-sm">
+      <div>
+        <span className="text-slate-400">Most Picked:</span>{" "}
+        <span className="text-white font-medium">
+          {spotlight.mostPicked}
+        </span>
+      </div>
+      <div>
+        <span className="text-slate-400">Sleeper Pick:</span>{" "}
+        <span className="text-white font-medium">
+          {spotlight.sleeper}
+        </span>
+      </div>
+      <div>
+        <span className="text-slate-400">Trending:</span>{" "}
+        <span className="text-white font-medium">
+          {spotlight.trending}
+        </span>
+      </div>
+      <div>
+        <span className="text-slate-400">Player to Watch:</span>{" "}
+        <span className="text-white font-medium">
+          {spotlight.watch}
+        </span>
+      </div>
+    </div>
+
+    {/* Badge Row */}
+    <div className="flex flex-wrap gap-2 mt-3">
+      {badges
+        .filter((b) => b.earned)
+        .slice(0, 4)
+        .map((b) => (
+          <button
+            key={b.id}
+            onClick={() => setBadgeModalOpen(true)}
+            className="px-3 py-2 rounded-lg bg-white/5 border border-white/15 shadow-sm flex items-center gap-2 text-xs hover:border-emerald-400 transition"
+          >
+            <span className="text-base">{b.emoji}</span>
+            <span className="text-slate-100">{b.name}</span>
+          </button>
+        ))}
+
+      {badges.filter((b) => b.earned).length === 0 && (
+        <span className="text-xs text-slate-500">
+          Earn badges by building streaks and hitting milestones.
+        </span>
+      )}
+    </div>
+  </div>
+
+  {/* Upcoming Event */}
+  <div className="rounded-xl bg-slate-900/70 border border-white/10 p-5 shadow-xl flex flex-col gap-4">
+    <h3 className="text-lg font-semibold">Upcoming Event</h3>
+
+    {upcomingTournament ? (
+      <>
+        <div className="space-y-1">
+          <div className="text-white font-medium text-lg">
+            {upcomingTournament.name}
           </div>
-
-          {/* Badge Row */}
-          <div className="flex flex-wrap gap-2 mt-3">
-            {badges
-              .filter((b) => b.earned)
-              .slice(0, 4)
-              .map((b) => (
-                <button
-                  key={b.id}
-                  onClick={() => setBadgeModalOpen(true)}
-                  className="px-3 py-2 rounded-lg bg-white/5 border border-white/15 shadow-sm flex items-center gap-2 text-xs hover:border-emerald-400 transition"
-                >
-                  <span className="text-base">{b.emoji}</span>
-                  <span className="text-slate-100">{b.name}</span>
-                </button>
-              ))}
-
-            {badges.filter((b) => b.earned).length === 0 && (
-              <span className="text-xs text-slate-500">
-                Earn badges by building streaks and hitting milestones.
-              </span>
-            )}
+          <div className="text-slate-400 text-sm">
+            {new Date(upcomingTournament.start_date).toLocaleDateString()}{" "}
+            –{" "}
+            {new Date(upcomingTournament.end_date).toLocaleDateString()}
           </div>
         </div>
 
-        {/* Upcoming Event */}
-        <div className="rounded-xl bg-slate-900/70 border border-white/10 p-5 shadow-xl flex flex-col gap-4">
-          <h3 className="text-lg font-semibold">Upcoming Event</h3>
-
-          {upcomingTournament ? (
-            <>
-              <div className="space-y-1">
-                <div className="text-white font-medium text-lg">
-                  {upcomingTournament.name}
-                </div>
-                <div className="text-slate-400 text-sm">
-                  {new Date(upcomingTournament.start_date).toLocaleDateString()}{" "}
-                  –{" "}
-                  {new Date(upcomingTournament.end_date).toLocaleDateString()}
-                </div>
-              </div>
-
-              {premiumLabel(upcomingTournament) && (
-                <span
-                  className={`inline-flex items-center gap-2 px-3 py-1 text-[11px] uppercase tracking-wide rounded-full ${categoryColor(
-                    upcomingTournament.category
-                  )}`}
-                >
-                  {premiumLabel(upcomingTournament)}
-                  &nbsp;&nbsp;
-                  {categoryIcon(upcomingTournament.category)}
-                </span>
-              )}
-
-              <p className="text-slate-300 text-sm mt-2">
-                Starts in{" "}
-                {Math.ceil(
-                  (new Date(upcomingTournament.start_date).getTime() -
-                    today.getTime()) /
-                    (1000 * 60 * 60 * 24)
-                )}{" "}
-                days.
-              </p>
-            </>
-          ) : (
-            <p className="text-slate-500 text-sm">
-              No upcoming tournaments scheduled.
-            </p>
-          )}
-        </div>
-      </section>
-
-      {/* Current Tournament */}
-      <section className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 border border-white/10 p-5 md:p-6 shadow-xl flex flex-col gap-4 animate-fadeIn">
-        {currentTournament ? (
-          <>
-            <div className="space-y-2">
-              <h2 className="text-2xl md:text-3xl font-bold text-white">
-                {currentTournament.name}
-              </h2>
-              <p className="text-slate-400 text-sm">
-                {new Date(currentTournament.start_date).toLocaleDateString()}{" "}
-                –{" "}
-                {new Date(currentTournament.end_date).toLocaleDateString()}
-              </p>
-
-              {premiumLabel(currentTournament) && (
-                <span
-                  className={`inline-flex items-center gap-2 mt-2 px-3 py-1 text-[11px] uppercase tracking-wide rounded-full ${categoryColor(
-                    currentTournament.category
-                  )}`}
-                >
-                  {premiumLabel(currentTournament)}
-                  &nbsp;&nbsp;
-                  {categoryIcon(currentTournament.category)}
-                </span>
-              )}
-            </div>
-
-            <p className="text-slate-300 text-sm">
-              Lock in your pick for this event. You can choose any player you like this week.
-            </p>
-          </>
-        ) : (
-          <p className="text-slate-500 text-sm">No current tournament.</p>
+        {premiumLabel(upcomingTournament) && (
+          <span
+            className={`
+              inline-flex items-center gap-1
+              px-2.5 py-1
+              h-6
+              text-[11px] font-semibold uppercase tracking-wide
+              rounded-full
+              ${categoryColor(upcomingTournament.category)}
+            `}
+          >
+            {categoryIcon(upcomingTournament.category)}
+            {premiumLabel(upcomingTournament)}
+          </span>
         )}
-      </section>
+
+        <p className="text-slate-300 text-sm mt-2">
+          Starts in{" "}
+          {Math.ceil(
+            (new Date(upcomingTournament.start_date).getTime() -
+              today.getTime()) /
+              (1000 * 60 * 60 * 24)
+          )}{" "}
+          days.
+        </p>
+      </>
+    ) : (
+      <p className="text-slate-500 text-sm">
+        No upcoming tournaments scheduled.
+      </p>
+    )}
+  </div>
+</section>
+
+{/* Current Tournament */}
+<section className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 border border-white/10 p-5 md:p-6 shadow-xl flex flex-col gap-4 animate-fadeIn">
+  {currentTournament ? (
+    <>
+      <div className="space-y-2">
+        <h2 className="text-2xl md:text-3xl font-bold text-white">
+          {currentTournament.name}
+        </h2>
+        <p className="text-slate-400 text-sm">
+          {new Date(currentTournament.start_date).toLocaleDateString()}{" "}
+          –{" "}
+          {new Date(currentTournament.end_date).toLocaleDateString()}
+        </p>
+
+        {premiumLabel(currentTournament) && (
+          <span
+            className={`
+              inline-flex items-center gap-1
+              px-2.5 py-1
+              h-6
+              text-[11px] font-semibold uppercase tracking-wide
+              rounded-full
+              ${categoryColor(currentTournament.category)}
+            `}
+          >
+            {categoryIcon(currentTournament.category)}
+            {premiumLabel(currentTournament)}
+          </span>
+        )}
+      </div>
+
+      <p className="text-slate-300 text-sm">
+        Lock in your pick for this event. You can choose any player you like this week.
+      </p>
+    </>
+  ) : (
+    <p className="text-slate-500 text-sm">No current tournament.</p>
+  )}
+</section>
 
       {/* Past Tournament Dropdown */}
       <section className="space-y-3 animate-fadeIn">

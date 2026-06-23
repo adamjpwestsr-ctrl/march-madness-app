@@ -1,13 +1,14 @@
 import Link from "next/link";
+
 import WeeklyBanner from "@/app/components/WeeklyBanner";
 import TodayTrivia from "@/app/components/TodayTrivia";
 import FeaturedSports from "@/app/components/FeaturedSports";
 import UserStats from "@/app/components/UserStats";
-
-// REMOVE THESE FOR NOW:
-// import LiveScoreboard from "@/app/components/LiveScoreboard";
-// import QuickActions from "@/app/components/QuickActions";
-// import ActivityFeed from "@/app/components/ActivityFeed";
+import QuickActions from "@/app/components/QuickActions";
+import MultiSportScoreboard from "@/app/components/MultiSportScoreboard";
+import YourPicksWidget from "@/app/components/YourPicksWidget";
+import RealActivityFeed from "@/app/components/RealActivityFeed";
+import ScoreTicker from "@/app/components/ScoreTicker";
 
 import { getCurrentUserSession } from "@/lib/getCurrentUserSession";
 import {
@@ -60,7 +61,7 @@ export default async function HomePage() {
             sports—all in one place, all year long.
           </p>
 
-          {/* Inline hero stats (static for now) */}
+          {/* Inline hero stats */}
           <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3 text-xs md:text-sm">
             <div className="rounded-lg bg-slate-900/60 border border-white/5 px-3 py-2">
               <p className="text-slate-400">Weekly streak</p>
@@ -81,11 +82,26 @@ export default async function HomePage() {
           </div>
         </div>
 
-        {/* Dedicated stats row (client component) */}
-	<UserStats userId={String(userId)} />
+        {/* USER STATS */}
+        <UserStats userId={String(userId)} />
       </section>
 
-      {/* TOP ROW: Weekly + Today’s Trivia */}
+      {/* QUICK ACTIONS */}
+      <section>
+        <QuickActions />
+      </section>
+
+      {/* YOUR PICKS */}
+      <section>
+        <YourPicksWidget userId={String(userId)} />
+      </section>
+
+      {/* MULTI-SPORT SCOREBOARD */}
+      <section>
+        <MultiSportScoreboard />
+      </section>
+
+      {/* WEEKLY + TRIVIA */}
       <section className="grid gap-6 md:grid-cols-2">
         <Link href="/challenges" className="block">
           <WeeklyBanner />
@@ -96,14 +112,24 @@ export default async function HomePage() {
         </Link>
       </section>
 
-      {/* FEATURED SPORTS / CHALLENGES */}
+      {/* FEATURED SPORTS */}
       <section>
         <Link href="/sports" className="block">
           <FeaturedSports />
         </Link>
       </section>
 
-      {/* FOOTER / BRANDING */}
+      {/* REAL ACTIVITY FEED */}
+      <section>
+        <RealActivityFeed userId={String(userId)} />
+      </section>
+
+      {/* LIVE TICKER */}
+      <section>
+        <ScoreTicker />
+      </section>
+
+      {/* FOOTER */}
       <section className="border-t border-slate-800 pt-6 mt-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>

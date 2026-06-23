@@ -82,7 +82,7 @@ export default async function HomePage() {
         </div>
 
         {/* Dedicated stats row (client component) */}
-        <UserStats userId={userId} />
+	<UserStats userId={String(userId)} />
       </section>
 
       {/* TOP ROW: Weekly + Today’s Trivia */}

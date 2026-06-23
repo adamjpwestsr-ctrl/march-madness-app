@@ -12,10 +12,13 @@ import {
   ListChecks,
   Settings,
   LogOut,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 
 export default function MobileNav() {
   const [open, setOpen] = useState(false);
+  const [openChallenges, setOpenChallenges] = useState(false);
   const router = useRouter();
 
   const handleLogout = async () => {
@@ -62,7 +65,81 @@ export default function MobileNav() {
         <nav className="flex flex-col">
           {link("/home", "Home", Home)}
           {link("/sports/march-madness", "March Madness", Trophy)}
-          {link("/challenges", "Challenges", ListChecks)}
+
+          {/* Challenges (Expandable) */}
+          <button
+            onClick={() => setOpenChallenges(!openChallenges)}
+            className="flex items-center gap-3 px-4 py-3 text-lg border-b border-slate-800 text-slate-200"
+          >
+            <ListChecks size={20} />
+            Challenges
+            {openChallenges ? (
+              <ChevronDown size={18} className="ml-auto" />
+            ) : (
+              <ChevronRight size={18} className="ml-auto" />
+            )}
+          </button>
+
+          {openChallenges && (
+            <div className="flex flex-col bg-slate-900/80">
+              <Link
+                href="/challenges"
+                onClick={() => setOpen(false)}
+                className="px-8 py-2 text-base text-slate-300 border-b border-slate-800 hover:bg-slate-800"
+              >
+                Challenges Hub
+              </Link>
+
+              <Link
+                href="/sports/golf/weekly"
+                onClick={() => setOpen(false)}
+                className="px-8 py-2 text-base text-slate-300 border-b border-slate-800 hover:bg-slate-800"
+              >
+                Golf Weekly
+              </Link>
+
+              <Link
+                href="/sports/mlb"
+                onClick={() => setOpen(false)}
+                className="px-8 py-2 text-base text-slate-300 border-b border-slate-800 hover:bg-slate-800"
+              >
+                MLB Weekly
+              </Link>
+
+              <Link
+                href="/sports/mlb/derby"
+                onClick={() => setOpen(false)}
+                className="px-8 py-2 text-base text-slate-300 border-b border-slate-800 hover:bg-slate-800"
+              >
+                MLB Derby
+              </Link>
+
+              <Link
+                href="/sports/nfl/weekly"
+                onClick={() => setOpen(false)}
+                className="px-8 py-2 text-base text-slate-300 border-b border-slate-800 hover:bg-slate-800"
+              >
+                NFL Weekly
+              </Link>
+
+              <Link
+                href="/sports/nba/weekly"
+                onClick={() => setOpen(false)}
+                className="px-8 py-2 text-base text-slate-300 border-b border-slate-800 hover:bg-slate-800"
+              >
+                NBA Weekly
+              </Link>
+
+              <Link
+                href="/sports/nhl/weekly"
+                onClick={() => setOpen(false)}
+                className="px-8 py-2 text-base text-slate-300 border-b border-slate-800 hover:bg-slate-800"
+              >
+                NHL Weekly
+              </Link>
+            </div>
+          )}
+
           {link("/trivia", "Trivia", Brain)}
           {link("/leaderboard", "Leaderboard", Trophy)}
           {link("/settings", "Settings", Settings)}

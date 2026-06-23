@@ -1,4 +1,3 @@
-// app/components/SidebarNav.tsx
 "use client";
 
 import { useState } from "react";
@@ -13,6 +12,11 @@ import {
   LogOut,
   ChevronDown,
   ChevronRight,
+  Golf,
+  Baseball,
+  Football,
+  Basketball,
+  IceCream,
 } from "lucide-react";
 
 export default function SidebarNav() {
@@ -58,45 +62,75 @@ export default function SidebarNav() {
         )}
       </button>
 
-      {openChallenges && (
-        <div className="ml-8 flex flex-col gap-1">
+      {/* ▼▼▼ Animated Expandable Section ▼▼▼ */}
+      <div
+        className={`
+          ml-8 flex flex-col gap-1
+          overflow-hidden transition-all duration-300 ease-out
+          ${openChallenges ? "max-h-96 opacity-100" : "max-h-0 opacity-0"}
+        `}
+      >
+        {/* Hub */}
+        <Link
+          href="/challenges"
+          className={`flex items-center gap-2 px-3 py-1 rounded-md text-sm hover:bg-slate-800 ${
+            pathname === "/challenges" ? "bg-slate-800 text-white" : "text-slate-400"
+          }`}
+        >
+          <ListChecks size={16} />
+          Challenges Hub
+        </Link>
 
-          {/* Hub */}
-          <Link
-            href="/challenges"
-            className={`px-3 py-1 rounded-md text-sm hover:bg-slate-800 ${
-              pathname === "/challenges" ? "bg-slate-800 text-white" : "text-slate-400"
-            }`}
-          >
-            Challenges Hub
-          </Link>
+        {/* Weekly Challenges */}
+        <Link
+          href="/sports/golf/weekly"
+          className="flex items-center gap-2 px-3 py-1 text-sm text-slate-400 hover:bg-slate-800 rounded-md"
+        >
+          <Golf size={16} />
+          Golf Weekly
+        </Link>
 
-          {/* Weekly Challenges */}
-          <Link href="/sports/golf/weekly" className="px-3 py-1 text-sm text-slate-400 hover:bg-slate-800 rounded-md">
-            Golf Weekly
-          </Link>
+        <Link
+          href="/sports/mlb"
+          className="flex items-center gap-2 px-3 py-1 text-sm text-slate-400 hover:bg-slate-800 rounded-md"
+        >
+          <Baseball size={16} />
+          MLB Weekly
+        </Link>
 
-          <Link href="/sports/mlb" className="px-3 py-1 text-sm text-slate-400 hover:bg-slate-800 rounded-md">
-            MLB Weekly
-          </Link>
+        <Link
+          href="/sports/mlb/derby"
+          className="flex items-center gap-2 px-3 py-1 text-sm text-slate-400 hover:bg-slate-800 rounded-md"
+        >
+          <Baseball size={16} />
+          MLB Derby
+        </Link>
 
-          <Link href="/sports/mlb/derby" className="px-3 py-1 text-sm text-slate-400 hover:bg-slate-800 rounded-md">
-            MLB Derby
-          </Link>
+        <Link
+          href="/sports/nfl/weekly"
+          className="flex items-center gap-2 px-3 py-1 text-sm text-slate-400 hover:bg-slate-800 rounded-md"
+        >
+          <Football size={16} />
+          NFL Weekly
+        </Link>
 
-          <Link href="/sports/nfl/weekly" className="px-3 py-1 text-sm text-slate-400 hover:bg-slate-800 rounded-md">
-            NFL Weekly
-          </Link>
+        <Link
+          href="/sports/nba/weekly"
+          className="flex items-center gap-2 px-3 py-1 text-sm text-slate-400 hover:bg-slate-800 rounded-md"
+        >
+          <Basketball size={16} />
+          NBA Weekly
+        </Link>
 
-          <Link href="/sports/nba/weekly" className="px-3 py-1 text-sm text-slate-400 hover:bg-slate-800 rounded-md">
-            NBA Weekly
-          </Link>
-
-          <Link href="/sports/nhl/weekly" className="px-3 py-1 text-sm text-slate-400 hover:bg-slate-800 rounded-md">
-            NHL Weekly
-          </Link>
-        </div>
-      )}
+        <Link
+          href="/sports/nhl/weekly"
+          className="flex items-center gap-2 px-3 py-1 text-sm text-slate-400 hover:bg-slate-800 rounded-md"
+        >
+          <IceCream size={16} />
+          NHL Weekly
+        </Link>
+      </div>
+      {/* ▲▲▲ Animated Expandable Section ▲▲▲ */}
 
       {link("/trivia", "Trivia", Brain)}
       {link("/leaderboard", "Leaderboard", Trophy)}

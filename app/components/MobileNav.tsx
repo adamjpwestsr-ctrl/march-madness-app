@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import {
   Menu,
   X,
@@ -14,12 +14,18 @@ import {
   LogOut,
   ChevronDown,
   ChevronRight,
+  Golf,
+  Baseball,
+  Football,
+  Basketball,
+  IceCream,
 } from "lucide-react";
 
 export default function MobileNav() {
   const [open, setOpen] = useState(false);
   const [openChallenges, setOpenChallenges] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
 
   const handleLogout = async () => {
     await fetch("/logout", { method: "POST" });
@@ -30,7 +36,9 @@ export default function MobileNav() {
     <Link
       href={href}
       onClick={() => setOpen(false)}
-      className="flex items-center gap-3 px-4 py-3 text-lg border-b border-slate-800"
+      className={`flex items-center gap-3 px-4 py-3 text-lg border-b border-slate-800 ${
+        pathname === href ? "bg-slate-800 text-white" : "text-slate-300"
+      }`}
     >
       <Icon size={20} />
       {label}
@@ -80,65 +88,107 @@ export default function MobileNav() {
             )}
           </button>
 
-          {openChallenges && (
-            <div className="flex flex-col bg-slate-900/80">
-              <Link
-                href="/challenges"
-                onClick={() => setOpen(false)}
-                className="px-8 py-2 text-base text-slate-300 border-b border-slate-800 hover:bg-slate-800"
-              >
-                Challenges Hub
-              </Link>
+          {/* ▼▼▼ Animated Expandable Section ▼▼▼ */}
+          <div
+            className={`
+              flex flex-col bg-slate-900/80
+              overflow-hidden transition-all duration-300 ease-out
+              ${openChallenges ? "max-h-96 opacity-100" : "max-h-0 opacity-0"}
+            `}
+          >
+            <Link
+              href="/challenges"
+              onClick={() => setOpen(false)}
+              className={`flex items-center gap-2 px-8 py-2 text-base border-b border-slate-800 hover:bg-slate-800 ${
+                pathname === "/challenges"
+                  ? "bg-slate-800 text-white"
+                  : "text-slate-300"
+              }`}
+            >
+              <ListChecks size={16} />
+              Challenges Hub
+            </Link>
 
-              <Link
-                href="/sports/golf/weekly"
-                onClick={() => setOpen(false)}
-                className="px-8 py-2 text-base text-slate-300 border-b border-slate-800 hover:bg-slate-800"
-              >
-                Golf Weekly
-              </Link>
+            <Link
+              href="/sports/golf/weekly"
+              onClick={() => setOpen(false)}
+              className={`flex items-center gap-2 px-8 py-2 text-base border-b border-slate-800 hover:bg-slate-800 ${
+                pathname.startsWith("/sports/golf/weekly")
+                  ? "bg-slate-800 text-white"
+                  : "text-slate-300"
+              }`}
+            >
+              <Golf size={16} />
+              Golf Weekly
+            </Link>
 
-              <Link
-                href="/sports/mlb"
-                onClick={() => setOpen(false)}
-                className="px-8 py-2 text-base text-slate-300 border-b border-slate-800 hover:bg-slate-800"
-              >
-                MLB Weekly
-              </Link>
+            <Link
+              href="/sports/mlb"
+              onClick={() => setOpen(false)}
+              className={`flex items-center gap-2 px-8 py-2 text-base border-b border-slate-800 hover:bg-slate-800 ${
+                pathname.startsWith("/sports/mlb") &&
+                !pathname.includes("/derby")
+                  ? "bg-slate-800 text-white"
+                  : "text-slate-300"
+              }`}
+            >
+              <Baseball size={16} />
+              MLB Weekly
+            </Link>
 
-              <Link
-                href="/sports/mlb/derby"
-                onClick={() => setOpen(false)}
-                className="px-8 py-2 text-base text-slate-300 border-b border-slate-800 hover:bg-slate-800"
-              >
-                MLB Derby
-              </Link>
+            <Link
+              href="/sports/mlb/derby"
+              onClick={() => setOpen(false)}
+              className={`flex items-center gap-2 px-8 py-2 text-base border-b border-slate-800 hover:bg-slate-800 ${
+                pathname.startsWith("/sports/mlb/derby")
+                  ? "bg-slate-800 text-white"
+                  : "text-slate-300"
+              }`}
+            >
+              <Baseball size={16} />
+              MLB Derby
+            </Link>
 
-              <Link
-                href="/sports/nfl/weekly"
-                onClick={() => setOpen(false)}
-                className="px-8 py-2 text-base text-slate-300 border-b border-slate-800 hover:bg-slate-800"
-              >
-                NFL Weekly
-              </Link>
+            <Link
+              href="/sports/nfl/weekly"
+              onClick={() => setOpen(false)}
+              className={`flex items-center gap-2 px-8 py-2 text-base border-b border-slate-800 hover:bg-slate-800 ${
+                pathname.startsWith("/sports/nfl/weekly")
+                  ? "bg-slate-800 text-white"
+                  : "text-slate-300"
+              }`}
+            >
+              <Football size={16} />
+              NFL Weekly
+            </Link>
 
-              <Link
-                href="/sports/nba/weekly"
-                onClick={() => setOpen(false)}
-                className="px-8 py-2 text-base text-slate-300 border-b border-slate-800 hover:bg-slate-800"
-              >
-                NBA Weekly
-              </Link>
+            <Link
+              href="/sports/nba/weekly"
+              onClick={() => setOpen(false)}
+              className={`flex items-center gap-2 px-8 py-2 text-base border-b border-slate-800 hover:bg-slate-800 ${
+                pathname.startsWith("/sports/nba/weekly")
+                  ? "bg-slate-800 text-white"
+                  : "text-slate-300"
+              }`}
+            >
+              <Basketball size={16} />
+              NBA Weekly
+            </Link>
 
-              <Link
-                href="/sports/nhl/weekly"
-                onClick={() => setOpen(false)}
-                className="px-8 py-2 text-base text-slate-300 border-b border-slate-800 hover:bg-slate-800"
-              >
-                NHL Weekly
-              </Link>
-            </div>
-          )}
+            <Link
+              href="/sports/nhl/weekly"
+              onClick={() => setOpen(false)}
+              className={`flex items-center gap-2 px-8 py-2 text-base border-b border-slate-800 hover:bg-slate-800 ${
+                pathname.startsWith("/sports/nhl/weekly")
+                  ? "bg-slate-800 text-white"
+                  : "text-slate-300"
+              }`}
+            >
+              <IceCream size={16} />
+              NHL Weekly
+            </Link>
+          </div>
+          {/* ▲▲▲ Animated Expandable Section ▲▲▲ */}
 
           {link("/trivia", "Trivia", Brain)}
           {link("/leaderboard", "Leaderboard", Trophy)}

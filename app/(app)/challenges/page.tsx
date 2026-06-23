@@ -1,87 +1,165 @@
 import Link from "next/link";
-import ChallengeCard from "@/app/components/ChallengeCard";
-import WeeklyBanner from "@/app/components/WeeklyBanner";
-import TriviaModeCard from "@/app/components/TriviaModeCard";
-import LeaderboardCard from "@/app/components/LeaderboardCard";
-import { CHALLENGES } from "@/app/config/challenges";
-
-// ⭐ New import for the dynamic Golf Weekly card
-import GolfWeeklyCard from "@/app/components/GolfWeeklyCard";
+import {
+  Trophy,
+  Brain,
+  Golf,
+  Baseball,
+  Football,
+  Basketball,
+  IceCream,
+  Sparkles,
+} from "lucide-react";
 
 export default function ChallengesHub() {
   return (
-    <div className="space-y-10">
+    <div className="space-y-12 animate-fadeIn">
+      {/* Header */}
       <section>
         <h1 className="text-3xl font-semibold mb-2">Challenges</h1>
         <p className="text-slate-400">
-          Weekly picks, trivia, and sports challenges — all in one place.
+          Explore weekly sports challenges, trivia modes, and special events.
         </p>
       </section>
 
-      <section>
-        <Link href="/challenges/weekly" className="block">
-          <WeeklyBanner />
-        </Link>
+      {/* Weekly Challenges */}
+      <section className="space-y-4">
+        <h2 className="text-xl font-semibold text-slate-200 flex items-center gap-2">
+          <Sparkles size={18} className="text-emerald-400" />
+          Weekly Challenges
+        </h2>
+
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <ChallengeItem
+            href="/sports/golf/weekly"
+            icon={<Golf size={22} />}
+            title="Golf Weekly"
+            desc="Pick a golfer each week and track your streak."
+          />
+
+          <ChallengeItem
+            href="/sports/mlb"
+            icon={<Baseball size={22} />}
+            title="MLB Weekly"
+            desc="Choose your top hitter and follow weekly performance."
+          />
+
+          <ChallengeItem
+            href="/sports/mlb/derby"
+            icon={<Baseball size={22} />}
+            title="MLB Derby"
+            desc="Predict home run leaders in a derby-style challenge."
+          />
+
+          <ChallengeItem
+            href="/sports/nfl/weekly"
+            icon={<Football size={22} />}
+            title="NFL Weekly"
+            desc="Pick a player each week and build your streak."
+          />
+
+          <ChallengeItem
+            href="/sports/nba/weekly"
+            icon={<Basketball size={22} />}
+            title="NBA Weekly"
+            desc="Choose a standout performer each week."
+          />
+
+          <ChallengeItem
+            href="/sports/nhl/weekly"
+            icon={<IceCream size={22} />}
+            title="NHL Weekly"
+            desc="Track weekly picks across the NHL season."
+          />
+        </div>
       </section>
 
-{/* ⭐ Challenge Cards Grid */}
-<section
-  className="
-    grid
-    gap-6
-    md:grid-cols-2
-    lg:grid-cols-3
-    auto-rows-[1fr]          /* ⭐ Ensures all rows match height */
-  "
->
-  {CHALLENGES.map((c) => {
-    // ⭐ Special override: Golf Weekly uses the new dynamic card
-    if (c.id === "golf-weekly") {
-      return (
-        <div key={c.id} className="h-full">
-          <GolfWeeklyCard />
+      {/* Special Challenges */}
+      <section className="space-y-4">
+        <h2 className="text-xl font-semibold text-slate-200 flex items-center gap-2">
+          <Trophy size={18} className="text-yellow-400" />
+          Special Challenges
+        </h2>
+
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <ChallengeItem
+            href="/sports/march-madness"
+            icon={<Trophy size={22} />}
+            title="March Madness"
+            desc="Build your bracket and compete for the top spot."
+          />
         </div>
-      );
-    }
+      </section>
 
-    // ⭐ Default behavior for all other challenges
-    return c.href ? (
-      <Link key={c.id} href={c.href} className="h-full block">
-        <ChallengeCard
-          sport={c.sport}
-          title={c.title}
-          difficulty={c.difficulty}
-          status={c.status}
-        />
-      </Link>
-    ) : (
-      <div
-        key={c.id}
-        className="h-full opacity-60 cursor-not-allowed"
-        title="Coming Soon"
-      >
-        <ChallengeCard
-          sport={c.sport}
-          title={c.title}
-          difficulty={c.difficulty}
-          status={c.status}
-        />
-      </div>
-    );
-  })}
-</section>
+      {/* Trivia */}
+      <section className="space-y-4">
+        <h2 className="text-xl font-semibold text-slate-200 flex items-center gap-2">
+          <Brain size={18} className="text-blue-400" />
+          Trivia Challenges
+        </h2>
 
-      {/* Bottom Section */}
-      <section className="grid gap-6 md:grid-cols-2">
-        <div className="rounded-xl border border-slate-800 p-6 bg-slate-900/40">
-          <h2 className="text-xl font-semibold mb-4">Your Progress</h2>
-          <p className="text-slate-400">Progress tracking coming soon.</p>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <ChallengeItem
+            href="/challenges/weekly"
+            icon={<Brain size={22} />}
+            title="Weekly Trivia"
+            desc="A new themed trivia challenge every week."
+          />
         </div>
-
-        <Link href="/leaderboard" className="block">
-          <LeaderboardCard title="Leaderboard" value="View Rankings" />
-        </Link>
       </section>
     </div>
+  );
+}
+
+/* ------------------------------
+   Reusable Challenge Item
+------------------------------ */
+function ChallengeItem({
+  href,
+  icon,
+  title,
+  desc,
+}: {
+  href: string;
+  icon: React.ReactNode;
+  title: string;
+  desc: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className="
+        group
+        rounded-xl
+        border border-white/10
+        bg-slate-900/40
+        backdrop-blur
+        p-5
+        shadow-md
+        hover:shadow-lg
+        hover:border-emerald-400/40
+        transition-all
+        duration-300
+        flex flex-col gap-3
+      "
+    >
+      <div
+        className="
+          w-12 h-12
+          rounded-lg
+          bg-slate-800/60
+          flex items-center justify-center
+          text-slate-200
+          group-hover:bg-emerald-500/20
+          transition
+        "
+      >
+        {icon}
+      </div>
+
+      <div>
+        <h3 className="text-lg font-semibold text-white">{title}</h3>
+        <p className="text-slate-400 text-sm">{desc}</p>
+      </div>
+    </Link>
   );
 }

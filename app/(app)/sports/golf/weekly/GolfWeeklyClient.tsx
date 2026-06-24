@@ -334,7 +334,6 @@ const categoryIcon = (category: string | null) => {
           </button>
         </div>
       </header>
-
 {/* Spotlight + Upcoming Event */}
 <section className="w-full grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fadeIn">
   {/* Spotlight */}
@@ -344,27 +343,19 @@ const categoryIcon = (category: string | null) => {
     <div className="flex flex-col gap-3 text-sm">
       <div>
         <span className="text-slate-400">Most Picked:</span>{" "}
-        <span className="text-white font-medium">
-          {spotlight.mostPicked}
-        </span>
+        <span className="text-white font-medium">{spotlight.mostPicked}</span>
       </div>
       <div>
         <span className="text-slate-400">Sleeper Pick:</span>{" "}
-        <span className="text-white font-medium">
-          {spotlight.sleeper}
-        </span>
+        <span className="text-white font-medium">{spotlight.sleeper}</span>
       </div>
       <div>
         <span className="text-slate-400">Trending:</span>{" "}
-        <span className="text-white font-medium">
-          {spotlight.trending}
-        </span>
+        <span className="text-white font-medium">{spotlight.trending}</span>
       </div>
       <div>
         <span className="text-slate-400">Player to Watch:</span>{" "}
-        <span className="text-white font-medium">
-          {spotlight.watch}
-        </span>
+        <span className="text-white font-medium">{spotlight.watch}</span>
       </div>
     </div>
 
@@ -403,8 +394,7 @@ const categoryIcon = (category: string | null) => {
             {upcomingTournament.name}
           </div>
           <div className="text-slate-400 text-sm">
-            {new Date(upcomingTournament.start_date).toLocaleDateString()}{" "}
-            –{" "}
+            {new Date(upcomingTournament.start_date).toLocaleDateString()} –{" "}
             {new Date(upcomingTournament.end_date).toLocaleDateString()}
           </div>
         </div>
@@ -436,9 +426,7 @@ const categoryIcon = (category: string | null) => {
         </p>
       </>
     ) : (
-      <p className="text-slate-500 text-sm">
-        No upcoming tournaments scheduled.
-      </p>
+      <p className="text-slate-500 text-sm">No upcoming tournaments scheduled.</p>
     )}
   </div>
 </section>
@@ -452,8 +440,7 @@ const categoryIcon = (category: string | null) => {
           {currentTournament.name}
         </h2>
         <p className="text-slate-400 text-sm">
-          {new Date(currentTournament.start_date).toLocaleDateString()}{" "}
-          –{" "}
+          {new Date(currentTournament.start_date).toLocaleDateString()} –{" "}
           {new Date(currentTournament.end_date).toLocaleDateString()}
         </p>
 
@@ -483,64 +470,68 @@ const categoryIcon = (category: string | null) => {
   )}
 </section>
 
-      {/* Past Tournament Dropdown */}
-      <section className="space-y-3 animate-fadeIn">
-        <h3 className="text-sm font-semibold text-slate-300 uppercase tracking-wide">
-          Past Tournaments
-        </h3>
+{/* CURRENT PICK + SCOREBOARD + TOP 5 PREVIEW */}
+<section className="rounded-xl border border-slate-800 bg-slate-900/40 p-5 shadow-md flex flex-col gap-6 animate-fadeIn">
 
-        {pastTournaments.length === 0 ? (
-          <p className="text-xs text-slate-500">No past tournaments yet.</p>
-        ) : (
-          <select
-            value={selectedTournamentId ?? ""}
-            onChange={(e) => setSelectedTournamentId(Number(e.target.value))}
-            className="w-full max-w-md rounded-lg bg-slate-900 border border-slate-700 text-slate-200 px-3 py-2 text-sm"
-          >
-            {pastTournaments.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.name} — {new Date(t.start_date).toLocaleDateString()}
-              </option>
-            ))}
-          </select>
-        )}
+  {/* Row: Current Pick + Scoreboard Link */}
+  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    {/* Current Pick */}
+    <div>
+      <h3 className="text-sm font-semibold text-slate-300 mb-1">Your Pick This Week</h3>
+      {currentPick ? (
+        <p className="text-emerald-400 font-medium">{currentPick}</p>
+      ) : (
+        <p className="text-slate-500 text-sm">No pick locked in yet.</p>
+      )}
+    </div>
 
-        {isPastTournament && (
-          <p className="text-xs text-slate-500">
-            You cannot make picks for past tournaments.
-          </p>
-        )}
-      </section>
+    {/* Golf Scoreboard Link */}
+    <Link
+      href="/sports/golf/scoreboard"
+      className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-600/30 transition"
+    >
+      <span className="font-medium">View Full Golf Scoreboard</span>
+    </Link>
+  </div>
 
-      {/* Player Grid */}
-      <section className="w-full animate-fadeIn">
-        <div className="rounded-xl bg-slate-900/70 border border-white/10 p-5 shadow-xl flex flex-col gap-4">
-          <h3 className="text-lg font-semibold">Select Your Player</h3>
+  {/* TOP 5 LEADERBOARD PREVIEW */}
+  {topFive && topFive.length > 0 && (
+    <div className="rounded-lg bg-slate-800/40 border border-white/10 p-4 shadow-inner">
+      <h4 className="text-sm font-semibold text-slate-300 mb-3">Top 5 Leaderboard</h4>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-            {players.map((player) => {
-              const isPicked = pickedPlayerId === player.id;
+      <div className="space-y-3">
+        {topFive.map((p: any, idx: number) => (
+          <div key={p.id} className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-slate-500 text-xs w-4">{idx + 1}</span>
+              <img
+                src={p.athlete?.headshot}
+                alt={p.athlete?.shortName}
+                className="w-7 h-7 rounded-full"
+              />
+              <span className="text-slate-200 text-sm">{p.athlete?.shortName}</span>
+            </div>
 
-              return (
-                <button
-                  key={player.id}
-                  onClick={() => setPickedPlayerId(player.id)}
-                  disabled={Boolean(isPastTournament)}
-                  className={`
-                    p-3 rounded-lg border text-sm text-left transition-all
-                    ${
-                      isPicked
-                        ? "bg-emerald-600 border-emerald-400 text-white shadow-lg shadow-emerald-600/30"
-                        : "bg-slate-900 border-slate-700 text-slate-300 hover:bg-slate-800"
-                    }
-                    ${isPastTournament ? "opacity-40 cursor-not-allowed" : ""}
-                  `}
-                >
-                  {player.name}
-                </button>
-              );
-            })}
+            <div className="text-right">
+              <p
+                className={`font-semibold ${
+                  p.score < 0
+                    ? "text-emerald-400"
+                    : p.score > 0
+                    ? "text-red-400"
+                    : "text-slate-300"
+                }`}
+              >
+                {p.score}
+              </p>
+              <p className="text-xs text-slate-500">Thru {p.thru || "-"}</p>
+            </div>
           </div>
+        ))}
+      </div>
+    </div>
+  )}
+</section>
 
           {/* Save Button */}
           <button

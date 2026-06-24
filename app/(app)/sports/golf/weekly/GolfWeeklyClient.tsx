@@ -348,21 +348,22 @@ const categoryIcon = (category: string | null) => {
       <div className="fixed inset-0 -z-10 bg-gradient-to-b from-slate-900 via-slate-950 to-black opacity-80" />
       <div className="pointer-events-none fixed inset-0 -z-10 animate-pulse-slow opacity-10 bg-[url('/noise.png')]" />
 
-      {/* Sticky Header */}
-      {currentTournament && (
-        <div className="sticky top-0 z-40 bg-slate-950/80 backdrop-blur-xl border-b border-white/10 py-3 px-2 flex items-center justify-between">
-          <div className="font-semibold text-white text-sm">
-            {currentTournament.name}
-          </div>
+{/* Sticky Header */}
+{currentTournament && (
+  <div className="sticky top-0 z-40 bg-slate-950/80 backdrop-blur-xl border-b border-white/10 py-2.5 px-4 flex items-center justify-between">
+    {/* Tournament Name */}
+    <div className="text-lg md:text-xl font-bold text-white tracking-tight">
+      {currentTournament.name}
+    </div>
 
-          {pickedPlayerId && (
-            <div className="text-emerald-400 text-xs">
-              Picked: {players.find((p) => p.id === pickedPlayerId)?.name}
-            </div>
-          )}
-        </div>
-      )}
-
+    {/* Current Pick */}
+    {pickedPlayerId && (
+      <div className="text-emerald-400 text-sm md:text-base font-semibold">
+        Picked: {players.find((p) => p.id === pickedPlayerId)?.name}
+      </div>
+    )}
+  </div>
+)}
       {/* Header */}
       <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 animate-fadeIn">
         <div className="space-y-2">
@@ -479,6 +480,23 @@ const categoryIcon = (category: string | null) => {
   </div>
 </section>
 
+{/* Tournament Selector Pills */}
+<div className="flex flex-wrap gap-2 mb-6">
+  {tournaments.map((t) => (
+    <button
+      key={t.id}
+      onClick={() => setSelectedTournamentId(t.id)}
+      className={`px-3 py-1.5 rounded-full text-xs font-medium border transition ${
+        selectedTournamentId === t.id
+          ? "bg-emerald-600 text-white border-emerald-500"
+          : "bg-slate-800 text-slate-300 border-white/10 hover:border-emerald-400"
+      }`}
+    >
+      {t.name} • {new Date(t.start_date).toLocaleDateString()}
+    </button>
+  ))}
+</div>
+
 {/* CURRENT TOURNAMENT BLOCK */}
 <section className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 border border-white/10 p-5 md:p-6 shadow-xl flex flex-col gap-6 animate-fadeIn">
 
@@ -565,6 +583,35 @@ const categoryIcon = (category: string | null) => {
     </div>
   )}
 </section>
+
+{/* Player Selection Grid */}
+<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 mt-6">
+  {players.map((pl) => (
+    <button
+      key={pl.id}
+      onClick={() => setPickedPlayerId(pl.id)}
+      className={`p-3 rounded-lg border text-left transition ${
+        pickedPlayerId === pl.id
+          ? "bg-emerald-600/20 border-emerald-500 text-emerald-300"
+          : "bg-slate-800/40 border-white/10 text-slate-300 hover:border-emerald-400"
+      }`}
+    >
+      <div className="flex items-center gap-2">
+        {pl.photo_url && (
+          <img
+            src={pl.photo_url}
+            alt={pl.name}
+            className="w-8 h-8 rounded-full object-cover"
+          />
+        )}
+        <span className="font-medium text-sm">{pl.name}</span>
+      </div>
+      {pl.country && (
+        <p className="text-xs text-slate-500 mt-1">{pl.country}</p>
+      )}
+    </button>
+  ))}
+</div>
 
   {/* Save Button */}
   <button

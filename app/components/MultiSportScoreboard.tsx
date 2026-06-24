@@ -37,7 +37,7 @@ export default function MultiSportScoreboard() {
   }, [sport]);
 
   return (
-<div className="rounded-xl border border-slate-800 bg-slate-900/40 backdrop-blur p-3 shadow-md space-y-2 min-h-[120px]">
+<div className="rounded-xl border border-slate-800 bg-slate-900/40 backdrop-blur p-3 shadow-md space-y-2 min-h-[110px]">
 
       {/* Header */}
       <div className="flex items-center gap-2">

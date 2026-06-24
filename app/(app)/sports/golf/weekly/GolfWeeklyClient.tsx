@@ -475,7 +475,6 @@ const categoryIcon = (category: string | null) => {
 
   {/* Row: Current Pick + Scoreboard Link */}
   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-    {/* Current Pick */}
     <div>
       <h3 className="text-sm font-semibold text-slate-300 mb-1">Your Pick This Week</h3>
       {currentPick ? (
@@ -485,7 +484,6 @@ const categoryIcon = (category: string | null) => {
       )}
     </div>
 
-    {/* Golf Scoreboard Link */}
     <Link
       href="/sports/golf/scoreboard"
       className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-600/30 transition"
@@ -532,113 +530,114 @@ const categoryIcon = (category: string | null) => {
     </div>
   )}
 
-          {/* Save Button */}
-          <button
-            onClick={handlePick}
-            disabled={isPastTournament || !pickedPlayerId || loadingPick}
-            className={`
-              w-full py-3 rounded-lg text-center font-semibold text-sm mt-4
-              transition-all duration-200
-              ${
-                isPastTournament
-                  ? "bg-slate-800 text-slate-500 cursor-not-allowed"
-                  : pickedPlayerId
-                  ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-600/30"
-                  : "bg-slate-800 text-slate-500 cursor-not-allowed"
-              }
-            `}
-          >
-            {isPastTournament
-              ? "Cannot pick for past tournaments"
-              : loadingPick
-              ? "Saving..."
-              : "Save Pick"}
-          </button>
-        </div>
+  {/* Save Button */}
+  <button
+    onClick={handlePick}
+    disabled={isPastTournament || !pickedPlayerId || loadingPick}
+    className={`
+      w-full py-3 rounded-lg text-center font-semibold text-sm mt-4
+      transition-all duration-200
+      ${
+        isPastTournament
+          ? "bg-slate-800 text-slate-500 cursor-not-allowed"
+          : pickedPlayerId
+          ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-600/30"
+          : "bg-slate-800 text-slate-500 cursor-not-allowed"
+      }
+    `}
+  >
+    {isPastTournament
+      ? "Cannot pick for past tournaments"
+      : loadingPick
+      ? "Saving..."
+      : "Save Pick"}
+  </button>
 
-      {/* Player Picks Sidebar */}
-      <button
-        onClick={() => setSidebarOpen(true)}
-        className="fixed bottom-6 right-6 z-40 bg-slate-900/80 backdrop-blur-xl border border-white/10 px-4 py-2 rounded-full text-sm text-slate-300 hover:text-white shadow-lg"
-      >
-        Player Picks
-      </button>
+</section>   {/* ✅ THIS SECTION IS NOW PROPERLY CLOSED */}
 
-      {sidebarOpen && (
-        <div className="fixed inset-0 z-50 flex">
-          <div
-            className="flex-1 bg-black/40 backdrop-blur-sm"
-            onClick={() => setSidebarOpen(false)}
-          />
+{/* Player Picks Sidebar */}
+<button
+  onClick={() => setSidebarOpen(true)}
+  className="fixed bottom-6 right-6 z-40 bg-slate-900/80 backdrop-blur-xl border border-white/10 px-4 py-2 rounded-full text-sm text-slate-300 hover:text-white shadow-lg"
+>
+  Player Picks
+</button>
 
-          <div className="w-80 bg-slate-900 border-l border-white/10 p-5 overflow-y-auto">
-            <h3 className="text-lg font-semibold mb-4">Player Picks</h3>
+{sidebarOpen && (
+  <div className="fixed inset-0 z-50 flex">
+    <div
+      className="flex-1 bg-black/40 backdrop-blur-sm"
+      onClick={() => setSidebarOpen(false)}
+    />
 
-            {userPicks.length === 0 && (
-              <p className="text-sm text-slate-500">No picks yet.</p>
-            )}
+    <div className="w-80 bg-slate-900 border-l border-white/10 p-5 overflow-y-auto">
+      <h3 className="text-lg font-semibold mb-4">Player Picks</h3>
 
-            <div className="flex flex-col gap-3">
-              {userPicks.map((p) => {
-                const t = tournaments.find((t) => t.id === p.tournament_id);
-                const pl = players.find((pl) => pl.id === p.player_id);
-
-                return (
-                  <div
-                    key={`${p.tournament_id}-${p.player_id}`}
-                    className="p-3 rounded-lg bg-white/5 border border-white/10"
-                  >
-                    <div className="text-white font-medium text-sm">
-                      {pl?.name}
-                    </div>
-                    <div className="text-xs text-slate-400">{t?.name}</div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
+      {userPicks.length === 0 && (
+        <p className="text-sm text-slate-500">No picks yet.</p>
       )}
 
-      {/* Pick History Modal */}
-      {historyOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xl">
-          <div className="w-full max-w-lg bg-slate-900 border border-white/10 rounded-xl p-6 shadow-xl max-h-[80vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-semibold">Pick History</h3>
-              <button
-                onClick={() => setHistoryOpen(false)}
-                className="text-slate-400 hover:text-white"
-              >
-                ✕
-              </button>
+      <div className="flex flex-col gap-3">
+        {userPicks.map((p) => {
+          const t = tournaments.find((t) => t.id === p.tournament_id);
+          const pl = players.find((pl) => pl.id === p.player_id);
+
+          return (
+            <div
+              key={`${p.tournament_id}-${p.player_id}`}
+              className="p-3 rounded-lg bg-white/5 border border-white/10"
+            >
+              <div className="text-white font-medium text-sm">
+                {pl?.name}
+              </div>
+              <div className="text-xs text-slate-400">{t?.name}</div>
             </div>
+          );
+        })}
+      </div>
+    </div>
+  </div>
+)}
 
-            {userPicks.length === 0 && (
-              <p className="text-sm text-slate-500">No picks yet.</p>
-            )}
+{/* Pick History Modal */}
+{historyOpen && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xl">
+    <div className="w-full max-w-lg bg-slate-900 border border-white/10 rounded-xl p-6 shadow-xl max-h-[80vh] overflow-y-auto">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-xl font-semibold">Pick History</h3>
+        <button
+          onClick={() => setHistoryOpen(false)}
+          className="text-slate-400 hover:text-white"
+        >
+          ✕
+        </button>
+      </div>
 
-            <div className="flex flex-col gap-3">
-              {userPicks.map((p) => {
-                const t = tournaments.find((t) => t.id === p.tournament_id);
-                const pl = players.find((pl) => pl.id === p.player_id);
-
-                return (
-                  <div
-                    key={`${p.tournament_id}-${p.player_id}`}
-                    className="p-3 rounded-lg bg-white/5 border border-white/10"
-                  >
-                    <div className="text-white font-medium text-sm">
-                      {pl?.name}
-                    </div>
-                    <div className="text-xs text-slate-400">{t?.name}</div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
+      {userPicks.length === 0 && (
+        <p className="text-sm text-slate-500">No picks yet.</p>
       )}
+
+      <div className="flex flex-col gap-3">
+        {userPicks.map((p) => {
+          const t = tournaments.find((t) => t.id === p.tournament_id);
+          const pl = players.find((pl) => pl.id === p.player_id);
+
+          return (
+            <div
+              key={`${p.tournament_id}-${p.player_id}`}
+              className="p-3 rounded-lg bg-white/5 border border-white/10"
+            >
+              <div className="text-white font-medium text-sm">
+                {pl?.name}
+              </div>
+              <div className="text-xs text-slate-400">{t?.name}</div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  </div>
+)}
 
       {/* Badge Collection Modal */}
       {badgeModalOpen && (

@@ -636,28 +636,28 @@ const categoryIcon = (category: string | null) => {
   ))}
 </div>
 
-  {/* Save Button */}
-  <button
-    onClick={handlePick}
-    disabled={isPastTournament || !pickedPlayerId || loadingPick}
-    className={`
-      w-full py-3 rounded-lg text-center font-semibold text-sm mt-4
-      transition-all duration-200
-      ${
-        isPastTournament
-          ? "bg-slate-800 text-slate-500 cursor-not-allowed"
-          : pickedPlayerId
-          ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-600/30"
-          : "bg-slate-800 text-slate-500 cursor-not-allowed"
-      }
-    `}
-  >
-    {isPastTournament
-      ? "Cannot pick for past tournaments"
-      : loadingPick
-      ? "Saving..."
-      : "Save Pick"}
-  </button>
+{/* Save Button */}
+<button
+  onClick={handlePick}
+  disabled={isPastTournament || !pickedPlayerId || loadingPick}
+  className={`
+    w-full py-3 rounded-lg text-center font-semibold text-sm mt-4
+    transition-all duration-200
+    ${
+      isPastTournament
+        ? "bg-slate-800 text-slate-500 cursor-not-allowed"
+        : pickedPlayerId
+        ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-600/30"
+        : "bg-slate-800 text-slate-500 cursor-not-allowed"
+    }
+  `}
+>
+  {isPastTournament
+    ? "Cannot pick for past tournaments"
+    : loadingPick
+    ? "Saving..."
+    : "Save Pick"}
+</button>
 
 {/* Player Picks Sidebar */}
 <button
@@ -743,87 +743,87 @@ const categoryIcon = (category: string | null) => {
   </div>
 )}
 
-      {/* Badge Collection Modal */}
-      {badgeModalOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xl z-50 flex items-center justify-center">
-          <div className="w-full max-w-2xl bg-slate-900/90 border border-white/10 rounded-xl p-6 shadow-xl max-h-[80vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-semibold">Badges</h3>
-              <button
-                onClick={() => setBadgeModalOpen(false)}
-                className="text-slate-400 hover:text-white"
-              >
-                ✕
-              </button>
+{/* Badge Collection Modal */}
+{badgeModalOpen && (
+  <div className="fixed inset-0 bg-black/60 backdrop-blur-xl z-50 flex items-center justify-center">
+    <div className="w-full max-w-2xl bg-slate-900/90 border border-white/10 rounded-xl p-6 shadow-xl max-h-[80vh] overflow-y-auto">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-xl font-semibold">Badges</h3>
+        <button
+          onClick={() => setBadgeModalOpen(false)}
+          className="text-slate-400 hover:text-white"
+        >
+          ✕
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+        {badges.map((b) => (
+          <div
+            key={b.id}
+            className={`
+              relative p-4 rounded-xl border shadow-md
+              bg-white/5
+              ${
+                b.earned
+                  ? "border-emerald-400/60 shadow-emerald-500/20"
+                  : "border-white/10 opacity-60"
+              }
+            `}
+          >
+            {!b.earned && (
+              <div className="absolute inset-0 rounded-xl bg-slate-950/60 flex items-center justify-center text-xs text-slate-400">
+                🔒 Locked
+              </div>
+            )}
+
+            <div className="text-2xl mb-2">{b.emoji}</div>
+
+            <div className="text-sm font-semibold text-white">
+              {b.name}
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {badges.map((b) => (
-                <div
-                  key={b.id}
-                  className={`
-                    relative p-4 rounded-xl border shadow-md
-                    bg-white/5
-                    ${
-                      b.earned
-                        ? "border-emerald-400/60 shadow-emerald-500/20"
-                        : "border-white/10 opacity-60"
-                    }
-                  `}
-                >
-                  {!b.earned && (
-                    <div className="absolute inset-0 rounded-xl bg-slate-950/60 flex items-center justify-center text-xs text-slate-400">
-                      🔒 Locked
-                    </div>
-                  )}
-
-                  <div className="text-2xl mb-2">{b.emoji}</div>
-
-                  <div className="text-sm font-semibold text-white">
-                    {b.name}
-                  </div>
-
-                  <div className="text-xs text-slate-400 mt-1">
-                    {b.description}
-                  </div>
-
-                  {b.earned_at && (
-                    <div className="text-[10px] text-emerald-300 mt-2">
-                      Earned {new Date(b.earned_at).toLocaleDateString()}
-                    </div>
-                  )}
-                </div>
-              ))}
+            <div className="text-xs text-slate-400 mt-1">
+              {b.description}
             </div>
-          </div>
-        </div>
-      )}
 
-      {/* New Badge Toast */}
-      {newBadge && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50">
-          <div className="px-4 py-3 rounded-xl bg-slate-900/95 border border-emerald-400/60 shadow-xl flex items-center gap-3 animate-fadeIn">
-            <span className="text-2xl">{newBadge.emoji}</span>
-            <div className="flex flex-col">
-              <span className="text-xs text-emerald-300 uppercase tracking-wide">
-                New Badge Unlocked
-              </span>
-              <span className="text-sm text-white font-semibold">
-                {newBadge.name}
-              </span>
-            </div>
+            {b.earned_at && (
+              <div className="text-[10px] text-emerald-300 mt-2">
+                Earned {new Date(b.earned_at).toLocaleDateString()}
+              </div>
+            )}
           </div>
-        </div>
-      )}
+        ))}
+      </div>
+    </div>
+  </div>
+)}
 
-      {/* Save Toast */}
-      {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
-          <div className="px-4 py-2 rounded-lg bg-slate-900/90 border border-white/10 shadow-xl text-sm text-white animate-fadeIn">
-            {toast}
-          </div>
-        </div>
-      )}
+{/* New Badge Toast */}
+{newBadge && (
+  <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50">
+    <div className="px-4 py-3 rounded-xl bg-slate-900/95 border border-emerald-400/60 shadow-xl flex items-center gap-3 animate-fadeIn">
+      <span className="text-2xl">{newBadge.emoji}</span>
+      <div className="flex flex-col">
+        <span className="text-xs text-emerald-300 uppercase tracking-wide">
+          New Badge Unlocked
+        </span>
+        <span className="text-sm text-white font-semibold">
+          {newBadge.name}
+        </span>
+      </div>
+    </div>
+  </div>
+)}
+
+{/* Save Toast */}
+{toast && (
+  <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+    <div className="px-4 py-2 rounded-lg bg-slate-900/90 border border-white/10 shadow-xl text-sm text-white animate-fadeIn">
+      {toast}
+    </div>
+  </div>
+)}
 </div>
 );
 }

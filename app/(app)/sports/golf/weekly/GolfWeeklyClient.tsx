@@ -103,6 +103,20 @@ export default function GolfWeeklyClient({
     pastTournaments.some((t) => t.id === selectedTournamentId)
   );
 
+// Compute the user's current pick for the active tournament
+const currentPick = (() => {
+  if (!currentTournament) return null;
+
+  const pick = userPicks.find(
+    (p) => p.tournament_id === currentTournament.id
+  );
+
+  if (!pick) return null;
+
+  const player = players.find((pl) => pl.id === pick.player_id);
+  return player?.name ?? null;
+})();
+
   // ----------------------
   // Fetches
   // ----------------------

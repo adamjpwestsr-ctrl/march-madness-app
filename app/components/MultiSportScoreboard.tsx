@@ -16,26 +16,23 @@ export default function MultiSportScoreboard() {
   const [games, setGames] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-const fetchScores = async () => {
-  setLoading(true);
-  try {
-    const date = new Date().toISOString().slice(0, 10);
-    const url = 'http://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard';
-    //const url = `https://site.api.espn.com/apis/v2/sports/${SPORTS[sport]}/scoreboard?dates=${date}&limit=300&useMap=true`;
+  const fetchScores = async () => {
+    setLoading(true);
+    try {
+      // Fetch from your Next.js API route instead of ESPN directly
+      const res = await fetch(`/api/scoreboard/${sport}`, { cache: "no-store" });
+      const data = await res.json();
+      setGames(data?.events || []);
+    } catch (err) {
+      console.error("Scoreboard error:", err);
+      setGames([]);
+    }
+    setLoading(false);
+  };
 
-    const res = await fetch(url, { cache: "no-store" });
-    const data = await res.json();
-
-    setGames(data?.events || []);
-  } catch (err) {
-    console.error("Scoreboard error:", err);
-    setGames([]);
-  }
-  setLoading(false);
-};
   useEffect(() => {
     fetchScores();
-    const interval = setInterval(fetchScores, 60000);
+    const interval = setInterval(fetchScores, 60000); // refresh every minute
     return () => clearInterval(interval);
   }, [sport]);
 

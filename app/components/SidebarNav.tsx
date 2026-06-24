@@ -12,11 +12,10 @@ import {
   LogOut,
   ChevronDown,
   ChevronRight,
-  Golf,
-  Baseball,
-  Football,
-  Basketball,
+  Flag,
   Goal,
+  CircleDot,
+  BaseballBat,
 } from "lucide-react";
 
 export default function SidebarNav() {
@@ -85,7 +84,7 @@ export default function SidebarNav() {
           href="/sports/golf/weekly"
           className="flex items-center gap-2 px-3 py-1 text-sm text-slate-400 hover:bg-slate-800 rounded-md"
         >
-          <Golf size={16} />
+          <Flag size={16} />
           Golf Weekly
         </Link>
 
@@ -93,7 +92,7 @@ export default function SidebarNav() {
           href="/sports/mlb"
           className="flex items-center gap-2 px-3 py-1 text-sm text-slate-400 hover:bg-slate-800 rounded-md"
         >
-          <Baseball size={16} />
+          <BaseballBat size={16} />
           MLB Weekly
         </Link>
 
@@ -109,7 +108,7 @@ export default function SidebarNav() {
           href="/sports/nfl/weekly"
           className="flex items-center gap-2 px-3 py-1 text-sm text-slate-400 hover:bg-slate-800 rounded-md"
         >
-          <Football size={16} />
+          <Goal size={16} />
           NFL Weekly
         </Link>
 
@@ -117,7 +116,7 @@ export default function SidebarNav() {
           href="/sports/nba/weekly"
           className="flex items-center gap-2 px-3 py-1 text-sm text-slate-400 hover:bg-slate-800 rounded-md"
         >
-          <Basketball size={16} />
+          <CircleDot size={16} />
           NBA Weekly
         </Link>
 

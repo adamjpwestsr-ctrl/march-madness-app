@@ -44,21 +44,21 @@ export default async function HomePage() {
 
   return (
     <div className="space-y-12 pb-20">
-      {/* 🏆 MULTI-SPORT SCOREBOARD (Top Bar) */}
-      <section className="sticky top-0 z-30 bg-slate-950/90 backdrop-blur border-b border-slate-800 overflow-hidden">
-        <div className="relative max-w-full">
-          {/* Gradient fade edges */}
-          <div className="absolute left-0 top-0 w-12 h-full bg-gradient-to-r from-slate-950 to-transparent pointer-events-none" />
-          <div className="absolute right-0 top-0 w-12 h-full bg-gradient-to-l from-slate-950 to-transparent pointer-events-none" />
+{/* 🏆 MULTI-SPORT SCOREBOARD (Top Bar) */}
+<section className="sticky top-0 z-30 bg-slate-950/90 backdrop-blur border-b border-slate-800">
+  <div className="relative w-full overflow-hidden">
+    {/* Gradient fade edges */}
+    <div className="absolute left-0 top-0 w-12 h-full bg-gradient-to-r from-slate-950 to-transparent pointer-events-none" />
+    <div className="absolute right-0 top-0 w-12 h-full bg-gradient-to-l from-slate-950 to-transparent pointer-events-none" />
 
-          {/* Scrollable marquee container */}
-          <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
-            <div className="flex gap-3 px-4 py-2 animate-scroll-slow hover:animation-pause">
-              <MultiSportScoreboard />
-            </div>
-          </div>
-        </div>
-      </section>
+    {/* Scrollable container */}
+    <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
+      <div className="flex gap-3 px-3 py-2 animate-scroll-slow hover:animation-pause w-max">
+        <MultiSportScoreboard />
+      </div>
+    </div>
+  </div>
+</section>
 
       {/* HERO + STATS */}
       <section className="space-y-6">

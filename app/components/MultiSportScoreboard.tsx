@@ -37,7 +37,8 @@ export default function MultiSportScoreboard() {
   }, [sport]);
 
   return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-900/40 backdrop-blur p-5 shadow-lg space-y-4">
+<div className="rounded-xl border border-slate-800 bg-slate-900/40 backdrop-blur p-3 shadow-md space-y-2 min-h-[120px]">
+
       {/* Header */}
       <div className="flex items-center gap-2">
         <Trophy size={18} className="text-emerald-400" />

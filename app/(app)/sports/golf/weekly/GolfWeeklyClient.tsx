@@ -63,7 +63,7 @@ interface Achievement {
 }
 
 // ----------------------
-// COMPONENT
+// Component
 // ----------------------
 export default function GolfWeeklyClient({
   tournaments,
@@ -74,7 +74,7 @@ export default function GolfWeeklyClient({
 }) {
   const today = new Date();
 
-  // Strict admin control
+  // Determine tournament groups
   const currentTournament = tournaments.find((t) => t.is_current);
   const pastTournaments = tournaments.filter(
     (t) => new Date(t.end_date) < today
@@ -83,9 +83,13 @@ export default function GolfWeeklyClient({
     (t) => new Date(t.start_date) > today
   );
 
+  // ----------------------
+  // State
+  // ----------------------
   const [selectedTournamentId, setSelectedTournamentId] = useState<number | null>(
     currentTournament?.id ?? null
   );
+
   const [pickedPlayerId, setPickedPlayerId] = useState<number | null>(null);
   const [userPicks, setUserPicks] = useState<UserPick[]>([]);
   const [loadingPick, setLoadingPick] = useState(false);
@@ -106,12 +110,13 @@ export default function GolfWeeklyClient({
   const [newBadge, setNewBadge] = useState<Badge | null>(null);
   const [topFive, setTopFive] = useState<any[]>([]);
 
-  const isPastTournament = !!(
-    selectedTournamentId &&
-    pastTournaments.some((t) => t.id === selectedTournamentId)
-  );
+  const isPastTournament =
+    !!selectedTournamentId &&
+    pastTournaments.some((t) => t.id === selectedTournamentId);
 
-  // Compute the user's current pick for the active tournament
+  // ----------------------
+  // Derived: Current Pick
+  // ----------------------
   const currentPick = (() => {
     if (!currentTournament) return null;
 
@@ -126,32 +131,38 @@ export default function GolfWeeklyClient({
   })();
 
   // ----------------------
-  // Fetches
+  // Fetch: State
   // ----------------------
   useEffect(() => {
     fetch("/api/golf/weekly/state")
       .then((res) => res.json())
       .then((data) => {
         setUserPicks(data.picks || []);
+
         if (selectedTournamentId) {
           const existing = (data.picks || []).find(
             (p: UserPick) => p.tournament_id === selectedTournamentId
           );
           setPickedPlayerId(existing?.player_id ?? null);
         }
+
         setLeaderboard(data.leaderboard || []);
       })
       .catch(() => {});
   }, []);
 
+  // Update pick when tournament changes
   useEffect(() => {
     if (!selectedTournamentId) return;
+
     const existing = userPicks.find(
       (p) => p.tournament_id === selectedTournamentId
     );
+
     setPickedPlayerId(existing?.player_id ?? null);
   }, [selectedTournamentId, userPicks]);
 
+  // Spotlight
   useEffect(() => {
     fetch("/api/golf/weekly/spotlight")
       .then((res) => res.json())
@@ -159,6 +170,7 @@ export default function GolfWeeklyClient({
       .catch(() => {});
   }, []);
 
+  // Streaks
   useEffect(() => {
     fetch("/api/golf/weekly/streaks")
       .then((r) => r.json())
@@ -166,6 +178,7 @@ export default function GolfWeeklyClient({
       .catch(() => {});
   }, []);
 
+  // Badges
   useEffect(() => {
     fetch("/api/golf/weekly/badges")
       .then((r) => r.json())
@@ -173,6 +186,7 @@ export default function GolfWeeklyClient({
       .catch(() => {});
   }, []);
 
+  // Achievements
   useEffect(() => {
     fetch("/api/golf/weekly/achievements")
       .then((r) => r.json())
@@ -180,18 +194,21 @@ export default function GolfWeeklyClient({
       .catch(() => {});
   }, []);
 
+  // Toast timeout
   useEffect(() => {
     if (!toast) return;
     const t = setTimeout(() => setToast(null), 2500);
     return () => clearTimeout(t);
   }, [toast]);
 
+  // New badge timeout
   useEffect(() => {
     if (!newBadge) return;
     const t = setTimeout(() => setNewBadge(null), 3000);
     return () => clearTimeout(t);
   }, [newBadge]);
 
+  // Live leaderboard
   useEffect(() => {
     async function loadLeaderboard() {
       try {
@@ -206,6 +223,7 @@ export default function GolfWeeklyClient({
             const thruStat = p.statistics?.find(
               (s: any) => s.name === "thru"
             );
+
             return {
               id: p.id,
               athlete: p.athlete,
@@ -226,22 +244,20 @@ export default function GolfWeeklyClient({
   }, []);
 
   // ----------------------
-  // Label + Color + Icon helpers
+  // Helpers
   // ----------------------
   const premiumLabel = (t: Tournament) => {
-  if (!t.category) return null;
-  switch (t.category) {
-    case "major":
-      return "Major";
-    case "signature":
-      return "Signature";
-    case "fedex":
-      return "FedEx Cup";
-    default:
-      return null;
-  }
-};
-
+    switch (t.category) {
+      case "major":
+        return "Major";
+      case "signature":
+        return "Signature";
+      case "fedex":
+        return "FedEx Cup";
+      default:
+        return null;
+    }
+  };
 
   const categoryColor = (category: string | null) => {
     switch (category) {
@@ -268,10 +284,15 @@ export default function GolfWeeklyClient({
   };
 
   // ----------------------
-  // Handle Pick
+  // Save Pick
   // ----------------------
   const handlePick = async () => {
     if (!selectedTournamentId || !pickedPlayerId) return;
+
+    if (isPastTournament) {
+      setToast("Viewing past tournament — picks are locked.");
+      return;
+    }
 
     try {
       setLoadingPick(true);
@@ -292,7 +313,7 @@ export default function GolfWeeklyClient({
         return;
       }
 
-      // Update user picks
+      // Update picks
       setUserPicks((prev) => {
         const existing = prev.find(
           (p) => p.tournament_id === selectedTournamentId
@@ -315,14 +336,13 @@ export default function GolfWeeklyClient({
         ];
       });
 
-      // Confetti celebration
+      // Confetti
       confetti({
         particleCount: 80,
         spread: 60,
         origin: { y: 0.7 },
       });
 
-      // Toast
       setToast("Pick saved!");
 
       // Refresh leaderboard
@@ -357,7 +377,11 @@ export default function GolfWeeklyClient({
   };
 
   // ----------------------
-  // Render
+  // JSX Return Begins (Batch 2)
+  // ----------------------
+
+  // ----------------------
+  // JSX Return Begins
   // ----------------------
   return (
     <div className="relative w-full min-h-screen bg-slate-950 text-white px-4 py-6 md:px-8 md:py-10 flex flex-col gap-8 overflow-x-hidden">
@@ -368,12 +392,10 @@ export default function GolfWeeklyClient({
       {/* Sticky Header */}
       {currentTournament && (
         <div className="sticky top-0 z-40 bg-slate-950/80 backdrop-blur-xl border-b border-white/10 py-2.5 px-4 flex items-center justify-between">
-          {/* Tournament Name */}
           <div className="text-lg md:text-xl font-bold text-white tracking-tight">
             {currentTournament.name}
           </div>
 
-          {/* Current Pick */}
           {pickedPlayerId && (
             <div className="text-emerald-400 text-sm md:text-base font-semibold">
               Picked: {players.find((p) => p.id === pickedPlayerId)?.name}
@@ -389,8 +411,7 @@ export default function GolfWeeklyClient({
             Golf Weekly Picks
           </h1>
           <p className="text-slate-400 text-sm md:text-base max-w-xl">
-            Pick one player per tournament. You can pick any player you like
-            each week.
+            Pick one player per tournament. You can pick any player you like each week.
           </p>
 
           <button
@@ -411,27 +432,19 @@ export default function GolfWeeklyClient({
           <div className="flex flex-col gap-3 text-sm">
             <div>
               <span className="text-slate-400">Most Picked:</span>{" "}
-              <span className="text-white font-medium">
-                {spotlight.mostPicked}
-              </span>
+              <span className="text-white font-medium">{spotlight.mostPicked}</span>
             </div>
             <div>
               <span className="text-slate-400">Sleeper Pick:</span>{" "}
-              <span className="text-white font-medium">
-                {spotlight.sleeper}
-              </span>
+              <span className="text-white font-medium">{spotlight.sleeper}</span>
             </div>
             <div>
               <span className="text-slate-400">Trending:</span>{" "}
-              <span className="text-white font-medium">
-                {spotlight.trending}
-              </span>
+              <span className="text-white font-medium">{spotlight.trending}</span>
             </div>
             <div>
               <span className="text-slate-400">Player to Watch:</span>{" "}
-              <span className="text-white font-medium">
-                {spotlight.watch}
-              </span>
+              <span className="text-white font-medium">{spotlight.watch}</span>
             </div>
           </div>
 
@@ -465,7 +478,6 @@ export default function GolfWeeklyClient({
 
           {upcomingTournament ? (
             <>
-              {/* Tournament name + category pill */}
               <div className="flex items-center gap-3">
                 <div className="text-white font-medium text-lg">
                   {upcomingTournament.name}
@@ -488,63 +500,51 @@ export default function GolfWeeklyClient({
                 )}
               </div>
 
-              {/* Dates */}
               <div className="text-slate-400 text-sm">
-                {new Date(
-                  upcomingTournament.start_date
-                ).toLocaleDateString()}{" "}
-                –{" "}
-                {new Date(
-                  upcomingTournament.end_date
-                ).toLocaleDateString()}
+                {new Date(upcomingTournament.start_date).toLocaleDateString()} –{" "}
+                {new Date(upcomingTournament.end_date).toLocaleDateString()}
               </div>
 
-              {/* Countdown */}
               <p className="text-slate-300 text-sm mt-2">
                 Starts in{" "}
                 {Math.ceil(
-                  (new Date(
-                    upcomingTournament.start_date
-                  ).getTime() -
-                    today.getTime()) /
+                  (new Date(upcomingTournament.start_date).getTime() - today.getTime()) /
                     (1000 * 60 * 60 * 24)
                 )}{" "}
                 days.
               </p>
             </>
           ) : (
-            <p className="text-slate-500 text-sm">
-              No upcoming tournaments scheduled.
-            </p>
+            <p className="text-slate-500 text-sm">No upcoming tournaments scheduled.</p>
           )}
         </div>
       </section>
 
-      {/* Past Tournament Dropdown (disabled) */}
+      {/* Past Tournament Dropdown (ENABLED) */}
       <div className="mb-6">
-      <select
-  onChange={(e) => setSelectedTournamentId(Number(e.target.value))}
-  className="w-full rounded-lg bg-slate-900/60 border border-white/10 text-slate-300 text-sm p-2"
->
-  <option>Past Tournaments</option>
-  {pastTournaments.map((t) => (
-    <option key={t.id} value={t.id}>
-      {t.name} • {new Date(t.start_date).toLocaleDateString()}
-    </option>
-  ))}
-</select>
-
+        <select
+          value={selectedTournamentId ?? ""}
+          onChange={(e) => setSelectedTournamentId(Number(e.target.value))}
+          className="w-full rounded-lg bg-slate-900/60 border border-white/10 text-slate-300 text-sm p-2"
+        >
+          <option value="">Past Tournaments</option>
+          {pastTournaments.map((t) => (
+            <option key={t.id} value={t.id}>
+              {t.name} • {new Date(t.start_date).toLocaleDateString()}
+            </option>
+          ))}
+        </select>
+      </div>
 
       {/* CURRENT TOURNAMENT BLOCK */}
       <section className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 border border-white/10 p-5 md:p-6 shadow-xl flex flex-col gap-6 animate-fadeIn">
-        {/* 1️⃣ Tournament Info + Lock Message */}
+        {/* Tournament Info */}
         <div className="space-y-3">
           <div className="flex items-center gap-3">
             <h2 className="text-2xl md:text-3xl font-bold text-white">
               {currentTournament?.name ?? "No current tournament"}
             </h2>
 
-            {/* ⭐ Category Pill (Major, Signature, FedEx, etc.) */}
             {currentTournament && premiumLabel(currentTournament) && (
               <span
                 className={`
@@ -564,34 +564,24 @@ export default function GolfWeeklyClient({
 
           {currentTournament && (
             <p className="text-slate-400 text-sm">
-              {new Date(
-                currentTournament.start_date
-              ).toLocaleDateString()}{" "}
-              –{" "}
-              {new Date(
-                currentTournament.end_date
-              ).toLocaleDateString()}
+              {new Date(currentTournament.start_date).toLocaleDateString()} –{" "}
+              {new Date(currentTournament.end_date).toLocaleDateString()}
             </p>
           )}
 
           {currentTournament ? (
             <p className="text-slate-300 text-sm">
-              Lock in your pick for this event. You can choose any
-              player you like this week.
+              Lock in your pick for this event. You can choose any player you like this week.
             </p>
           ) : (
-            <p className="text-slate-500 text-sm">
-              No current tournament available.
-            </p>
+            <p className="text-slate-500 text-sm">No current tournament available.</p>
           )}
         </div>
 
-        {/* 2️⃣ Your Pick This Week */}
+        {/* Your Pick This Week */}
         <div className="rounded-lg bg-slate-800/50 border border-white/10 p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
           <div>
-            <h3 className="text-sm font-semibold text-slate-300 mb-1">
-              Your Pick This Week
-            </h3>
+            <h3 className="text-sm font-semibold text-slate-300 mb-1">Your Pick This Week</h3>
             <p className="text-emerald-400 font-medium">
               {currentPick ?? "No pick locked in yet."}
             </p>
@@ -605,23 +595,17 @@ export default function GolfWeeklyClient({
           </Link>
         </div>
 
-        {/* 3️⃣ Scoreboard Block */}
+        {/* Live Scoreboard */}
         {topFive?.length > 0 ? (
           <div className="rounded-lg bg-slate-800/40 border border-white/10 p-4 shadow-inner">
-            <h4 className="text-sm font-semibold text-slate-300 mb-3">
-              Top 5 Leaderboard
-            </h4>
+            <h4 className="text-sm font-semibold text-slate-300 mb-3">Top 5 Leaderboard</h4>
 
             <div className="space-y-3">
               {topFive.map((p: any, idx: number) => (
-                <div
-                  key={p.id}
-                  className="flex items-center justify-between"
-                >
+                <div key={p.id} className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <span className="text-slate-500 text-xs w-4">
-                      {idx + 1}
-                    </span>
+                    <span className="text-slate-500 text-xs w-4">{idx + 1}</span>
+
                     {p.athlete?.headshot && (
                       <img
                         src={p.athlete.headshot}
@@ -629,6 +613,7 @@ export default function GolfWeeklyClient({
                         className="w-7 h-7 rounded-full"
                       />
                     )}
+
                     <span className="text-slate-200 text-sm">
                       {p.athlete?.shortName ?? "Unknown"}
                     </span>
@@ -646,9 +631,7 @@ export default function GolfWeeklyClient({
                     >
                       {p.score}
                     </p>
-                    <p className="text-xs text-slate-500">
-                      Thru {p.thru || "-"}
-                    </p>
+                    <p className="text-xs text-slate-500">Thru {p.thru || "-"}</p>
                   </div>
                 </div>
               ))}
@@ -681,14 +664,11 @@ export default function GolfWeeklyClient({
                   className="w-8 h-8 rounded-full object-cover"
                 />
               )}
-              <span className="font-medium text-sm">
-                {pl.name}
-              </span>
+              <span className="font-medium text-sm">{pl.name}</span>
             </div>
+
             {pl.country && (
-              <p className="text-xs text-slate-500 mt-1">
-                {pl.country}
-              </p>
+              <p className="text-xs text-slate-500 mt-1">{pl.country}</p>
             )}
           </button>
         ))}
@@ -717,14 +697,14 @@ export default function GolfWeeklyClient({
           : "Save Pick"}
       </button>
 
-      {/* Player Picks Sidebar */}
+      {/* Player Picks Sidebar Trigger */}
       <button
         onClick={() => setSidebarOpen(true)}
         className="fixed bottom-6 right-6 z-40 bg-slate-900/80 backdrop-blur-xl border border-white/10 px-4 py-2 rounded-full text-sm text-slate-300 hover:text-white shadow-lg"
       >
         Player Picks
       </button>
-
+      {/* Player Picks Sidebar */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-50 flex">
           <div
@@ -733,36 +713,24 @@ export default function GolfWeeklyClient({
           />
 
           <div className="w-80 bg-slate-900 border-l border-white/10 p-5 overflow-y-auto">
-            <h3 className="text-lg font-semibold mb-4">
-              Player Picks
-            </h3>
+            <h3 className="text-lg font-semibold mb-4">Player Picks</h3>
 
             {userPicks.length === 0 && (
-              <p className="text-sm text-slate-500">
-                No picks yet.
-              </p>
+              <p className="text-sm text-slate-500">No picks yet.</p>
             )}
 
             <div className="flex flex-col gap-3">
               {userPicks.map((p) => {
-                const t = tournaments.find(
-                  (t) => t.id === p.tournament_id
-                );
-                const pl = players.find(
-                  (pl) => pl.id === p.player_id
-                );
+                const t = tournaments.find((t) => t.id === p.tournament_id);
+                const pl = players.find((pl) => pl.id === p.player_id);
 
                 return (
                   <div
                     key={`${p.tournament_id}-${p.player_id}`}
                     className="p-3 rounded-lg bg-white/5 border border-white/10"
                   >
-                    <div className="text-white font-medium text-sm">
-                      {pl?.name}
-                    </div>
-                    <div className="text-xs text-slate-400">
-                      {t?.name}
-                    </div>
+                    <div className="text-white font-medium text-sm">{pl?.name}</div>
+                    <div className="text-xs text-slate-400">{t?.name}</div>
                   </div>
                 );
               })}
@@ -776,9 +744,7 @@ export default function GolfWeeklyClient({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xl">
           <div className="w-full max-w-lg bg-slate-900 border border-white/10 rounded-xl p-6 shadow-xl max-h-[80vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-semibold">
-                Pick History
-              </h3>
+              <h3 className="text-xl font-semibold">Pick History</h3>
               <button
                 onClick={() => setHistoryOpen(false)}
                 className="text-slate-400 hover:text-white"
@@ -788,31 +754,21 @@ export default function GolfWeeklyClient({
             </div>
 
             {userPicks.length === 0 && (
-              <p className="text-sm text-slate-500">
-                No picks yet.
-              </p>
+              <p className="text-sm text-slate-500">No picks yet.</p>
             )}
 
             <div className="flex flex-col gap-3">
               {userPicks.map((p) => {
-                const t = tournaments.find(
-                  (t) => t.id === p.tournament_id
-                );
-                const pl = players.find(
-                  (pl) => pl.id === p.player_id
-                );
+                const t = tournaments.find((t) => t.id === p.tournament_id);
+                const pl = players.find((pl) => pl.id === p.player_id);
 
                 return (
                   <div
                     key={`${p.tournament_id}-${p.player_id}`}
                     className="p-3 rounded-lg bg-white/5 border border-white/10"
                   >
-                    <div className="text-white font-medium text-sm">
-                      {pl?.name}
-                    </div>
-                    <div className="text-xs text-slate-400">
-                      {t?.name}
-                    </div>
+                    <div className="text-white font-medium text-sm">{pl?.name}</div>
+                    <div className="text-xs text-slate-400">{t?.name}</div>
                   </div>
                 );
               })}
@@ -855,24 +811,15 @@ export default function GolfWeeklyClient({
                     </div>
                   )}
 
-                  <div className="text-2xl mb-2">
-                    {b.emoji}
-                  </div>
+                  <div className="text-2xl mb-2">{b.emoji}</div>
 
-                  <div className="text-sm font-semibold text-white">
-                    {b.name}
-                  </div>
+                  <div className="text-sm font-semibold text-white">{b.name}</div>
 
-                  <div className="text-xs text-slate-400 mt-1">
-                    {b.description}
-                  </div>
+                  <div className="text-xs text-slate-400 mt-1">{b.description}</div>
 
                   {b.earned_at && (
                     <div className="text-[10px] text-emerald-300 mt-2">
-                      Earned{" "}
-                      {new Date(
-                        b.earned_at
-                      ).toLocaleDateString()}
+                      Earned {new Date(b.earned_at).toLocaleDateString()}
                     </div>
                   )}
                 </div>
@@ -886,16 +833,12 @@ export default function GolfWeeklyClient({
       {newBadge && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50">
           <div className="px-4 py-3 rounded-xl bg-slate-900/95 border border-emerald-400/60 shadow-xl flex items-center gap-3 animate-fadeIn">
-            <span className="text-2xl">
-              {newBadge.emoji}
-            </span>
+            <span className="text-2xl">{newBadge.emoji}</span>
             <div className="flex flex-col">
               <span className="text-xs text-emerald-300 uppercase tracking-wide">
                 New Badge Unlocked
               </span>
-              <span className="text-sm text-white font-semibold">
-                {newBadge.name}
-              </span>
+              <span className="text-sm text-white font-semibold">{newBadge.name}</span>
             </div>
           </div>
         </div>
@@ -912,3 +855,4 @@ export default function GolfWeeklyClient({
     </div>
   );
 }
+

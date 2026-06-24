@@ -229,12 +229,19 @@ export default function GolfWeeklyClient({
   // Label + Color + Icon helpers
   // ----------------------
   const premiumLabel = (t: Tournament) => {
-    if (!t.is_premium_event) return null;
-    if (t.category === "major") return "Major";
-    if (t.category === "signature") return "Signature";
-    if (t.category === "fedex") return "FedEx Cup";
-    return "Premium";
-  };
+  if (!t.category) return null;
+  switch (t.category) {
+    case "major":
+      return "Major";
+    case "signature":
+      return "Signature";
+    case "fedex":
+      return "FedEx Cup";
+    default:
+      return null;
+  }
+};
+
 
   const categoryColor = (category: string | null) => {
     switch (category) {
@@ -515,19 +522,18 @@ export default function GolfWeeklyClient({
 
       {/* Past Tournament Dropdown (disabled) */}
       <div className="mb-6">
-        <select
-          disabled
-          className="w-full rounded-lg bg-slate-900/60 border border-white/10 text-slate-500 text-sm p-2 cursor-not-allowed"
-        >
-          <option>Past Tournaments</option>
-          {pastTournaments.map((t) => (
-            <option key={t.id} value={t.id}>
-              {t.name} •{" "}
-              {new Date(t.start_date).toLocaleDateString()}
-            </option>
-          ))}
-        </select>
-      </div>
+      <select
+  onChange={(e) => setSelectedTournamentId(Number(e.target.value))}
+  className="w-full rounded-lg bg-slate-900/60 border border-white/10 text-slate-300 text-sm p-2"
+>
+  <option>Past Tournaments</option>
+  {pastTournaments.map((t) => (
+    <option key={t.id} value={t.id}>
+      {t.name} • {new Date(t.start_date).toLocaleDateString()}
+    </option>
+  ))}
+</select>
+
 
       {/* CURRENT TOURNAMENT BLOCK */}
       <section className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 border border-white/10 p-5 md:p-6 shadow-xl flex flex-col gap-6 animate-fadeIn">

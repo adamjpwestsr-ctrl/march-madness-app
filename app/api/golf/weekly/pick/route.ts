@@ -33,10 +33,10 @@ export async function POST(req: Request) {
 
   const userId = user.id;
   const body = await req.json();
-  const golferId = body.golferId;
+  const player_id = body.player_id;
 
-  if (!golferId) {
-    return Response.json({ error: "Missing golferId" }, { status: 400 });
+  if (!player_id) {
+    return Response.json({ error: "Missing player_id" }, { status: 400 });
   }
 
   // Get current tournament
@@ -59,7 +59,7 @@ export async function POST(req: Request) {
       {
         user_id: userId,
         tournament_id: tournamentId,
-        player_id: golferId,
+        player_id: player_id,
       },
       {
         onConflict: "user_id,tournament_id", // ⭐ Correct conflict target

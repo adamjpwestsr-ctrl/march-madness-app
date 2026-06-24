@@ -24,7 +24,7 @@ interface Player {
 
 interface UserPick {
   tournament_id: number;
-  golferID: number;
+  player_id: number;
 }
 
 interface LeaderboardRow {
@@ -115,7 +115,7 @@ export default function GolfWeeklyClient({
           const existing = (data.picks || []).find(
             (p: UserPick) => p.tournament_id === selectedTournamentId
           );
-          setPickedPlayerId(existing?.golferID ?? null);
+          setPickedPlayerId(existing?.player_id ?? null);
         }
         setLeaderboard(data.leaderboard || []);
       })
@@ -125,7 +125,7 @@ export default function GolfWeeklyClient({
   useEffect(() => {
     if (!selectedTournamentId) return;
     const existing = userPicks.find((p) => p.tournament_id === selectedTournamentId);
-    setPickedPlayerId(existing?.golferID ?? null);
+    setPickedPlayerId(existing?.player_id ?? null);
   }, [selectedTournamentId, userPicks]);
 
   useEffect(() => {
@@ -217,7 +217,7 @@ const categoryIcon = (category: string | null) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           tournament_id: selectedTournamentId,
-          golferID: pickedPlayerId,
+          player_id: pickedPlayerId,
         }),
       });
 
@@ -237,7 +237,7 @@ const categoryIcon = (category: string | null) => {
         if (existing) {
           return prev.map((p) =>
             p.tournament_id === selectedTournamentId
-              ? { ...p, golferID: pickedPlayerId }
+              ? { ...p, player_id: pickedPlayerId }
               : p
           );
         }
@@ -246,7 +246,7 @@ const categoryIcon = (category: string | null) => {
           ...prev,
           {
             tournament_id: selectedTournamentId,
-            golferID: pickedPlayerId,
+            player_id: pickedPlayerId,
           },
         ];
       });
@@ -591,11 +591,11 @@ const categoryIcon = (category: string | null) => {
             <div className="flex flex-col gap-3">
               {userPicks.map((p) => {
                 const t = tournaments.find((t) => t.id === p.tournament_id);
-                const pl = players.find((pl) => pl.id === p.golferID);
+                const pl = players.find((pl) => pl.id === p.player_id);
 
                 return (
                   <div
-                    key={`${p.tournament_id}-${p.golferID}`}
+                    key={`${p.tournament_id}-${p.player_id}`}
                     className="p-3 rounded-lg bg-white/5 border border-white/10"
                   >
                     <div className="text-white font-medium text-sm">
@@ -631,11 +631,11 @@ const categoryIcon = (category: string | null) => {
             <div className="flex flex-col gap-3">
               {userPicks.map((p) => {
                 const t = tournaments.find((t) => t.id === p.tournament_id);
-                const pl = players.find((pl) => pl.id === p.golferID);
+                const pl = players.find((pl) => pl.id === p.player_id);
 
                 return (
                   <div
-                    key={`${p.tournament_id}-${p.golferID}`}
+                    key={`${p.tournament_id}-${p.player_id}`}
                     className="p-3 rounded-lg bg-white/5 border border-white/10"
                   >
                     <div className="text-white font-medium text-sm">

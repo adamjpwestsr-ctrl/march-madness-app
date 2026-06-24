@@ -880,4 +880,3 @@ const categoryIcon = (category: string | null) => {
 )}
 </div>
 );
-}

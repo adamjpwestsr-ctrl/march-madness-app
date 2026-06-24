@@ -9,6 +9,7 @@ import MultiSportScoreboard from "@/app/components/MultiSportScoreboard";
 import YourPicksWidget from "@/app/components/YourPicksWidget";
 import RealActivityFeed from "@/app/components/RealActivityFeed";
 import ScoreTicker from "@/app/components/ScoreTicker";
+import SpotlightBanner from "@/app/components/SpotlightBanner";
 
 import { getCurrentUserSession } from "@/lib/getCurrentUserSession";
 import {
@@ -85,6 +86,12 @@ export default async function HomePage() {
         {/* USER STATS */}
         <UserStats userId={String(userId)} />
       </section>
+
+	{/* SPOTLIGHT BANNER */}
+	<section>
+  	<SpotlightBanner />
+	</section>
+
 
       {/* QUICK ACTIONS */}
       <section>

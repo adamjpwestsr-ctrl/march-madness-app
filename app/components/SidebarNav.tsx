@@ -12,9 +12,11 @@ import {
   LogOut,
   ChevronDown,
   ChevronRight,
-  Star,
-  Flag,
-  Target,
+  Golf,
+  Baseball,
+  Football,
+  Basketball,
+  Goal,
 } from "lucide-react";
 
 export default function SidebarNav() {
@@ -83,7 +85,7 @@ export default function SidebarNav() {
           href="/sports/golf/weekly"
           className="flex items-center gap-2 px-3 py-1 text-sm text-slate-400 hover:bg-slate-800 rounded-md"
         >
-          <Target size={16} />
+          <Golf size={16} />
           Golf Weekly
         </Link>
 
@@ -91,7 +93,7 @@ export default function SidebarNav() {
           href="/sports/mlb"
           className="flex items-center gap-2 px-3 py-1 text-sm text-slate-400 hover:bg-slate-800 rounded-md"
         >
-          <Flag size={16} />
+          <Baseball size={16} />
           MLB Weekly
         </Link>
 
@@ -99,7 +101,7 @@ export default function SidebarNav() {
           href="/sports/mlb/derby"
           className="flex items-center gap-2 px-3 py-1 text-sm text-slate-400 hover:bg-slate-800 rounded-md"
         >
-          <Flag size={16} />
+          <Trophy size={16} />
           MLB Derby
         </Link>
 
@@ -107,7 +109,7 @@ export default function SidebarNav() {
           href="/sports/nfl/weekly"
           className="flex items-center gap-2 px-3 py-1 text-sm text-slate-400 hover:bg-slate-800 rounded-md"
         >
-          <Target size={16} />
+          <Football size={16} />
           NFL Weekly
         </Link>
 
@@ -115,7 +117,7 @@ export default function SidebarNav() {
           href="/sports/nba/weekly"
           className="flex items-center gap-2 px-3 py-1 text-sm text-slate-400 hover:bg-slate-800 rounded-md"
         >
-          <Target size={16} />
+          <Basketball size={16} />
           NBA Weekly
         </Link>
 
@@ -123,7 +125,7 @@ export default function SidebarNav() {
           href="/sports/nhl/weekly"
           className="flex items-center gap-2 px-3 py-1 text-sm text-slate-400 hover:bg-slate-800 rounded-md"
         >
-          <Target size={16} />
+          <Goal size={16} />
           NHL Weekly
         </Link>
       </div>

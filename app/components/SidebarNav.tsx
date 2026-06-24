@@ -14,8 +14,8 @@ import {
   ChevronRight,
   Flag,
   Goal,
+  Circle,
   CircleDot,
-  BaseballBat,
 } from "lucide-react";
 
 export default function SidebarNav() {
@@ -92,7 +92,7 @@ export default function SidebarNav() {
           href="/sports/mlb"
           className="flex items-center gap-2 px-3 py-1 text-sm text-slate-400 hover:bg-slate-800 rounded-md"
         >
-          <BaseballBat size={16} />
+          <Circle size={16} />
           MLB Weekly
         </Link>
 

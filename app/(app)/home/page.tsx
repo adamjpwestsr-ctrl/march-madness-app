@@ -44,6 +44,22 @@ export default async function HomePage() {
 
   return (
     <div className="space-y-12 pb-20">
+      {/* MULTI-SPORT SCOREBOARD (Top Bar) */}
+      <section className="sticky top-0 z-30 bg-slate-950/80 backdrop-blur border-b border-slate-800 overflow-hidden">
+        <div className="relative">
+          {/* Gradient fade edges */}
+          <div className="absolute left-0 top-0 w-12 h-full bg-gradient-to-r from-slate-950 to-transparent pointer-events-none" />
+          <div className="absolute right-0 top-0 w-12 h-full bg-gradient-to-l from-slate-950 to-transparent pointer-events-none" />
+
+          {/* Scrollable marquee container */}
+          <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
+            <div className="min-w-full flex gap-4 px-4 py-3 animate-scroll-slow hover:animation-pause">
+              <MultiSportScoreboard />
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* HERO + STATS */}
       <section className="space-y-6">
         <div className="rounded-2xl border border-slate-800 bg-gradient-to-br from-slate-900/80 via-slate-900/40 to-emerald-700/30 p-8 shadow-xl shadow-emerald-900/40 relative overflow-hidden">
@@ -80,11 +96,6 @@ export default async function HomePage() {
       {/* YOUR PICKS */}
       <section>
         <YourPicksWidget userId={String(userId)} />
-      </section>
-
-      {/* MULTI-SPORT SCOREBOARD */}
-      <section>
-        <MultiSportScoreboard />
       </section>
 
       {/* WEEKLY + TRIVIA */}

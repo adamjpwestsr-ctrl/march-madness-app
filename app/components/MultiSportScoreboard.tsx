@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Trophy } from "lucide-react";
 
 const SPORTS = {
+  GOLF: "golf/pga",
   NBA: "basketball/nba",
   NFL: "football/nfl",
   MLB: "baseball/mlb",

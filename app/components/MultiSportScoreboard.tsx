@@ -20,7 +20,8 @@ const fetchScores = async () => {
   setLoading(true);
   try {
     const date = new Date().toISOString().slice(0, 10);
-    const url = `https://site.api.espn.com/apis/v2/sports/${SPORTS[sport]}/scoreboard?dates=${date}&limit=300&useMap=true`;
+    const url = 'http://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard';
+    //const url = `https://site.api.espn.com/apis/v2/sports/${SPORTS[sport]}/scoreboard?dates=${date}&limit=300&useMap=true`;
 
     const res = await fetch(url, { cache: "no-store" });
     const data = await res.json();

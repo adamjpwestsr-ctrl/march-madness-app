@@ -434,20 +434,16 @@ const categoryIcon = (category: string | null) => {
     </div>
   </div>
 
-  {/* Upcoming Event */}
-  <div className="rounded-xl bg-slate-900/70 border border-white/10 p-5 shadow-xl flex flex-col gap-4">
-    <h3 className="text-lg font-semibold">Upcoming Event</h3>
+{/* Upcoming Event */}
+<div className="rounded-xl bg-slate-900/70 border border-white/10 p-5 shadow-xl flex flex-col gap-4">
+  <h3 className="text-lg font-semibold">Upcoming Event</h3>
 
-    {upcomingTournament ? (
-      <>
-        <div className="space-y-1">
-          <div className="text-white font-medium text-lg">
-            {upcomingTournament.name}
-          </div>
-          <div className="text-slate-400 text-sm">
-            {new Date(upcomingTournament.start_date).toLocaleDateString()} –{" "}
-            {new Date(upcomingTournament.end_date).toLocaleDateString()}
-          </div>
+  {upcomingTournament ? (
+    <>
+      {/* Tournament name + category pill */}
+      <div className="flex items-center gap-3">
+        <div className="text-white font-medium text-lg">
+          {upcomingTournament.name}
         </div>
 
         {premiumLabel(upcomingTournament) && (
@@ -465,22 +461,29 @@ const categoryIcon = (category: string | null) => {
             {premiumLabel(upcomingTournament)}
           </span>
         )}
+      </div>
 
-        <p className="text-slate-300 text-sm mt-2">
-          Starts in{" "}
-          {Math.ceil(
-            (new Date(upcomingTournament.start_date).getTime() -
-              today.getTime()) /
-              (1000 * 60 * 60 * 24)
-          )}{" "}
-          days.
-        </p>
-      </>
-    ) : (
-      <p className="text-slate-500 text-sm">No upcoming tournaments scheduled.</p>
-    )}
-  </div>
-</section>
+      {/* Dates */}
+      <div className="text-slate-400 text-sm">
+        {new Date(upcomingTournament.start_date).toLocaleDateString()} –{" "}
+        {new Date(upcomingTournament.end_date).toLocaleDateString()}
+      </div>
+
+      {/* Countdown */}
+      <p className="text-slate-300 text-sm mt-2">
+        Starts in{" "}
+        {Math.ceil(
+          (new Date(upcomingTournament.start_date).getTime() -
+            today.getTime()) /
+            (1000 * 60 * 60 * 24)
+        )}{" "}
+        days.
+      </p>
+    </>
+  ) : (
+    <p className="text-slate-500 text-sm">No upcoming tournaments scheduled.</p>
+  )}
+</div>
 
 {/* Past Tournament Dropdown (disabled) */}
 <div className="mb-6">

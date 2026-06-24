@@ -20,7 +20,6 @@ export default function MultiSportScoreboard() {
   const fetchScores = async () => {
     setLoading(true);
     try {
-      // Fetch from your Next.js API route instead of ESPN directly
       const res = await fetch(`/api/scoreboard/${sport}`, { cache: "no-store" });
       const data = await res.json();
       setGames(data?.events || []);
@@ -33,7 +32,7 @@ export default function MultiSportScoreboard() {
 
   useEffect(() => {
     fetchScores();
-    const interval = setInterval(fetchScores, 60000); // refresh every minute
+    const interval = setInterval(fetchScores, 60000);
     return () => clearInterval(interval);
   }, [sport]);
 
@@ -73,6 +72,12 @@ export default function MultiSportScoreboard() {
       ) : (
         <div className="flex overflow-x-auto gap-4 pb-2 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
           {games.map((game: any) => {
+            // GOLF SPECIAL HANDLING
+            if (sport === "GOLF") {
+              return <GolfScoreCard key={game.id} game={game} />;
+            }
+
+            // TEAM SPORTS (existing layout)
             const comp = game.competitions?.[0];
             const home = comp?.competitors?.find((c: any) => c.homeAway === "home");
             const away = comp?.competitors?.find((c: any) => c.homeAway === "away");
@@ -128,6 +133,46 @@ export default function MultiSportScoreboard() {
           })}
         </div>
       )}
+    </div>
+  );
+}
+
+/* ------------------------------
+   GOLF SCORECARD COMPONENT
+------------------------------ */
+function GolfScoreCard({ game }: { game: any }) {
+  const comp = game.competitions?.[0];
+  const players = comp?.competitors || [];
+
+  return (
+    <div className="min-w-[260px] rounded-xl bg-slate-800/60 border border-white/5 p-4 shadow hover:shadow-md transition-all">
+      <p className="text-xs text-slate-400 mb-3">{game.name}</p>
+
+      <div className="space-y-3">
+        {players.map((p: any) => {
+          const score = p.score; // e.g. -5, E, +2
+          const thru = p.statistics?.find((s: any) => s.name === "thru")?.value;
+          const pos = p.order; // leaderboard position
+
+          return (
+            <div key={p.id} className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <img
+                  src={p.athlete?.headshot}
+                  alt={p.athlete?.shortName}
+                  className="w-7 h-7 rounded-full"
+                />
+                <span className="text-slate-200 text-sm">{p.athlete?.shortName}</span>
+              </div>
+
+              <div className="text-right">
+                <p className="text-white font-semibold">{score}</p>
+                <p className="text-xs text-slate-500">Thru {thru || "-"}</p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

@@ -4,7 +4,9 @@ import {
   Brain,
   Star,
   Flag,
-  Target,
+  Goal,
+  Circle,
+  CircleDot,
   Medal,
 } from "lucide-react";
 
@@ -29,35 +31,35 @@ export default function ChallengesHub() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <ChallengeItem
             href="/sports/golf/weekly"
-            icon={<Target size={22} />}
+            icon={<Flag size={22} />}
             title="Golf Weekly"
             desc="Pick a golfer each week and track your streak."
           />
 
           <ChallengeItem
             href="/sports/mlb"
-            icon={<Flag size={22} />}
+            icon={<Circle size={22} />}
             title="MLB Weekly"
             desc="Choose your top hitter and follow weekly performance."
           />
 
           <ChallengeItem
             href="/sports/nfl/weekly"
-            icon={<Target size={22} />}
+            icon={<Goal size={22} />}
             title="NFL Weekly"
             desc="Pick a player each week and build your streak."
           />
 
           <ChallengeItem
             href="/sports/nba/weekly"
-            icon={<Target size={22} />}
+            icon={<CircleDot size={22} />}
             title="NBA Weekly"
             desc="Choose a standout performer each week."
           />
 
           <ChallengeItem
             href="/sports/nhl/weekly"
-            icon={<Target size={22} />}
+            icon={<Goal size={22} />}
             title="NHL Weekly"
             desc="Track weekly picks across the NHL season."
           />
@@ -81,7 +83,7 @@ export default function ChallengesHub() {
 
           <ChallengeItem
             href="/sports/mlb/derby"
-            icon={<Flag size={22} />}
+            icon={<Medal size={22} />}
             title="MLB Derby"
             desc="Predict home run leaders in a derby-style challenge."
           />

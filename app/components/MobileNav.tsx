@@ -16,7 +16,9 @@ import {
   ChevronRight,
   Star,
   Flag,
-  Target,
+  Goal,
+  Circle,
+  CircleDot,
 } from "lucide-react";
 
 export default function MobileNav() {
@@ -93,6 +95,7 @@ export default function MobileNav() {
               ${openChallenges ? "max-h-96 opacity-100" : "max-h-0 opacity-0"}
             `}
           >
+            {/* Hub */}
             <Link
               href="/challenges"
               onClick={() => setOpen(false)}
@@ -106,6 +109,7 @@ export default function MobileNav() {
               Challenges Hub
             </Link>
 
+            {/* Golf Weekly */}
             <Link
               href="/sports/golf/weekly"
               onClick={() => setOpen(false)}
@@ -115,10 +119,11 @@ export default function MobileNav() {
                   : "text-slate-300"
               }`}
             >
-              <Target size={16} />
+              <Flag size={16} />
               Golf Weekly
             </Link>
 
+            {/* MLB Weekly */}
             <Link
               href="/sports/mlb"
               onClick={() => setOpen(false)}
@@ -129,10 +134,11 @@ export default function MobileNav() {
                   : "text-slate-300"
               }`}
             >
-              <Flag size={16} />
+              <Circle size={16} />
               MLB Weekly
             </Link>
 
+            {/* MLB Derby */}
             <Link
               href="/sports/mlb/derby"
               onClick={() => setOpen(false)}
@@ -142,10 +148,11 @@ export default function MobileNav() {
                   : "text-slate-300"
               }`}
             >
-              <Flag size={16} />
+              <Trophy size={16} />
               MLB Derby
             </Link>
 
+            {/* NFL Weekly */}
             <Link
               href="/sports/nfl/weekly"
               onClick={() => setOpen(false)}
@@ -155,10 +162,11 @@ export default function MobileNav() {
                   : "text-slate-300"
               }`}
             >
-              <Target size={16} />
+              <Goal size={16} />
               NFL Weekly
             </Link>
 
+            {/* NBA Weekly */}
             <Link
               href="/sports/nba/weekly"
               onClick={() => setOpen(false)}
@@ -168,10 +176,11 @@ export default function MobileNav() {
                   : "text-slate-300"
               }`}
             >
-              <Target size={16} />
+              <CircleDot size={16} />
               NBA Weekly
             </Link>
 
+            {/* NHL Weekly */}
             <Link
               href="/sports/nhl/weekly"
               onClick={() => setOpen(false)}
@@ -181,7 +190,7 @@ export default function MobileNav() {
                   : "text-slate-300"
               }`}
             >
-              <Target size={16} />
+              <Goal size={16} />
               NHL Weekly
             </Link>
           </div>

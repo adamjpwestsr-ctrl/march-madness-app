@@ -21,6 +21,8 @@ interface Tournament {
 interface Player {
   id: number;
   name: string;
+  country?: string | null;
+  photo_url?: string | null;
 }
 
 interface UserPick {

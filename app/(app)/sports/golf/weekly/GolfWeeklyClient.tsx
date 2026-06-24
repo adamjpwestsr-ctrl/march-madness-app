@@ -555,7 +555,6 @@ const categoryIcon = (category: string | null) => {
               : "Save Pick"}
           </button>
         </div>
-      </section>
 
       {/* Player Picks Sidebar */}
       <button

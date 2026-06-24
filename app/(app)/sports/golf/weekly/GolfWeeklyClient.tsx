@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import confetti from "canvas-confetti";
 import { FaTrophy, FaFlagCheckered, FaGolfBall } from "react-icons/fa";
 

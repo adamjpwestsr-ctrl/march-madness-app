@@ -61,16 +61,16 @@ export default async function HomePage() {
             Play brackets, weekly picks, and trivia across your favorite
             sports—all in one place, all year long.
           </p>
+        </div>
 
         {/* USER STATS */}
         <UserStats userId={String(userId)} />
       </section>
 
-	{/* SPOTLIGHT BANNER */}
-	<section>
-  	<SpotlightBanner />
-	</section>
-
+      {/* SPOTLIGHT BANNER */}
+      <section>
+        <SpotlightBanner />
+      </section>
 
       {/* QUICK ACTIONS */}
       <section>

@@ -16,20 +16,22 @@ export default function MultiSportScoreboard() {
   const [games, setGames] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchScores = async () => {
-    setLoading(true);
-    try {
-      const url = `https://site.api.espn.com/apis/v2/sports/${SPORTS[sport]}/scoreboard`;
-      const res = await fetch(url);
-      const data = await res.json();
-      setGames(data?.events || []);
-    } catch (err) {
-      console.error("Scoreboard error:", err);
-      setGames([]);
-    }
-    setLoading(false);
-  };
+const fetchScores = async () => {
+  setLoading(true);
+  try {
+    const date = new Date().toISOString().slice(0, 10);
+    const url = `https://site.api.espn.com/apis/v2/sports/${SPORTS[sport]}/scoreboard?dates=${date}&limit=300&useMap=true`;
 
+    const res = await fetch(url, { cache: "no-store" });
+    const data = await res.json();
+
+    setGames(data?.events || []);
+  } catch (err) {
+    console.error("Scoreboard error:", err);
+    setGames([]);
+  }
+  setLoading(false);
+};
   useEffect(() => {
     fetchScores();
     const interval = setInterval(fetchScores, 60000);

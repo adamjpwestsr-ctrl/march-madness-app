@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+const [topFive, setTopFive] = useState<any[]>([]);
 import confetti from "canvas-confetti";
 import { FaTrophy, FaFlagCheckered, FaGolfBall } from "react-icons/fa";
 
@@ -182,6 +183,37 @@ const currentPick = (() => {
     const t = setTimeout(() => setNewBadge(null), 3000);
     return () => clearTimeout(t);
   }, [newBadge]);
+
+useEffect(() => {
+  async function loadLeaderboard() {
+    try {
+      const res = await fetch("/api/scoreboard/GOLF", { cache: "no-store" });
+      const data = await res.json();
+
+      const competitors =
+        data?.events?.[0]?.competitions?.[0]?.competitors || [];
+
+      const leaderboard = competitors
+        .map((p: any) => {
+          const thruStat = p.statistics?.find((s: any) => s.name === "thru");
+          return {
+            id: p.id,
+            athlete: p.athlete,
+            score: Number(p.score),
+            thru: thruStat?.value ?? "-",
+          };
+        })
+        .sort((a: any, b: any) => a.score - b.score);
+
+      setTopFive(leaderboard.slice(0, 5));
+    } catch (err) {
+      console.error("Failed to load golf leaderboard:", err);
+      setTopFive([]);
+    }
+  }
+
+  loadLeaderboard();
+}, []);
 
 // ----------------------
 // Label + Color + Icon helpers

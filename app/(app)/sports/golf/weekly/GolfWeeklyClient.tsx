@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-const [topFive, setTopFive] = useState<any[]>([]);
 import confetti from "canvas-confetti";
 import { FaTrophy, FaFlagCheckered, FaGolfBall } from "react-icons/fa";
 
@@ -99,6 +98,7 @@ export default function GolfWeeklyClient({
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [badgeModalOpen, setBadgeModalOpen] = useState(false);
   const [newBadge, setNewBadge] = useState<Badge | null>(null);
+  const [topFive, setTopFive] = useState<any[]>([]);
 
   const isPastTournament = !!(
     selectedTournamentId &&

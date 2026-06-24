@@ -387,7 +387,8 @@ const categoryIcon = (category: string | null) => {
 
 {/* Spotlight + Upcoming Event */}
 <section className="w-full grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fadeIn">
-  {/* Spotlight */}
+  
+{/* Spotlight */}
   <div className="rounded-xl bg-slate-900/70 border border-white/10 p-5 shadow-xl flex flex-col gap-4">
     <h3 className="text-lg font-semibold">Weekly Spotlight</h3>
 
@@ -409,6 +410,7 @@ const categoryIcon = (category: string | null) => {
         <span className="text-white font-medium">{spotlight.watch}</span>
       </div>
     </div>
+</section>
 
     {/* Badge Row */}
     <div className="flex flex-wrap gap-2 mt-3">
@@ -543,6 +545,7 @@ const categoryIcon = (category: string | null) => {
     <p className="text-slate-500 text-sm">No current tournament available.</p>
   )}
 </div>
+</section>
 
   {/* 2️⃣ Your Pick This Week */}
   <div className="rounded-lg bg-slate-800/50 border border-white/10 p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
@@ -606,6 +609,58 @@ const categoryIcon = (category: string | null) => {
       No leaderboard data available.
     </div>
   )}
+
+{/* Player Selection Grid */}
+<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 mt-6">
+  {players.map((pl) => (
+    <button
+      key={pl.id}
+      onClick={() => setPickedPlayerId(pl.id)}
+      className={`p-3 rounded-lg border text-left transition ${
+        pickedPlayerId === pl.id
+          ? "bg-emerald-600/20 border-emerald-500 text-emerald-300"
+          : "bg-slate-800/40 border-white/10 text-slate-300 hover:border-emerald-400"
+      }`}
+    >
+      <div className="flex items-center gap-2">
+        {pl.photo_url && (
+          <img
+            src={pl.photo_url}
+            alt={pl.name}
+            className="w-8 h-8 rounded-full object-cover"
+          />
+        )}
+        <span className="font-medium text-sm">{pl.name}</span>
+      </div>
+      {pl.country && (
+        <p className="text-xs text-slate-500 mt-1">{pl.country}</p>
+      )}
+    </button>
+  ))}
+</div>
+
+{/* Save Button */}
+<button
+  onClick={handlePick}
+  disabled={isPastTournament || !pickedPlayerId || loadingPick}
+  className={`
+    w-full py-3 rounded-lg text-center font-semibold text-sm mt-4
+    transition-all duration-200
+    ${
+      isPastTournament
+        ? "bg-slate-800 text-slate-500 cursor-not-allowed"
+        : pickedPlayerId
+        ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-600/30"
+        : "bg-slate-800 text-slate-500 cursor-not-allowed"
+    }
+  `}
+>
+  {isPastTournament
+    ? "Cannot pick for past tournaments"
+    : loadingPick
+    ? "Saving..."
+    : "Save Pick"}
+</button>
 
 {/* Player Selection Grid */}
 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 mt-6">

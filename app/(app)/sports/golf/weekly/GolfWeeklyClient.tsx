@@ -381,6 +381,7 @@ const categoryIcon = (category: string | null) => {
           </button>
         </div>
       </header>
+
 {/* Spotlight + Upcoming Event */}
 <section className="w-full grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fadeIn">
   {/* Spotlight */}
@@ -478,69 +479,48 @@ const categoryIcon = (category: string | null) => {
   </div>
 </section>
 
-{/* Current Tournament */}
-<section className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 border border-white/10 p-5 md:p-6 shadow-xl flex flex-col gap-4 animate-fadeIn">
-  {currentTournament ? (
-    <>
-      <div className="space-y-2">
-        <h2 className="text-2xl md:text-3xl font-bold text-white">
-          {currentTournament.name}
-        </h2>
-        <p className="text-slate-400 text-sm">
-          {new Date(currentTournament.start_date).toLocaleDateString()} –{" "}
-          {new Date(currentTournament.end_date).toLocaleDateString()}
-        </p>
+{/* CURRENT TOURNAMENT BLOCK */}
+<section className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 border border-white/10 p-5 md:p-6 shadow-xl flex flex-col gap-6 animate-fadeIn">
 
-        {premiumLabel(currentTournament) && (
-          <span
-            className={`
-              inline-flex items-center gap-1
-              px-2.5 py-1
-              h-6
-              text-[11px] font-semibold uppercase tracking-wide
-              rounded-full
-              ${categoryColor(currentTournament.category)}
-            `}
-          >
-            {categoryIcon(currentTournament.category)}
-            {premiumLabel(currentTournament)}
-          </span>
-        )}
-      </div>
-
+  {/* 1️⃣ Tournament Info + Lock Message */}
+  <div className="space-y-2">
+    <h2 className="text-2xl md:text-3xl font-bold text-white">
+      {currentTournament?.name ?? "No current tournament"}
+    </h2>
+    {currentTournament && (
+      <p className="text-slate-400 text-sm">
+        {new Date(currentTournament.start_date).toLocaleDateString()} –{" "}
+        {new Date(currentTournament.end_date).toLocaleDateString()}
+      </p>
+    )}
+    {currentTournament ? (
       <p className="text-slate-300 text-sm">
         Lock in your pick for this event. You can choose any player you like this week.
       </p>
-    </>
-  ) : (
-    <p className="text-slate-500 text-sm">No current tournament.</p>
-  )}
-</section>
+    ) : (
+      <p className="text-slate-500 text-sm">No current tournament available.</p>
+    )}
+  </div>
 
-{/* CURRENT PICK + SCOREBOARD + TOP 5 PREVIEW */}
-<section className="rounded-xl border border-slate-800 bg-slate-900/40 p-5 shadow-md flex flex-col gap-6 animate-fadeIn">
-
-  {/* Row: Current Pick + Scoreboard Link */}
-  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+  {/* 2️⃣ Your Pick This Week */}
+  <div className="rounded-lg bg-slate-800/50 border border-white/10 p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
     <div>
       <h3 className="text-sm font-semibold text-slate-300 mb-1">Your Pick This Week</h3>
-      {currentPick ? (
-        <p className="text-emerald-400 font-medium">{currentPick}</p>
-      ) : (
-        <p className="text-slate-500 text-sm">No pick locked in yet.</p>
-      )}
+      <p className="text-emerald-400 font-medium">
+        {currentPick ?? "No pick locked in yet."}
+      </p>
     </div>
 
     <Link
       href="/sports/golf/scoreboard"
       className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-600/30 transition"
     >
-      <span className="font-medium">View Full Golf Scoreboard</span>
+      View Full Golf Scoreboard
     </Link>
   </div>
 
-  {/* TOP 5 LEADERBOARD PREVIEW */}
-  {topFive && topFive.length > 0 && (
+  {/* 3️⃣ Scoreboard Block */}
+  {topFive?.length > 0 ? (
     <div className="rounded-lg bg-slate-800/40 border border-white/10 p-4 shadow-inner">
       <h4 className="text-sm font-semibold text-slate-300 mb-3">Top 5 Leaderboard</h4>
 
@@ -549,12 +529,16 @@ const categoryIcon = (category: string | null) => {
           <div key={p.id} className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <span className="text-slate-500 text-xs w-4">{idx + 1}</span>
-              <img
-                src={p.athlete?.headshot}
-                alt={p.athlete?.shortName}
-                className="w-7 h-7 rounded-full"
-              />
-              <span className="text-slate-200 text-sm">{p.athlete?.shortName}</span>
+              {p.athlete?.headshot && (
+                <img
+                  src={p.athlete.headshot}
+                  alt={p.athlete.shortName}
+                  className="w-7 h-7 rounded-full"
+                />
+              )}
+              <span className="text-slate-200 text-sm">
+                {p.athlete?.shortName ?? "Unknown"}
+              </span>
             </div>
 
             <div className="text-right">
@@ -575,7 +559,12 @@ const categoryIcon = (category: string | null) => {
         ))}
       </div>
     </div>
+  ) : (
+    <div className="rounded-lg bg-slate-800/40 border border-white/10 p-4 text-slate-500 text-sm">
+      No leaderboard data available.
+    </div>
   )}
+</section>
 
   {/* Save Button */}
   <button
@@ -599,8 +588,6 @@ const categoryIcon = (category: string | null) => {
       ? "Saving..."
       : "Save Pick"}
   </button>
-
-</section>   {/* ✅ THIS SECTION IS NOW PROPERLY CLOSED */}
 
 {/* Player Picks Sidebar */}
 <button

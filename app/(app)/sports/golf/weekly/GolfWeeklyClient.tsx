@@ -824,6 +824,6 @@ const categoryIcon = (category: string | null) => {
           </div>
         </div>
       )}
-    </div>
-  );
+</div>
+);
 }

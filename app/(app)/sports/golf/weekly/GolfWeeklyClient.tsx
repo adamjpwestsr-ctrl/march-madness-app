@@ -482,45 +482,64 @@ const categoryIcon = (category: string | null) => {
   </div>
 </section>
 
-{/* Tournament Selector Pills */}
-<div className="flex flex-wrap gap-2 mb-6">
-  {tournaments.map((t) => (
-    <button
-      key={t.id}
-      onClick={() => setSelectedTournamentId(t.id)}
-      className={`px-3 py-1.5 rounded-full text-xs font-medium border transition ${
-        selectedTournamentId === t.id
-          ? "bg-emerald-600 text-white border-emerald-500"
-          : "bg-slate-800 text-slate-300 border-white/10 hover:border-emerald-400"
-      }`}
-    >
-      {t.name} • {new Date(t.start_date).toLocaleDateString()}
-    </button>
-  ))}
+{/* Past Tournament Dropdown (disabled) */}
+<div className="mb-6">
+  <select
+    disabled
+    className="w-full rounded-lg bg-slate-900/60 border border-white/10 text-slate-500 text-sm p-2 cursor-not-allowed"
+  >
+    <option>Past Tournaments</option>
+    {pastTournaments.map((t) => (
+      <option key={t.id} value={t.id}>
+        {t.name} • {new Date(t.start_date).toLocaleDateString()}
+      </option>
+    ))}
+  </select>
 </div>
 
 {/* CURRENT TOURNAMENT BLOCK */}
 <section className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 border border-white/10 p-5 md:p-6 shadow-xl flex flex-col gap-6 animate-fadeIn">
 
-  {/* 1️⃣ Tournament Info + Lock Message */}
-  <div className="space-y-2">
+ {/* 1️⃣ Tournament Info + Lock Message */}
+<div className="space-y-3">
+  <div className="flex items-center gap-3">
     <h2 className="text-2xl md:text-3xl font-bold text-white">
       {currentTournament?.name ?? "No current tournament"}
     </h2>
-    {currentTournament && (
-      <p className="text-slate-400 text-sm">
-        {new Date(currentTournament.start_date).toLocaleDateString()} –{" "}
-        {new Date(currentTournament.end_date).toLocaleDateString()}
-      </p>
-    )}
-    {currentTournament ? (
-      <p className="text-slate-300 text-sm">
-        Lock in your pick for this event. You can choose any player you like this week.
-      </p>
-    ) : (
-      <p className="text-slate-500 text-sm">No current tournament available.</p>
+
+    {/* ⭐ Category Pill (Major, Signature, FedEx, etc.) */}
+    {currentTournament && premiumLabel(currentTournament) && (
+      <span
+        className={`
+          inline-flex items-center gap-1
+          px-2.5 py-1
+          h-6
+          text-[11px] font-semibold uppercase tracking-wide
+          rounded-full
+          ${categoryColor(currentTournament.category)}
+        `}
+      >
+        {categoryIcon(currentTournament.category)}
+        {premiumLabel(currentTournament)}
+      </span>
     )}
   </div>
+
+  {currentTournament && (
+    <p className="text-slate-400 text-sm">
+      {new Date(currentTournament.start_date).toLocaleDateString()} –{" "}
+      {new Date(currentTournament.end_date).toLocaleDateString()}
+    </p>
+  )}
+
+  {currentTournament ? (
+    <p className="text-slate-300 text-sm">
+      Lock in your pick for this event. You can choose any player you like this week.
+    </p>
+  ) : (
+    <p className="text-slate-500 text-sm">No current tournament available.</p>
+  )}
+</div>
 
   {/* 2️⃣ Your Pick This Week */}
   <div className="rounded-lg bg-slate-800/50 border border-white/10 p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">

@@ -62,27 +62,6 @@ export default async function HomePage() {
             sports—all in one place, all year long.
           </p>
 
-          {/* Inline hero stats */}
-          <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3 text-xs md:text-sm">
-            <div className="rounded-lg bg-slate-900/60 border border-white/5 px-3 py-2">
-              <p className="text-slate-400">Weekly streak</p>
-              <p className="text-emerald-400 font-semibold">7 weeks</p>
-            </div>
-            <div className="rounded-lg bg-slate-900/60 border border-white/5 px-3 py-2">
-              <p className="text-slate-400">Trivia accuracy</p>
-              <p className="text-sky-400 font-semibold">82%</p>
-            </div>
-            <div className="rounded-lg bg-slate-900/60 border border-white/5 px-3 py-2">
-              <p className="text-slate-400">Total points</p>
-              <p className="text-amber-400 font-semibold">4,320</p>
-            </div>
-            <div className="rounded-lg bg-slate-900/60 border border-white/5 px-3 py-2">
-              <p className="text-slate-400">Global rank</p>
-              <p className="text-fuchsia-400 font-semibold">Top 12%</p>
-            </div>
-          </div>
-        </div>
-
         {/* USER STATS */}
         <UserStats userId={String(userId)} />
       </section>

@@ -34,6 +34,7 @@ export default function ChallengesHub() {
             icon={<Flag size={22} />}
             title="Golf Weekly"
             desc="Pick a golfer each week and track your streak."
+            color="emerald"
           />
 
           <ChallengeItem
@@ -41,6 +42,7 @@ export default function ChallengesHub() {
             icon={<Circle size={22} />}
             title="MLB Weekly"
             desc="Choose your top hitter and follow weekly performance."
+            color="amber"
           />
 
           <ChallengeItem
@@ -48,6 +50,7 @@ export default function ChallengesHub() {
             icon={<Goal size={22} />}
             title="NFL Weekly"
             desc="Pick a player each week and build your streak."
+            color="red"
           />
 
           <ChallengeItem
@@ -55,6 +58,7 @@ export default function ChallengesHub() {
             icon={<CircleDot size={22} />}
             title="NBA Weekly"
             desc="Choose a standout performer each week."
+            color="sky"
           />
 
           <ChallengeItem
@@ -62,6 +66,7 @@ export default function ChallengesHub() {
             icon={<Goal size={22} />}
             title="NHL Weekly"
             desc="Track weekly picks across the NHL season."
+            color="blue"
           />
         </div>
       </section>
@@ -79,6 +84,7 @@ export default function ChallengesHub() {
             icon={<Trophy size={22} />}
             title="March Madness"
             desc="Build your bracket and compete for the top spot."
+            color="fuchsia"
           />
 
           <ChallengeItem
@@ -86,6 +92,7 @@ export default function ChallengesHub() {
             icon={<Medal size={22} />}
             title="MLB Derby"
             desc="Predict home run leaders in a derby-style challenge."
+            color="yellow"
           />
         </div>
       </section>
@@ -103,6 +110,7 @@ export default function ChallengesHub() {
             icon={<Brain size={22} />}
             title="Weekly Trivia"
             desc="A new themed trivia challenge every week."
+            color="sky"
           />
         </div>
       </section>
@@ -118,40 +126,40 @@ function ChallengeItem({
   icon,
   title,
   desc,
+  color = "emerald",
 }: {
   href: string;
   icon: React.ReactNode;
   title: string;
   desc: string;
+  color?: string;
 }) {
+  const colorMap: Record<string, string> = {
+    emerald: "group-hover:border-emerald-400/40 group-hover:bg-emerald-500/10",
+    amber: "group-hover:border-amber-400/40 group-hover:bg-amber-500/10",
+    red: "group-hover:border-red-400/40 group-hover:bg-red-500/10",
+    sky: "group-hover:border-sky-400/40 group-hover:bg-sky-500/10",
+    blue: "group-hover:border-blue-400/40 group-hover:bg-blue-500/10",
+    fuchsia: "group-hover:border-fuchsia-400/40 group-hover:bg-fuchsia-500/10",
+    yellow: "group-hover:border-yellow-400/40 group-hover:bg-yellow-500/10",
+  };
+
   return (
     <Link
       href={href}
-      className="
-        group
-        rounded-xl
-        border border-white/10
-        bg-slate-900/40
-        backdrop-blur
-        p-5
-        shadow-md
-        hover:shadow-lg
-        hover:border-emerald-400/40
-        transition-all
-        duration-300
-        flex flex-col gap-3
-      "
+      className={`
+        group rounded-xl border border-white/10 bg-slate-900/40 backdrop-blur p-5
+        shadow-md hover:shadow-lg transition-all duration-300 flex flex-col gap-3
+        active:scale-[0.97] active:shadow-sm
+        ${colorMap[color]}
+      `}
     >
       <div
-        className="
-          w-12 h-12
-          rounded-lg
-          bg-slate-800/60
-          flex items-center justify-center
-          text-slate-200
-          group-hover:bg-emerald-500/20
-          transition
-        "
+        className={`
+          w-12 h-12 rounded-lg bg-slate-800/60 flex items-center justify-center
+          text-slate-200 transition active:scale-95
+          ${colorMap[color]}
+        `}
       >
         {icon}
       </div>

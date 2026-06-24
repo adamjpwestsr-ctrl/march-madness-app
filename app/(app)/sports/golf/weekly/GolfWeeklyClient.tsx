@@ -410,7 +410,6 @@ const categoryIcon = (category: string | null) => {
         <span className="text-white font-medium">{spotlight.watch}</span>
       </div>
     </div>
-</section>
 
     {/* Badge Row */}
     <div className="flex flex-wrap gap-2 mt-3">

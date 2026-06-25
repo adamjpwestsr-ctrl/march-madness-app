@@ -9,7 +9,7 @@ import {
 } from '@/lib/marchMadnessTypes';
 
 import { OpeningRoundPanel } from '@/components/march-madness/OpeningRoundPanel';
-import { RegionBracketPanel } from '@/components/march-madness/RegionBracketPanel';
+import { RegionalBracketPanel } from '@/components/march-madness/RegionalBracketPanel';
 import { LiveTicker } from '@/components/march-madness/LiveTicker';
 import { LeaderboardPreview } from '@/components/march-madness/LeaderboardPreview';
 import { BracketList } from '@/components/march-madness/BracketList';

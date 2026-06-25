@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabaseServer';
 import { LeaderboardRow } from '@/lib/marchMadnessTypes';
 
 export async function GET() {
-  const supabase = createClient();
+ const supabase = await createClient();
 
   const { data: scores } = await supabase
     .from('bracket_potential_scores')

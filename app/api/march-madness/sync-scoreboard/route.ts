@@ -6,7 +6,7 @@ const ESPN_SCOREBOARD_URL =
   'http://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard';
 
 export async function POST() {
-  const supabase = createClient();
+const supabase = await createClient();
 
   // 1. Fetch ESPN scoreboard
   const res = await fetch(ESPN_SCOREBOARD_URL, { cache: 'no-store' });

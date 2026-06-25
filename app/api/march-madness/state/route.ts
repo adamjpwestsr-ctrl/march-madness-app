@@ -12,7 +12,7 @@ import {
 } from '@/lib/marchMadnessTypes';
 
 export async function GET() {
-  const supabase = createClient();
+ const supabase = await createClient();
 
   // Brackets
   const { data: bracketsData } = await supabase

@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabaseServer';
 import { LiveGameSummary } from '@/lib/marchMadnessTypes';
 
 export async function GET() {
-  const supabase = createClient();
+const supabase = await createClient();
 
   const { data: liveData } = await supabase
     .from('live_scores')

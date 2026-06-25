@@ -35,13 +35,25 @@ export async function POST(req: Request) {
   const body = await req.json();
   const { bracket_name, icon, tiebreaker_score } = body;
 
-  // 🔐 Try to get the current user
+  // Get current user (if logged in)
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // 🧩 Use authenticated user_id if available, else fallback for testing
-  const user_id = user?.id ?? 1;
+  // Required field
+  const user_id = user?.id ?? '00000000-0000-0000-0000-000000000000';
+
+  // Optional fields
+  const email = user?.email ?? null;
+  const user_uuid = user?.id ?? null;
+
+  // Compute bracket_number (per user)
+  const { count } = await supabase
+    .from('brackets')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', user_id);
+
+  const bracket_number = (count ?? 0) + 1;
 
   const { data, error } = await supabase
     .from('brackets')
@@ -52,6 +64,11 @@ export async function POST(req: Request) {
       tiebreaker_score,
       sport: 'ncaab',
       mulligans_remaining: 2,
+
+      // 🧩 Newly added fields
+      email,
+      user_uuid,
+      bracket_number,
     })
     .select()
     .single();

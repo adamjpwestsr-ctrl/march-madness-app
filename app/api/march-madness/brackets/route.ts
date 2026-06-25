@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabaseServer';
 import { BracketSummary } from '@/lib/marchMadnessTypes';
 
 export async function GET() {
-  const supabase = createClient();
+  const supabase = await createClient(); // IMPORTANT FIX
 
   const { data: bracketsData } = await supabase
     .from('brackets')
@@ -32,7 +32,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const supabase = createClient();
+  const supabase = await createClient(); // IMPORTANT FIX
   const body = await req.json();
 
   const { bracket_name, icon, tiebreaker_score } = body;

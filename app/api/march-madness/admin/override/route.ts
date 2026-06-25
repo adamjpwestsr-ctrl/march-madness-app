@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabaseServer';
 
 export async function POST(req: Request) {
-  const supabase = createClient();
+  const supabase = await createClient(); // IMPORTANT: await the async client
   const body = await req.json();
 
   const { game_id, winner_team } = body;
@@ -43,7 +43,11 @@ export async function POST(req: Request) {
       .single();
 
     const updateField =
-      nextGame.team1_id === null ? 'team1' : nextGame.team2_id === null ? 'team2' : null;
+      nextGame.team1_id === null
+        ? 'team1'
+        : nextGame.team2_id === null
+        ? 'team2'
+        : null;
 
     if (updateField) {
       await supabase

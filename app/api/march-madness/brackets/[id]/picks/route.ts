@@ -1,18 +1,22 @@
-// app/api/march-madness/brackets/[id]/picks/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabaseServer';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } } | { params: Promise<{ id: string }> }
 ) {
+  // Handle both direct and Promise‑wrapped params for Next.js 16 compatibility
+  const params =
+    'then' in context.params
+      ? await context.params
+      : context.params;
+
   const supabase = createClient();
   const bracketId = params.id;
 
   const body = await request.json();
   const picks = body.picks as { game_id: number; selected_team: string }[];
 
-  // Check if bracket already submitted
   const { data: submission } = await supabase
     .from('bracket_submissions')
     .select('*')
@@ -26,14 +30,12 @@ export async function POST(
     );
   }
 
-  // Prepare upsert payload
   const upserts = picks.map((p) => ({
     bracket_id: bracketId,
     game_id: p.game_id,
     selected_team: p.selected_team,
   }));
 
-  // Save picks
   const { error } = await supabase
     .from('picks')
     .upsert(upserts, { onConflict: 'bracket_id,game_id' });

@@ -1,39 +1,39 @@
-// app/api/march-madness/brackets/[id]/submit/route.ts
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabaseServer';
 
-type Params = { params: { id: string } };
+export async function POST(
+  request: NextRequest,
+  context: { params: { id: string } } | { params: Promise<{ id: string }> }
+) {
+  // Handle both direct and Promise‑wrapped params for Next.js 16 compatibility
+  const params =
+    'then' in context.params
+      ? await context.params
+      : context.params;
 
-export async function POST(req: Request, { params }: Params) {
   const supabase = createClient();
   const bracketId = params.id;
-  const body = await req.json();
 
-  const { tiebreaker_score } = body;
+  try {
+    const body = await request.json();
+    const { tiebreaker_score } = body;
 
-  const { data: existing } = await supabase
-    .from('bracket_submissions')
-    .select('*')
-    .eq('bracket_id', bracketId)
-    .maybeSingle();
+    // Mark bracket as submitted
+    const { error } = await supabase
+      .from('bracket_submissions')
+      .insert({
+        bracket_id: bracketId,
+        tiebreaker_score,
+        submitted_at: new Date().toISOString(),
+      });
 
-  if (existing) {
-    return NextResponse.json(
-      { error: 'Bracket already submitted' },
-      { status: 400 },
-    );
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    console.error('Error submitting bracket:', err);
+    return NextResponse.json({ error: 'Failed to submit bracket' }, { status: 500 });
   }
-
-  const { error } = await supabase
-    .from('bracket_submissions')
-    .insert({
-      bracket_id: bracketId,
-      tiebreaker: tiebreaker_score,
-    });
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
-  }
-
-  return NextResponse.json({ success: true });
 }

@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabaseServer';
 
 export async function POST() {
-  const supabase = createClient();
+  const supabase = await createClient(); // IMPORTANT: await the async client
 
   // 1. Load tournament teams
   const { data: teams, error: teamError } = await supabase
@@ -27,7 +27,6 @@ export async function POST() {
   const openingRoundGames = [];
   const mainBracketGames = [];
 
-  // Example: seeds 11, 12, 16 often have play-in games
   const playInSeeds = [11, 12, 16];
 
   for (const region of ['East', 'West', 'South', 'Midwest']) {

@@ -1,10 +1,9 @@
-// app/api/march-madness/brackets/route.ts
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabaseServer';
 import { BracketSummary } from '@/lib/marchMadnessTypes';
 
 export async function GET() {
-  const supabase = await createClient(); // IMPORTANT FIX
+  const supabase = await createClient();
 
   const { data: bracketsData } = await supabase
     .from('brackets')
@@ -32,14 +31,22 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const supabase = await createClient(); // IMPORTANT FIX
+  const supabase = await createClient();
   const body = await req.json();
-
   const { bracket_name, icon, tiebreaker_score } = body;
+
+  // 🔐 Try to get the current user
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // 🧩 Use authenticated user_id if available, else fallback for testing
+  const user_id = user?.id ?? 1;
 
   const { data, error } = await supabase
     .from('brackets')
     .insert({
+      user_id,
       bracket_name,
       icon,
       tiebreaker_score,

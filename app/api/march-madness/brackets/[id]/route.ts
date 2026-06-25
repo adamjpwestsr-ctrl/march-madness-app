@@ -1,10 +1,6 @@
-// app/api/march-madness/brackets/[id]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabaseServer';
-import {
-  TournamentGame,
-  TournamentTeam,
-} from '@/lib/marchMadnessTypes';
+import { TournamentGame, TournamentTeam } from '@/lib/marchMadnessTypes';
 
 export async function GET(
   request: NextRequest,
@@ -12,51 +8,56 @@ export async function GET(
 ) {
   // Handle both direct and Promise‑wrapped params for Next.js 16 compatibility
   const params =
-    'then' in context.params
-      ? await context.params
-      : context.params;
+    'then' in context.params ? await context.params : context.params;
 
   const supabase = await createClient();
   const bracketId = params.id;
 
-  // Fetch bracket data
+  // ✅ Correct column name
   const { data: bracket } = await supabase
     .from('brackets')
     .select('*')
-    .eq('id', bracketId)
+    .eq('bracket_id', bracketId)
     .maybeSingle();
 
+  // ✅ Correct table name and numeric round
   const { data: openingRoundGames } = await supabase
-    .from('games')
+    .from('tournament_games')
     .select('*')
-    .eq('round', 'Opening');
+    .eq('round', 0);
 
-  const { data: regionalGames } = await supabase
-    .from('games')
+  // ✅ All other games
+  const { data: allGames } = await supabase
+    .from('tournament_games')
     .select('*')
-    .neq('round', 'Opening');
+    .neq('round', 0);
 
+  // ✅ Picks for this bracket
   const { data: picks } = await supabase
     .from('picks')
     .select('*')
     .eq('bracket_id', bracketId);
 
+  // ✅ Teams table
   const { data: teams } = await supabase
-    .from('teams')
+    .from('tournament_teams')
     .select('*');
+
+  // ✅ Group regional games safely
+  const regionalGames = (allGames ?? []).reduce<Record<string, TournamentGame[]>>(
+    (acc, game) => {
+      const region = game.region ?? 'Unknown';
+      acc[region] = acc[region] || [];
+      acc[region].push(game);
+      return acc;
+    },
+    {}
+  );
 
   return NextResponse.json({
     bracket,
     openingRoundGames: openingRoundGames as TournamentGame[],
-    regionalGames: regionalGames?.reduce<Record<string, TournamentGame[]>>(
-      (acc, game) => {
-        const region = game.region ?? 'Unknown';
-        acc[region] = acc[region] || [];
-        acc[region].push(game);
-        return acc;
-      },
-      {}
-    ),
+    regionalGames,
     picks,
     teams: teams as TournamentTeam[],
   });

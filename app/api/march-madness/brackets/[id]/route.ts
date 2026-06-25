@@ -2,23 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabaseServer';
 import { TournamentGame, TournamentTeam } from '@/lib/marchMadnessTypes';
 
-
-export default async function BracketViewPage({ params }: any) {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_SITE_URL}/api/march-madness/brackets/${params.id}`,
-    { cache: 'no-store' }
-  );
-
-  const data = await res.json();
-
-  console.log("BRACKET PAGE DATA:", JSON.stringify(data, null, 2));
-
-  return (
-    ...
-  );
-}
-
-
 export async function GET(
   request: NextRequest,
   context: { params: { id: string } } | { params: Promise<{ id: string }> }

@@ -16,7 +16,7 @@ export async function GET(
       ? await context.params
       : context.params;
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const bracketId = params.id;
 
   // Fetch bracket data

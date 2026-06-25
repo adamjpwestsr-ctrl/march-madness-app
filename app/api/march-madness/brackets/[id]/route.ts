@@ -1,76 +1,63 @@
 // app/api/march-madness/brackets/[id]/route.ts
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabaseServer';
 import {
   TournamentGame,
   TournamentTeam,
 } from '@/lib/marchMadnessTypes';
 
-type Params = { params: { id: string } };
+export async function GET(
+  request: NextRequest,
+  context: { params: { id: string } } | { params: Promise<{ id: string }> }
+) {
+  // Handle both direct and Promise‑wrapped params for Next.js 16 compatibility
+  const params =
+    'then' in context.params
+      ? await context.params
+      : context.params;
 
-export async function GET(_req: Request, { params }: Params) {
   const supabase = createClient();
   const bracketId = params.id;
 
+  // Fetch bracket data
   const { data: bracket } = await supabase
     .from('brackets')
     .select('*')
-    .eq('bracket_id', bracketId)
-    .single();
+    .eq('id', bracketId)
+    .maybeSingle();
 
-  const { data: gamesData } = await supabase
-    .from('tournament_games')
-    .select('*');
+  const { data: openingRoundGames } = await supabase
+    .from('games')
+    .select('*')
+    .eq('round', 'Opening');
 
-  const { data: picksData } = await supabase
+  const { data: regionalGames } = await supabase
+    .from('games')
+    .select('*')
+    .neq('round', 'Opening');
+
+  const { data: picks } = await supabase
     .from('picks')
     .select('*')
     .eq('bracket_id', bracketId);
 
-  const { data: teamsData } = await supabase
-    .from('v_tournament_teams')
+  const { data: teams } = await supabase
+    .from('teams')
     .select('*');
-
-  const openingRoundGames: TournamentGame[] =
-    (gamesData ?? []).filter((g) => g.round === 0) as TournamentGame[];
-
-  const regionalGamesByRegion: Record<string, TournamentGame[]> = {};
-  (gamesData ?? [])
-    .filter((g) => (g.round ?? 0) >= 1)
-    .forEach((g) => {
-      const region = g.region ?? 'Unknown';
-      if (!regionalGamesByRegion[region]) regionalGamesByRegion[region] = [];
-      regionalGamesByRegion[region].push(g as TournamentGame);
-    });
 
   return NextResponse.json({
     bracket,
-    openingRoundGames,
-    regionalGames: regionalGamesByRegion,
-    picks: picksData ?? [],
-    teams: (teamsData ?? []) as TournamentTeam[],
+    openingRoundGames: openingRoundGames as TournamentGame[],
+    regionalGames: regionalGames?.reduce<Record<string, TournamentGame[]>>(
+      (acc, game) => {
+        const region = game.region ?? 'Unknown';
+        acc[region] = acc[region] || [];
+        acc[region].push(game);
+        return acc;
+      },
+      {}
+    ),
+    picks,
+    teams: teams as TournamentTeam[],
   });
-}
-
-export async function PUT(req: Request, { params }: Params) {
-  const supabase = createClient();
-  const bracketId = params.id;
-  const body = await req.json();
-
-  const { bracket_name, icon, tiebreaker_score } = body;
-
-  const { error } = await supabase
-    .from('brackets')
-    .update({
-      bracket_name,
-      icon,
-      tiebreaker_score,
-    })
-    .eq('bracket_id', bracketId);
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
-  }
-
-  return NextResponse.json({ success: true });
 }

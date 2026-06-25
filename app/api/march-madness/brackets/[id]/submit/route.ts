@@ -11,7 +11,7 @@ export async function POST(
       ? await context.params
       : context.params;
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const bracketId = params.id;
 
   try {

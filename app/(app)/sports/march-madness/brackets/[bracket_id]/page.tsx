@@ -1,10 +1,31 @@
 // app/(app)/sports/march-madness/brackets/[bracket_id]/page.tsx
 import { ReadOnlyBracket } from '@/components/march-madness/ReadOnlyBracket';
 
-export default async function BracketViewPage({ params }: { params: { bracket_id: string } }) {
-const res = await fetch(`/api/march-madness/brackets/${params.bracket_id}`, {
-  cache: 'no-store',
-});
+export default async function BracketViewPage({
+  params,
+}: {
+  params: { bracket_id?: string };
+}) {
+  // Guard against missing bracket_id
+  if (!params?.bracket_id) {
+    return (
+      <div className="p-6 text-center text-red-500">
+        Invalid bracket ID — please return to the leaderboard.
+      </div>
+    );
+  }
+
+  const res = await fetch(`/api/march-madness/brackets/${params.bracket_id}`, {
+    cache: 'no-store',
+  });
+
+  if (!res.ok) {
+    return (
+      <div className="p-6 text-center text-red-500">
+        Failed to load bracket data. Please try again later.
+      </div>
+    );
+  }
 
   const data = await res.json();
 

@@ -27,15 +27,15 @@ export async function GET() {
   const submittedSet = new Set(submissionsData?.map((s) => s.bracket_id) ?? []);
 
   const brackets: BracketSummary[] =
-    bracketsData?.map((b) => ({
-      bracket_id: b.bracket_id,
-      bracket_name: b.bracket_name,
-      icon: b.icon,
-      created_at: b.created_at,
-      tiebreaker_score: b.tiebreaker_score,
-      mulligans_remaining: b.mulligans_remaining,
-      submitted: submittedSet.has(b.bracket_id),
-    })) ?? [];
+  bracketsData?.map((b) => ({
+    bracket_id: b.id, // FIXED
+    bracket_name: b.bracket_name,
+    icon: b.icon,
+    created_at: b.created_at,
+    tiebreaker_score: b.tiebreaker_score,
+    mulligans_remaining: b.mulligans_remaining,
+    submitted: submittedSet.has(b.id),
+  })) ?? [];
 
   // Games
   const { data: gamesData } = await supabase

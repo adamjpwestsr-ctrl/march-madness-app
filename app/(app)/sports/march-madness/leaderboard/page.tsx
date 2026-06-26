@@ -101,11 +101,14 @@ export default function LeaderboardPage() {
             : 'bg-red-900/20 border-red-700/30';
 
           return (
-            <div
-              key={row.bracket_id}
-              ref={(el) => (rowRefs.current[row.bracket_id] = el)}
-              className={`p-4 rounded-lg border flex justify-between items-center hover:bg-white/10 transition-all ${bgColor}`}
-            >
+           <div
+  key={row.bracket_id}
+  ref={(el) => {
+    rowRefs.current[row.bracket_id] = el;
+  }}
+  className={`p-4 rounded-lg border flex justify-between items-center hover:bg-white/10 transition-all ${bgColor}`}
+>
+
               {/* Left side: Rank + Name */}
               <div className="flex items-center gap-4">
                 <div className="text-2xl font-bold">{index + 1}</div>

@@ -8,7 +8,7 @@ export default function NewBracketPage() {
   const [tiebreaker, setTiebreaker] = useState('');
 
   async function createBracket() {
-    await fetch('/api/march-madness/brackets', {
+    await fetch('/api/march-madness/bracket-list', {
       method: 'POST',
       body: JSON.stringify({
         bracket_name: name,
@@ -53,3 +53,4 @@ export default function NewBracketPage() {
     </div>
   );
 }
+

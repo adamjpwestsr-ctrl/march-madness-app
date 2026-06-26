@@ -1,5 +1,5 @@
 export default async function BracketsPage() {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/march-madness/brackets`, {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/march-madness/bracket-list`, {
     cache: 'no-store',
   });
   const brackets = await res.json();
@@ -30,3 +30,4 @@ export default async function BracketsPage() {
     </div>
   );
 }
+

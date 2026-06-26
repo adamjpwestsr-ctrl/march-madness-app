@@ -45,7 +45,7 @@ export default async function BracketViewPage({
   if (!data?.bracket) {
     return (
       <div className="p-6 text-center text-red-500">
-        Bracket not found — Shit be broken — please return to the leaderboard.
+        Bracket not found — please return to the leaderboard.
       </div>
     );
   }

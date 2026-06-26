@@ -19,7 +19,7 @@ export function BracketList({
   const handleCreate = async () => {
     try {
       setCreating(true);
-      const res = await fetch('/api/march-madness/brackets', {
+      const res = await fetch('/api/march-madness/bracket-list', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -61,3 +61,4 @@ export function BracketList({
     </div>
   );
 }
+

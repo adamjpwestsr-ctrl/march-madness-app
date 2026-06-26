@@ -6,8 +6,13 @@ export default async function BracketViewPage({
 }: {
   params: { bracket_id?: string };
 }) {
-  // Guard against missing bracket_id
-  if (!params?.bracket_id) {
+  // Guard against missing or stringified undefined
+  const bracketId =
+    params?.bracket_id && params.bracket_id !== 'undefined'
+      ? params.bracket_id
+      : null;
+
+  if (!bracketId) {
     return (
       <div className="p-6 text-center text-red-500">
         Invalid bracket ID — please return to the leaderboard.
@@ -15,7 +20,7 @@ export default async function BracketViewPage({
     );
   }
 
-  const res = await fetch(`/api/march-madness/brackets/${params.bracket_id}`, {
+  const res = await fetch(`/api/march-madness/brackets/${bracketId}`, {
     cache: 'no-store',
   });
 
@@ -35,7 +40,7 @@ export default async function BracketViewPage({
         <h1 className="text-3xl font-bold">{data.bracket.bracket_name}</h1>
 
         <a
-          href={`/sports/march-madness/brackets/${params.bracket_id}/edit`}
+          href={`/sports/march-madness/brackets/${bracketId}/edit`}
           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
         >
           Edit Bracket

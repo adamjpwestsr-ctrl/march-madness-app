@@ -1,16 +1,20 @@
+// app/api/march-madness/brackets/[bracket_id]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabaseServer';
 import { TournamentGame, TournamentTeam } from '@/lib/marchMadnessTypes';
 
 export async function GET(
   request: NextRequest,
-  context: { params: { id: string } } | { params: Promise<{ id: string }> }
+  context:
+    | { params: { bracket_id: string } }
+    | { params: Promise<{ bracket_id: string }> }
 ) {
+  // Handle both direct and Promise‑wrapped params for Next.js 16
   const params =
     'then' in context.params ? await context.params : context.params;
 
   const supabase = await createClient();
-  const bracketId = params.id;
+  const bracketId = params.bracket_id;
 
   // Fetch bracket
   const { data: bracket } = await supabase

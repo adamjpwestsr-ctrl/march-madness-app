@@ -24,9 +24,22 @@ export default async function BracketViewPage({
   }
 
   // Fetch bracket data
-  const res = await fetch(`/api/march-madness/brackets/${bracketId}`, {
+  //const res = await fetch(`/api/march-madness/brackets/${bracketId}`, {
+  //  cache: 'no-store',
+  //});
+
+import { headers } from 'next/headers';
+
+// inside your GET / page component or loader:
+const baseUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ?? `https://${headers().get('host')}`;
+
+const res = await fetch(
+  `${baseUrl}/api/march-madness/brackets/${bracketId}`,
+  {
     cache: 'no-store',
-  });
+  }
+);
 
   // Handle API errors (404, 500, etc.)
   if (!res.ok) {

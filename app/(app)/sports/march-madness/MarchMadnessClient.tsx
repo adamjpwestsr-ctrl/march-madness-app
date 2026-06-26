@@ -27,6 +27,7 @@ export function MarchMadnessClient() {
       const res = await fetch('/api/march-madness/state', { cache: 'no-store' });
       const json = await res.json();
       setState(json);
+	console.log("STATE BRACKETS:", json.brackets);
       setLoading(false);
     })();
   }, []);

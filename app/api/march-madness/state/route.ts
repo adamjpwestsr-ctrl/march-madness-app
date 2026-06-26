@@ -119,6 +119,7 @@ const brackets: BracketSummary[] =
     lockState,
     liveSummary,
   };
-
+console.log("BRACKETS FROM DB:", bracketsData);
+console.log("MAPPED BRACKETS:", brackets);
   return NextResponse.json(state);
 }

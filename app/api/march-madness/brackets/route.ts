@@ -35,26 +35,35 @@ export async function POST(req: Request) {
   const body = await req.json();
   const { bracket_name, icon, tiebreaker_score } = body;
 
-  // Get current user (if logged in)
+  // 🔐 Get current user (if logged in)
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Required field
+  // 🧩 Required field
   const user_id = user?.id ?? '00000000-0000-0000-0000-000000000000';
 
-  // Optional fields
+  // 🧩 Optional fields
   const email = user?.email ?? null;
   const user_uuid = user?.id ?? null;
 
-  // Compute bracket_number (per user)
+  // 🧮 Check bracket count (limit 4 per user)
   const { count } = await supabase
     .from('brackets')
     .select('*', { count: 'exact', head: true })
     .eq('user_id', user_id);
 
+  if ((count ?? 0) >= 4) {
+    return NextResponse.json(
+      { error: 'You have reached the maximum of 4 brackets.' },
+      { status: 400 }
+    );
+  }
+
+  // 🧮 Compute bracket_number (per user)
   const bracket_number = (count ?? 0) + 1;
 
+  // 🧩 Insert new bracket
   const { data, error } = await supabase
     .from('brackets')
     .insert({
@@ -64,8 +73,6 @@ export async function POST(req: Request) {
       tiebreaker_score,
       sport: 'ncaab',
       mulligans_remaining: 2,
-
-      // 🧩 Newly added fields
       email,
       user_uuid,
       bracket_number,
@@ -76,6 +83,16 @@ export async function POST(req: Request) {
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
+
+  // ✅ Step 1: Flip user Active flag when bracket created
+  await supabase
+    .from('users')
+    .update({ is_active: true })
+    .eq('auth_id', user?.id);
+
+  // ✅ Step 3 (future): Paid indicator belongs in leaderboard query
+  // Example join:
+  // SELECT b.*, u.has_paid FROM brackets b JOIN users u ON b.user_id::text = u.auth_id::text;
 
   return NextResponse.json(data);
 }

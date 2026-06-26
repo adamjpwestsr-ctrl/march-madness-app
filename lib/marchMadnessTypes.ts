@@ -40,14 +40,19 @@ export type BracketSummary = {
   submitted: boolean;
 };
 
-export type LeaderboardRow = {
+export interface LeaderboardRow {
   bracket_id: string;
   bracket_name: string;
   icon: string | null;
+
   earned_points: number;
   possible_points: number;
   max_possible_score: number;
   mulligans_used: number;
+
+  email: string | null;     // identity (auth email)
+  has_paid: boolean;        // pool flag
+  is_active: boolean;       // pool flag
 };
 
 export type MulliganSummary = {

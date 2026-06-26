@@ -3,24 +3,11 @@
 import { useEffect, useState } from 'react';
 import { LeaderboardRow } from '@/lib/marchMadnessTypes';
 
-export function LeaderboardPreview() {
-  const [rows, setRows] = useState<LeaderboardRow[]>([]);
+export function LeaderboardPreview({ rows }: { rows: LeaderboardRow[] }) {
   const [prevRows, setPrevRows] = useState<LeaderboardRow[]>([]);
 
   useEffect(() => {
-    async function load() {
-      const res = await fetch('/api/march-madness/leaderboard', {
-        cache: 'no-store',
-      });
-      const json = await res.json();
-
-      setPrevRows(rows);
-      setRows(json.slice(0, 5)); // top 5 only
-    }
-
-    load();
-    const interval = setInterval(load, 5000);
-    return () => clearInterval(interval);
+    setPrevRows(rows);
   }, [rows]);
 
   function getRankChange(bracketId: string) {
@@ -28,7 +15,6 @@ export function LeaderboardPreview() {
     const newIndex = rows.findIndex((r) => r.bracket_id === bracketId);
 
     if (prevIndex === -1 || newIndex === -1) return null;
-
     if (newIndex < prevIndex) return 'up';
     if (newIndex > prevIndex) return 'down';
     return 'same';
@@ -47,7 +33,7 @@ export function LeaderboardPreview() {
       </div>
 
       <div className="space-y-3">
-        {rows.map((row, index) => {
+        {rows.slice(0, 5).map((row, index) => {
           const movement = getRankChange(row.bracket_id);
 
           return (
@@ -59,7 +45,24 @@ export function LeaderboardPreview() {
                 <div className="text-xl font-bold">{index + 1}</div>
 
                 <div>
-                  <div className="font-semibold">{row.bracket_name}</div>
+                  <div className="font-semibold flex items-center gap-2">
+                    {row.bracket_name}
+
+                    {/* Paid / Unpaid icon */}
+                    {row.has_paid ? (
+                      <span className="text-green-400 font-bold">$</span>
+                    ) : (
+                      <span className="text-red-400 font-bold">✗</span>
+                    )}
+                  </div>
+
+                  {/* Eligibility badge */}
+                  {!row.has_paid && (
+                    <div className="text-xs text-red-300 bg-red-900/30 px-2 py-1 rounded w-fit mt-1">
+                      Not eligible to win
+                    </div>
+                  )}
+
                   <div className="text-sm opacity-70">
                     Max: {row.max_possible_score}
                   </div>

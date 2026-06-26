@@ -19,6 +19,7 @@ export function MarchMadnessClient() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardRow[]>([]);
   const [live, setLive] = useState<LiveGameSummary[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showUnpaid, setShowUnpaid] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -49,6 +50,10 @@ export function MarchMadnessClient() {
   if (loading || !state) {
     return <div className="p-6">Loading March Madness…</div>;
   }
+
+  const visibleLeaderboard = showUnpaid
+    ? leaderboard
+    : leaderboard.filter((row) => row.has_paid);
 
   return (
     <div className="space-y-8">
@@ -85,8 +90,17 @@ export function MarchMadnessClient() {
       </section>
 
       {/* Leaderboard preview */}
-      <section>
-        <LeaderboardPreview />
+      <section className="space-y-4">
+        <div className="flex justify-end">
+          <button
+            onClick={() => setShowUnpaid(!showUnpaid)}
+            className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg hover:bg-white/20 transition"
+          >
+            {showUnpaid ? 'Hide Unpaid' : 'Show Unpaid'}
+          </button>
+        </div>
+
+        <LeaderboardPreview rows={visibleLeaderboard} />
       </section>
     </div>
   );

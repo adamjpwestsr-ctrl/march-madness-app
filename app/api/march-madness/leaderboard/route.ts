@@ -34,8 +34,8 @@ export async function GET() {
         bracket_name: b.bracket_name,
         icon: b.icon,
         email: b.email,
-        has_paid: b.users?.has_paid ?? false,
-        is_active: b.users?.is_active ?? false,
+        has_paid: b.users?.[0]?.has_paid ?? false,
+	is_active: b.users?.[0]?.is_active ?? false,
       },
     ])
   );

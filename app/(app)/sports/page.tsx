@@ -1,6 +1,6 @@
 import Link from "next/link";
-import SportsHero from "@/app/sports/SportsHero";
-import SportsCard from "@/app/sports/SportsCard";
+import SportsHero from "@/app/(app)/sports/SportsHero";
+import SportsCard from "@/app/(app)/sports/SportsCard";
 import { CHALLENGES } from "@/app/config/challenges";
 
 export default function SportsHub() {

@@ -12,7 +12,7 @@ import {
 } from '@/lib/marchMadnessTypes';
 
 export async function GET() {
- const supabase = await createClient();
+  const supabase = await createClient();
 
   // Brackets
   const { data: bracketsData } = await supabase
@@ -61,10 +61,18 @@ export async function GET() {
 
   const teams: TournamentTeam[] = (teamsData ?? []) as TournamentTeam[];
 
-  // Leaderboard
+  // Leaderboard — MUST include new fields
   const { data: leaderboardData } = await supabase
     .from('bracket_potential_scores')
-    .select('*');
+    .select(`
+      bracket_id,
+      earned_points,
+      possible_points,
+      max_possible_score,
+      email,
+      has_paid,
+      is_active
+    `);
 
   const leaderboard: LeaderboardRow[] =
     leaderboardData?.map((row) => ({
@@ -72,11 +80,18 @@ export async function GET() {
       bracket_name:
         brackets.find((b) => b.bracket_id === row.bracket_id)?.bracket_name ??
         'Unknown',
-      icon: brackets.find((b) => b.bracket_id === row.bracket_id)?.icon ?? null,
+      icon:
+        brackets.find((b) => b.bracket_id === row.bracket_id)?.icon ?? null,
+
       earned_points: Number(row.earned_points ?? 0),
       possible_points: Number(row.possible_points ?? 0),
       max_possible_score: Number(row.max_possible_score ?? 0),
-      mulligans_used: 0, // can be wired from mulligan views later
+      mulligans_used: 0,
+
+      // NEW REQUIRED FIELDS
+      email: row.email ?? null,
+      has_paid: row.has_paid ?? false,
+      is_active: row.is_active ?? false,
     })) ?? [];
 
   // Mulligans
@@ -86,11 +101,11 @@ export async function GET() {
 
   const mulligans: MulliganSummary[] = (mulligansData ?? []) as MulliganSummary[];
 
-  // Live summary placeholder (to be wired to cached ESPN data)
+  // Live summary placeholder
   const liveSummary: LiveGameSummary[] = [];
 
   const lockState = {
-    bracketsOpen: true, // later: derive from scheduled_at / admin flags
+    bracketsOpen: true,
     openingRoundComplete: openingRoundGames.every((g) => !!g.winner),
   };
 

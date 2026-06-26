@@ -10,7 +10,6 @@ export default async function BracketViewPage({
 
   console.log("BracketViewPage params:", params);
 
-  // Normalize and validate the bracket ID
   const bracketId =
     params?.bracket_id && params.bracket_id !== 'undefined'
       ? params.bracket_id
@@ -24,10 +23,13 @@ export default async function BracketViewPage({
     );
   }
 
-  // Build absolute URL for server-side fetch
+  // ✅ FIX: headers() must be awaited in Next.js 16
+  const h = await headers();
+  const host = h.get('host');
+
   const baseUrl =
     process.env.NEXT_PUBLIC_SITE_URL ??
-    `https://${headers().get('host')}`;
+    `https://${host}`;
 
   const res = await fetch(
     `${baseUrl}/api/march-madness/brackets/${bracketId}`,
@@ -36,7 +38,6 @@ export default async function BracketViewPage({
     }
   );
 
-  // Handle API errors (404, 500, etc.)
   if (!res.ok) {
     return (
       <div className="p-6 text-center text-red-500">
@@ -49,7 +50,6 @@ export default async function BracketViewPage({
 
   const data = await res.json();
 
-  // Defensive guard: ensure bracket object exists
   if (!data?.bracket) {
     return (
       <div className="p-6 text-center text-red-500">

@@ -23,6 +23,14 @@ export async function GET(
     .eq('bracket_id', bracketId)
     .maybeSingle();
 
+  // If no bracket found, return 404
+  if (!bracket) {
+    return NextResponse.json(
+      { error: 'Bracket not found' },
+      { status: 404 }
+    );
+  }
+
   // Opening round = round 0
   const { data: openingRoundGames } = await supabase
     .from('tournament_games')
@@ -56,8 +64,9 @@ export async function GET(
     return acc;
   }, {});
 
+  // Return the exact shape the page expects
   return NextResponse.json({
-    bracket: bracket ?? null,
+    bracket,
     openingRoundGames: openingRoundGames ?? [],
     regionalGames,
     picks: picks ?? [],

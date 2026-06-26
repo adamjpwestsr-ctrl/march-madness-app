@@ -7,10 +7,9 @@ export default async function BracketViewPage({
   params: { bracket_id?: string };
 }) {
 
-console.log("BracketViewPage params:", params);
+  console.log("BracketViewPage params:", params);
 
-
-  // Guard against missing or stringified undefined
+  // Normalize and validate the bracket ID
   const bracketId =
     params?.bracket_id && params.bracket_id !== 'undefined'
       ? params.bracket_id
@@ -24,19 +23,32 @@ console.log("BracketViewPage params:", params);
     );
   }
 
+  // Fetch bracket data
   const res = await fetch(`/api/march-madness/brackets/${bracketId}`, {
     cache: 'no-store',
   });
 
+  // Handle API errors (404, 500, etc.)
   if (!res.ok) {
     return (
       <div className="p-6 text-center text-red-500">
-        Failed to load bracket data. Please try again later.
+        {res.status === 404
+          ? 'Bracket not found — please return to the leaderboard.'
+          : 'Failed to load bracket data. Please try again later.'}
       </div>
     );
   }
 
   const data = await res.json();
+
+  // Defensive guard: ensure bracket object exists
+  if (!data?.bracket) {
+    return (
+      <div className="p-6 text-center text-red-500">
+        Bracket not found — Shit be broken — please return to the leaderboard.
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6">

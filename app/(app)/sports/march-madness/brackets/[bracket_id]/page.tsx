@@ -1,5 +1,6 @@
 // app/(app)/sports/march-madness/brackets/[bracket_id]/page.tsx
 import { ReadOnlyBracket } from '@/components/march-madness/ReadOnlyBracket';
+import { headers } from 'next/headers';
 
 export default async function BracketViewPage({
   params,
@@ -23,23 +24,17 @@ export default async function BracketViewPage({
     );
   }
 
-  // Fetch bracket data
-  //const res = await fetch(`/api/march-madness/brackets/${bracketId}`, {
-  //  cache: 'no-store',
-  //});
+  // Build absolute URL for server-side fetch
+  const baseUrl =
+    process.env.NEXT_PUBLIC_SITE_URL ??
+    `https://${headers().get('host')}`;
 
-import { headers } from 'next/headers';
-
-// inside your GET / page component or loader:
-const baseUrl =
-  process.env.NEXT_PUBLIC_SITE_URL ?? `https://${headers().get('host')}`;
-
-const res = await fetch(
-  `${baseUrl}/api/march-madness/brackets/${bracketId}`,
-  {
-    cache: 'no-store',
-  }
-);
+  const res = await fetch(
+    `${baseUrl}/api/march-madness/brackets/${bracketId}`,
+    {
+      cache: 'no-store',
+    }
+  );
 
   // Handle API errors (404, 500, etc.)
   if (!res.ok) {

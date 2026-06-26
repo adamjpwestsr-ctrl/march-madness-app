@@ -2,10 +2,9 @@
 import { ReadOnlyBracket } from '@/components/march-madness/ReadOnlyBracket';
 
 export default async function BracketViewPage({ params }: { params: { bracket_id: string } }) {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_SITE_URL}/api/march-madness/brackets/${params.bracket_id}`,
-    { cache: 'no-store' }
-  );
+const res = await fetch(`/api/march-madness/brackets/${params.bracket_id}`, {
+  cache: 'no-store',
+});
 
   const data = await res.json();
 

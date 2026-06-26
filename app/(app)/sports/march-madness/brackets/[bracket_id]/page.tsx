@@ -6,6 +6,10 @@ export default async function BracketViewPage({
 }: {
   params: { bracket_id?: string };
 }) {
+
+console.log("BracketViewPage params:", params);
+
+
   // Guard against missing or stringified undefined
   const bracketId =
     params?.bracket_id && params.bracket_id !== 'undefined'

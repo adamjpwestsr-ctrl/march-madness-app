@@ -74,7 +74,7 @@ export async function GET() {
         completed: summary.status === 'post',
         winner:
           summary.status === 'post'
-            ? summary.home_score > summary.away_score
+            ? (summary.home_score ?? 0) > (summary.away_score ?? 0)
               ? summary.home_team
               : summary.away_team
             : null,

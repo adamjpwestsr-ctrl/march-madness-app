@@ -1,4 +1,4 @@
-// app/(app)/sports/march-madness/brackets/[id]/edit/page.tsx
+// app/(app)/sports/march-madness/brackets/[bracket_id]/edit/page.tsx
 
 'use client';
 
@@ -7,7 +7,7 @@ import { InteractiveBracketEditor } from '@/components/march-madness/Interactive
 import { TournamentGame, TournamentTeam } from '@/lib/marchMadnessTypes';
 
 export default function EditBracketPage({ params }: any) {
-  const bracketId = params.id;
+  const bracketId = params.bracket_id;
 
   const [games, setGames] = useState<TournamentGame[]>([]);
   const [teams, setTeams] = useState<TournamentTeam[]>([]);

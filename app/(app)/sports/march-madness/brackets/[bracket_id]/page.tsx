@@ -1,5 +1,3 @@
-// app/(app)/sports/march-madness/brackets/[bracket_id]/page.tsx
-
 'use client';
 
 import { useEffect, useState } from 'react';

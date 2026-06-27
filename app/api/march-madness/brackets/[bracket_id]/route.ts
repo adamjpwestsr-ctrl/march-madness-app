@@ -5,28 +5,28 @@ import { TournamentGame, TournamentTeam } from '@/lib/marchMadnessTypes';
 
 console.log("🔥 API HIT: /api/march-madness/brackets/[bracket_id]");
 
-
 export async function GET(
   request: NextRequest,
   context:
     | { params: { bracket_id: string } }
     | { params: Promise<{ bracket_id: string }> }
 ) {
-  // Handle both direct and Promise‑wrapped params for Next.js 16
+  // Handle Next.js 16 async params
   const params =
     'then' in context.params ? await context.params : context.params;
 
   const supabase = await createClient();
   const bracketId = params.bracket_id;
 
-  // Fetch bracket
+  // -----------------------------
+  // FETCH BRACKET
+  // -----------------------------
   const { data: bracket } = await supabase
     .from('brackets')
     .select('*')
     .eq('bracket_id', bracketId)
     .maybeSingle();
 
-  // If no bracket found, return 404
   if (!bracket) {
     return NextResponse.json(
       { error: 'Bracket not found' },
@@ -34,45 +34,60 @@ export async function GET(
     );
   }
 
-  // Opening round = round 0
-  const { data: openingRoundGames } = await supabase
-    .from('tournament_games')
-    .select('*')
-    .eq('round', 0);
-
-  // All other rounds
+  // -----------------------------
+  // FETCH ALL GAMES
+  // -----------------------------
   const { data: allGames } = await supabase
     .from('tournament_games')
     .select('*')
-    .neq('round', 0);
+    .order('round', { ascending: true })
+    .order('game_number', { ascending: true });
 
-  // Picks
+  // Opening Round = round 1 (76‑team format)
+  const openingRoundGames = (allGames ?? []).filter(
+    (g) => g.round === 1
+  );
+
+  // Regional games = rounds 2+
+  const regionalGames = (allGames ?? [])
+    .filter((g) => g.round && g.round >= 2)
+    .reduce<Record<string, TournamentGame[]>>((acc, game) => {
+      const region = game.region ?? 'Unknown';
+      if (!acc[region]) acc[region] = [];
+      acc[region].push(game);
+      return acc;
+    }, {});
+
+  // -----------------------------
+  // FETCH PICKS
+  // -----------------------------
   const { data: picks } = await supabase
     .from('picks')
     .select('*')
     .eq('bracket_id', bracketId);
 
-  // Teams
+  // -----------------------------
+  // FETCH TEAMS
+  // -----------------------------
   const { data: teams } = await supabase
     .from('tournament_teams')
     .select('*');
 
-  // Group regional games
-  const regionalGames = (allGames ?? []).reduce<
-    Record<string, TournamentGame[]>
-  >((acc, game) => {
-    const region = game.region ?? 'Unknown';
-    acc[region] = acc[region] || [];
-    acc[region].push(game);
-    return acc;
-  }, {});
+  // -----------------------------
+  // LIVE SUMMARY (placeholder)
+  // ESPN integration will populate this
+  // -----------------------------
+  const liveSummary = []; // TODO: ESPN API integration
 
-  // Return the exact shape the page expects
+  // -----------------------------
+  // RETURN FULL PAYLOAD
+  // -----------------------------
   return NextResponse.json({
     bracket,
-    openingRoundGames: openingRoundGames ?? [],
+    openingRoundGames,
     regionalGames,
     picks: picks ?? [],
     teams: teams ?? [],
+    liveSummary,
   });
 }

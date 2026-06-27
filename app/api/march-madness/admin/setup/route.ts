@@ -3,9 +3,9 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabaseServer';
 
 export async function POST() {
-  const supabase = await createClient(); // IMPORTANT: await the async client
+  const supabase = await createClient();
 
-  // 1. Load tournament teams
+  // 1️⃣ Load tournament teams
   const { data: teams, error: teamError } = await supabase
     .from('tournament_teams')
     .select('*')
@@ -23,10 +23,10 @@ export async function POST() {
     );
   }
 
-  // 2. Build Opening Round games (round = 0)
+  // -----------------------------
+  // 2️⃣ Build Opening Round (round = 1)
+  // -----------------------------
   const openingRoundGames = [];
-  const mainBracketGames = [];
-
   const playInSeeds = [11, 12, 16];
 
   for (const region of ['East', 'West', 'South', 'Midwest']) {
@@ -37,7 +37,7 @@ export async function POST() {
 
       if (contenders.length === 2) {
         openingRoundGames.push({
-          round: 0,
+          round: 1,
           region,
           team1_id: contenders[0].id,
           team2_id: contenders[1].id,
@@ -47,13 +47,12 @@ export async function POST() {
     }
   }
 
-  // 3. Insert Opening Round games
   const { data: openingInsert, error: openingError } = await supabase
     .from('tournament_games')
     .insert(
       openingRoundGames.map((g, idx) => ({
         game_number: idx + 1,
-        round: 0,
+        round: 1,
         region: g.region,
         team1_id: g.team1_id,
         team2_id: g.team2_id,
@@ -66,7 +65,9 @@ export async function POST() {
     return NextResponse.json({ error: openingError.message }, { status: 400 });
   }
 
-  // 4. Build Round of 64 (round = 1)
+  // -----------------------------
+  // 3️⃣ Build Round of 64 (round = 2)
+  // -----------------------------
   const round64Games = [];
 
   for (const region of ['East', 'West', 'South', 'Midwest']) {
@@ -88,7 +89,7 @@ export async function POST() {
       const t2 = regionTeams.find((t) => t.seed === seed2);
 
       round64Games.push({
-        round: 1,
+        round: 2,
         region,
         team1_id: t1?.id ?? null,
         team2_id: t2?.id ?? null,
@@ -102,7 +103,7 @@ export async function POST() {
     .insert(
       round64Games.map((g, idx) => ({
         game_number: 100 + idx,
-        round: 1,
+        round: 2,
         region: g.region,
         team1_id: g.team1_id,
         team2_id: g.team2_id,

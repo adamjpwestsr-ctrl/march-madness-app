@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabaseServer';
 
 export async function POST(req: Request) {
-  const supabase = await createClient(); // IMPORTANT: await the async client
+  const supabase = await createClient();
   const body = await req.json();
 
   const { game_id, winner_team } = body;
@@ -15,46 +15,54 @@ export async function POST(req: Request) {
     );
   }
 
-  // 1. Update winner
+  // 1️⃣ Update winner + completed flag
   const { error: updateError } = await supabase
     .from('tournament_games')
-    .update({ winner: winner_team, completed: true })
+    .update({
+      winner: winner_team,
+      completed: true,
+    })
     .eq('id', game_id);
 
   if (updateError) {
     return NextResponse.json({ error: updateError.message }, { status: 400 });
   }
 
-  // 2. Fetch game to find next slot
+  // 2️⃣ Fetch game to determine next slot
   const { data: game } = await supabase
     .from('tournament_games')
     .select('*')
     .eq('id', game_id)
     .single();
 
-  if (game?.winner_to_game_id) {
-    const nextGameId = game.winner_to_game_id;
+  if (!game || !game.winner_to_game_id) {
+    return NextResponse.json({ success: true });
+  }
 
-    // Determine if winner goes into team1 or team2
-    const { data: nextGame } = await supabase
+  const nextGameId = game.winner_to_game_id;
+
+  // 3️⃣ Fetch next game
+  const { data: nextGame } = await supabase
+    .from('tournament_games')
+    .select('*')
+    .eq('id', nextGameId)
+    .single();
+
+  if (!nextGame) {
+    return NextResponse.json({ success: true });
+  }
+
+  // 4️⃣ Determine placement (team1 or team2)
+  const updateField =
+    nextGame.team1 === null ? 'team1' :
+    nextGame.team2 === null ? 'team2' :
+    null;
+
+  if (updateField) {
+    await supabase
       .from('tournament_games')
-      .select('*')
-      .eq('id', nextGameId)
-      .single();
-
-    const updateField =
-      nextGame.team1_id === null
-        ? 'team1'
-        : nextGame.team2_id === null
-        ? 'team2'
-        : null;
-
-    if (updateField) {
-      await supabase
-        .from('tournament_games')
-        .update({ [updateField]: winner_team })
-        .eq('id', nextGameId);
-    }
+      .update({ [updateField]: winner_team })
+      .eq('id', nextGameId);
   }
 
   return NextResponse.json({ success: true });

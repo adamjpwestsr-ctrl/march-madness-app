@@ -3,11 +3,18 @@
 import { useEffect, useState } from 'react';
 
 export default function BracketPage({ params }: { params: { bracket_id: string } }) {
+  console.log("✅ PARAMS RECEIVED:", params);
+
   const bracketId = params.bracket_id;
   const [data, setData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!bracketId) {
+      setError("No bracket_id found in params");
+      return;
+    }
+
     async function load() {
       try {
         const res = await fetch(`/api/march-madness/brackets/${bracketId}`, { cache: 'no-store' });
@@ -18,6 +25,7 @@ export default function BracketPage({ params }: { params: { bracket_id: string }
         setError(err.message);
       }
     }
+
     load();
   }, [bracketId]);
 

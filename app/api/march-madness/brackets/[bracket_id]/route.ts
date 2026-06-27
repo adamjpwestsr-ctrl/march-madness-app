@@ -77,7 +77,7 @@ export async function GET(
   // LIVE SUMMARY (placeholder)
   // ESPN integration will populate this
   // -----------------------------
-  const liveSummary = []; // TODO: ESPN API integration
+const liveSummary: LiveGameSummary[] = []; // TODO: ESPN API integration
 
   // -----------------------------
   // RETURN FULL PAYLOAD

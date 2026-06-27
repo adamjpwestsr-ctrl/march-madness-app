@@ -1,7 +1,11 @@
 // app/api/march-madness/brackets/[bracket_id]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabaseServer';
-import { TournamentGame, TournamentTeam } from '@/lib/marchMadnessTypes';
+import {
+  TournamentGame,
+  TournamentTeam,
+  LiveGameSummary,   // ✅ Added import
+} from '@/lib/marchMadnessTypes';
 
 console.log("🔥 API HIT: /api/march-madness/brackets/[bracket_id]");
 
@@ -75,9 +79,8 @@ export async function GET(
 
   // -----------------------------
   // LIVE SUMMARY (placeholder)
-  // ESPN integration will populate this
   // -----------------------------
-const liveSummary: LiveGameSummary[] = []; // TODO: ESPN API integration
+  const liveSummary: LiveGameSummary[] = []; // TODO: ESPN API integration
 
   // -----------------------------
   // RETURN FULL PAYLOAD

@@ -1,55 +1,68 @@
-// app/(app)/sports/march-madness/brackets/[bracket_id]/edit/page.tsx
-
 'use client';
 
 import { useEffect, useState } from 'react';
 import { InteractiveBracketEditor } from '@/components/march-madness/InteractiveBracketEditor';
 import { TournamentGame, TournamentTeam } from '@/lib/marchMadnessTypes';
 
-export default function EditBracketPage({ params }: any) {
-  const bracketId = params.bracket_id;
-
+export default function EditBracketPage({ params }: { params: { bracket_id?: string } }) {
+  const [bracketId, setBracketId] = useState<string | null>(null);
   const [games, setGames] = useState<TournamentGame[]>([]);
   const [teams, setTeams] = useState<TournamentTeam[]>([]);
   const [picks, setPicks] = useState<Record<number, string>>({});
   const [tiebreaker, setTiebreaker] = useState<number>(0);
   const [isLocked, setIsLocked] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    async function resolveParams() {
+      try {
+        const resolved = await Promise.resolve(params);
+        const id = resolved?.bracket_id;
+        if (!id) throw new Error('No bracket_id found in params');
+        setBracketId(id);
+      } catch (err: any) {
+        setError(err.message);
+      }
+    }
+    resolveParams();
+  }, [params]);
+
+  useEffect(() => {
+    if (!bracketId) return;
+
     async function load() {
-      setLoading(true);
+      try {
+        setLoading(true);
+        const res = await fetch(`/api/march-madness/brackets/${bracketId}`, { cache: 'no-store' });
+        if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
+        const data = await res.json();
 
-      const res = await fetch(`/api/march-madness/brackets/${bracketId}`, {
-        cache: 'no-store',
-      });
+        const allGames = [
+          ...data.openingRoundGames,
+          ...Object.values(data.regionalGames).flat(),
+        ];
 
-      const data = await res.json();
+        setGames(allGames);
+        setTeams(data.teams);
 
-      const allGames = [
-        ...data.openingRoundGames,
-        ...Object.values(data.regionalGames).flat(),
-      ];
+        const pickMap: Record<number, string> = {};
+        data.picks.forEach((p: any) => {
+          pickMap[p.game_id] = p.selected_team;
+        });
+        setPicks(pickMap);
 
-      setGames(allGames);
-      setTeams(data.teams);
-
-      const pickMap: Record<number, string> = {};
-      data.picks.forEach((p: any) => {
-        pickMap[p.game_id] = p.selected_team;
-      });
-      setPicks(pickMap);
-
-      setTiebreaker(data.bracket.tiebreaker_score ?? 0);
-
-      setLoading(false);
+        setTiebreaker(data.bracket.tiebreaker_score ?? 0);
+        setLoading(false);
+      } catch (err: any) {
+        setError(err.message);
+      }
     }
 
     load();
   }, [bracketId]);
 
   async function handleSubmit(picks: Record<number, string>, tiebreaker: number) {
-    // Save picks
     await fetch(`/api/march-madness/brackets/${bracketId}/picks`, {
       method: 'POST',
       body: JSON.stringify({
@@ -60,7 +73,6 @@ export default function EditBracketPage({ params }: any) {
       }),
     });
 
-    // Submit bracket
     await fetch(`/api/march-madness/brackets/${bracketId}/submit`, {
       method: 'POST',
       body: JSON.stringify({ tiebreaker_score: tiebreaker }),
@@ -69,6 +81,7 @@ export default function EditBracketPage({ params }: any) {
     window.location.href = `/sports/march-madness/brackets/${bracketId}`;
   }
 
+  if (error) return <div className="p-6 text-red-500">Error: {error}</div>;
   if (loading) return <div className="p-6">Loading bracket…</div>;
 
   return (
@@ -76,7 +89,7 @@ export default function EditBracketPage({ params }: any) {
       <h1 className="text-3xl font-bold">Edit Bracket</h1>
 
       <InteractiveBracketEditor
-        bracketId={bracketId}
+        bracketId={bracketId!}
         games={games}
         teams={teams}
         initialPicks={picks}

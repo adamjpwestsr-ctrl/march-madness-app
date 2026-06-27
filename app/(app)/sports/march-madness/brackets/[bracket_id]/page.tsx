@@ -1,82 +1,38 @@
 // app/(app)/sports/march-madness/brackets/[bracket_id]/page.tsx
-import { ReadOnlyBracket } from '@/components/march-madness/ReadOnlyBracket';
-import { headers } from 'next/headers';
 
-export default async function BracketViewPage({
-  params,
-}: {
-  params: { bracket_id?: string };
-}) {
+'use client';
 
-  console.log("BracketViewPage params:", params);
+import { useEffect, useState } from 'react';
 
-  const bracketId =
-    params?.bracket_id && params.bracket_id !== 'undefined'
-      ? params.bracket_id
-      : null;
+export default function BracketPage({ params }: { params: { bracket_id: string } }) {
+  const bracketId = params.bracket_id;
+  const [data, setData] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  if (!bracketId) {
-    return (
-      <div className="p-6 text-center text-red-500">
-        Invalid bracket ID — please return to the leaderboard.
-      </div>
-    );
-  }
-
-  // ✅ FIX: headers() must be awaited in Next.js 16
-  const h = await headers();
-  const host = h.get('host');
-
-  const baseUrl =
-    process.env.NEXT_PUBLIC_SITE_URL ??
-    `https://${host}`;
-
-  const res = await fetch(
-    `${baseUrl}/api/march-madness/brackets/${bracketId}`,
-    {
-      cache: 'no-store',
+  useEffect(() => {
+    async function load() {
+      try {
+        const res = await fetch(`/api/march-madness/brackets/${bracketId}`, { cache: 'no-store' });
+        if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
+        const json = await res.json();
+        setData(json);
+      } catch (err: any) {
+        setError(err.message);
+      }
     }
-  );
+    load();
+  }, [bracketId]);
 
-  if (!res.ok) {
-    return (
-      <div className="p-6 text-center text-red-500">
-        {res.status === 404
-          ? 'Bracket not found — please return to the leaderboard.'
-          : 'Failed to load bracket data. Please try again later.'}
-      </div>
-    );
-  }
-
-  const data = await res.json();
-
-  if (!data?.bracket) {
-    return (
-      <div className="p-6 text-center text-red-500">
-        Bracket not found — please return to the leaderboard.
-      </div>
-    );
-  }
+  if (error) return <div className="p-6 text-red-500">Error: {error}</div>;
+  if (!data) return <div className="p-6">Loading bracket data…</div>;
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">{data.bracket.bracket_name}</h1>
-
-        <a
-          href={`/sports/march-madness/brackets/${bracketId}/edit`}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-        >
-          Edit Bracket
-        </a>
-      </div>
-
-      <ReadOnlyBracket
-        games={[
-          ...data.openingRoundGames,
-          ...Object.values(data.regionalGames).flat(),
-        ]}
-      />
+    <div className="p-6 space-y-4">
+      <h1 className="text-3xl font-bold">Bracket Loaded ✅</h1>
+      <p>Bracket ID: {bracketId}</p>
+      <pre className="bg-gray-900 text-gray-100 p-4 rounded">
+        {JSON.stringify(data.bracket, null, 2)}
+      </pre>
     </div>
   );
 }

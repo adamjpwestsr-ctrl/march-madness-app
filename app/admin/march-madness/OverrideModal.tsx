@@ -2,13 +2,19 @@
 
 import { useEffect, useState } from 'react';
 
-export default function OverrideModal({ open, onClose, onLog }) {
-  const [games, setGames] = useState([]);
-  const [selectedGame, setSelectedGame] = useState(null);
+interface OverrideModalProps {
+  open: boolean;
+  onClose: () => void;
+  onLog: (msg: string) => void;
+}
+
+export default function OverrideModal({ open, onClose, onLog }: OverrideModalProps) {
+  const [games, setGames] = useState<any[]>([]);
+  const [selectedGame, setSelectedGame] = useState<any | null>(null);
   const [winner, setWinner] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Load all games when modal opens
+  // Load games when modal opens
   useEffect(() => {
     if (!open) return;
 
@@ -43,7 +49,6 @@ export default function OverrideModal({ open, onClose, onLog }) {
       });
 
       const json = await res.json();
-
       onLog(`✅ Override complete: ${JSON.stringify(json)}`);
       onClose();
     } catch (err) {

@@ -2,18 +2,31 @@
 
 import { useEffect, useState } from 'react';
 
-export default function BracketPage({ params }: { params: { bracket_id: string } }) {
-  console.log("✅ PARAMS RECEIVED:", params);
-
-  const bracketId = params.bracket_id;
+export default function BracketPage({ params }: { params: any }) {
+  const [bracketId, setBracketId] = useState<string | null>(null);
   const [data, setData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!bracketId) {
-      setError("No bracket_id found in params");
-      return;
+    async function resolveParams() {
+      try {
+        // Handle both Promise and plain object cases
+        const resolved = await Promise.resolve(params);
+        console.log('✅ PARAMS RESOLVED:', resolved);
+
+        const id = resolved?.bracket_id;
+        if (!id) throw new Error('No bracket_id found in resolved params');
+        setBracketId(id);
+      } catch (err: any) {
+        setError(err.message);
+      }
     }
+
+    resolveParams();
+  }, [params]);
+
+  useEffect(() => {
+    if (!bracketId) return;
 
     async function load() {
       try {

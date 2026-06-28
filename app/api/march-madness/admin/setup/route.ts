@@ -30,10 +30,10 @@ export async function POST() {
   const playInSeeds = [11, 12, 16];
 
   for (const region of ['East', 'West', 'South', 'Midwest']) {
-    const regionTeams = Array.isArray(teams) ? teams.filter((t) => t.region === region);
+    const regionTeams = teams.filter((t) => t.region === region);
 
     for (const seed of playInSeeds) {
-      const contenders = Array.isArray(regionTeams) ? regionTeams.filter((t) => t.seed === seed);
+      const contenders = regionTeams.filter((t) => t.seed === seed);
 
       if (contenders.length === 2) {
         openingRoundGames.push({
@@ -71,7 +71,7 @@ export async function POST() {
   const round64Games = [];
 
   for (const region of ['East', 'West', 'South', 'Midwest']) {
-    const regionTeams = Array.isArray(teams) ? teams.filter((t) => t.region === region);
+    const regionTeams = teams.filter((t) => t.region === region);
 
     const seedPairs = [
       [1, 16],
@@ -122,4 +122,3 @@ export async function POST() {
     teamsSeeded: teams.length,
   });
 }
-

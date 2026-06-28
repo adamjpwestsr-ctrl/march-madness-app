@@ -3,13 +3,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabaseServer';
 import { TournamentGame } from '@/lib/marchMadnessTypes';
 
-/**
- * Scoring engine:
- * - Calculates points for each bracket based on correct picks.
- * - Updates leaderboard totals.
- * - Supports upset bonuses and tiebreaker proximity.
- * - Designed for 76‑team March Madness format.
- */
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
 
@@ -36,13 +29,13 @@ export async function POST(request: NextRequest) {
 
     // 3️⃣ Scoring rules
     const roundPoints: Record<number, number> = {
-      1: 1, // Opening Round
-      2: 2, // Round of 64
-      3: 4, // Round of 32
-      4: 8, // Sweet 16
-      5: 16, // Elite 8
-      6: 32, // Final Four
-      7: 64, // Championship
+      1: 1,
+      2: 2,
+      3: 4,
+      4: 8,
+      5: 16,
+      6: 32,
+      7: 64,
     };
 
     // 4️⃣ Compute scores per bracket
@@ -54,7 +47,8 @@ export async function POST(request: NextRequest) {
     }[] = [];
 
     for (const bracket of brackets) {
-      const bracketPicks = Array.isArray(picks) ? picks.filter((p) => p.bracket_id === bracket.bracket_id);
+      const bracketPicks = picks.filter((p) => p.bracket_id === bracket.bracket_id);
+
       let earned = 0;
       let possible = 0;
 
@@ -68,10 +62,12 @@ export async function POST(request: NextRequest) {
         if (pick.selected_team === game.winner) {
           earned += points;
 
-          // Optional upset bonus: +1 if winner seed ≥ 9
           const winningSeed =
             game.team1 === game.winner ? game.seed1 : game.seed2;
-          if (winningSeed && winningSeed >= 9) earned += 1;
+
+          if (winningSeed && winningSeed >= 9) {
+            earned += 1;
+          }
         }
       }
 
@@ -79,11 +75,11 @@ export async function POST(request: NextRequest) {
         bracket_id: bracket.bracket_id,
         earned_points: earned,
         possible_points: possible,
-        max_possible_score: possible, // placeholder until future logic
+        max_possible_score: possible,
       });
     }
 
-    // 5️⃣ Update leaderboard table
+    // 5️⃣ Update leaderboard
     const { error: updateError } = await supabase
       .from('leaderboard')
       .upsert(leaderboardUpdates, { onConflict: 'bracket_id' });
@@ -101,4 +97,3 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to calculate scores' }, { status: 500 });
   }
 }
-

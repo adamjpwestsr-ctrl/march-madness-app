@@ -14,7 +14,14 @@ export async function POST(
 
   const supabase = await createClient();
   const bracketId = params.bracket_id;
-if (!bracketId) { return NextResponse.json(@{ error = 'Missing bracket_id' }, @{ status = 400 }); }
+
+  // FIXED VALIDATION BLOCK
+  if (!bracketId) {
+    return NextResponse.json(
+      { error: "Missing bracket_id" },
+      { status: 400 }
+    );
+  }
 
   const body = await request.json();
   const picks = body.picks as { game_id: number; selected_team: string }[];

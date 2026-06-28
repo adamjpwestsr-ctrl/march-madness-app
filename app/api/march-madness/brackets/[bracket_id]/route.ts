@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabaseServer';
 import {
   TournamentGame,
   TournamentTeam,
-  LiveGameSummary,   // ✅ Added import
+  LiveGameSummary,
 } from '@/lib/marchMadnessTypes';
 
 console.log("🔥 API HIT: /api/march-madness/brackets/[bracket_id]");
@@ -21,7 +21,14 @@ export async function GET(
 
   const supabase = await createClient();
   const bracketId = params.bracket_id;
-if (!bracketId) { return NextResponse.json(@{ error = 'Missing bracket_id' }, @{ status = 400 }); }
+
+  // FIXED VALIDATION BLOCK
+  if (!bracketId) {
+    return NextResponse.json(
+      { error: "Missing bracket_id" },
+      { status: 400 }
+    );
+  }
 
   // -----------------------------
   // FETCH BRACKET

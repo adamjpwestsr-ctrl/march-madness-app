@@ -58,12 +58,12 @@ export async function POST() {
     const homeScore = Number(home.score ?? 0);
     const awayScore = Number(away.score ?? 0);
 
-    const winner =
-      status === 'post'
-        ? homeScore > awayScore
-          ? homeTeam
-          : awayTeam
-        : null;
+const winner =
+  status === 'post'
+    ? (homeScore ?? 0) > (awayScore ?? 0)
+      ? homeTeam
+      : awayTeam
+    : null;
 
     // -----------------------------
     // 4️⃣ MATCH LOCAL GAME BY ESPN GAME ID

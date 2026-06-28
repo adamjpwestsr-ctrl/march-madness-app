@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
     }[] = [];
 
     for (const bracket of brackets) {
-      const bracketPicks = Array.isArray(picks) ? Array.isArray(picks) ? picks.filter((p) => p.bracket_id === bracket.bracket_id);
+      const bracketPicks = Array.isArray(picks) ? picks.filter((p) => p.bracket_id === bracket.bracket_id);
       let earned = 0;
       let possible = 0;
 

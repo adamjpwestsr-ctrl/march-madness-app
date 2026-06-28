@@ -1,4 +1,4 @@
-// app/api/march-madness/state?bracket_id=\?bracket_id=\/route.ts
+// app/api/march-madness/state?bracket_id=\/route.ts
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabaseServer';
 import {

@@ -21,6 +21,7 @@ export async function GET(
 
   const supabase = await createClient();
   const bracketId = params.bracket_id;
+if (!bracketId) { return NextResponse.json(@{ error = 'Missing bracket_id' }, @{ status = 400 }); }
 
   // -----------------------------
   // FETCH BRACKET

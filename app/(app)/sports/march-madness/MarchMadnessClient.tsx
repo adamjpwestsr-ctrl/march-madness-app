@@ -1,4 +1,3 @@
-// app/(app)/sports/march-madness/MarchMadnessClient.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -21,26 +20,63 @@ export function MarchMadnessClient() {
   const [loading, setLoading] = useState(true);
   const [showUnpaid, setShowUnpaid] = useState(false);
 
+  // -----------------------------
+  // LOAD GLOBAL STATE
+  // -----------------------------
   useEffect(() => {
     (async () => {
-      setLoading(true);
-      const res = await fetch('/api/march-madness/state', { cache: 'no-store' });
-      const json = await res.json();
-      setState(json);
-	console.log("STATE BRACKETS:", json.brackets);
-      setLoading(false);
+      try {
+        setLoading(true);
+
+        const res = await fetch('/api/march-madness/state?all=true', {
+          cache: 'no-store',
+        });
+
+        if (!res.ok) {
+          console.error('STATE FETCH FAILED:', await res.text());
+          setLoading(false);
+          return;
+        }
+
+        const json = await res.json();
+        setState(json);
+
+        console.log('STATE BRACKETS:', json.brackets);
+      } catch (err) {
+        console.error('STATE ERROR:', err);
+      } finally {
+        setLoading(false);
+      }
     })();
   }, []);
 
+  // -----------------------------
+  // LOAD LEADERBOARD + LIVE SCORES
+  // -----------------------------
   useEffect(() => {
     const load = async () => {
-      const [lbRes, liveRes] = await Promise.all([
-        fetch('/api/march-madness/leaderboard', { cache: 'no-store' }),
-        fetch('/api/march-madness/live', { cache: 'no-store' }),
-      ]);
+      try {
+        const [stateRes, liveRes] = await Promise.all([
+          fetch('/api/march-madness/state?all=true', { cache: 'no-store' }),
+          fetch('/api/march-madness/live', { cache: 'no-store' }),
+        ]);
 
-      setLeaderboard(await lbRes.json());
-      setLive(await liveRes.json());
+        if (stateRes.ok) {
+          const stateJson = await stateRes.json();
+          setLeaderboard(stateJson.leaderboard ?? []);
+        } else {
+          console.error('LEADERBOARD FETCH FAILED:', await stateRes.text());
+        }
+
+        if (liveRes.ok) {
+          const liveJson = await liveRes.json();
+          setLive(liveJson ?? []);
+        } else {
+          console.error('LIVE FETCH FAILED:', await liveRes.text());
+        }
+      } catch (err) {
+        console.error('LIVE/LEADERBOARD ERROR:', err);
+      }
     };
 
     load();
@@ -48,14 +84,23 @@ export function MarchMadnessClient() {
     return () => clearInterval(interval);
   }, []);
 
+  // -----------------------------
+  // LOADING STATE
+  // -----------------------------
   if (loading || !state) {
     return <div className="p-6">Loading March Madness…</div>;
   }
 
+  // -----------------------------
+  // FILTER LEADERBOARD
+  // -----------------------------
   const visibleLeaderboard = showUnpaid
     ? leaderboard
     : leaderboard.filter((row) => row.has_paid);
 
+  // -----------------------------
+  // RENDER UI
+  // -----------------------------
   return (
     <div className="space-y-8">
       {/* Live ticker */}

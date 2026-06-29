@@ -5,6 +5,8 @@ import {
   MarchMadnessState,
   LeaderboardRow,
   LiveGameSummary,
+  TournamentGame,
+  Bracket,
 } from '@/lib/marchMadnessTypes';
 
 import { OpeningRoundPanel } from '@/components/march-madness/OpeningRoundPanel';
@@ -14,61 +16,54 @@ import { LeaderboardPreview } from '@/components/march-madness/LeaderboardPrevie
 import { BracketList } from '@/components/march-madness/BracketList';
 
 // ------------------------------------------------------
-// EXPANDABLE REGION CARDS
+// REGION MODAL OVERLAY
 // ------------------------------------------------------
-function ExpandableRegions({
-  regionalGames,
+function RegionModal({
+  region,
+  games,
+  picks,
+  onPick,
+  onSave,
+  onClose,
 }: {
-  regionalGames: Record<string, any[]>;
+  region: string;
+  games: TournamentGame[];
+  picks: Record<number, string>;
+  onPick: (gameId: number, winner: string) => void;
+  onSave: () => void;
+  onClose: () => void;
 }) {
-  const [expandedRegion, setExpandedRegion] = useState<string | null>(null);
-
-  const toggleRegion = (region: string) => {
-    setExpandedRegion(expandedRegion === region ? null : region);
-  };
-
-  const regionOrder = ['East', 'West', 'South', 'Midwest'];
-
   return (
-    <section className="space-y-6">
-      {regionOrder.map((region) => {
-        const games = regionalGames[region] ?? [];
-        if (!games.length) return null;
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="relative w-full max-w-6xl bg-slate-900 rounded-xl p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
 
-        const isExpanded = expandedRegion === region;
+        {/* Close */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-white/70 hover:text-white text-sm font-semibold"
+        >
+          ✕ Close
+        </button>
 
-        return (
-          <div
-            key={region}
-            className="rounded-xl bg-white/10 backdrop-blur-xl shadow-xl border border-white/20 overflow-hidden transition-all"
-          >
-            {/* Header */}
-            <button
-              onClick={() => toggleRegion(region)}
-              className="w-full flex justify-between items-center px-6 py-4 text-lg font-bold uppercase tracking-wide text-white/90 hover:bg-white/20 transition"
-            >
-              <span>{region}</span>
-              <span className="text-sm opacity-70">
-                {isExpanded ? 'Collapse' : 'Expand'}
-              </span>
-            </button>
+        {/* Save Picks */}
+        <button
+          onClick={onSave}
+          className="absolute top-4 right-24 px-3 py-1 rounded-md bg-green-600/40 border border-green-400 text-xs text-white/90 hover:bg-green-600/60 transition"
+        >
+          Save Picks
+        </button>
 
-            {/* Collapsible Content */}
-            <div
-              className={`transition-[max-height] duration-500 ease-in-out ${
-                isExpanded ? 'max-h-[2000px]' : 'max-h-0'
-              } overflow-hidden`}
-            >
-              {isExpanded && (
-                <div className="p-6">
-                  <RegionBracketPanel region={region} games={games} />
-                </div>
-              )}
-            </div>
-          </div>
-        );
-      })}
-    </section>
+        <h2 className="text-2xl font-bold mb-4 text-center uppercase tracking-wide">
+          {region} Region
+        </h2>
+
+        <RegionBracketPanel
+          region={region}
+          games={games}
+          onPick={onPick}
+        />
+      </div>
+    </div>
   );
 }
 
@@ -81,6 +76,14 @@ export function MarchMadnessClient() {
   const [live, setLive] = useState<LiveGameSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [showUnpaid, setShowUnpaid] = useState(false);
+
+  const [activeRegion, setActiveRegion] = useState<string | null>(null);
+
+  // ⭐ The bracket the user is editing
+  const [activeBracketId, setActiveBracketId] = useState<string | null>(null);
+
+  // ⭐ Local pick state: gameId → winner
+  const [picks, setPicks] = useState<Record<number, string>>({});
 
   // -----------------------------
   // LOAD GLOBAL STATE
@@ -160,6 +163,54 @@ export function MarchMadnessClient() {
     ? leaderboard
     : leaderboard.filter((row) => row.has_paid);
 
+  const regionOrder = ['East', 'West', 'South', 'Midwest'];
+
+  // -----------------------------
+  // PICK HANDLERS
+  // -----------------------------
+  const handlePick = (gameId: number, winner: string) => {
+    setPicks((prev) => ({
+      ...prev,
+      [gameId]: winner,
+    }));
+  };
+
+  const handleSave = async () => {
+    if (!activeBracketId) {
+      console.error('No active bracket selected');
+      return;
+    }
+
+    const formattedPicks = Object.entries(picks).map(([gameId, winner]) => ({
+      game_id: Number(gameId),
+      selected_team: winner,
+    }));
+
+    try {
+      const res = await fetch(
+        `/api/march-madness/brackets/${activeBracketId}/picks`,
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            picks: formattedPicks,
+            tiebreaker_score: null,
+          }),
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+
+      if (!res.ok) {
+        console.error('SAVE PICKS FAILED:', await res.text());
+        return;
+      }
+
+      console.log('Picks saved!');
+      setActiveRegion(null);
+    } catch (err) {
+      console.error('SAVE PICKS ERROR:', err);
+    }
+  };
+
   // -----------------------------
   // RENDER UI
   // -----------------------------
@@ -175,14 +226,65 @@ export function MarchMadnessClient() {
         <OpeningRoundPanel games={state.openingRoundGames} live={live} />
       </section>
 
-      {/* Expandable Regions */}
-      <ExpandableRegions regionalGames={state.regionalGames} />
-
-      {/* Your brackets */}
+      {/* Your brackets (user must select one first) */}
       <section className="space-y-4">
         <h2 className="text-2xl font-bold">Your Brackets</h2>
-        <BracketList brackets={state.brackets} />
+
+        <BracketList
+          brackets={state.brackets}
+          onSelectBracket={(bracketId: string) => {
+            setActiveBracketId(bracketId);
+            setPicks({});
+          }}
+        />
       </section>
+
+      {/* Regions */}
+      <section className="space-y-4">
+        <h2 className="text-2xl font-bold text-center">Regions</h2>
+
+        {!activeBracketId && (
+          <p className="text-center text-red-400 font-semibold">
+            Select a bracket above before making picks.
+          </p>
+        )}
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {regionOrder.map((region) => {
+            const games = state.regionalGames[region] ?? [];
+            if (!games.length) return null;
+
+            return (
+              <button
+                key={region}
+                disabled={!activeBracketId}
+                onClick={() => setActiveRegion(region)}
+                className={`rounded-xl p-4 text-center font-bold uppercase tracking-wide transition
+                  ${
+                    activeBracketId
+                      ? 'bg-white/10 border border-white/20 text-white/90 hover:bg-white/20'
+                      : 'bg-gray-700/40 border border-gray-600 text-gray-500 cursor-not-allowed'
+                  }
+                `}
+              >
+                {region}
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* Region modal overlay */}
+      {activeRegion && activeBracketId && (
+        <RegionModal
+          region={activeRegion}
+          games={state.regionalGames[activeRegion] ?? []}
+          picks={picks}
+          onPick={handlePick}
+          onSave={handleSave}
+          onClose={() => setActiveRegion(null)}
+        />
+      )}
 
       {/* Leaderboard preview */}
       <section className="space-y-4">

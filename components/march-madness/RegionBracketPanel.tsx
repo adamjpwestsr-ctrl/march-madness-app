@@ -5,9 +5,11 @@ import { TournamentGame } from '@/lib/marchMadnessTypes';
 export function RegionBracketPanel({
   region,
   games,
+  onPick,
 }: {
   region: string;
   games: TournamentGame[];
+  onPick?: (gameId: number, winner: string) => void;
 }) {
   // Group games by round
   const rounds: Record<number, TournamentGame[]> = {};
@@ -20,6 +22,11 @@ export function RegionBracketPanel({
   const roundOrder = Object.keys(rounds)
     .map(Number)
     .sort((a, b) => a - b);
+
+  const handlePick = (game: TournamentGame, winner: string) => {
+    if (!winner || winner === 'TBD') return;
+    if (onPick) onPick(game.id, winner);
+  };
 
   return (
     <div className="rounded-xl p-6 bg-white/10 backdrop-blur-xl shadow-xl space-y-8">
@@ -36,39 +43,57 @@ export function RegionBracketPanel({
               {roundLabel(round)}
             </h3>
 
-            {rounds[round].map((g) => (
-              <div
-                key={g.id}
-                className="p-3 rounded-lg bg-white/5 border border-white/10 hover:bg-white/20 transition-all"
-              >
-                {/* Team 1 */}
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-sm opacity-70">
-                    {g.seed1 ? `#${g.seed1}` : ''}
-                  </span>
-                  <span className="font-semibold">
-                    {g.team1 ?? 'TBD'}
-                  </span>
-                </div>
+            {rounds[round].map((g) => {
+              const winner = g.winner;
 
-                {/* Team 2 */}
-                <div className="flex justify-between items-center">
-                  <span className="text-sm opacity-70">
-                    {g.seed2 ? `#${g.seed2}` : ''}
-                  </span>
-                  <span className="font-semibold">
-                    {g.team2 ?? 'TBD'}
-                  </span>
-                </div>
+              return (
+                <div
+                  key={g.id}
+                  className="p-3 rounded-lg bg-white/5 border border-white/10 transition-all"
+                >
+                  {/* Team 1 */}
+                  <button
+                    onClick={() => handlePick(g, g.team1 ?? '')}
+                    className={`flex justify-between items-center mb-1 w-full text-left px-2 py-1 rounded-md transition
+                      ${
+                        winner === g.team1
+                          ? 'bg-green-600/30 border border-green-400'
+                          : 'hover:bg-white/20'
+                      }
+                    `}
+                  >
+                    <span className="text-sm opacity-70">
+                      {g.seed1 ? `#${g.seed1}` : ''}
+                    </span>
+                    <span className="font-semibold">{g.team1 ?? 'TBD'}</span>
+                  </button>
 
-                {/* Winner */}
-                {g.winner && (
-                  <div className="mt-2 text-green-400 font-bold text-sm text-center">
-                    Winner: {g.winner}
-                  </div>
-                )}
-              </div>
-            ))}
+                  {/* Team 2 */}
+                  <button
+                    onClick={() => handlePick(g, g.team2 ?? '')}
+                    className={`flex justify-between items-center w-full text-left px-2 py-1 rounded-md transition
+                      ${
+                        winner === g.team2
+                          ? 'bg-green-600/30 border border-green-400'
+                          : 'hover:bg-white/20'
+                      }
+                    `}
+                  >
+                    <span className="text-sm opacity-70">
+                      {g.seed2 ? `#${g.seed2}` : ''}
+                    </span>
+                    <span className="font-semibold">{g.team2 ?? 'TBD'}</span>
+                  </button>
+
+                  {/* Winner */}
+                  {winner && (
+                    <div className="mt-2 text-green-400 font-bold text-sm text-center">
+                      Winner: {winner}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         ))}
       </div>

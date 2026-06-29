@@ -12,6 +12,9 @@ export function RegionBracketPanel({
   onPick?: (gameId: number, winner: string) => void;
 }) {
   // Group games by round
+
+const filteredGames = games.filter((g) => g.region === region);
+
   const rounds: Record<number, TournamentGame[]> = {};
   games.forEach((g) => {
     const r = g.round ?? 0;

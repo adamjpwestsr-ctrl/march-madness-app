@@ -35,7 +35,6 @@ function RegionModal({
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
       <div className="relative w-full max-w-6xl bg-slate-900 rounded-xl p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
 
-        {/* Close */}
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-white/70 hover:text-white text-sm font-semibold"
@@ -43,7 +42,6 @@ function RegionModal({
           ✕ Close
         </button>
 
-        {/* Save Picks */}
         <button
           onClick={onSave}
           className="absolute top-4 right-24 px-3 py-1 rounded-md bg-green-600/40 border border-green-400 text-xs text-white/90 hover:bg-green-600/60 transition"
@@ -83,16 +81,34 @@ export function MarchMadnessClient() {
     (async () => {
       try {
         setLoading(true);
+
         const res = await fetch('/api/march-madness/state?all=true', {
           cache: 'no-store',
         });
+
         if (!res.ok) {
           console.error('STATE FETCH FAILED:', await res.text());
           setLoading(false);
           return;
         }
+
         const json = await res.json();
-        setState(json);
+
+        // ⭐ FIX: Group games by region
+        const groupedByRegion: Record<string, TournamentGame[]> = {};
+        const allGames: TournamentGame[] = json.allGames ?? json.games ?? [];
+
+        allGames.forEach((game) => {
+          const regionKey = game.region ?? 'Unknown';
+          if (!groupedByRegion[regionKey]) groupedByRegion[regionKey] = [];
+          groupedByRegion[regionKey].push(game);
+        });
+
+        setState({
+          ...json,
+          regionalGames: groupedByRegion,
+        });
+
         setBrackets(json.brackets ?? []);
       } catch (err) {
         console.error('STATE ERROR:', err);
@@ -146,7 +162,9 @@ export function MarchMadnessClient() {
           tiebreaker_score: 120,
         }),
       });
+
       const json = await res.json();
+
       if (res.ok) {
         setBrackets((prev) => [...prev, json]);
         setActiveBracketId(json.bracket_id);
@@ -219,7 +237,6 @@ export function MarchMadnessClient() {
   // -----------------------------
   return (
     <div className="space-y-8">
-      {/* Live ticker */}
       <section>
         <LiveTicker />
       </section>

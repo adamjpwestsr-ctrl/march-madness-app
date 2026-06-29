@@ -1,4 +1,3 @@
-// app/api/march-madness/state?bracket_id=\/route.ts
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabaseServer';
 import {
@@ -60,24 +59,40 @@ export async function GET() {
   const openingRoundGames: TournamentGame[] =
     (gamesData ?? []).filter((g) => g.round === 1) as TournamentGame[];
 
-// Regional games = rounds 2+
-const regionalGamesByRegion: Record<string, TournamentGame[]> = {
-  East: [],
-  West: [],
-  South: [],
-  Midwest: [],
-};
+  // -----------------------------
+  // ✅ FIX: Group regional games by region
+  // -----------------------------
+  const regionalGamesByRegion: Record<string, TournamentGame[]> = {
+    East: [],
+    West: [],
+    South: [],
+    Midwest: [],
+  };
 
-(gamesData ?? [])
-  .filter((g) => (g.round ?? 0) >= 2)
-  .forEach((g) => {
-    // Normalize region
-    const region = g.region;
+  (gamesData ?? [])
+    .filter((g) => (g.round ?? 0) >= 2)
+    .forEach((g) => {
+      // Normalize region safely
+      const region =
+        g.region && typeof g.region === 'string'
+          ? g.region.trim()
+          : 'Unknown';
 
-    // Only push into valid regions
-    if (region && regionalGamesByRegion[region]) {
-      regionalGamesByRegion[region].push(g as TournamentGame);
-    }
+      // Push into valid region or fallback
+      if (regionalGamesByRegion[region]) {
+        regionalGamesByRegion[region].push(g as TournamentGame);
+      } else {
+        // Fallback: evenly distribute if region missing
+        const total = Object.keys(regionalGamesByRegion).length;
+        const index = (g.game_number ?? 0) % total;
+        const regionKey = Object.keys(regionalGamesByRegion)[index];
+        regionalGamesByRegion[regionKey].push(g as TournamentGame);
+      }
+    });
+
+  // Ensure all regions exist even if empty
+  ['East', 'West', 'South', 'Midwest'].forEach((r) => {
+    if (!regionalGamesByRegion[r]) regionalGamesByRegion[r] = [];
   });
 
   // -----------------------------
@@ -94,7 +109,7 @@ const regionalGamesByRegion: Record<string, TournamentGame[]> = {
   const teams: TournamentTeam[] = (teamsData ?? []) as TournamentTeam[];
 
   // -----------------------------
-  // 4️⃣ FETCH LEADERBOARD (new scoring engine)
+  // 4️⃣ FETCH LEADERBOARD
   // -----------------------------
   const { data: leaderboardData, error: leaderboardError } = await supabase
     .from('leaderboard')
@@ -112,12 +127,10 @@ const regionalGamesByRegion: Record<string, TournamentGame[]> = {
         'Unknown',
       icon:
         brackets.find((b) => b.bracket_id === row.bracket_id)?.icon ?? null,
-
       earned_points: Number(row.earned_points ?? 0),
       possible_points: Number(row.possible_points ?? 0),
       max_possible_score: Number(row.max_possible_score ?? 0),
       mulligans_used: Number(row.mulligans_used ?? 0),
-
       email: row.email ?? null,
       has_paid: row.has_paid ?? false,
       is_active: row.is_active ?? false,
@@ -137,7 +150,7 @@ const regionalGamesByRegion: Record<string, TournamentGame[]> = {
   const mulligans: MulliganSummary[] = (mulligansData ?? []) as MulliganSummary[];
 
   // -----------------------------
-  // 6️⃣ LIVE SUMMARY (ESPN pipeline will populate this)
+  // 6️⃣ LIVE SUMMARY (placeholder)
   // -----------------------------
   const liveSummary: LiveGameSummary[] = [];
 
@@ -165,4 +178,3 @@ const regionalGamesByRegion: Record<string, TournamentGame[]> = {
 
   return NextResponse.json(state);
 }
-

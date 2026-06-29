@@ -12,7 +12,6 @@ import { OpeningRoundPanel } from '@/components/march-madness/OpeningRoundPanel'
 import { RegionBracketPanel } from '@/components/march-madness/RegionBracketPanel';
 import { LiveTicker } from '@/components/march-madness/LiveTicker';
 import { LeaderboardPreview } from '@/components/march-madness/LeaderboardPreview';
-import { BracketList } from '@/components/march-madness/BracketList';
 
 // ------------------------------------------------------
 // REGION MODAL OVERLAY
@@ -56,11 +55,7 @@ function RegionModal({
           {region} Region
         </h2>
 
-        <RegionBracketPanel
-          region={region}
-          games={games}
-          onPick={onPick}
-        />
+        <RegionBracketPanel region={region} games={games} onPick={onPick} />
       </div>
     </div>
   );
@@ -77,12 +72,9 @@ export function MarchMadnessClient() {
   const [showUnpaid, setShowUnpaid] = useState(false);
 
   const [activeRegion, setActiveRegion] = useState<string | null>(null);
-
-  // ⭐ The bracket the user is editing
   const [activeBracketId, setActiveBracketId] = useState<string | null>(null);
-
-  // ⭐ Local pick state: gameId → winner
   const [picks, setPicks] = useState<Record<number, string>>({});
+  const [brackets, setBrackets] = useState<any[]>([]);
 
   // -----------------------------
   // LOAD GLOBAL STATE
@@ -91,21 +83,17 @@ export function MarchMadnessClient() {
     (async () => {
       try {
         setLoading(true);
-
         const res = await fetch('/api/march-madness/state?all=true', {
           cache: 'no-store',
         });
-
         if (!res.ok) {
           console.error('STATE FETCH FAILED:', await res.text());
           setLoading(false);
           return;
         }
-
         const json = await res.json();
         setState(json);
-
-        console.log('STATE BRACKETS:', json.brackets);
+        setBrackets(json.brackets ?? []);
       } catch (err) {
         console.error('STATE ERROR:', err);
       } finally {
@@ -128,15 +116,11 @@ export function MarchMadnessClient() {
         if (stateRes.ok) {
           const stateJson = await stateRes.json();
           setLeaderboard(stateJson.leaderboard ?? []);
-        } else {
-          console.error('LEADERBOARD FETCH FAILED:', await stateRes.text());
         }
 
         if (liveRes.ok) {
           const liveJson = await liveRes.json();
           setLive(liveJson ?? []);
-        } else {
-          console.error('LIVE FETCH FAILED:', await liveRes.text());
         }
       } catch (err) {
         console.error('LIVE/LEADERBOARD ERROR:', err);
@@ -149,29 +133,36 @@ export function MarchMadnessClient() {
   }, []);
 
   // -----------------------------
-  // LOADING STATE
+  // BRACKET CREATION
   // -----------------------------
-  if (loading || !state) {
-    return <div className="p-6">Loading March Madness…</div>;
-  }
-
-  // -----------------------------
-  // FILTER LEADERBOARD
-  // -----------------------------
-  const visibleLeaderboard = showUnpaid
-    ? leaderboard
-    : leaderboard.filter((row) => row.has_paid);
-
-  const regionOrder = ['East', 'West', 'South', 'Midwest'];
+  const handleCreateBracket = async () => {
+    try {
+      const res = await fetch('/api/march-madness/bracket-list', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bracket_name: 'My Bracket',
+          icon: '🏀',
+          tiebreaker_score: 120,
+        }),
+      });
+      const json = await res.json();
+      if (res.ok) {
+        setBrackets((prev) => [...prev, json]);
+        setActiveBracketId(json.bracket_id);
+      } else {
+        console.error('CREATE BRACKET ERROR:', json.error);
+      }
+    } catch (err) {
+      console.error('CREATE BRACKET FAILED:', err);
+    }
+  };
 
   // -----------------------------
   // PICK HANDLERS
   // -----------------------------
   const handlePick = (gameId: number, winner: string) => {
-    setPicks((prev) => ({
-      ...prev,
-      [gameId]: winner,
-    }));
+    setPicks((prev) => ({ ...prev, [gameId]: winner }));
   };
 
   const handleSave = async () => {
@@ -211,6 +202,19 @@ export function MarchMadnessClient() {
   };
 
   // -----------------------------
+  // LOADING STATE
+  // -----------------------------
+  if (loading || !state) {
+    return <div className="p-6">Loading March Madness…</div>;
+  }
+
+  const visibleLeaderboard = showUnpaid
+    ? leaderboard
+    : leaderboard.filter((row) => row.has_paid);
+
+  const regionOrder = ['East', 'West', 'South', 'Midwest'];
+
+  // -----------------------------
   // RENDER UI
   // -----------------------------
   return (
@@ -220,22 +224,38 @@ export function MarchMadnessClient() {
         <LiveTicker />
       </section>
 
+      {/* Bracket selector */}
+      <section className="space-y-4">
+        <div className="flex justify-between items-center">
+          <h2 className="text-2xl font-bold">My Brackets</h2>
+          <div className="flex items-center gap-2">
+            <select
+              value={activeBracketId ?? ''}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val === '__create__') {
+                  handleCreateBracket();
+                } else {
+                  setActiveBracketId(val || null);
+                }
+              }}
+              className="bg-slate-800 text-white rounded-md px-3 py-2 border border-white/20"
+            >
+              <option value="">Select a bracket</option>
+              {brackets.map((b) => (
+                <option key={b.bracket_id} value={b.bracket_id}>
+                  {b.icon ?? '🏀'} {b.bracket_name}
+                </option>
+              ))}
+              <option value="__create__">➕ Create Bracket</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
       {/* Opening Round */}
       <section>
         <OpeningRoundPanel games={state.openingRoundGames} live={live} />
-      </section>
-
-      {/* Your brackets (user must select one first) */}
-      <section className="space-y-4">
-        <h2 className="text-2xl font-bold">Your Brackets</h2>
-
-        <BracketList
-          brackets={state.brackets}
-          onSelectBracket={(bracketId: string) => {
-            setActiveBracketId(bracketId);
-            setPicks({});
-          }}
-        />
       </section>
 
       {/* Regions */}
@@ -244,7 +264,7 @@ export function MarchMadnessClient() {
 
         {!activeBracketId && (
           <p className="text-center text-red-400 font-semibold">
-            Select a bracket above before making picks.
+            Select or create a bracket above before making picks.
           </p>
         )}
 

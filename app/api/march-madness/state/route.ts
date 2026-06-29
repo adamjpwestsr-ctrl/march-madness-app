@@ -60,15 +60,25 @@ export async function GET() {
   const openingRoundGames: TournamentGame[] =
     (gamesData ?? []).filter((g) => g.round === 1) as TournamentGame[];
 
-  // Regional games = rounds 2+
-  const regionalGamesByRegion: Record<string, TournamentGame[]> = {};
-  (gamesData ?? [])
-    .filter((g) => (g.round ?? 0) >= 2)
-    .forEach((g) => {
-      const region = g.region ?? 'Unknown';
-      if (!regionalGamesByRegion[region]) regionalGamesByRegion[region] = [];
+// Regional games = rounds 2+
+const regionalGamesByRegion: Record<string, TournamentGame[]> = {
+  East: [],
+  West: [],
+  South: [],
+  Midwest: [],
+};
+
+(gamesData ?? [])
+  .filter((g) => (g.round ?? 0) >= 2)
+  .forEach((g) => {
+    // Normalize region
+    const region = g.region;
+
+    // Only push into valid regions
+    if (region && regionalGamesByRegion[region]) {
       regionalGamesByRegion[region].push(g as TournamentGame);
-    });
+    }
+  });
 
   // -----------------------------
   // 3️⃣ FETCH TEAMS

@@ -5,6 +5,7 @@ import { useState } from 'react';
 
 export function BracketList({
   brackets,
+  onSelectBracket,
 }: {
   brackets: {
     bracket_id: string;
@@ -13,6 +14,7 @@ export function BracketList({
     tiebreaker_score?: number | null;
     submitted?: boolean;
   }[];
+  onSelectBracket?: (bracketId: string) => void;
 }) {
   const [creating, setCreating] = useState(false);
 
@@ -56,9 +58,14 @@ export function BracketList({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {brackets.map((b) => (
-        <BracketCard key={b.bracket_id} bracket={b} />
+        <div
+          key={b.bracket_id}
+          onClick={() => onSelectBracket?.(b.bracket_id)}
+          className="cursor-pointer hover:bg-white/10 rounded-xl transition"
+        >
+          <BracketCard bracket={b} />
+        </div>
       ))}
     </div>
   );
 }
-

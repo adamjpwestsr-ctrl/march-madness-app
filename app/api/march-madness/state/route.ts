@@ -47,7 +47,7 @@ export async function GET() {
   // -----------------------------
   const { data: gamesData, error: gamesError } = await supabase
     .from('tournament_games')
-    .select('*')
+    .select('id, round, game_number, team1, team2, seed1, seed2, winner, region')
     .order('round', { ascending: true })
     .order('game_number', { ascending: true });
 
@@ -71,22 +71,18 @@ export async function GET() {
 
   (gamesData ?? [])
     .filter((g) => (g.round ?? 0) >= 2)
-    .forEach((g) => {
-      // Normalize region safely
+    .forEach((g, i) => {
       const region =
         g.region && typeof g.region === 'string'
           ? g.region.trim()
-          : 'Unknown';
+          : null;
 
-      // Push into valid region or fallback
-      if (regionalGamesByRegion[region]) {
+      if (region && regionalGamesByRegion[region]) {
         regionalGamesByRegion[region].push(g as TournamentGame);
       } else {
-        // Fallback: evenly distribute if region missing
-        const total = Object.keys(regionalGamesByRegion).length;
-        const index = (g.game_number ?? 0) % total;
-        const regionKey = Object.keys(regionalGamesByRegion)[index];
-        regionalGamesByRegion[regionKey].push(g as TournamentGame);
+        // fallback: distribute evenly if region missing
+        const regionKeys = Object.keys(regionalGamesByRegion);
+        regionalGamesByRegion[regionKeys[i % 4]].push(g as TournamentGame);
       }
     });
 

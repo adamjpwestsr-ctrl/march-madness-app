@@ -6,7 +6,6 @@ import {
   LeaderboardRow,
   LiveGameSummary,
   TournamentGame,
-  Bracket,
 } from '@/lib/marchMadnessTypes';
 
 import { OpeningRoundPanel } from '@/components/march-madness/OpeningRoundPanel';

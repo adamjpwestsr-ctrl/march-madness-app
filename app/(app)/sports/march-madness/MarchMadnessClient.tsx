@@ -13,6 +13,68 @@ import { LiveTicker } from '@/components/march-madness/LiveTicker';
 import { LeaderboardPreview } from '@/components/march-madness/LeaderboardPreview';
 import { BracketList } from '@/components/march-madness/BracketList';
 
+// ------------------------------------------------------
+// EXPANDABLE REGION CARDS
+// ------------------------------------------------------
+function ExpandableRegions({
+  regionalGames,
+}: {
+  regionalGames: Record<string, any[]>;
+}) {
+  const [expandedRegion, setExpandedRegion] = useState<string | null>(null);
+
+  const toggleRegion = (region: string) => {
+    setExpandedRegion(expandedRegion === region ? null : region);
+  };
+
+  const regionOrder = ['East', 'West', 'South', 'Midwest'];
+
+  return (
+    <section className="space-y-6">
+      {regionOrder.map((region) => {
+        const games = regionalGames[region] ?? [];
+        if (!games.length) return null;
+
+        const isExpanded = expandedRegion === region;
+
+        return (
+          <div
+            key={region}
+            className="rounded-xl bg-white/10 backdrop-blur-xl shadow-xl border border-white/20 overflow-hidden transition-all"
+          >
+            {/* Header */}
+            <button
+              onClick={() => toggleRegion(region)}
+              className="w-full flex justify-between items-center px-6 py-4 text-lg font-bold uppercase tracking-wide text-white/90 hover:bg-white/20 transition"
+            >
+              <span>{region}</span>
+              <span className="text-sm opacity-70">
+                {isExpanded ? 'Collapse' : 'Expand'}
+              </span>
+            </button>
+
+            {/* Collapsible Content */}
+            <div
+              className={`transition-[max-height] duration-500 ease-in-out ${
+                isExpanded ? 'max-h-[2000px]' : 'max-h-0'
+              } overflow-hidden`}
+            >
+              {isExpanded && (
+                <div className="p-6">
+                  <RegionBracketPanel region={region} games={games} />
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </section>
+  );
+}
+
+// ------------------------------------------------------
+// MAIN CLIENT COMPONENT
+// ------------------------------------------------------
 export function MarchMadnessClient() {
   const [state, setState] = useState<MarchMadnessState | null>(null);
   const [leaderboard, setLeaderboard] = useState<LeaderboardRow[]>([]);
@@ -113,21 +175,8 @@ export function MarchMadnessClient() {
         <OpeningRoundPanel games={state.openingRoundGames} live={live} />
       </section>
 
-      {/* Regions */}
-      <section className="space-y-6">
-        {['East', 'West', 'South', 'Midwest'].map((region) => {
-          const games = state.regionalGames[region] ?? [];
-          if (!games.length) return null;
-
-          return (
-            <RegionBracketPanel
-              key={region}
-              region={region}
-              games={games}
-            />
-          );
-        })}
-      </section>
+      {/* Expandable Regions */}
+      <ExpandableRegions regionalGames={state.regionalGames} />
 
       {/* Your brackets */}
       <section className="space-y-4">

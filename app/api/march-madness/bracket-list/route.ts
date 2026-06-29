@@ -40,14 +40,10 @@ export async function POST(req: Request) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // 🧩 Required field
+  // If no user, fallback to anonymous UUID
   const user_id = user?.id ?? '00000000-0000-0000-0000-000000000000';
 
-  // 🧩 Optional fields
-  const email = user?.email ?? null;
-  const user_uuid = user?.id ?? null;
-
-  // 🧮 Check bracket count (limit 4 per user)
+  // 🧮 Count brackets for this user (limit 4)
   const { count } = await supabase
     .from('brackets')
     .select('*', { count: 'exact', head: true })
@@ -60,39 +56,32 @@ export async function POST(req: Request) {
     );
   }
 
-  // 🧮 Compute bracket_number (per user)
-  const bracket_number = (count ?? 0) + 1;
-
-  // 🧩 Insert new bracket
+  // 🧩 Insert new bracket (ONLY valid columns)
   const { data, error } = await supabase
     .from('brackets')
     .insert({
-      user_id,
       bracket_name,
       icon,
       tiebreaker_score,
       sport: 'ncaab',
       mulligans_remaining: 2,
-      email,
-      user_uuid,
-      bracket_number,
+      user_id, // ⭐ Add this column to your schema if you want per-user brackets
     })
     .select()
     .single();
 
   if (error) {
+    console.error('BRACKET CREATE ERROR:', error);
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
 
-  // ✅ Step 1: Flip user Active flag when bracket created
-  await supabase
-    .from('users')
-    .update({ is_active: true })
-    .eq('auth_id', user?.id);
-
-  // ✅ Step 3 (future): Paid indicator belongs in leaderboard query
-  // Example join:
-  // SELECT b.*, u.has_paid FROM brackets b JOIN users u ON b.user_id::text = u.auth_id::text;
+  // ⭐ Optional: mark user active
+  if (user?.id) {
+    await supabase
+      .from('users')
+      .update({ is_active: true })
+      .eq('auth_id', user.id);
+  }
 
   return NextResponse.json(data);
 }

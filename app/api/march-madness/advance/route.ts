@@ -27,13 +27,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'No completed games to advance' });
     }
 
-    // 2. Build a map of next games to update
-    const nextGameUpdates: Record<number, { team1?: string | null; team2?: string | null }> = {};
+    // 2. Build a map of next games to update (UUID keys)
+    const nextGameUpdates: Record<
+      string,
+      { team1_id?: string | null; team2_id?: string | null }
+    > = {};
 
     for (const game of games) {
       if (!game.winner_to_game_id || !game.winner) continue;
 
-      const nextId = game.winner_to_game_id;
+      const nextId = game.winner_to_game_id; // UUID
+
       if (!nextGameUpdates[nextId]) {
         nextGameUpdates[nextId] = {};
       }
@@ -41,23 +45,23 @@ export async function POST(request: NextRequest) {
       // Fetch the next game to determine placement
       const { data: nextGame } = await supabase
         .from('tournament_games')
-        .select('id, team1, team2')
+        .select('id, team1_id, team2_id')
         .eq('id', nextId)
         .maybeSingle();
 
       if (!nextGame) continue;
 
-      // Winner fills team1 if empty, otherwise team2
-      if (!nextGame.team1) {
-        nextGameUpdates[nextId].team1 = game.winner;
-      } else if (!nextGame.team2) {
-        nextGameUpdates[nextId].team2 = game.winner;
+      // Winner fills team1_id if empty, otherwise team2_id
+      if (!nextGame.team1_id) {
+        nextGameUpdates[nextId].team1_id = game.winner;
+      } else if (!nextGame.team2_id) {
+        nextGameUpdates[nextId].team2_id = game.winner;
       }
     }
 
-    // 3. Apply updates to next‑round games
+    // 3. Apply updates to next‑round games (UUID-safe)
     const updates = Object.entries(nextGameUpdates).map(([id, payload]) => ({
-      id: Number(id),
+      id, // UUID — DO NOT convert to number
       ...payload,
     }));
 

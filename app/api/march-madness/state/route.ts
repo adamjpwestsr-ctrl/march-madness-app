@@ -81,34 +81,45 @@ export async function GET() {
   // -----------------------------
   // ⭐ NORMALIZE JOINED DATA BACK INTO TournamentGame SHAPE
   // -----------------------------
-  function normalizeGame(g: any): TournamentGame {
-    return {
-      id: g.id,
-      round: g.round,
-      game_number: g.game_number,
-      region: g.region,
-      winner: g.winner,
+function normalizeGame(g: any): TournamentGame {
+  return {
+    id: g.id,
+    round: g.round,
+    game_number: g.game_number,
+    region: g.region,
+    winner: g.winner,
 
-      // Convert joined team objects back into IDs
-      team1_id: g.team1?.id ?? null,
-      team2_id: g.team2?.id ?? null,
+    // IDs from joined data
+    team1_id: g.team1?.id ?? null,
+    team2_id: g.team2?.id ?? null,
 
-      // Seeds (optional)
-      seed1: g.team1?.seed ?? null,
-      seed2: g.team2?.seed ?? null,
+    // Legacy string fields (UI still expects these)
+    team1: g.team1?.team_name ?? null,
+    team2: g.team2?.team_name ?? null,
 
-      // Scores
-      home_score: g.home_score ?? 0,
-      away_score: g.away_score ?? 0,
+    // Seeds
+    seed1: g.team1?.seed ?? null,
+    seed2: g.team2?.seed ?? null,
 
-      // Required fields your type expects but joined data does not provide
-      round_id: null,
-      winner_to_game_id: null,
-      is_placeholder: g.is_placeholder ?? false,
-      completed: g.completed ?? false,
-      status: g.status ?? 'pre',
-    };
-  }
+    // Scores
+    home_score: g.home_score ?? 0,
+    away_score: g.away_score ?? 0,
+
+    // Required fields your type expects but joined data does not provide
+    round_id: null,
+    winner_to_game_id: null,
+    is_placeholder: g.is_placeholder ?? false,
+    completed: g.completed ?? false,
+    status: g.status ?? 'pre',
+
+    // Required metadata fields
+    site: g.site ?? null,
+    scheduled_at: g.scheduled_at ?? null,
+
+    // Bracket ownership (global games = null)
+    bracket_id: null,
+  };
+}
 
   // -----------------------------
   // 3️⃣ OPENING ROUND

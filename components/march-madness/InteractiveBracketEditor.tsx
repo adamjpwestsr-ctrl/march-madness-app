@@ -15,12 +15,18 @@ export function InteractiveBracketEditor({
   bracketId: string;
   games: TournamentGame[];
   teams: TournamentTeam[];
-  initialPicks: Record<number, string>;
+
+  // UUID-safe picks
+  initialPicks: Record<string, string>;
   initialTiebreaker: number | null;
+
   isLocked: boolean;
-  onSubmit: (picks: Record<number, string>, tiebreaker: number) => void;
+
+  // UUID-safe submit
+  onSubmit: (picks: Record<string, string>, tiebreaker: number) => void;
 }) {
-  const [picks, setPicks] = useState<Record<number, string>>(initialPicks);
+  // UUID-safe picks state
+  const [picks, setPicks] = useState<Record<string, string>>(initialPicks);
   const [tiebreaker, setTiebreaker] = useState(initialTiebreaker ?? 0);
 
   // -----------------------------
@@ -47,18 +53,15 @@ export function InteractiveBracketEditor({
     .sort((a, b) => a - b);
 
   // -----------------------------
-  // HANDLE PICK
+  // HANDLE PICK (UUID-safe)
   // -----------------------------
-  function handlePick(gameId: number, team: string) {
+  function handlePick(gameId: string, team: string) {
     if (isLocked) return;
 
     setPicks((prev) => ({
       ...prev,
       [gameId]: team,
     }));
-
-    // Placeholder for future winner advancement logic
-    // advanceWinner(gameId, team);
   }
 
   // -----------------------------
@@ -106,7 +109,7 @@ export function InteractiveBracketEditor({
                 </h4>
 
                 {grouped[round][region].map((g) => {
-                  const selected = picks[g.id];
+                  const selected = picks[g.id]; // UUID-safe
 
                   return (
                     <div

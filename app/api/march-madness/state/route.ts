@@ -45,11 +45,21 @@ export async function GET() {
   // -----------------------------
   // 2️⃣ FETCH ALL GAMES
   // -----------------------------
-  const { data: gamesData, error: gamesError } = await supabase
-    .from('tournament_games')
-    .select('id, round, game_number, team1, team2, seed1, seed2, winner, region')
-    .order('round', { ascending: true })
-    .order('game_number', { ascending: true });
+ const { data: gamesData, error: gamesError } = await supabase
+  .from('tournament_games')
+  .select(`
+    id,
+    round,
+    game_number,
+    region,
+    home_score,
+    away_score,
+    winner,
+    team1:team1_id (id, team_name, seed, region),
+    team2:team2_id (id, team_name, seed, region)
+  `)
+  .order('round', { ascending: true })
+  .order('game_number', { ascending: true });
 
   if (gamesError) {
     return NextResponse.json({ error: gamesError.message }, { status: 400 });

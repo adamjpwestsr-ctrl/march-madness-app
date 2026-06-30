@@ -55,6 +55,9 @@ export async function GET() {
       home_score,
       away_score,
       winner,
+      status,
+      is_placeholder,
+      completed,
       team1:team1_id (
         id,
         team_name,
@@ -75,12 +78,48 @@ export async function GET() {
     return NextResponse.json({ error: gamesError.message }, { status: 400 });
   }
 
-  // Opening Round = round 1
-  const openingRoundGames: TournamentGame[] =
-    (gamesData ?? []).filter((g) => g.round === 1) as TournamentGame[];
+  // -----------------------------
+  // ⭐ NORMALIZE JOINED DATA BACK INTO TournamentGame SHAPE
+  // -----------------------------
+  function normalizeGame(g: any): TournamentGame {
+    return {
+      id: g.id,
+      round: g.round,
+      game_number: g.game_number,
+      region: g.region,
+      winner: g.winner,
+
+      // Convert joined team objects back into IDs
+      team1_id: g.team1?.id ?? null,
+      team2_id: g.team2?.id ?? null,
+
+      // Seeds (optional)
+      seed1: g.team1?.seed ?? null,
+      seed2: g.team2?.seed ?? null,
+
+      // Scores
+      home_score: g.home_score ?? 0,
+      away_score: g.away_score ?? 0,
+
+      // Required fields your type expects but joined data does not provide
+      round_id: null,
+      winner_to_game_id: null,
+      is_placeholder: g.is_placeholder ?? false,
+      completed: g.completed ?? false,
+      status: g.status ?? 'pre',
+    };
+  }
 
   // -----------------------------
-  // 3️⃣ GROUP REGIONAL GAMES BY REGION
+  // 3️⃣ OPENING ROUND
+  // -----------------------------
+  const openingRoundGames: TournamentGame[] =
+    (gamesData ?? [])
+      .filter((g) => g.round === 1)
+      .map(normalizeGame);
+
+  // -----------------------------
+  // 4️⃣ GROUP REGIONAL GAMES BY REGION
   // -----------------------------
   const regionalGamesByRegion: Record<string, TournamentGame[]> = {
     East: [],
@@ -98,11 +137,11 @@ export async function GET() {
           : null;
 
       if (region && regionalGamesByRegion[region]) {
-        regionalGamesByRegion[region].push(g as TournamentGame);
+        regionalGamesByRegion[region].push(normalizeGame(g));
       } else {
         // fallback: evenly distribute if region missing
         const regionKeys = Object.keys(regionalGamesByRegion);
-        regionalGamesByRegion[regionKeys[i % 4]].push(g as TournamentGame);
+        regionalGamesByRegion[regionKeys[i % 4]].push(normalizeGame(g));
       }
     });
 
@@ -112,7 +151,7 @@ export async function GET() {
   });
 
   // -----------------------------
-  // 4️⃣ FETCH TEAMS
+  // 5️⃣ FETCH TEAMS
   // -----------------------------
   const { data: teamsData, error: teamsError } = await supabase
     .from('v_tournament_teams')
@@ -125,7 +164,7 @@ export async function GET() {
   const teams: TournamentTeam[] = (teamsData ?? []) as TournamentTeam[];
 
   // -----------------------------
-  // 5️⃣ FETCH LEADERBOARD
+  // 6️⃣ FETCH LEADERBOARD
   // -----------------------------
   const { data: leaderboardData, error: leaderboardError } = await supabase
     .from('leaderboard')
@@ -153,7 +192,7 @@ export async function GET() {
     })) ?? [];
 
   // -----------------------------
-  // 6️⃣ FETCH MULLIGANS
+  // 7️⃣ FETCH MULLIGANS
   // -----------------------------
   const { data: mulligansData, error: mulliganError } = await supabase
     .from('bracket_mulligans')
@@ -166,12 +205,12 @@ export async function GET() {
   const mulligans: MulliganSummary[] = (mulligansData ?? []) as MulliganSummary[];
 
   // -----------------------------
-  // 7️⃣ LIVE SUMMARY (placeholder)
+  // 8️⃣ LIVE SUMMARY (placeholder)
   // -----------------------------
   const liveSummary: LiveGameSummary[] = [];
 
   // -----------------------------
-  // 8️⃣ LOCK STATE
+  // 9️⃣ LOCK STATE
   // -----------------------------
   const lockState = {
     bracketsOpen: true,
@@ -179,7 +218,7 @@ export async function GET() {
   };
 
   // -----------------------------
-  // 9️⃣ FINAL PAYLOAD
+  // 🔟 FINAL PAYLOAD
   // -----------------------------
   const state: MarchMadnessState = {
     brackets,

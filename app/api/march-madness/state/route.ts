@@ -43,34 +43,44 @@ export async function GET() {
     })) ?? [];
 
   // -----------------------------
-  // 2️⃣ FETCH ALL GAMES
+  // 2️⃣ FETCH ALL GAMES (JOIN TEAMS)
   // -----------------------------
- const { data: gamesData, error: gamesError } = await supabase
-  .from('tournament_games')
-  .select(`
-    id,
-    round,
-    game_number,
-    region,
-    home_score,
-    away_score,
-    winner,
-    team1:team1_id (id, team_name, seed, region),
-    team2:team2_id (id, team_name, seed, region)
-  `)
-  .order('round', { ascending: true })
-  .order('game_number', { ascending: true });
+  const { data: gamesData, error: gamesError } = await supabase
+    .from('tournament_games')
+    .select(`
+      id,
+      round,
+      game_number,
+      region,
+      home_score,
+      away_score,
+      winner,
+      team1:team1_id (
+        id,
+        team_name,
+        seed,
+        region
+      ),
+      team2:team2_id (
+        id,
+        team_name,
+        seed,
+        region
+      )
+    `)
+    .order('round', { ascending: true })
+    .order('game_number', { ascending: true });
 
   if (gamesError) {
     return NextResponse.json({ error: gamesError.message }, { status: 400 });
   }
 
-  // Opening Round = round 1 (76‑team format)
+  // Opening Round = round 1
   const openingRoundGames: TournamentGame[] =
     (gamesData ?? []).filter((g) => g.round === 1) as TournamentGame[];
 
   // -----------------------------
-  // ✅ FIX: Group regional games by region
+  // 3️⃣ GROUP REGIONAL GAMES BY REGION
   // -----------------------------
   const regionalGamesByRegion: Record<string, TournamentGame[]> = {
     East: [],
@@ -90,19 +100,19 @@ export async function GET() {
       if (region && regionalGamesByRegion[region]) {
         regionalGamesByRegion[region].push(g as TournamentGame);
       } else {
-        // fallback: distribute evenly if region missing
+        // fallback: evenly distribute if region missing
         const regionKeys = Object.keys(regionalGamesByRegion);
         regionalGamesByRegion[regionKeys[i % 4]].push(g as TournamentGame);
       }
     });
 
-  // Ensure all regions exist even if empty
+  // Ensure all regions exist
   ['East', 'West', 'South', 'Midwest'].forEach((r) => {
     if (!regionalGamesByRegion[r]) regionalGamesByRegion[r] = [];
   });
 
   // -----------------------------
-  // 3️⃣ FETCH TEAMS
+  // 4️⃣ FETCH TEAMS
   // -----------------------------
   const { data: teamsData, error: teamsError } = await supabase
     .from('v_tournament_teams')
@@ -115,7 +125,7 @@ export async function GET() {
   const teams: TournamentTeam[] = (teamsData ?? []) as TournamentTeam[];
 
   // -----------------------------
-  // 4️⃣ FETCH LEADERBOARD
+  // 5️⃣ FETCH LEADERBOARD
   // -----------------------------
   const { data: leaderboardData, error: leaderboardError } = await supabase
     .from('leaderboard')
@@ -143,7 +153,7 @@ export async function GET() {
     })) ?? [];
 
   // -----------------------------
-  // 5️⃣ FETCH MULLIGANS
+  // 6️⃣ FETCH MULLIGANS
   // -----------------------------
   const { data: mulligansData, error: mulliganError } = await supabase
     .from('bracket_mulligans')
@@ -156,12 +166,12 @@ export async function GET() {
   const mulligans: MulliganSummary[] = (mulligansData ?? []) as MulliganSummary[];
 
   // -----------------------------
-  // 6️⃣ LIVE SUMMARY (placeholder)
+  // 7️⃣ LIVE SUMMARY (placeholder)
   // -----------------------------
   const liveSummary: LiveGameSummary[] = [];
 
   // -----------------------------
-  // 7️⃣ LOCK STATE
+  // 8️⃣ LOCK STATE
   // -----------------------------
   const lockState = {
     bracketsOpen: true,
@@ -169,7 +179,7 @@ export async function GET() {
   };
 
   // -----------------------------
-  // 8️⃣ BUILD FINAL STATE PAYLOAD
+  // 9️⃣ FINAL PAYLOAD
   // -----------------------------
   const state: MarchMadnessState = {
     brackets,

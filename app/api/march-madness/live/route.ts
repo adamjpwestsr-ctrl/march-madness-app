@@ -6,33 +6,20 @@ import { LiveGameSummary } from '@/lib/marchMadnessTypes';
 export async function GET() {
   const supabase = await createClient();
 
-  // -----------------------------
-  // 1. FETCH ESPN SCOREBOARD
-  // -----------------------------
+  // Fetch ESPN scoreboard
   const espnRes = await fetch(
     'https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard'
   );
-
   const espnJson = await espnRes.json();
   const events = espnJson.events ?? [];
 
-  // -----------------------------
-  // 2. FETCH LOCAL TOURNAMENT GAMES
-  // -----------------------------
-  const { data: gamesData } = await supabase
+  // Fetch local games
+  const { data: localGames } = await supabase
     .from('tournament_games')
     .select('*');
 
-  // Map ESPN game IDs → local game rows
-  const gameMap = new Map(
-    (gamesData ?? []).map((g) => [String(g.id), g])
-  );
-
   const liveSummary: LiveGameSummary[] = [];
 
-  // -----------------------------
-  // 3. PROCESS ESPN EVENTS
-  // -----------------------------
   for (const event of events) {
     const competition = event.competitions?.[0];
     if (!competition) continue;
@@ -44,13 +31,18 @@ export async function GET() {
 
     const status = competition.status?.type?.state ?? 'pre';
 
-    // Build LiveGameSummary
+    const homeTeam = home?.team?.shortDisplayName ?? '';
+    const awayTeam = away?.team?.shortDisplayName ?? '';
+
+    const homeScore = Number(home?.score ?? 0);
+    const awayScore = Number(away?.score ?? 0);
+
     const summary: LiveGameSummary = {
       game_id: espnGameId,
-      home_team: home?.team?.shortDisplayName ?? '',
-      away_team: away?.team?.shortDisplayName ?? '',
-      home_score: Number(home?.score ?? 0),
-      away_score: Number(away?.score ?? 0),
+      home_team: homeTeam,
+      away_team: awayTeam,
+      home_score: homeScore,
+      away_score: awayScore,
       status,
       region: null,
       round: null,
@@ -58,32 +50,45 @@ export async function GET() {
 
     liveSummary.push(summary);
 
-    // -----------------------------
-    // 4. UPDATE LOCAL GAME IF MATCH FOUND
-    // -----------------------------
-    const localGame = gameMap.get(espnGameId);
+    // Match local game by team names
+    const localGame = localGames?.find(
+      (g) =>
+        g.team1 === homeTeam &&
+        g.team2 === awayTeam
+    );
+
     if (!localGame) continue;
 
-    // Update scores + status
+    const winner =
+      status === 'post'
+        ? homeScore > awayScore
+          ? homeTeam
+          : awayTeam
+        : null;
+
+    // Update local game
     await supabase
       .from('tournament_games')
       .update({
-        home_score: summary.home_score,
-        away_score: summary.away_score,
-        status: summary.status,
-        completed: summary.status === 'post',
-        winner:
-          summary.status === 'post'
-            ? (summary.home_score ?? 0) > (summary.away_score ?? 0)
-              ? summary.home_team
-              : summary.away_team
-            : null,
+        home_score: homeScore,
+        away_score: awayScore,
+        status,
+        completed: status === 'post',
+        winner,
       })
       .eq('id', localGame.id);
+
+    // Auto-advance winners
+    if (status === 'post') {
+      await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/march-madness/advance`, {
+        method: 'POST',
+      });
+
+      await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/march-madness/score`, {
+        method: 'POST',
+      });
+    }
   }
 
-  // -----------------------------
-  // 5. RETURN LIVE SUMMARY
-  // -----------------------------
   return NextResponse.json(liveSummary);
 }

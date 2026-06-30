@@ -19,12 +19,28 @@ export async function POST(request: NextRequest) {
 
     const games = (completedGames ?? []) as TournamentGame[];
 
-    // 2️⃣ Fetch all brackets and their picks
-    const { data: brackets } = await supabase.from('brackets').select('bracket_id');
-    const { data: picks } = await supabase.from('picks').select('*');
+    // 2️⃣ Fetch all brackets and their picks (UUID-safe)
+    const { data: brackets, error: bracketsError } = await supabase
+      .from('brackets')
+      .select('bracket_id');
+
+    if (bracketsError) {
+      return NextResponse.json({ error: bracketsError.message }, { status: 400 });
+    }
+
+    const { data: picks, error: picksError } = await supabase
+      .from('picks')
+      .select('*');
+
+    if (picksError) {
+      return NextResponse.json({ error: picksError.message }, { status: 400 });
+    }
 
     if (!brackets || !picks) {
-      return NextResponse.json({ error: 'Missing bracket or pick data' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Missing bracket or pick data' },
+        { status: 400 }
+      );
     }
 
     // 3️⃣ Scoring rules
@@ -47,12 +63,15 @@ export async function POST(request: NextRequest) {
     }[] = [];
 
     for (const bracket of brackets) {
-      const bracketPicks = picks.filter((p) => p.bracket_id === bracket.bracket_id);
+      const bracketPicks = picks.filter(
+        (p) => p.bracket_id === bracket.bracket_id
+      );
 
       let earned = 0;
       let possible = 0;
 
       for (const game of games) {
+        // game.id is UUID, picks.game_id must also be UUID
         const pick = bracketPicks.find((p) => p.game_id === game.id);
         if (!pick) continue;
 
@@ -94,6 +113,9 @@ export async function POST(request: NextRequest) {
     });
   } catch (err) {
     console.error('Error calculating scores:', err);
-    return NextResponse.json({ error: 'Failed to calculate scores' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to calculate scores' },
+      { status: 500 }
+    );
   }
 }

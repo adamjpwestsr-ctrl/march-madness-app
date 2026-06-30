@@ -8,28 +8,23 @@ export async function POST(
     | { params: { bracket_id: string } }
     | { params: Promise<{ bracket_id: string }> }
 ) {
-  // Handle Next.js 16 async params
   const params =
     'then' in context.params ? await context.params : context.params;
 
   const supabase = await createClient();
   const bracketId = params.bracket_id;
 
-  // FIXED VALIDATION BLOCK
   if (!bracketId) {
-    return NextResponse.json(
-      { error: "Missing bracket_id" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: 'Missing bracket_id' }, { status: 400 });
   }
 
   const body = await request.json();
-  const picks = body.picks as { game_id: number; selected_team: string }[];
+
+  // UUID-safe picks
+  const picks = body.picks as { game_id: string; selected_team: string }[];
   const tiebreaker = body.tiebreaker_score ?? null;
 
-  // -----------------------------
-  // CHECK IF BRACKET ALREADY SUBMITTED
-  // -----------------------------
+  // Check if already submitted
   const { data: submission } = await supabase
     .from('bracket_submissions')
     .select('*')
@@ -43,22 +38,14 @@ export async function POST(
     );
   }
 
-  // -----------------------------
-  // VALIDATE PICKS EXIST
-  // -----------------------------
   if (!Array.isArray(picks) || picks.length === 0) {
-    return NextResponse.json(
-      { error: 'No picks submitted' },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: 'No picks submitted' }, { status: 400 });
   }
 
-  // -----------------------------
-  // UPSERT PICKS
-  // -----------------------------
+  // UUID-safe upserts
   const upserts = picks.map((p) => ({
     bracket_id: bracketId,
-    game_id: p.game_id,
+    game_id: p.game_id, // UUID
     selected_team: p.selected_team,
   }));
 
@@ -67,15 +54,10 @@ export async function POST(
     .upsert(upserts, { onConflict: 'bracket_id,game_id' });
 
   if (pickError) {
-    return NextResponse.json(
-      { error: pickError.message },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: pickError.message }, { status: 400 });
   }
 
-  // -----------------------------
-  // SAVE TIEBREAKER
-  // -----------------------------
+  // Save tiebreaker
   const { error: tiebreakerError } = await supabase
     .from('bracket_submissions')
     .upsert(
@@ -94,8 +76,5 @@ export async function POST(
     );
   }
 
-  // -----------------------------
-  // SUCCESS
-  // -----------------------------
   return NextResponse.json({ success: true });
 }

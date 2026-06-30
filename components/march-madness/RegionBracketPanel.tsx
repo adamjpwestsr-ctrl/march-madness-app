@@ -9,14 +9,14 @@ export function RegionBracketPanel({
 }: {
   region: string;
   games: TournamentGame[];
-  onPick?: (gameId: number, winner: string) => void;
+  onPick?: (gameId: string, winner: string) => void;
 }) {
+  // Filter games by region
+  const filteredGames = games.filter((g) => g.region === region);
+
   // Group games by round
-
-const filteredGames = games.filter((g) => g.region === region);
-
   const rounds: Record<number, TournamentGame[]> = {};
-  games.forEach((g) => {
+  filteredGames.forEach((g) => {
     const r = g.round ?? 0;
     if (!rounds[r]) rounds[r] = [];
     rounds[r].push(g);
@@ -49,6 +49,12 @@ const filteredGames = games.filter((g) => g.region === region);
             {rounds[round].map((g) => {
               const winner = g.winner;
 
+              const team1Name = g.team1_id ? g.team1 ?? g.team1_id : g.team1 ?? 'TBD';
+              const team2Name = g.team2_id ? g.team2 ?? g.team2_id : g.team2 ?? 'TBD';
+
+              const seed1 = g.seed1 ?? null;
+              const seed2 = g.seed2 ?? null;
+
               return (
                 <div
                   key={g.id}
@@ -56,36 +62,36 @@ const filteredGames = games.filter((g) => g.region === region);
                 >
                   {/* Team 1 */}
                   <button
-                    onClick={() => handlePick(g, g.team1 ?? '')}
+                    onClick={() => handlePick(g, team1Name)}
                     className={`flex justify-between items-center mb-1 w-full text-left px-2 py-1 rounded-md transition
                       ${
-                        winner === g.team1
+                        winner === team1Name
                           ? 'bg-green-600/30 border border-green-400'
                           : 'hover:bg-white/20'
                       }
                     `}
                   >
                     <span className="text-sm opacity-70">
-                      {g.seed1 ? `#${g.seed1}` : ''}
+                      {seed1 ? `#${seed1}` : ''}
                     </span>
-                    <span className="font-semibold">{g.team1 ?? 'TBD'}</span>
+                    <span className="font-semibold">{team1Name}</span>
                   </button>
 
                   {/* Team 2 */}
                   <button
-                    onClick={() => handlePick(g, g.team2 ?? '')}
+                    onClick={() => handlePick(g, team2Name)}
                     className={`flex justify-between items-center w-full text-left px-2 py-1 rounded-md transition
                       ${
-                        winner === g.team2
+                        winner === team2Name
                           ? 'bg-green-600/30 border border-green-400'
                           : 'hover:bg-white/20'
                       }
                     `}
                   >
                     <span className="text-sm opacity-70">
-                      {g.seed2 ? `#${g.seed2}` : ''}
+                      {seed2 ? `#${seed2}` : ''}
                     </span>
-                    <span className="font-semibold">{g.team2 ?? 'TBD'}</span>
+                    <span className="font-semibold">{team2Name}</span>
                   </button>
 
                   {/* Winner */}

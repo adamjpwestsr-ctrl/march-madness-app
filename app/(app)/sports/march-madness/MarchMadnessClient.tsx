@@ -26,8 +26,8 @@ function RegionModal({
 }: {
   region: string;
   games: TournamentGame[];
-  picks: Record<number, string>;
-  onPick: (gameId: number, winner: string) => void;
+  picks: Record<string, string>;
+  onPick: (gameId: string, winner: string) => void;
   onSave: () => void;
   onClose: () => void;
 }) {
@@ -71,7 +71,10 @@ export function MarchMadnessClient() {
 
   const [activeRegion, setActiveRegion] = useState<string | null>(null);
   const [activeBracketId, setActiveBracketId] = useState<string | null>(null);
-  const [picks, setPicks] = useState<Record<number, string>>({});
+
+  // ⭐ Picks now use UUID keys
+  const [picks, setPicks] = useState<Record<string, string>>({});
+
   const [brackets, setBrackets] = useState<any[]>([]);
 
   // -----------------------------
@@ -177,9 +180,9 @@ export function MarchMadnessClient() {
   };
 
   // -----------------------------
-  // PICK HANDLERS
+  // PICK HANDLERS (UUID SAFE)
   // -----------------------------
-  const handlePick = (gameId: number, winner: string) => {
+  const handlePick = (gameId: string, winner: string) => {
     setPicks((prev) => ({ ...prev, [gameId]: winner }));
   };
 
@@ -190,7 +193,7 @@ export function MarchMadnessClient() {
     }
 
     const formattedPicks = Object.entries(picks).map(([gameId, winner]) => ({
-      game_id: Number(gameId),
+      game_id: gameId, // UUID
       selected_team: winner,
     }));
 

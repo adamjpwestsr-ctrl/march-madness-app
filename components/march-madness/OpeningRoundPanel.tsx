@@ -15,10 +15,16 @@ export function OpeningRoundPanel({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
         {games.map((g) => {
+          const team1Name = g.team1 ?? 'TBD';
+          const team2Name = g.team2 ?? 'TBD';
+
+          const seed1 = g.seed1 ?? null;
+          const seed2 = g.seed2 ?? null;
+
           const liveMatch = live.find(
             (l) =>
-              (l.home_team === g.team1 && l.away_team === g.team2) ||
-              (l.home_team === g.team2 && l.away_team === g.team1)
+              (l.home_team === team1Name && l.away_team === team2Name) ||
+              (l.home_team === team2Name && l.away_team === team1Name)
           );
 
           return (
@@ -29,32 +35,32 @@ export function OpeningRoundPanel({
               {/* Team 1 */}
               <div className="flex justify-between items-center mb-0.5">
                 <span className="text-xs opacity-70">
-                  {g.seed1 ? `#${g.seed1}` : ''}
+                  {seed1 ? `#${seed1}` : ''}
                 </span>
-                <span className="text-sm font-semibold">{g.team1 ?? 'TBD'}</span>
+                <span className="text-sm font-semibold">{team1Name}</span>
               </div>
 
               {/* Team 2 */}
               <div className="flex justify-between items-center">
                 <span className="text-xs opacity-70">
-                  {g.seed2 ? `#${g.seed2}` : ''}
+                  {seed2 ? `#${seed2}` : ''}
                 </span>
-                <span className="text-sm font-semibold">{g.team2 ?? 'TBD'}</span>
+                <span className="text-sm font-semibold">{team2Name}</span>
               </div>
 
               {/* Score / Status */}
               {liveMatch ? (
                 <div className="mt-1 text-sm font-bold text-center">
-                  {liveMatch.home_score} – {liveMatch.away_score}
+                  {liveMatch.home_score} – {liveMatch.away_score}
                   <div className="text-xs opacity-70">{liveMatch.status}</div>
                 </div>
               ) : g.winner ? (
                 <div className="mt-1 text-green-400 font-bold text-xs text-center">
-                  Winner: {g.winner}
+                  Winner: {g.winner}
                 </div>
               ) : (
                 <div className="mt-1 opacity-70 text-xs text-center">
-                  Awaiting result…
+                  Awaiting result…
                 </div>
               )}
             </div>

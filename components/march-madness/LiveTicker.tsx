@@ -9,8 +9,9 @@ export function LiveTicker() {
   useEffect(() => {
     async function load() {
       const res = await fetch('/api/march-madness/live', { cache: 'no-store' });
+      if (!res.ok) return;
       const json = await res.json();
-      setGames(json);
+      setGames(Array.isArray(json) ? json : []);
     }
 
     load();

@@ -170,6 +170,7 @@ export function MarchMadnessClient() {
   // PICK HANDLERS (UUID SAFE)
   // -----------------------------
   const handlePick = (gameId: string, winner: string) => {
+    if (!winner || winner === 'TBD') return;   // ✅ Step C
     setPicks((prev) => ({ ...prev, [gameId]: winner }));
   };
 
@@ -262,7 +263,11 @@ export function MarchMadnessClient() {
 
       {/* Opening Round */}
       <section>
-        <OpeningRoundPanel games={state.openingRoundGames} live={live} />
+        <OpeningRoundPanel
+          games={state.openingRoundGames}
+          live={live}
+          onPick={handlePick}   // ✅ Step A
+        />
       </section>
 
       {/* Regions */}

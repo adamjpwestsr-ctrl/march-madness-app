@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import confetti from "canvas-confetti";
 import { FaTrophy, FaFlagCheckered, FaGolfBall } from "react-icons/fa";
-import { LeaderboardPreview } from "@/components/march-madness/LeaderboardPreview";
+import GolfLeaderboardPreview from "@/components/golf/GolfLeaderboardPreview";
 
 
 // ----------------------
@@ -526,7 +526,7 @@ export default function GolfWeeklyClient({
   <h2 className="text-xl font-semibold text-emerald-400 mb-4">
     Weekly Leaderboard
   </h2>
-  <LeaderboardPreview rows={leaderboard} />
+  <GolfLeaderboardPreview rows={leaderboard} />
 </section>
 
 

@@ -6,10 +6,12 @@ export function RegionBracketPanel({
   region,
   games,
   onPick,
+  picks = {},
 }: {
   region: string;
   games: TournamentGame[];
   onPick?: (gameId: string, winner: string) => void;
+  picks?: Record<string, string>;
 }) {
   const filteredGames = games.filter((g) => g.region === region);
 
@@ -54,14 +56,15 @@ export function RegionBracketPanel({
             </h3>
 
             {rounds[round].map((g) => {
-              const winner = g.winner;
               const team1Name = g.team1 ?? 'TBD';
               const team2Name = g.team2 ?? 'TBD';
               const seed1 = g.seed1 ?? null;
               const seed2 = g.seed2 ?? null;
 
-              const isTeam1Picked = winner === team1Name;
-              const isTeam2Picked = winner === team2Name;
+              const isTeam1Picked =
+                picks[g.id] === team1Name || g.winner === team1Name;
+              const isTeam2Picked =
+                picks[g.id] === team2Name || g.winner === team2Name;
 
               return (
                 <div
@@ -112,9 +115,9 @@ export function RegionBracketPanel({
                     </span>
                   </button>
 
-                  {winner && (
+                  {g.winner && (
                     <div className="mt-2 text-green-400 font-bold text-sm text-center">
-                      Winner: {winner}
+                      Winner: {g.winner}
                     </div>
                   )}
                 </div>

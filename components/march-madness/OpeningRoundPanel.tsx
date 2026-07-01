@@ -6,10 +6,12 @@ export function OpeningRoundPanel({
   games,
   live,
   onPick,
+  picks = {},
 }: {
   games: TournamentGame[];
   live: LiveGameSummary[];
   onPick?: (gameId: string, winner: string) => void;
+  picks?: Record<string, string>;
 }) {
   const handlePick = (game: TournamentGame, winner: string) => {
     if (!winner || winner === 'TBD') return;
@@ -35,8 +37,10 @@ export function OpeningRoundPanel({
               (l.home_team === team2Name && l.away_team === team1Name)
           );
 
-          const isTeam1Picked = g.winner === team1Name;
-          const isTeam2Picked = g.winner === team2Name;
+          const isTeam1Picked =
+            picks[g.id] === team1Name || g.winner === team1Name;
+          const isTeam2Picked =
+            picks[g.id] === team2Name || g.winner === team2Name;
 
           return (
             <div

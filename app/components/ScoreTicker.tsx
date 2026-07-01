@@ -30,12 +30,10 @@ export default function ScoreTicker() {
   useEffect(() => {
     fetchScores();
 
-    // Rotate sports every 20 seconds
     const rotate = setInterval(() => {
       setSportIndex((i) => (i + 1) % sportKeys.length);
     }, 20000);
 
-    // Refresh scores every 60 seconds
     const refresh = setInterval(fetchScores, 60000);
 
     return () => {
@@ -44,10 +42,18 @@ export default function ScoreTicker() {
     };
   }, [sportIndex]);
 
+  // Duplicate list for seamless marquee
+  const marqueeGames = [...games, ...games];
+
   return (
-    <div className="w-full overflow-hidden border-t border-b border-slate-800 bg-slate-900/60 backdrop-blur py-2">
-      <div className="flex items-center gap-4 animate-ticker whitespace-nowrap">
-        {games.map((game: any) => {
+    <div className="relative w-full overflow-hidden py-2 bg-slate-900/60 border-t border-b border-slate-800 backdrop-blur">
+      {/* Fade edges */}
+      <div className="absolute left-0 top-0 w-16 h-full bg-gradient-to-r from-slate-900 to-transparent pointer-events-none" />
+      <div className="absolute right-0 top-0 w-16 h-full bg-gradient-to-l from-slate-900 to-transparent pointer-events-none" />
+
+      {/* Marquee */}
+      <div className="flex items-center gap-6 whitespace-nowrap animate-ticker">
+        {marqueeGames.map((game: any) => {
           const comp = game.competitions?.[0];
           const home = comp?.competitors?.find((c: any) => c.homeAway === "home");
           const away = comp?.competitors?.find((c: any) => c.homeAway === "away");
@@ -56,11 +62,11 @@ export default function ScoreTicker() {
 
           return (
             <div
-              key={game.id}
-              className="flex items-center gap-2 px-6 text-sm text-slate-300"
+              key={`${game.id}-${Math.random()}`}
+              className="flex items-center gap-3 px-6 text-sm text-slate-300"
             >
               {/* Sport tag */}
-              <span className="text-emerald-400 font-semibold">
+              <span className="text-emerald-400 font-semibold uppercase tracking-wide">
                 {sportKeys[sportIndex]}
               </span>
 
@@ -90,17 +96,17 @@ export default function ScoreTicker() {
         })}
       </div>
 
-      {/* Animation keyframes */}
+      {/* Animation */}
       <style jsx>{`
         .animate-ticker {
           animation: ticker 40s linear infinite;
         }
         @keyframes ticker {
           0% {
-            transform: translateX(100%);
+            transform: translateX(0);
           }
           100% {
-            transform: translateX(-100%);
+            transform: translateX(-50%);
           }
         }
       `}</style>

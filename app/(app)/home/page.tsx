@@ -5,7 +5,6 @@ import TodayTrivia from "@/app/components/TodayTrivia";
 import FeaturedSports from "@/app/components/FeaturedSports";
 import UserStats from "@/app/components/UserStats";
 import QuickActions from "@/app/components/QuickActions";
-import MultiSportScoreboard from "@/app/components/MultiSportScoreboard";
 import YourPicksWidget from "@/app/components/YourPicksWidget";
 import RealActivityFeed from "@/app/components/RealActivityFeed";
 import ScoreTicker from "@/app/components/ScoreTicker";
@@ -45,44 +44,33 @@ export default async function HomePage() {
   return (
     <div className="space-y-12 pb-20">
 
-{/* HERO + STATS */}
-<section className="space-y-6">
-  <div className="rounded-2xl border border-slate-800 bg-gradient-to-br from-slate-900/80 via-slate-900/40 to-emerald-700/30 p-8 shadow-xl shadow-emerald-900/40 relative overflow-hidden">
-    {/* Ambient glow */}
-    <div className="pointer-events-none absolute -top-10 -right-10 w-40 h-40 bg-emerald-500/20 blur-3xl" />
-    <div className="pointer-events-none absolute -bottom-16 -left-16 w-52 h-52 bg-sky-500/10 blur-3xl" />
+      {/* HERO + STATS */}
+      <section className="space-y-6">
+        <div className="rounded-2xl border border-slate-800 bg-gradient-to-br from-slate-900/80 via-slate-900/40 to-emerald-700/30 p-8 shadow-xl shadow-emerald-900/40 relative overflow-hidden">
+          <div className="pointer-events-none absolute -top-10 -right-10 w-40 h-40 bg-emerald-500/20 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-16 -left-16 w-52 h-52 bg-sky-500/10 blur-3xl" />
 
-    <p className="text-xs md:text-sm uppercase tracking-[0.25em] text-emerald-400 mb-3">
-      Welcome back
-    </p>
-    <h1 className="text-2xl md:text-3xl font-semibold mb-3">
-      {displayName}, your next sports challenge is waiting.
-    </h1>
-    <p className="text-slate-300 max-w-2xl text-sm md:text-base">
-      Play brackets, weekly picks, and trivia across your favorite
-      sports—all in one place, all year long.
-    </p>
-  </div>
+          <p className="text-xs md:text-sm uppercase tracking-[0.25em] text-emerald-400 mb-3">
+            Welcome back
+          </p>
+          <h1 className="text-2xl md:text-3xl font-semibold mb-3">
+            {displayName}, your next sports challenge is waiting.
+          </h1>
+          <p className="text-slate-300 max-w-2xl text-sm md:text-base">
+            Play brackets, weekly picks, and trivia across your favorite
+            sports—all in one place, all year long.
+          </p>
+        </div>
 
-  {/* USER STATS */}
-  <UserStats userId={String(userId)} />
-</section>
+        <UserStats userId={String(userId)} />
+      </section>
 
-{/* 🏆 MULTI-SPORT SCOREBOARD */}
-<section className="z-20 bg-slate-950/90 backdrop-blur border-b border-slate-800">
-  <div className="relative w-full overflow-hidden">
-    {/* Gradient fade edges */}
-    <div className="absolute left-0 top-0 w-12 h-full bg-gradient-to-r from-slate-950 to-transparent pointer-events-none" />
-    <div className="absolute right-0 top-0 w-12 h-full bg-gradient-to-l from-slate-950 to-transparent pointer-events-none" />
-
-    {/* Scrollable container */}
-    <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
-      <div className="flex gap-3 px-3 py-2 w-max">
-        <MultiSportScoreboard />
-      </div>
-    </div>
-  </div>
-</section>
+      {/* 🏆 LIVE SCORE TICKER */}
+      <section className="z-20 bg-slate-950/90 backdrop-blur border-b border-slate-800 relative overflow-hidden">
+        <div className="absolute left-0 top-0 w-12 h-full bg-gradient-to-r from-slate-950 to-transparent pointer-events-none" />
+        <div className="absolute right-0 top-0 w-12 h-full bg-gradient-to-l from-slate-950 to-transparent pointer-events-none" />
+        <ScoreTicker />
+      </section>
 
       {/* SPOTLIGHT BANNER */}
       <section>
@@ -120,11 +108,6 @@ export default async function HomePage() {
       {/* REAL ACTIVITY FEED */}
       <section>
         <RealActivityFeed userId={String(userId)} />
-      </section>
-
-      {/* LIVE TICKER */}
-      <section>
-        <ScoreTicker />
       </section>
 
       {/* FOOTER */}

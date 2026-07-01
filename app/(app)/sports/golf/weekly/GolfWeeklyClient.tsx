@@ -424,135 +424,140 @@ export default function GolfWeeklyClient({
           </button>
         </div>
       </header>
-
-      {/* Spotlight + Upcoming Event */}
+{/* Spotlight + Upcoming Event */}
 <section className="w-full grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fadeIn">
+
   {/* Spotlight */}
   <div className="rounded-xl bg-slate-900/70 border border-white/10 p-5 shadow-xl flex flex-col gap-4">
     <h3 className="text-lg font-semibold">Weekly Spotlight</h3>
 
-          <div className="flex flex-col gap-3 text-sm">
-            <div>
-              <span className="text-slate-400">Most Picked:</span>{" "}
-              <span className="text-white font-medium">{spotlight.mostPicked}</span>
-            </div>
-            <div>
-              <span className="text-slate-400">Sleeper Pick:</span>{" "}
-              <span className="text-white font-medium">{spotlight.sleeper}</span>
-            </div>
-            <div>
-              <span className="text-slate-400">Trending:</span>{" "}
-              <span className="text-white font-medium">{spotlight.trending}</span>
-            </div>
-            <div>
-              <span className="text-slate-400">Player to Watch:</span>{" "}
-              <span className="text-white font-medium">{spotlight.watch}</span>
-            </div>
-          </div>
+    <div className="flex flex-col gap-3 text-sm">
+      <div>
+        <span className="text-slate-400">Most Picked:</span>{" "}
+        <span className="text-white font-medium">{spotlight.mostPicked}</span>
+      </div>
+      <div>
+        <span className="text-slate-400">Sleeper Pick:</span>{" "}
+        <span className="text-white font-medium">{spotlight.sleeper}</span>
+      </div>
+      <div>
+        <span className="text-slate-400">Trending:</span>{" "}
+        <span className="text-white font-medium">{spotlight.trending}</span>
+      </div>
+      <div>
+        <span className="text-slate-400">Player to Watch:</span>{" "}
+        <span className="text-white font-medium">{spotlight.watch}</span>
+      </div>
+    </div>
 
-          {/* Badge Row */}
-          <div className="flex flex-wrap gap-2 mt-3">
-            {badges
-              .filter((b) => b.earned)
-              .slice(0, 4)
-              .map((b) => (
-                <button
-                  key={b.id}
-                  onClick={() => setBadgeModalOpen(true)}
-                  className="px-3 py-2 rounded-lg bg-white/5 border border-white/15 shadow-sm flex items-center gap-2 text-xs hover:border-emerald-400 transition"
-                >
-                  <span className="text-base">{b.emoji}</span>
-                  <span className="text-slate-100">{b.name}</span>
-                </button>
-              ))}
+    {/* Badge Row */}
+    <div className="flex flex-wrap gap-2 mt-3">
+      {badges
+        .filter((b) => b.earned)
+        .slice(0, 4)
+        .map((b) => (
+          <button
+            key={b.id}
+            onClick={() => setBadgeModalOpen(true)}
+            className="px-3 py-2 rounded-lg bg-white/5 border border-white/15 shadow-sm flex items-center gap-2 text-xs hover:border-emerald-400 transition"
+          >
+            <span className="text-base">{b.emoji}</span>
+            <span className="text-slate-100">{b.name}</span>
+          </button>
+        ))}
 
-            {badges.filter((b) => b.earned).length === 0 && (
-              <span className="text-xs text-slate-500">
-                Earn badges by building streaks and hitting milestones.
+      {badges.filter((b) => b.earned).length === 0 && (
+        <span className="text-xs text-slate-500">
+          Earn badges by building streaks and hitting milestones.
+        </span>
+      )}
+    </div>
+  </div>
+
+  {/* Upcoming Event + Leaderboard */}
+  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+    {/* Upcoming Event */}
+    <div className="rounded-xl bg-slate-900/70 border border-white/10 p-5 shadow-xl flex flex-col gap-4">
+      <h3 className="text-lg font-semibold">Upcoming Event</h3>
+
+      {upcomingTournament ? (
+        <>
+          <div className="flex items-center gap-3">
+            <div className="text-white font-medium text-lg">
+              {upcomingTournament.name}
+            </div>
+
+            {premiumLabel(upcomingTournament) && (
+              <span
+                className={`
+                  inline-flex items-center gap-1
+                  px-2.5 py-1
+                  h-6
+                  text-[11px] font-semibold uppercase tracking-wide
+                  rounded-full
+                  ${categoryColor(upcomingTournament.category)}
+                `}
+              >
+                {categoryIcon(upcomingTournament.category)}
+                {premiumLabel(upcomingTournament)}
               </span>
             )}
           </div>
-        </div>
 
-{/* Upcoming Event + Leaderboard */}
-<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-  {/* Upcoming Event */}
-  <div className="rounded-xl bg-slate-900/70 border border-white/10 p-5 shadow-xl flex flex-col gap-4">
-    <h3 className="text-lg font-semibold">Upcoming Event</h3>
-    {upcomingTournament ? (
-      <>
-        <div className="flex items-center gap-3">
-          <div className="text-white font-medium text-lg">
-            {upcomingTournament.name}
+          <div className="text-slate-400 text-sm">
+            {new Date(upcomingTournament.start_date).toLocaleDateString()} –{" "}
+            {new Date(upcomingTournament.end_date).toLocaleDateString()}
           </div>
 
-          {premiumLabel(upcomingTournament) && (
-            <span
-              className={`
-                inline-flex items-center gap-1
-                px-2.5 py-1
-                h-6
-                text-[11px] font-semibold uppercase tracking-wide
-                rounded-full
-                ${categoryColor(upcomingTournament.category)}
-              `}
-            >
-              {categoryIcon(upcomingTournament.category)}
-              {premiumLabel(upcomingTournament)}
-            </span>
-          )}
-        </div>
-
-        <div className="text-slate-400 text-sm">
-          {new Date(upcomingTournament.start_date).toLocaleDateString()} –{" "}
-          {new Date(upcomingTournament.end_date).toLocaleDateString()}
-        </div>
-
-        <p className="text-slate-300 text-sm mt-2">
-          Starts in{" "}
-          {Math.ceil(
-            (new Date(upcomingTournament.start_date).getTime() - today.getTime()) /
-              (1000 * 60 * 60 * 24)
-          )}{" "}
-          days.
-        </p>
-      </>
-    ) : (
-      <p className="text-slate-500 text-sm">No upcoming tournaments scheduled.</p>
-    )}
-  </div>
-
-  {/* Weekly Leaderboard (Top 5 preview) */}
-  <Link href="/sports/golf/weekly/leaderboard">
-    <div className="rounded-xl bg-slate-900/70 border border-white/10 p-5 shadow-xl flex flex-col gap-4 cursor-pointer hover:bg-slate-900/80 transition">
-      <h3 className="text-lg font-semibold text-emerald-400">Weekly Leaderboard</h3>
-      <table className="w-full text-left text-slate-300 text-sm">
-        <thead>
-          <tr className="text-slate-400">
-            <th className="pb-2">Rank</th>
-            <th className="pb-2">Player</th>
-            <th className="pb-2">Points</th>
-          </tr>
-        </thead>
-        <tbody>
-          {leaderboard.slice(0, 5).map((entry, i) => (
-            <tr key={entry.user_id} className="border-t border-slate-800">
-              <td className="py-1">{i + 1}</td>
-              <td className="py-1">{entry.user_name}</td>
-              <td className="py-1">{entry.total_points}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      {leaderboard.length > 5 && (
-        <p className="text-emerald-400 text-xs mt-2 text-right">
-          View Full Leaderboard →
-        </p>
+          <p className="text-slate-300 text-sm mt-2">
+            Starts in{" "}
+            {Math.ceil(
+              (new Date(upcomingTournament.start_date).getTime() - today.getTime()) /
+                (1000 * 60 * 60 * 24)
+            )}{" "}
+            days.
+          </p>
+        </>
+      ) : (
+        <p className="text-slate-500 text-sm">No upcoming tournaments scheduled.</p>
       )}
     </div>
-  </Link>
-</div>
 
+    {/* Weekly Leaderboard (Top 5 preview) */}
+    <Link href="/sports/golf/weekly/leaderboard">
+      <div className="rounded-xl bg-slate-900/70 border border-white/10 p-5 shadow-xl flex flex-col gap-4 cursor-pointer hover:bg-slate-900/80 transition">
+        <h3 className="text-lg font-semibold text-emerald-400">Weekly Leaderboard</h3>
+
+        <table className="w-full text-left text-slate-300 text-sm">
+          <thead>
+            <tr className="text-slate-400">
+              <th className="pb-2">Rank</th>
+              <th className="pb-2">Player</th>
+              <th className="pb-2">Points</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {leaderboard.slice(0, 5).map((entry, i) => (
+              <tr key={entry.user_id} className="border-t border-slate-800">
+                <td className="py-1">{i + 1}</td>
+                <td className="py-1">{entry.user_name}</td>
+                <td className="py-1">{entry.total_points}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        {leaderboard.length > 5 && (
+          <p className="text-emerald-400 text-xs mt-2 text-right">
+            View Full Leaderboard →
+          </p>
+        )}
+      </div>
+    </Link>
+  </div>
+</section>   {/* ⭐ THIS WAS MISSING */}
 
       {/* Past Tournament Dropdown (ENABLED) */}
       <div className="mb-6">

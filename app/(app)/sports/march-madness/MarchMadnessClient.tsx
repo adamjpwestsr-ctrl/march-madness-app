@@ -331,6 +331,7 @@ export function MarchMadnessClient() {
   {state.openingRoundGames?.length > 0 && (
     <OpeningRoundPanel
       games={state.openingRoundGames}
+      live={live}
       picks={picks}
       onPick={handlePick}
     />

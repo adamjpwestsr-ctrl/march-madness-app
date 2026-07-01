@@ -324,7 +324,7 @@ export function MarchMadnessClient() {
           />
         </div>
 
-        {/* Right column */}
+{/* Right column */}
 <div className="flex-1 space-y-12">
   {/* Opening Round */}
   {state.openingRoundGames?.length > 0 && (
@@ -337,38 +337,39 @@ export function MarchMadnessClient() {
   )}
 
   {/* Regional Brackets */}
- {regionOrder.map((region) => (
-  <div
-    key={region}
-    className={`transition-opacity duration-300 ${
-      activeRegion === region ? 'opacity-100' : 'opacity-40'
-    }`}
-  >
-    <RegionBracketPanel
-      region={region}
-      games={state.regionalGames[region] ?? []}
-      picks={picks}
-      onPick={handlePick}
-      teams={state.teams}
-    />
-  </div>
-))}
-
-
-
-      {/* Bottom strip */}
-      <section className="px-6 pb-10 space-y-4">
-        <div className="flex justify-end">
-          <button
-            onClick={() => setShowUnpaid(!showUnpaid)}
-            className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg hover:bg-white/20 transition shadow-md"
-          >
-            {showUnpaid ? 'Hide Unpaid' : 'Show Unpaid'}
-          </button>
-        </div>
-
-        <LeaderboardPreview rows={visibleLeaderboard} />
-      </section>
+  {regionOrder.map((region) => (
+    <div
+      key={region}
+      className={`transition-opacity duration-300 ${
+        activeRegion === region ? 'opacity-100' : 'opacity-40'
+      }`}
+    >
+      <RegionBracketPanel
+        region={region}
+        games={state.regionalGames[region] ?? []}
+        picks={picks}
+        onPick={handlePick}
+        teams={state.teams}
+      />
     </div>
-  );
+  ))}
+</div>   
+</main>  
+
+{/* Bottom strip */}
+<section className="px-6 pb-10 space-y-4">
+  <div className="flex justify-end">
+    <button
+      onClick={() => setShowUnpaid(!showUnpaid)}
+      className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg hover:bg-white/20 transition shadow-md"
+    >
+      {showUnpaid ? 'Hide Unpaid' : 'Show Unpaid'}
+    </button>
+  </div>
+
+  <LeaderboardPreview rows={visibleLeaderboard} />
+</section>
+
+</div>
+);
 }

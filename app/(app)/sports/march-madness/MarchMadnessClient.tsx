@@ -326,13 +326,13 @@ export function MarchMadnessClient() {
 
 {/* Right column */}
 <div className="flex-1 space-y-12">
+
   {/* Opening Round */}
   {state.openingRoundGames?.length > 0 && (
     <OpeningRoundPanel
       games={state.openingRoundGames}
       picks={picks}
       onPick={handlePick}
-      teams={state.teams}
     />
   )}
 

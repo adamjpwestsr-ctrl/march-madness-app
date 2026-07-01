@@ -14,53 +14,7 @@ import { LiveTicker } from '@/components/march-madness/LiveTicker';
 import { LeaderboardPreview } from '@/components/march-madness/LeaderboardPreview';
 
 // ------------------------------------------------------
-// REGION MODAL OVERLAY
-// ------------------------------------------------------
-function RegionModal({
-  region,
-  games,
-  picks,
-  onPick,
-  onSave,
-  onClose,
-}: {
-  region: string;
-  games: TournamentGame[];
-  picks: Record<string, string>;
-  onPick: (gameId: string, winner: string) => void;
-  onSave: () => void;
-  onClose: () => void;
-}) {
-  return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="relative w-full max-w-6xl bg-slate-900 rounded-xl p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
-
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-white/70 hover:text-white text-sm font-semibold"
-        >
-          ✕ Close
-        </button>
-
-        <button
-          onClick={onSave}
-          className="absolute top-4 right-24 px-3 py-1 rounded-md bg-green-600/40 border border-green-400 text-xs text-white/90 hover:bg-green-600/60 transition"
-        >
-          Save Picks
-        </button>
-
-        <h2 className="text-2xl font-bold mb-4 text-center uppercase tracking-wide">
-          {region} Region
-        </h2>
-
-        <RegionBracketPanel region={region} games={games} onPick={onPick} />
-      </div>
-    </div>
-  );
-}
-
-// ------------------------------------------------------
-// MAIN CLIENT COMPONENT
+// MAIN CLIENT COMPONENT (REDESIGNED LAYOUT)
 // ------------------------------------------------------
 export function MarchMadnessClient() {
   const [state, setState] = useState<MarchMadnessState | null>(null);
@@ -72,13 +26,15 @@ export function MarchMadnessClient() {
   const [activeRegion, setActiveRegion] = useState<string | null>(null);
   const [activeBracketId, setActiveBracketId] = useState<string | null>(null);
 
-  // ⭐ Picks now use UUID keys
+  // Picks keyed by game UUID
   const [picks, setPicks] = useState<Record<string, string>>({});
 
   const [brackets, setBrackets] = useState<any[]>([]);
 
+  const regionOrder = ['East', 'West', 'South', 'Midwest'];
+
   // -----------------------------
-  // LOAD GLOBAL STATE (NO CLIENT REGROUPING)
+  // LOAD GLOBAL STATE
   // -----------------------------
   useEffect(() => {
     (async () => {
@@ -97,7 +53,6 @@ export function MarchMadnessClient() {
 
         const json = await res.json();
 
-        // ⭐ Use backend-provided region grouping
         setState(json);
         setBrackets(json.brackets ?? []);
       } catch (err) {
@@ -170,7 +125,7 @@ export function MarchMadnessClient() {
   // PICK HANDLERS (UUID SAFE)
   // -----------------------------
   const handlePick = (gameId: string, winner: string) => {
-    if (!winner || winner === 'TBD') return;   // ✅ Step C
+    if (!winner || winner === 'TBD') return;
     setPicks((prev) => ({ ...prev, [gameId]: winner }));
   };
 
@@ -181,7 +136,7 @@ export function MarchMadnessClient() {
     }
 
     const formattedPicks = Object.entries(picks).map(([gameId, winner]) => ({
-      game_id: gameId, // UUID
+      game_id: gameId,
       selected_team: winner,
     }));
 
@@ -204,38 +159,56 @@ export function MarchMadnessClient() {
       }
 
       console.log('Picks saved!');
-      setActiveRegion(null);
     } catch (err) {
       console.error('SAVE PICKS ERROR:', err);
     }
   };
 
   // -----------------------------
+  // REGION PROGRESS (for overview cards)
+  // -----------------------------
+  const getRegionProgress = (region: string) => {
+    if (!state) return { total: 0, picked: 0 };
+    const games = state.regionalGames[region] ?? [];
+    const total = games.length;
+    const picked = games.filter((g) => picks[g.id]).length;
+    return { total, picked };
+  };
+
+  // -----------------------------
   // LOADING STATE
   // -----------------------------
   if (loading || !state) {
-    return <div className="p-6">Loading March Madness…</div>;
+    return (
+      <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center">
+        <div className="p-6 rounded-xl bg-slate-900/80 border border-white/10 shadow-2xl">
+          Loading March Madness…
+        </div>
+      </div>
+    );
   }
 
   const visibleLeaderboard = showUnpaid
     ? leaderboard
     : leaderboard.filter((row) => row.has_paid);
 
-  const regionOrder = ['East', 'West', 'South', 'Midwest'];
-
   // -----------------------------
-  // RENDER UI
+  // RENDER UI (REDESIGNED LAYOUT)
   // -----------------------------
   return (
-    <div className="space-y-8">
-      <section>
-        <LiveTicker />
-      </section>
+    <div className="min-h-screen bg-slate-950 text-white flex flex-col gap-6">
+      {/* Header */}
+      <header className="flex items-center justify-between px-6 pt-4">
+        <div>
+          <h1 className="text-3xl font-extrabold tracking-tight">
+            March Madness Bracket
+          </h1>
+          <p className="text-sm text-white/60">
+            {state.lockState.bracketsOpen ? 'Brackets open' : 'Brackets locked'}
+          </p>
+        </div>
 
-      {/* Bracket selector */}
-      <section className="space-y-4">
-        <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-bold">My Brackets</h2>
+        <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
             <select
               value={activeBracketId ?? ''}
@@ -258,67 +231,98 @@ export function MarchMadnessClient() {
               <option value="__create__">➕ Create Bracket</option>
             </select>
           </div>
+
+          <button
+            onClick={handleSave}
+            disabled={!activeBracketId}
+            className={`px-4 py-2 rounded-lg text-sm font-semibold transition
+              ${
+                activeBracketId
+                  ? 'bg-green-600/70 hover:bg-green-500 border border-green-300'
+                  : 'bg-slate-700/60 text-white/40 border border-slate-600 cursor-not-allowed'
+              }
+            `}
+          >
+            Save Picks
+          </button>
         </div>
+      </header>
+
+      {/* Live ticker */}
+      <section className="px-6">
+        <LiveTicker />
       </section>
 
-      {/* Opening Round */}
-      <section>
-        <OpeningRoundPanel
-          games={state.openingRoundGames}
-          live={live}
-          onPick={handlePick}   // ✅ Step A
-        />
-      </section>
+      {/* Main content */}
+      <main className="flex flex-col lg:flex-row gap-6 px-6 pb-6">
+        {/* Left column: Opening Round + Regions overview */}
+        <div className="flex-1 flex flex-col gap-4">
+          <OpeningRoundPanel
+            games={state.openingRoundGames}
+            live={live}
+            onPick={(gameId, winner) => handlePick(gameId, winner)}
+          />
 
-      {/* Regions */}
-      <section className="space-y-4">
-        <h2 className="text-2xl font-bold text-center">Regions</h2>
+          <div className="rounded-xl p-4 bg-slate-900/70 border border-white/10 shadow-xl space-y-3">
+            <h2 className="text-lg font-bold text-center uppercase tracking-wide text-white/80">
+              Regions Overview
+            </h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {regionOrder.map((region) => {
+                const { total, picked } = getRegionProgress(region);
+                const progress =
+                  total > 0 ? Math.round((picked / total) * 100) : 0;
 
-        {!activeBracketId && (
-          <p className="text-center text-red-400 font-semibold">
-            Select or create a bracket above before making picks.
-          </p>
-        )}
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {regionOrder.map((region) => {
-            const games = state.regionalGames[region] ?? [];
-            if (!games.length) return null;
-
-            return (
-              <button
-                key={region}
-                disabled={!activeBracketId}
-                onClick={() => setActiveRegion(region)}
-                className={`rounded-xl p-4 text-center font-bold uppercase tracking-wide transition
-                  ${
-                    activeBracketId
-                      ? 'bg-white/10 border border-white/20 text-white/90 hover:bg-white/20'
-                      : 'bg-gray-700/40 border border-gray-600 text-gray-500 cursor-not-allowed'
-                  }
-                `}
-              >
-                {region}
-              </button>
-            );
-          })}
+                return (
+                  <button
+                    key={region}
+                    disabled={!activeBracketId}
+                    onClick={() => setActiveRegion(region)}
+                    className={`rounded-xl p-4 bg-white/5 border border-white/10 transition-all flex flex-col items-center gap-2
+                      ${
+                        activeBracketId
+                          ? 'hover:bg-white/10 hover:scale-[1.02]'
+                          : 'bg-slate-800/60 text-white/40 cursor-not-allowed'
+                      }
+                    `}
+                  >
+                    <span className="text-sm uppercase tracking-wide font-bold">
+                      {region}
+                    </span>
+                    <div className="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
+                      <div
+                        className="h-full bg-green-500 transition-all"
+                        style={{ width: `${progress}%` }}
+                      />
+                    </div>
+                    <span className="text-xs text-white/70">
+                      {picked}/{total} picks
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
-      </section>
 
-      {/* Region modal overlay */}
-      {activeRegion && activeBracketId && (
-        <RegionModal
-          region={activeRegion}
-          games={state.regionalGames[activeRegion] ?? []}
-          picks={picks}
-          onPick={handlePick}
-          onSave={handleSave}
-          onClose={() => setActiveRegion(null)}
-        />
-      )}
+        {/* Right column: Region bracket detail */}
+        <div className="flex-1">
+          {activeRegion && activeBracketId ? (
+            <RegionBracketPanel
+              region={activeRegion}
+              games={state.regionalGames[activeRegion] ?? []}
+              onPick={(gameId, winner) => handlePick(gameId, winner)}
+            />
+          ) : (
+            <div className="h-full rounded-xl border border-dashed border-white/20 flex items-center justify-center text-white/50 bg-slate-900/60">
+              Select a region to view its bracket.
+            </div>
+          )}
+        </div>
+      </main>
 
-      {/* Leaderboard preview */}
-      <section className="space-y-4">
+      {/* Bottom strip: Leaderboard + controls */}
+      <section className="px-6 pb-6 space-y-4">
         <div className="flex justify-end">
           <button
             onClick={() => setShowUnpaid(!showUnpaid)}

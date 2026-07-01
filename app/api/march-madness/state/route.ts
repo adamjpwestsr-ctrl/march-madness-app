@@ -142,10 +142,13 @@ const regionalGamesByRegion: Record<string, TournamentGame[]> = {
 (gamesData ?? [])
   .filter((g) => (g.round ?? 0) >= 2)
   .forEach((g) => {
-    // Prefer team1.region → fallback to team2.region → fallback to game.region
+    // Handle Supabase join arrays
+    const team1Region = Array.isArray(g.team1) ? g.team1[0]?.region : g.team1?.region;
+    const team2Region = Array.isArray(g.team2) ? g.team2[0]?.region : g.team2?.region;
+
     const rawRegion =
-      g.team1?.region ??
-      g.team2?.region ??
+      team1Region ??
+      team2Region ??
       g.region ??
       null;
 
@@ -157,7 +160,6 @@ const regionalGamesByRegion: Record<string, TournamentGame[]> = {
     if (region && regionalGamesByRegion[region]) {
       regionalGamesByRegion[region].push(normalizeGame(g));
     } else {
-      // If region still missing, put in "Unknown"
       if (!regionalGamesByRegion['Unknown']) {
         regionalGamesByRegion['Unknown'] = [];
       }

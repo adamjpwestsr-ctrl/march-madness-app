@@ -5,7 +5,6 @@ import {
   MarchMadnessState,
   LeaderboardRow,
   LiveGameSummary,
-  TournamentGame,
 } from '@/lib/marchMadnessTypes';
 
 import { OpeningRoundPanel } from '@/components/march-madness/OpeningRoundPanel';
@@ -14,7 +13,7 @@ import { LiveTicker } from '@/components/march-madness/LiveTicker';
 import { LeaderboardPreview } from '@/components/march-madness/LeaderboardPreview';
 
 // ------------------------------------------------------
-// MAIN CLIENT COMPONENT (REDESIGNED LAYOUT)
+// MAIN CLIENT COMPONENT (FULLY POLISHED)
 // ------------------------------------------------------
 export function MarchMadnessClient() {
   const [state, setState] = useState<MarchMadnessState | null>(null);
@@ -122,7 +121,7 @@ export function MarchMadnessClient() {
   };
 
   // -----------------------------
-  // PICK HANDLERS (UUID SAFE)
+  // PICK HANDLERS
   // -----------------------------
   const handlePick = (gameId: string, winner: string) => {
     if (!winner || winner === 'TBD') return;
@@ -165,7 +164,7 @@ export function MarchMadnessClient() {
   };
 
   // -----------------------------
-  // REGION PROGRESS (for overview cards)
+  // REGION PROGRESS
   // -----------------------------
   const getRegionProgress = (region: string) => {
     if (!state) return { total: 0, picked: 0 };
@@ -193,49 +192,47 @@ export function MarchMadnessClient() {
     : leaderboard.filter((row) => row.has_paid);
 
   // -----------------------------
-  // RENDER UI (REDESIGNED LAYOUT)
+  // RENDER UI (FULL POLISH)
   // -----------------------------
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex flex-col gap-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 to-slate-900 text-white flex flex-col gap-8">
       {/* Header */}
-      <header className="flex items-center justify-between px-6 pt-4">
+      <header className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-white/10 backdrop-blur-xl">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight">
+          <h1 className="text-4xl font-extrabold tracking-tight drop-shadow">
             March Madness Bracket
           </h1>
-          <p className="text-sm text-white/60">
+          <p className="text-sm text-white/60 mt-1">
             {state.lockState.bracketsOpen ? 'Brackets open' : 'Brackets locked'}
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <select
-              value={activeBracketId ?? ''}
-              onChange={(e) => {
-                const val = e.target.value;
-                if (val === '__create__') {
-                  handleCreateBracket();
-                } else {
-                  setActiveBracketId(val || null);
-                }
-              }}
-              className="bg-slate-800 text-white rounded-md px-3 py-2 border border-white/20"
-            >
-              <option value="">Select a bracket</option>
-              {brackets.map((b) => (
-                <option key={b.bracket_id} value={b.bracket_id}>
-                  {b.icon ?? '🏀'} {b.bracket_name}
-                </option>
-              ))}
-              <option value="__create__">➕ Create Bracket</option>
-            </select>
-          </div>
+        <div className="flex items-center gap-4">
+          <select
+            value={activeBracketId ?? ''}
+            onChange={(e) => {
+              const val = e.target.value;
+              if (val === '__create__') {
+                handleCreateBracket();
+              } else {
+                setActiveBracketId(val || null);
+              }
+            }}
+            className="bg-slate-800 text-white rounded-lg px-4 py-2 border border-white/20 shadow-md hover:bg-slate-700 transition"
+          >
+            <option value="">Select a bracket</option>
+            {brackets.map((b) => (
+              <option key={b.bracket_id} value={b.bracket_id}>
+                {b.icon ?? '🏀'} {b.bracket_name}
+              </option>
+            ))}
+            <option value="__create__">➕ Create Bracket</option>
+          </select>
 
           <button
             onClick={handleSave}
             disabled={!activeBracketId}
-            className={`px-4 py-2 rounded-lg text-sm font-semibold transition
+            className={`px-5 py-2 rounded-lg text-sm font-semibold shadow-md transition
               ${
                 activeBracketId
                   ? 'bg-green-600/70 hover:bg-green-500 border border-green-300'
@@ -254,20 +251,23 @@ export function MarchMadnessClient() {
       </section>
 
       {/* Main content */}
-      <main className="flex flex-col lg:flex-row gap-6 px-6 pb-6">
-        {/* Left column: Opening Round + Regions overview */}
-        <div className="flex-1 flex flex-col gap-4">
+      <main className="flex flex-col lg:flex-row gap-8 px-6 pb-10">
+        {/* Left column */}
+        <div className="flex-1 flex flex-col gap-6">
           <OpeningRoundPanel
             games={state.openingRoundGames}
             live={live}
-            onPick={(gameId, winner) => handlePick(gameId, winner)}
+            picks={picks}
+            onPick={handlePick}
           />
 
-          <div className="rounded-xl p-4 bg-slate-900/70 border border-white/10 shadow-xl space-y-3">
-            <h2 className="text-lg font-bold text-center uppercase tracking-wide text-white/80">
+          {/* Regions Overview */}
+          <div className="rounded-2xl p-6 bg-slate-900/70 border border-white/10 shadow-xl space-y-4 backdrop-blur-xl">
+            <h2 className="text-xl font-bold text-center uppercase tracking-wide text-white/80">
               Regions Overview
             </h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               {regionOrder.map((region) => {
                 const { total, picked } = getRegionProgress(region);
                 const progress =
@@ -278,10 +278,10 @@ export function MarchMadnessClient() {
                     key={region}
                     disabled={!activeBracketId}
                     onClick={() => setActiveRegion(region)}
-                    className={`rounded-xl p-4 bg-white/5 border border-white/10 transition-all flex flex-col items-center gap-2
+                    className={`rounded-xl p-5 bg-white/5 border border-white/10 shadow-md transition-all flex flex-col items-center gap-3
                       ${
                         activeBracketId
-                          ? 'hover:bg-white/10 hover:scale-[1.02]'
+                          ? 'hover:bg-white/10 hover:scale-[1.03]'
                           : 'bg-slate-800/60 text-white/40 cursor-not-allowed'
                       }
                     `}
@@ -289,12 +289,14 @@ export function MarchMadnessClient() {
                     <span className="text-sm uppercase tracking-wide font-bold">
                       {region}
                     </span>
+
                     <div className="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
                       <div
-                        className="h-full bg-green-500 transition-all"
+                        className="h-full bg-green-500 transition-all duration-300"
                         style={{ width: `${progress}%` }}
                       />
                     </div>
+
                     <span className="text-xs text-white/70">
                       {picked}/{total} picks
                     </span>
@@ -305,28 +307,29 @@ export function MarchMadnessClient() {
           </div>
         </div>
 
-        {/* Right column: Region bracket detail */}
+        {/* Right column */}
         <div className="flex-1">
           {activeRegion && activeBracketId ? (
             <RegionBracketPanel
               region={activeRegion}
               games={state.regionalGames[activeRegion] ?? []}
-              onPick={(gameId, winner) => handlePick(gameId, winner)}
+              picks={picks}
+              onPick={handlePick}
             />
           ) : (
-            <div className="h-full rounded-xl border border-dashed border-white/20 flex items-center justify-center text-white/50 bg-slate-900/60">
+            <div className="h-full rounded-2xl border border-dashed border-white/20 flex items-center justify-center text-white/50 bg-slate-900/60 backdrop-blur-xl shadow-xl">
               Select a region to view its bracket.
             </div>
           )}
         </div>
       </main>
 
-      {/* Bottom strip: Leaderboard + controls */}
-      <section className="px-6 pb-6 space-y-4">
+      {/* Bottom strip */}
+      <section className="px-6 pb-10 space-y-4">
         <div className="flex justify-end">
           <button
             onClick={() => setShowUnpaid(!showUnpaid)}
-            className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg hover:bg-white/20 transition"
+            className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg hover:bg-white/20 transition shadow-md"
           >
             {showUnpaid ? 'Hide Unpaid' : 'Show Unpaid'}
           </button>

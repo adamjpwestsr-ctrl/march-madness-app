@@ -31,30 +31,51 @@ export function RegionBracketPanel({
     if (onPick) onPick(game.id, winner);
   };
 
+  // Region accent colors + gradient themes
   const regionAccent =
     region === 'East'
       ? 'blue'
       : region === 'West'
-      ? 'yellow'
+      ? 'amber'
       : region === 'South'
       ? 'red'
-      : 'green';
+      : 'emerald';
+
+  const regionGradient =
+    region === 'East'
+      ? 'from-blue-900/60 to-slate-900/40'
+      : region === 'West'
+      ? 'from-amber-900/60 to-slate-900/40'
+      : region === 'South'
+      ? 'from-red-900/60 to-slate-900/40'
+      : 'from-emerald-900/60 to-slate-900/40';
 
   return (
-    <div className="rounded-xl p-6 bg-gradient-to-br from-slate-900/60 to-slate-800/40 backdrop-blur-xl shadow-2xl space-y-8 border border-white/10">
+    <div
+      className={`rounded-2xl p-6 bg-gradient-to-br ${regionGradient} backdrop-blur-xl shadow-2xl space-y-10 border border-white/10`}
+    >
+      {/* Region Header */}
       <h2
-        className={`text-3xl font-extrabold text-center uppercase tracking-wide text-${regionAccent}-300 drop-shadow`}
+        className={`text-4xl font-extrabold text-center uppercase tracking-wide text-${regionAccent}-300 drop-shadow-lg`}
       >
         {region}
       </h2>
 
-      <div className="grid grid-cols-1 md:grid-cols-6 gap-6">
-        {roundOrder.map((round) => (
-          <div key={round} className="space-y-4">
+      {/* Bracket Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-6 gap-8">
+        {roundOrder.map((round, idx) => (
+          <div key={round} className="space-y-4 relative">
+            {/* Round Label */}
             <h3 className="text-lg font-bold text-center text-white/80 tracking-wide">
               {roundLabel(round)}
             </h3>
 
+            {/* Vertical connector line */}
+            {idx < roundOrder.length - 1 && (
+              <div className="hidden md:block absolute top-12 right-[-20px] h-[calc(100%-2rem)] border-r border-white/10 opacity-40" />
+            )}
+
+            {/* Games */}
             {rounds[round].map((g) => {
               const team1Name = g.team1 ?? 'TBD';
               const team2Name = g.team2 ?? 'TBD';
@@ -66,19 +87,26 @@ export function RegionBracketPanel({
               const isTeam2Picked =
                 picks[g.id] === team2Name || g.winner === team2Name;
 
+              const isUpset =
+                g.winner &&
+                seed1 &&
+                seed2 &&
+                ((g.winner === team1Name && seed1 > seed2) ||
+                  (g.winner === team2Name && seed2 > seed1));
+
               return (
                 <div
                   key={g.id}
-                  className="p-3 rounded-xl bg-white/5 border border-white/10 shadow-lg transition-all hover:shadow-xl hover:bg-white/10"
+                  className="p-4 rounded-xl bg-white/5 border border-white/10 shadow-lg transition-all duration-200 hover:shadow-2xl hover:bg-white/10"
                 >
                   {/* Team 1 */}
                   <button
                     onClick={() => handlePick(g, team1Name)}
-                    className={`flex justify-between items-center mb-2 w-full text-left px-3 py-2 rounded-lg transition-all duration-200
+                    className={`flex justify-between items-center mb-3 w-full text-left px-3 py-2 rounded-lg transition-all duration-200
                       ${
                         isTeam1Picked
-                          ? `bg-${regionAccent}-600/40 border border-${regionAccent}-400 scale-[1.02]`
-                          : 'hover:bg-white/20 hover:scale-[1.01]'
+                          ? `bg-${regionAccent}-600/40 border border-${regionAccent}-400 scale-[1.03] shadow-lg`
+                          : 'hover:bg-white/20 hover:scale-[1.02]'
                       }
                     `}
                   >
@@ -99,8 +127,8 @@ export function RegionBracketPanel({
                     className={`flex justify-between items-center w-full text-left px-3 py-2 rounded-lg transition-all duration-200
                       ${
                         isTeam2Picked
-                          ? `bg-${regionAccent}-600/40 border border-${regionAccent}-400 scale-[1.02]`
-                          : 'hover:bg-white/20 hover:scale-[1.01]'
+                          ? `bg-${regionAccent}-600/40 border border-${regionAccent}-400 scale-[1.03] shadow-lg`
+                          : 'hover:bg-white/20 hover:scale-[1.02]'
                       }
                     `}
                   >
@@ -115,9 +143,18 @@ export function RegionBracketPanel({
                     </span>
                   </button>
 
+                  {/* Winner + Upset Tag */}
                   {g.winner && (
-                    <div className="mt-2 text-green-400 font-bold text-sm text-center">
-                      Winner: {g.winner}
+                    <div className="mt-3 text-center space-y-1">
+                      <div className="text-green-400 font-bold text-sm">
+                        Winner: {g.winner}
+                      </div>
+
+                      {isUpset && (
+                        <div className="text-xs font-bold text-amber-300 uppercase tracking-wide">
+                          Upset!
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

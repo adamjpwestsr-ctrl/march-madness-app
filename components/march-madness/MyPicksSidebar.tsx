@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { TournamentGame, TournamentTeam } from '@/lib/marchMadnessTypes';
 import { ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 

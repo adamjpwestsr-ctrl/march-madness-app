@@ -34,9 +34,9 @@ interface UserPick {
 
 interface LeaderboardRow {
   user_id: number;
-  name: string;
-  initials: string;
-  points: number;
+  user_name: string;
+  avatar_url?: string | null;
+  total_points: number;
 }
 
 interface Streaks {

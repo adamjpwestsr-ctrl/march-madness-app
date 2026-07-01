@@ -238,6 +238,7 @@ const handleSave = async () => {
 // -----------------------------
 // RENDER UI (FULL POLISH)
 // -----------------------------
+
 return (
   <div className="min-h-screen bg-gradient-to-br from-slate-950 to-slate-900 text-white flex flex-col gap-8">
     {/* Header */}
@@ -346,3 +347,6 @@ return (
     </section>
   </div>
 );
+
+// ⭐ THIS WAS MISSING — CLOSE THE COMPONENT
+}

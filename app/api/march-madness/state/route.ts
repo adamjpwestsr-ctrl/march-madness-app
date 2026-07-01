@@ -130,36 +130,45 @@ function normalizeGame(g: any): TournamentGame {
       .map(normalizeGame);
 
   // -----------------------------
-  // 4️⃣ GROUP REGIONAL GAMES BY REGION
+  // 4️⃣ GROUP REGIONAL GAMES BY REGION (fixed)
   // -----------------------------
-  const regionalGamesByRegion: Record<string, TournamentGame[]> = {
-    East: [],
-    West: [],
-    South: [],
-    Midwest: [],
-  };
+const regionalGamesByRegion: Record<string, TournamentGame[]> = {
+  East: [],
+  West: [],
+  South: [],
+  Midwest: [],
+};
 
-  (gamesData ?? [])
-    .filter((g) => (g.round ?? 0) >= 2)
-    .forEach((g, i) => {
-      const region =
-        g.region && typeof g.region === 'string'
-          ? g.region.trim()
-          : null;
+(gamesData ?? [])
+  .filter((g) => (g.round ?? 0) >= 2)
+  .forEach((g) => {
+    // Prefer team1.region → fallback to team2.region → fallback to game.region
+    const rawRegion =
+      g.team1?.region ??
+      g.team2?.region ??
+      g.region ??
+      null;
 
-      if (region && regionalGamesByRegion[region]) {
-        regionalGamesByRegion[region].push(normalizeGame(g));
-      } else {
-        // fallback: evenly distribute if region missing
-        const regionKeys = Object.keys(regionalGamesByRegion);
-        regionalGamesByRegion[regionKeys[i % 4]].push(normalizeGame(g));
+    const region =
+      typeof rawRegion === 'string'
+        ? rawRegion.trim()
+        : null;
+
+    if (region && regionalGamesByRegion[region]) {
+      regionalGamesByRegion[region].push(normalizeGame(g));
+    } else {
+      // If region still missing, put in "Unknown"
+      if (!regionalGamesByRegion['Unknown']) {
+        regionalGamesByRegion['Unknown'] = [];
       }
-    });
-
-  // Ensure all regions exist
-  ['East', 'West', 'South', 'Midwest'].forEach((r) => {
-    if (!regionalGamesByRegion[r]) regionalGamesByRegion[r] = [];
+      regionalGamesByRegion['Unknown'].push(normalizeGame(g));
+    }
   });
+
+// Ensure all regions exist
+['East', 'West', 'South', 'Midwest', 'Unknown'].forEach((r) => {
+  if (!regionalGamesByRegion[r]) regionalGamesByRegion[r] = [];
+});
 
   // -----------------------------
   // 5️⃣ FETCH TEAMS

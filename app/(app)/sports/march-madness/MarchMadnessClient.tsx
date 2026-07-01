@@ -11,6 +11,7 @@ import { OpeningRoundPanel } from '@/components/march-madness/OpeningRoundPanel'
 import { RegionBracketPanel } from '@/components/march-madness/RegionBracketPanel';
 import { LiveTicker } from '@/components/march-madness/LiveTicker';
 import { LeaderboardPreview } from '@/components/march-madness/LeaderboardPreview';
+import MyPicksSidebar from '@/components/march-madness/MyPicksSidebar';
 
 // ------------------------------------------------------
 // MAIN CLIENT COMPONENT (FULLY POLISHED)

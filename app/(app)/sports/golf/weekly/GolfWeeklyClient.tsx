@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import confetti from "canvas-confetti";
 import { FaTrophy, FaFlagCheckered, FaGolfBall } from "react-icons/fa";
+import { LeaderboardPreview } from "@/components/march-madness/LeaderboardPreview";
+
 
 // ----------------------
 // Types
@@ -519,6 +521,14 @@ export default function GolfWeeklyClient({
           )}
         </div>
       </section>
+
+<section className="mt-10">
+  <h2 className="text-xl font-semibold text-emerald-400 mb-4">
+    Weekly Leaderboard
+  </h2>
+  <LeaderboardPreview rows={leaderboard} />
+</section>
+
 
       {/* Past Tournament Dropdown (ENABLED) */}
       <div className="mb-6">

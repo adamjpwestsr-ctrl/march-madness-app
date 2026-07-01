@@ -81,45 +81,54 @@ export async function GET() {
   // -----------------------------
   // ⭐ NORMALIZE JOINED DATA BACK INTO TournamentGame SHAPE
   // -----------------------------
-function normalizeGame(g: any): TournamentGame {
-  return {
-    id: g.id,
-    round: g.round,
-    game_number: g.game_number,
-    region: g.region,
-    winner: g.winner,
+  function normalizeGame(g: any): TournamentGame {
+    // Normalize team1/team2 join shape
+    const team1 = Array.isArray(g.team1)
+      ? g.team1[0]
+      : g.team1 ?? null;
 
-    // IDs from joined data
-    team1_id: g.team1?.id ?? null,
-    team2_id: g.team2?.id ?? null,
+    const team2 = Array.isArray(g.team2)
+      ? g.team2[0]
+      : g.team2 ?? null;
 
-    // Legacy string fields (UI still expects these)
-    team1: g.team1?.team_name ?? null,
-    team2: g.team2?.team_name ?? null,
+    return {
+      id: g.id,
+      round: g.round,
+      game_number: g.game_number,
+      region: g.region,
+      winner: g.winner,
 
-    // Seeds
-    seed1: g.team1?.seed ?? null,
-    seed2: g.team2?.seed ?? null,
+      // IDs from joined data
+      team1_id: team1?.id ?? null,
+      team2_id: team2?.id ?? null,
 
-    // Scores
-    home_score: g.home_score ?? 0,
-    away_score: g.away_score ?? 0,
+      // Legacy string fields (UI still expects these)
+      team1: team1?.team_name ?? null,
+      team2: team2?.team_name ?? null,
 
-    // Required fields your type expects but joined data does not provide
-    round_id: null,
-    winner_to_game_id: null,
-    is_placeholder: g.is_placeholder ?? false,
-    completed: g.completed ?? false,
-    status: g.status ?? 'pre',
+      // Seeds
+      seed1: team1?.seed ?? null,
+      seed2: team2?.seed ?? null,
 
-    // Required metadata fields
-    site: g.site ?? null,
-    scheduled_at: g.scheduled_at ?? null,
+      // Scores
+      home_score: g.home_score ?? 0,
+      away_score: g.away_score ?? 0,
 
-    // Bracket ownership (global games = null)
-    bracket_id: null,
-  };
-}
+      // Required fields your type expects but joined data does not provide
+      round_id: null,
+      winner_to_game_id: null,
+      is_placeholder: g.is_placeholder ?? false,
+      completed: g.completed ?? false,
+      status: g.status ?? 'pre',
+
+      // Required metadata fields
+      site: g.site ?? null,
+      scheduled_at: g.scheduled_at ?? null,
+
+      // Bracket ownership (global games = null)
+      bracket_id: null,
+    };
+  }
 
   // -----------------------------
   // 3️⃣ OPENING ROUND
@@ -130,47 +139,53 @@ function normalizeGame(g: any): TournamentGame {
       .map(normalizeGame);
 
   // -----------------------------
-  // 4️⃣ GROUP REGIONAL GAMES BY REGION (fixed)
+  // 4️⃣ GROUP REGIONAL GAMES BY REGION (FINAL FIXED VERSION)
   // -----------------------------
-const regionalGamesByRegion: Record<string, TournamentGame[]> = {
-  East: [],
-  West: [],
-  South: [],
-  Midwest: [],
-};
+  const regionalGamesByRegion: Record<string, TournamentGame[]> = {
+    East: [],
+    West: [],
+    South: [],
+    Midwest: [],
+  };
 
-(gamesData ?? [])
-  .filter((g) => (g.round ?? 0) >= 2)
-  .forEach((g) => {
-    // Handle Supabase join arrays
-    const team1Region = Array.isArray(g.team1) ? g.team1[0]?.region : g.team1?.region;
-    const team2Region = Array.isArray(g.team2) ? g.team2[0]?.region : g.team2?.region;
+  (gamesData ?? [])
+    .filter((g) => (g.round ?? 0) >= 2)
+    .forEach((g) => {
+      // Normalize join shape
+      const team1 = Array.isArray(g.team1)
+        ? g.team1[0]
+        : g.team1 ?? null;
 
-    const rawRegion =
-      team1Region ??
-      team2Region ??
-      g.region ??
-      null;
+      const team2 = Array.isArray(g.team2)
+        ? g.team2[0]
+        : g.team2 ?? null;
 
-    const region =
-      typeof rawRegion === 'string'
-        ? rawRegion.trim()
-        : null;
+      // Extract region safely
+      const rawRegion =
+        team1?.region ??
+        team2?.region ??
+        g.region ??
+        null;
 
-    if (region && regionalGamesByRegion[region]) {
-      regionalGamesByRegion[region].push(normalizeGame(g));
-    } else {
-      if (!regionalGamesByRegion['Unknown']) {
-        regionalGamesByRegion['Unknown'] = [];
+      const region =
+        typeof rawRegion === 'string'
+          ? rawRegion.trim()
+          : null;
+
+      if (region && regionalGamesByRegion[region]) {
+        regionalGamesByRegion[region].push(normalizeGame(g));
+      } else {
+        if (!regionalGamesByRegion['Unknown']) {
+          regionalGamesByRegion['Unknown'] = [];
+        }
+        regionalGamesByRegion['Unknown'].push(normalizeGame(g));
       }
-      regionalGamesByRegion['Unknown'].push(normalizeGame(g));
-    }
-  });
+    });
 
-// Ensure all regions exist
-['East', 'West', 'South', 'Midwest', 'Unknown'].forEach((r) => {
-  if (!regionalGamesByRegion[r]) regionalGamesByRegion[r] = [];
-});
+  // Ensure all regions exist
+  ['East', 'West', 'South', 'Midwest', 'Unknown'].forEach((r) => {
+    if (!regionalGamesByRegion[r]) regionalGamesByRegion[r] = [];
+  });
 
   // -----------------------------
   // 5️⃣ FETCH TEAMS

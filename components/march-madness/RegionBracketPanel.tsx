@@ -11,7 +11,7 @@ export function RegionBracketPanel({
   games: TournamentGame[];
   onPick?: (gameId: string, winner: string) => void;
 }) {
-  // Filter games by region
+  // Filter games by region (region already normalized in /state)
   const filteredGames = games.filter((g) => g.region === region);
 
   // Group games by round
@@ -49,8 +49,8 @@ export function RegionBracketPanel({
             {rounds[round].map((g) => {
               const winner = g.winner;
 
-              const team1Name = g.team1_id ? g.team1 ?? g.team1_id : g.team1 ?? 'TBD';
-              const team2Name = g.team2_id ? g.team2 ?? g.team2_id : g.team2 ?? 'TBD';
+              const team1Name = g.team1 ?? 'TBD';
+              const team2Name = g.team2 ?? 'TBD';
 
               const seed1 = g.seed1 ?? null;
               const seed2 = g.seed2 ?? null;

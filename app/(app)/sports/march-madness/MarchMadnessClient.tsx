@@ -78,7 +78,7 @@ export function MarchMadnessClient() {
   const [brackets, setBrackets] = useState<any[]>([]);
 
   // -----------------------------
-  // LOAD GLOBAL STATE
+  // LOAD GLOBAL STATE (NO CLIENT REGROUPING)
   // -----------------------------
   useEffect(() => {
     (async () => {
@@ -97,21 +97,8 @@ export function MarchMadnessClient() {
 
         const json = await res.json();
 
-        // ⭐ FIX: Group games by region
-        const groupedByRegion: Record<string, TournamentGame[]> = {};
-        const allGames: TournamentGame[] = json.allGames ?? json.games ?? [];
-
-        allGames.forEach((game) => {
-          const regionKey = game.region ?? 'Unknown';
-          if (!groupedByRegion[regionKey]) groupedByRegion[regionKey] = [];
-          groupedByRegion[regionKey].push(game);
-        });
-
-        setState({
-          ...json,
-          regionalGames: groupedByRegion,
-        });
-
+        // ⭐ Use backend-provided region grouping
+        setState(json);
         setBrackets(json.brackets ?? []);
       } catch (err) {
         console.error('STATE ERROR:', err);

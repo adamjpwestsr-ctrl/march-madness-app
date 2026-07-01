@@ -325,22 +325,36 @@ export function MarchMadnessClient() {
         </div>
 
         {/* Right column */}
-        <div className="flex-1">
-          {activeRegion && activeBracketId ? (
-            <RegionBracketPanel
-              region={activeRegion}
-              games={state.regionalGames[activeRegion] ?? []}
-              picks={picks}
-              onPick={handlePick}
-              teams={state.teams}
-            />
-          ) : (
-            <div className="h-full rounded-2xl border border-dashed border-white/20 flex items-center justify-center text-white/50 bg-slate-900/60 backdrop-blur-xl shadow-xl">
-              Select a region to view its bracket.
-            </div>
-          )}
-        </div>
-      </main>
+<div className="flex-1 space-y-12">
+  {/* Opening Round */}
+  {state.openingRoundGames?.length > 0 && (
+    <OpeningRoundPanel
+      games={state.openingRoundGames}
+      picks={picks}
+      onPick={handlePick}
+      teams={state.teams}
+    />
+  )}
+
+  {/* Regional Brackets */}
+ {regionOrder.map((region) => (
+  <div
+    key={region}
+    className={`transition-opacity duration-300 ${
+      activeRegion === region ? 'opacity-100' : 'opacity-40'
+    }`}
+  >
+    <RegionBracketPanel
+      region={region}
+      games={state.regionalGames[region] ?? []}
+      picks={picks}
+      onPick={handlePick}
+      teams={state.teams}
+    />
+  </div>
+))}
+
+
 
       {/* Bottom strip */}
       <section className="px-6 pb-10 space-y-4">

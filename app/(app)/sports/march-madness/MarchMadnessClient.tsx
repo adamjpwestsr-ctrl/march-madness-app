@@ -36,32 +36,39 @@ export function MarchMadnessClient() {
   // -----------------------------
   // LOAD GLOBAL STATE
   // -----------------------------
-  useEffect(() => {
-    (async () => {
-      try {
-        setLoading(true);
 
-        const res = await fetch('/api/march-madness/state?all=true', {
-          cache: 'no-store',
-        });
+useEffect(() => {
+  (async () => {
+    try {
+      setLoading(true);
 
-        if (!res.ok) {
-          console.error('STATE FETCH FAILED:', await res.text());
-          setLoading(false);
-          return;
-        }
+      const res = await fetch('/api/march-madness/state?all=true', {
+        cache: 'no-store',
+      });
 
-        const json = await res.json();
-
-        setState(json);
-        setBrackets(json.brackets ?? []);
-      } catch (err) {
-        console.error('STATE ERROR:', err);
-      } finally {
+      if (!res.ok) {
+        console.error('STATE FETCH FAILED:', await res.text());
         setLoading(false);
+        return;
       }
-    })();
-  }, []);
+
+      const json = await res.json();
+
+      setState(json);
+      setBrackets(json.brackets ?? []);
+
+      // ⭐ Auto-select first bracket so UI hydrates
+      if (!activeBracketId && json.brackets?.length) {
+        setActiveBracketId(json.brackets[0].bracket_id);
+      }
+
+    } catch (err) {
+      console.error('STATE ERROR:', err);
+    } finally {
+      setLoading(false);
+    }
+  })();
+}, []);
 
   // -----------------------------
   // LOAD LEADERBOARD + LIVE SCORES

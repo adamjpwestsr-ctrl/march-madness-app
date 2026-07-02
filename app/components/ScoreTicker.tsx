@@ -8,7 +8,15 @@ const SPORTS = {
   NFL: { path: "nfl", icon: "🏈" },
   NHL: { path: "nhl", icon: "🏒" },
   NCAAM: { path: "ncaam", icon: "🎓" },
+  GOLF: { path: "golf", icon: "⛳" },
   TENNIS: { path: "tennis", icon: "🎾" },
+  FIFA: { path: "fifa", icon: "⚽" },
+  EPL: { path: "epl", icon: "⚽" },
+  MLS: { path: "mls", icon: "⚽" },
+  UCL: { path: "ucl", icon: "⚽" }, // Champions League
+  F1: { path: "f1", icon: "🏎️" },
+  INDY: { path: "indy", icon: "🏎️" },
+  NASCAR: { path: "nascar", icon: "🏁" },
 };
 
 export default function ScoreTicker() {
@@ -18,20 +26,23 @@ export default function ScoreTicker() {
     try {
       const all: any[] = [];
 
-      // Fetch each sport feed from your backend
       for (const sport of Object.keys(SPORTS)) {
-        const url = `/api/scoreboard/${SPORTS[sport as keyof typeof SPORTS].path}`;
+        const { path } = SPORTS[sport as keyof typeof SPORTS];
+        const url = `/api/scoreboard/${path}`;
         const res = await fetch(url, { cache: "no-store" });
+        if (!res.ok) continue;
         const data = await res.json();
         if (data?.events?.length) all.push(...data.events);
       }
 
-      // 🔹 Filter to scores within the last 48 hours only (exclude future games)
       const now = new Date();
       const cutoff = new Date(now.getTime() - 48 * 60 * 60 * 1000);
+
       const recentGames = all.filter((game) => {
         const date = new Date(
-          game.date || game.startDate || game.competitions?.[0]?.startDate
+          game.date ||
+            game.startDate ||
+            game.competitions?.[0]?.startDate
         );
         return date >= cutoff && date <= now;
       });
@@ -49,15 +60,14 @@ export default function ScoreTicker() {
     return () => clearInterval(refresh);
   }, []);
 
-  const marqueeGames = [...games, ...games];
+  const marqueeGames = games.length ? [...games, ...games] : [];
 
   return (
-    <div className="relative w-full overflow-hidden py-2 min-h-[40px] bg-slate-900/60 border-t border-b border-slate-800 backdrop-blur group">
-      {/* Fade edges */}
+    <div className="relative w-full max-w-full overflow-hidden py-2 min-h-[40px] bg-slate-900/60 border-t border-b border-slate-800 backdrop-blur group">
       <div className="absolute left-0 top-0 w-16 h-full bg-gradient-to-r from-slate-900 to-transparent pointer-events-none" />
       <div className="absolute right-0 top-0 w-16 h-full bg-gradient-to-l from-slate-900 to-transparent pointer-events-none" />
 
-      <div className="w-full overflow-hidden">
+      <div className="w-full max-w-full overflow-hidden">
         {marqueeGames.length === 0 ? (
           <div className="text-slate-500 text-sm px-6">
             No recent or live scores available.
@@ -76,11 +86,10 @@ export default function ScoreTicker() {
                 (c: any) => c.homeAway === "away"
               );
 
-              const sportKey = Object.keys(SPORTS).find((s) =>
-                game?.league?.slug?.includes(
-                  SPORTS[s as keyof typeof SPORTS].path
-                )
-              ) as keyof typeof SPORTS;
+              const leagueSlug = game?.league?.slug || "";
+              const sportKey = (Object.keys(SPORTS) as (keyof typeof SPORTS)[]).find(
+                (s) => leagueSlug.toLowerCase().includes(SPORTS[s].path)
+              );
               const icon = sportKey ? SPORTS[sportKey].icon : "🏆";
 
               const isLive = game.status?.type?.state === "in";
@@ -92,10 +101,8 @@ export default function ScoreTicker() {
                   key={`${game.id}-${Math.random()}`}
                   className="flex items-center gap-3 px-6 text-sm text-slate-300"
                 >
-                  {/* Sport icon */}
                   <span className="text-xl">{icon}</span>
 
-                  {/* Away logo */}
                   {away?.team?.logo && (
                     <img
                       src={away.team.logo}
@@ -108,7 +115,6 @@ export default function ScoreTicker() {
 
                   <span className="text-slate-500">vs</span>
 
-                  {/* Home logo */}
                   {home?.team?.logo && (
                     <img
                       src={home.team.logo}
@@ -119,7 +125,6 @@ export default function ScoreTicker() {
                   <span>{home?.team?.abbreviation}</span>
                   <span className="font-bold text-white">{home?.score}</span>
 
-                  {/* Status */}
                   {isLive && (
                     <span className="flex items-center gap-1 text-red-400 font-semibold">
                       <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
@@ -143,10 +148,9 @@ export default function ScoreTicker() {
         )}
       </div>
 
-      {/* Animation */}
       <style jsx>{`
         .animate-ticker {
-          animation: ticker 120s linear infinite; /* 🐢 Slower speed */
+          animation: ticker 120s linear infinite;
         }
         @keyframes ticker {
           0% {

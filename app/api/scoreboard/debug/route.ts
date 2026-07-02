@@ -2,14 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
   try {
-    // Build absolute URL for both local and deployed environments
-    const baseUrl =
-      process.env.VERCEL_URL
-        ? `https://${process.env.VERCEL_URL}`
-        : "http://localhost:3000";
-
-    // Ensure we’re calling the API route, not the app root
-    const apiUrl = `${baseUrl}/api/scoreboard/all`;
+    // Dynamically build the full URL from the incoming request
+    const origin = request.nextUrl.origin;
+    const apiUrl = `${origin}/api/scoreboard/all`;
 
     const res = await fetch(apiUrl, { cache: "no-store" });
     if (!res.ok) {

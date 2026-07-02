@@ -7,7 +7,7 @@ const SPORTS = {
   NBA: { slug: "nba", icon: "🏀" },
   NFL: { slug: "nfl", icon: "🏈" },
   NHL: { slug: "nhl", icon: "🏒" },
-  NCAAM: { slug: "mens-college-basketball", icon: "🎓🏀" },
+  NCAAM: { slug: "mens-college-basketball", icon: "🎓" },
   GOLF: { slug: "pga", icon: "⛳" },
   TENNIS_ATP: { slug: "tennis", icon: "🎾" },
   EPL: { slug: "eng.1", icon: "⚽" },
@@ -82,7 +82,8 @@ export default function ScoreTicker() {
                 (c: any) => c.homeAway === "away"
               );
 
-              // Normalize slug across all ESPN structures
+              if (!home?.team || !away?.team) return null;
+
               const slug =
                 game?.league?.slug?.toLowerCase() ||
                 comp?.league?.slug?.toLowerCase() ||
@@ -106,27 +107,27 @@ export default function ScoreTicker() {
                 >
                   <span className="text-xl">{icon}</span>
 
-                  {away?.team?.logo && (
+                  {away.team.logo && (
                     <img
                       src={away.team.logo}
                       alt={away.team.displayName}
                       className="w-6 h-6 rounded-full object-cover"
                     />
                   )}
-                  <span>{away?.team?.abbreviation}</span>
-                  <span className="font-bold text-white">{away?.score}</span>
+                  <span>{away.team.abbreviation}</span>
+                  <span className="font-bold text-white">{away.score}</span>
 
                   <span className="text-slate-500">vs</span>
 
-                  {home?.team?.logo && (
+                  {home.team.logo && (
                     <img
                       src={home.team.logo}
                       alt={home.team.displayName}
                       className="w-6 h-6 rounded-full object-cover"
                     />
                   )}
-                  <span>{home?.team?.abbreviation}</span>
-                  <span className="font-bold text-white">{home?.score}</span>
+                  <span>{home.team.abbreviation}</span>
+                  <span className="font-bold text-white">{home.score}</span>
 
                   {isLive && (
                     <span className="flex items-center gap-1 text-red-400 font-semibold">
@@ -154,8 +155,20 @@ export default function ScoreTicker() {
       <style jsx>{`
         .animate-ticker {
           animation: ticker 120s linear infinite;
-          mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
-          -webkit-mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
+          mask-image: linear-gradient(
+            to right,
+            transparent 0%,
+            black 10%,
+            black 90%,
+            transparent 100%
+          );
+          -webkit-mask-image: linear-gradient(
+            to right,
+            transparent 0%,
+            black 10%,
+            black 90%,
+            transparent 100%
+          );
         }
         @keyframes ticker {
           0% {

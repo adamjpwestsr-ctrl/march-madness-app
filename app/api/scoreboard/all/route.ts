@@ -37,12 +37,15 @@ async function fetchLeague(path: string) {
 }
 
 export async function GET(request: NextRequest) {
-  const allEvents: any[] = [];
+  // Run all ESPN calls in parallel instead of sequentially
+  const results = await Promise.all(
+    (Object.keys(LEAGUES) as LeagueKey[]).map((key) =>
+      fetchLeague(LEAGUES[key])
+    )
+  );
 
-  for (const key of Object.keys(LEAGUES) as LeagueKey[]) {
-    const events = await fetchLeague(LEAGUES[key]);
-    allEvents.push(...events);
-  }
+  // Flatten all event arrays into one
+  const allEvents = results.flat();
 
   return NextResponse.json({ events: allEvents });
 }

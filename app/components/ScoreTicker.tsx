@@ -21,9 +21,6 @@ const SPORTS = {
 
 type SportKey = keyof typeof SPORTS;
 
-// 🔥 CHANGE THIS TO TEST ANY SPORT
-const TARGET_SPORT: SportKey = "GOLF";
-
 export default function ScoreTicker() {
   const [games, setGames] = useState<any[]>([]);
 
@@ -35,29 +32,21 @@ export default function ScoreTicker() {
       const data = await res.json();
       const events = data?.events || [];
 
-      // 🔍 Extract slug candidates for each event
-      const filtered = events.filter((game: any) => {
-        const comp = game.competitions?.[0];
+      const now = new Date();
+      const cutoff = new Date(now.getTime() - 48 * 60 * 60 * 1000);
+      const buffer = new Date(now.getTime() + 6 * 60 * 60 * 1000);
 
-        const slugCandidates = [
-          game?.league?.slug,
-          game?.league?.name,
-          comp?.league?.slug,
-          comp?.league?.name,
-          comp?.sport?.slug,
-          comp?.sport?.name,
-        ]
-          .filter(Boolean)
-          .map((s: string) => s.toLowerCase());
-
-        return slugCandidates.some((slug) =>
-          slug.includes(SPORTS[TARGET_SPORT].slug.toLowerCase())
+      const recent = events.filter((game: any) => {
+        const date = new Date(
+          game.date ||
+            game.startDate ||
+            game.competitions?.[0]?.startDate ||
+            game.competitions?.[0]?.date
         );
+        return date >= cutoff && date <= buffer;
       });
 
-      console.log("FILTERED EVENTS FOR", TARGET_SPORT, filtered);
-
-      setGames(filtered);
+      setGames(recent);
     } catch (err) {
       console.error("Unified scoreboard error:", err);
       setGames([]);
@@ -72,13 +61,14 @@ export default function ScoreTicker() {
 
   return (
     <div className="relative w-full overflow-hidden py-2 min-h-[40px] bg-slate-900/60 border-t border-b border-slate-800 backdrop-blur group">
+      {/* Fade edges */}
       <div className="absolute left-0 top-0 w-16 h-full bg-gradient-to-r from-slate-900 to-transparent pointer-events-none" />
       <div className="absolute right-0 top-0 w-16 h-full bg-gradient-to-l from-slate-900 to-transparent pointer-events-none" />
 
       <div className="w-full overflow-hidden">
         {games.length === 0 ? (
           <div className="text-slate-500 text-sm px-6">
-            No {TARGET_SPORT} scores available.
+            No recent or live scores available.
           </div>
         ) : (
           <div
@@ -87,21 +77,66 @@ export default function ScoreTicker() {
           >
             {games.map((game: any) => {
               const comp = game.competitions?.[0];
+              const slugCandidates = [
+                game?.league?.slug,
+                game?.league?.name,
+                comp?.league?.slug,
+                comp?.league?.name,
+                comp?.sport?.slug,
+                comp?.sport?.name,
+              ]
+                .filter(Boolean)
+                .map((s: string) => s.toLowerCase());
+
+              const sportKey = (Object.keys(SPORTS) as SportKey[]).find((k) =>
+                slugCandidates.some((slug) =>
+                  slug.includes(SPORTS[k].slug.toLowerCase())
+                )
+              );
+
+              const icon = sportKey ? SPORTS[sportKey].icon : "🏆";
+
+              // 🟢 Golf-specific rendering
+              const isGolf =
+                sportKey === "GOLF" ||
+                slugCandidates.some((slug) => slug.includes("pga"));
+              if (isGolf) {
+                return (
+                  <div
+                    key={game.id}
+                    className="flex items-center gap-3 px-6 text-sm text-slate-300"
+                  >
+                    <span className="text-xl">{SPORTS.GOLF.icon}</span>
+                    <span className="font-semibold text-white">
+                      {game.label || game.name || "Golf Tournament"}
+                    </span>
+                    <span className="text-slate-500">
+                      {new Date(game.startDate).toLocaleDateString()} – 
+                      {new Date(game.endDate).toLocaleDateString()}
+                    </span>
+                  </div>
+                );
+              }
+
+              // 🏈 Team-based rendering
               const home = comp?.competitors?.find(
                 (c: any) => c.homeAway === "home"
               );
               const away = comp?.competitors?.find(
                 (c: any) => c.homeAway === "away"
               );
-
               if (!home?.team || !away?.team) return null;
+
+              const isLive = game.status?.type?.state === "in";
+              const isFinal = game.status?.type?.state === "post";
+              const isUpcoming = game.status?.type?.state === "pre";
 
               return (
                 <div
                   key={`${game.id}-${Math.random()}`}
                   className="flex items-center gap-3 px-6 text-sm text-slate-300"
                 >
-                  <span className="text-xl">{SPORTS[TARGET_SPORT].icon}</span>
+                  <span className="text-xl">{icon}</span>
 
                   {away.team.logo && (
                     <img
@@ -124,6 +159,23 @@ export default function ScoreTicker() {
                   )}
                   <span>{home.team.abbreviation}</span>
                   <span className="font-bold text-white">{home.score}</span>
+
+                  {isLive && (
+                    <span className="flex items-center gap-1 text-red-400 font-semibold">
+                      <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                      LIVE
+                    </span>
+                  )}
+                  {isFinal && (
+                    <span className="text-slate-400 text-xs font-semibold">
+                      FINAL
+                    </span>
+                  )}
+                  {isUpcoming && (
+                    <span className="text-slate-500 text-xs">
+                      {game.status?.type?.shortDetail}
+                    </span>
+                  )}
                 </div>
               );
             })}

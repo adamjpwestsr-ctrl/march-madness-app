@@ -7,7 +7,7 @@ const SPORTS = {
   NBA: { slug: "nba", icon: "🏀" },
   NFL: { slug: "nfl", icon: "🏈" },
   NHL: { slug: "nhl", icon: "🏒" },
-  NCAAM: { slug: "mens-college-basketball", icon: "🎓" },
+  NCAAM: { slug: "mens-college-basketball", icon: "🎓🏀" },
   GOLF: { slug: "pga", icon: "⛳" },
   TENNIS_ATP: { slug: "tennis", icon: "🎾" },
   EPL: { slug: "eng.1", icon: "⚽" },
@@ -101,6 +101,17 @@ export default function ScoreTicker() {
                 sportKey === "GOLF" ||
                 slugCandidates.some((slug) => slug.includes("pga"));
               if (isGolf) {
+                const start =
+                  game.startDate ||
+                  game.date ||
+                  comp?.startDate ||
+                  comp?.date ||
+                  null;
+                const end =
+                  game.endDate ||
+                  comp?.endDate ||
+                  null;
+
                 return (
                   <div
                     key={game.id}
@@ -110,10 +121,12 @@ export default function ScoreTicker() {
                     <span className="font-semibold text-white">
                       {game.label || game.name || "Golf Tournament"}
                     </span>
-                    <span className="text-slate-500">
-                      {new Date(game.startDate).toLocaleDateString()} – 
-                      {new Date(game.endDate).toLocaleDateString()}
-                    </span>
+                    {start && end && (
+                      <span className="text-slate-500">
+                        {new Date(start).toLocaleDateString()} – 
+                        {new Date(end).toLocaleDateString()}
+                      </span>
+                    )}
                   </div>
                 );
               }

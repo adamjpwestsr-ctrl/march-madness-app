@@ -3,42 +3,44 @@
 import { useEffect, useState } from "react";
 
 const SPORTS = {
-  MLB: { path: "mlb", icon: "⚾️" },
-  NBA: { path: "nba", icon: "🏀" },
-  NFL: { path: "nfl", icon: "🏈" },
-  NHL: { path: "nhl", icon: "🏒" },
-  NCAAM: { path: "ncaam", icon: "🎓" },
-  GOLF: { path: "golf", icon: "⛳" },
-  TENNIS: { path: "tennis", icon: "🎾" },
-  FIFA: { path: "fifa", icon: "⚽" },
-  EPL: { path: "epl", icon: "⚽" },
-  MLS: { path: "mls", icon: "⚽" },
-  UCL: { path: "ucl", icon: "⚽" }, // Champions League
-  F1: { path: "f1", icon: "🏎️" },
-  INDY: { path: "indy", icon: "🏎️" },
-  NASCAR: { path: "nascar", icon: "🏁" },
+  MLB: { slug: "mlb", icon: "⚾️" },
+  NBA: { slug: "nba", icon: "🏀" },
+  NFL: { slug: "nfl", icon: "🏈" },
+  NHL: { slug: "nhl", icon: "🏒" },
+  NCAAM: { slug: "mens-college-basketball", icon: "🎓" },
+
+  GOLF: { slug: "pga", icon: "⛳" },
+
+  TENNIS_ATP: { slug: "atp", icon: "🎾" },
+
+  EPL: { slug: "eng.1", icon: "⚽" },
+  MLS: { slug: "usa.1", icon: "⚽" },
+  UCL: { slug: "uefa.1", icon: "⚽" },
+  FIFA: { slug: "fifa.worldcup", icon: "⚽" },
+
+  F1: { slug: "f1", icon: "🏎️" },
+  INDY: { slug: "indycar", icon: "🏎️" },
+  NASCAR: { slug: "nascar.cup", icon: "🏁" },
 };
 
 export default function ScoreTicker() {
   const [games, setGames] = useState<any[]>([]);
 
-  const fetchAllSports = async () => {
+  const fetchScores = async () => {
     try {
-      const all: any[] = [];
-
-      for (const sport of Object.keys(SPORTS)) {
-        const { path } = SPORTS[sport as keyof typeof SPORTS];
-        const url = `/api/scoreboard/${path}`;
-        const res = await fetch(url, { cache: "no-store" });
-        if (!res.ok) continue;
-        const data = await res.json();
-        if (data?.events?.length) all.push(...data.events);
+      const res = await fetch("/api/scoreboard/all", { cache: "no-store" });
+      if (!res.ok) {
+        setGames([]);
+        return;
       }
+
+      const data = await res.json();
+      const events = data?.events || [];
 
       const now = new Date();
       const cutoff = new Date(now.getTime() - 48 * 60 * 60 * 1000);
 
-      const recentGames = all.filter((game) => {
+      const recent = events.filter((game: any) => {
         const date = new Date(
           game.date ||
             game.startDate ||
@@ -47,16 +49,16 @@ export default function ScoreTicker() {
         return date >= cutoff && date <= now;
       });
 
-      setGames(recentGames);
+      setGames(recent);
     } catch (err) {
-      console.error("Ticker load failed:", err);
+      console.error("Unified scoreboard error:", err);
       setGames([]);
     }
   };
 
   useEffect(() => {
-    fetchAllSports();
-    const refresh = setInterval(fetchAllSports, 60000);
+    fetchScores();
+    const refresh = setInterval(fetchScores, 60000);
     return () => clearInterval(refresh);
   }, []);
 
@@ -64,6 +66,7 @@ export default function ScoreTicker() {
 
   return (
     <div className="relative w-full max-w-full overflow-hidden py-2 min-h-[40px] bg-slate-900/60 border-t border-b border-slate-800 backdrop-blur group">
+      {/* Fade edges */}
       <div className="absolute left-0 top-0 w-16 h-full bg-gradient-to-r from-slate-900 to-transparent pointer-events-none" />
       <div className="absolute right-0 top-0 w-16 h-full bg-gradient-to-l from-slate-900 to-transparent pointer-events-none" />
 
@@ -86,9 +89,9 @@ export default function ScoreTicker() {
                 (c: any) => c.homeAway === "away"
               );
 
-              const leagueSlug = game?.league?.slug || "";
-              const sportKey = (Object.keys(SPORTS) as (keyof typeof SPORTS)[]).find(
-                (s) => leagueSlug.toLowerCase().includes(SPORTS[s].path)
+              const slug = game?.league?.slug?.toLowerCase() || "";
+              const sportKey = Object.keys(SPORTS).find((k) =>
+                slug.includes(SPORTS[k].slug)
               );
               const icon = sportKey ? SPORTS[sportKey].icon : "🏆";
 

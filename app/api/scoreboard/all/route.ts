@@ -61,6 +61,8 @@ async function fetchGolf() {
 }
 
 export async function GET(request: NextRequest) {
+const golfEvents = await fetchGolf();
+console.log("GOLF EVENTS RAW:", golfEvents.length, golfEvents[0]);
   const results = await Promise.all([
     // ⭐ Fetch all non-golf leagues
     ...Object.entries(LEAGUES).map(async ([key, path]) => {

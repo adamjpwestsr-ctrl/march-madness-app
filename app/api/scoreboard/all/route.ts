@@ -24,9 +24,7 @@ const LEAGUES = {
 type LeagueKey = keyof typeof LEAGUES;
 
 async function fetchLeague(path: string) {
-
   const url = `https://site.api.espn.com/apis/site/v2/sports/${path}/scoreboard`;
-	console.log(`${key}: ${events.length}`);
 
   try {
     const res = await fetch(url, { cache: "no-store" });
@@ -39,11 +37,13 @@ async function fetchLeague(path: string) {
 }
 
 export async function GET(request: NextRequest) {
-  // Run all ESPN calls in parallel instead of sequentially
+  // Run all ESPN calls in parallel
   const results = await Promise.all(
-    (Object.keys(LEAGUES) as LeagueKey[]).map((key) =>
-      fetchLeague(LEAGUES[key])
-    )
+    (Object.keys(LEAGUES) as LeagueKey[]).map(async (key) => {
+      const events = await fetchLeague(LEAGUES[key]);
+      console.log(`${key}: ${events.length}`);
+      return events;
+    })
   );
 
   // Flatten all event arrays into one

@@ -32,9 +32,10 @@ export default function ScoreTicker() {
       const data = await res.json();
       const events = data?.events || [];
 
+      // Include all events within a reasonable window
       const now = new Date();
-      const cutoff = new Date(now.getTime() - 48 * 60 * 60 * 1000);
-      const buffer = new Date(now.getTime() + 6 * 60 * 60 * 1000);
+      const cutoff = new Date(now.getTime() - 72 * 60 * 60 * 1000);
+      const buffer = new Date(now.getTime() + 12 * 60 * 60 * 1000);
 
       const recent = events.filter((game: any) => {
         const date = new Date(
@@ -61,7 +62,6 @@ export default function ScoreTicker() {
 
   return (
     <div className="relative w-full overflow-hidden py-2 min-h-[40px] bg-slate-900/60 border-t border-b border-slate-800 backdrop-blur group">
-      {/* Fade edges */}
       <div className="absolute left-0 top-0 w-16 h-full bg-gradient-to-r from-slate-900 to-transparent pointer-events-none" />
       <div className="absolute right-0 top-0 w-16 h-full bg-gradient-to-l from-slate-900 to-transparent pointer-events-none" />
 
@@ -96,7 +96,7 @@ export default function ScoreTicker() {
 
               const icon = sportKey ? SPORTS[sportKey].icon : "🏆";
 
-              // 🟢 Golf-specific rendering
+              // 🟢 Golf-specific rendering (handles PGA tournaments)
               const isGolf =
                 sportKey === "GOLF" ||
                 slugCandidates.some((slug) => slug.includes("pga"));

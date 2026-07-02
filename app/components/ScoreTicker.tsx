@@ -8,16 +8,12 @@ const SPORTS = {
   NFL: { slug: "nfl", icon: "🏈" },
   NHL: { slug: "nhl", icon: "🏒" },
   NCAAM: { slug: "mens-college-basketball", icon: "🎓🏀" },
-
   GOLF: { slug: "pga", icon: "⛳" },
-
   TENNIS_ATP: { slug: "atp", icon: "🎾" },
-
   EPL: { slug: "eng.1", icon: "⚽" },
   MLS: { slug: "usa.1", icon: "⚽" },
   UCL: { slug: "uefa.1", icon: "⚽" },
   FIFA: { slug: "fifa.worldcup", icon: "⚽" },
-
   F1: { slug: "f1", icon: "🏎️" },
   INDY: { slug: "indycar", icon: "🏎️" },
   NASCAR: { slug: "nascar.cup", icon: "🏁" },
@@ -65,7 +61,7 @@ export default function ScoreTicker() {
     return () => clearInterval(refresh);
   }, []);
 
-  const marqueeGames = games.length ? [...games, ...games] : [];
+  const marqueeGames = games; // single list (no duplication)
 
   return (
     <div className="relative w-full overflow-hidden py-2 min-h-[40px] bg-slate-900/60 border-t border-b border-slate-800 backdrop-blur group">
@@ -81,7 +77,7 @@ export default function ScoreTicker() {
         ) : (
           <div
             key={games.length}
-            className="flex items-center gap-8 whitespace-nowrap animate-ticker group-hover:[animation-play-state:paused] max-w-[100vw]"
+            className="flex items-center gap-8 whitespace-nowrap animate-ticker group-hover:[animation-play-state:paused] w-[100vw] max-w-[100vw] overflow-hidden"
           >
             {marqueeGames.map((game: any) => {
               const comp = game.competitions?.[0];
@@ -92,13 +88,15 @@ export default function ScoreTicker() {
                 (c: any) => c.homeAway === "away"
               );
 
-              const slug = game?.league?.slug?.toLowerCase() || "";
-              const leagueName = game?.league?.name?.toLowerCase() || "";
+              const slug =
+                game?.league?.slug?.toLowerCase() ||
+                game?.league?.name?.toLowerCase() ||
+                game?.competitions?.[0]?.sport?.slug?.toLowerCase() ||
+                "";
 
-              const sportKey = (Object.keys(SPORTS) as SportKey[]).find((k) => {
-                const s = SPORTS[k].slug.toLowerCase();
-                return slug.includes(s) || leagueName.includes(s);
-              });
+              const sportKey = (Object.keys(SPORTS) as SportKey[]).find((k) =>
+                slug.includes(SPORTS[k].slug)
+              );
 
               const icon = sportKey ? SPORTS[sportKey].icon : "🏆";
 
@@ -164,10 +162,10 @@ export default function ScoreTicker() {
         }
         @keyframes ticker {
           0% {
-            transform: translateX(0);
+            transform: translateX(100%);
           }
           100% {
-            transform: translateX(-50%);
+            transform: translateX(-100%);
           }
         }
       `}</style>

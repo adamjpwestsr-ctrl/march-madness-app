@@ -88,6 +88,7 @@ export default function ScoreTicker() {
                 game?.league?.slug,
                 game?.league?.name,
                 comp?.sport?.slug,
+                comp?.sport?.name,
                 comp?.league?.slug,
                 comp?.league?.name,
               ]

@@ -7,7 +7,7 @@ const LEAGUES = {
   NHL: "hockey/nhl",
   NCAAM: "basketball/mens-college-basketball",
 
-  // GOLF REMOVED FROM HERE — handled separately
+  // Golf handled separately below
   TENNIS_ATP: "tennis/atp",
 
   EPL: "soccer/eng.1",
@@ -35,7 +35,7 @@ async function fetchLeague(path: string) {
   }
 }
 
-// ⭐ PGA FIX — ONLY THIS FEED WORKS FOR GOLF
+// 🟢 PGA FIX — normalize golf tournaments
 async function fetchGolf() {
   const url = "https://site.api.espn.com/apis/site/v2/sports/golf/pga/scoreboard";
 
@@ -45,33 +45,32 @@ async function fetchGolf() {
 
     const data = await res.json();
 
-    // ⭐ Normalize golf tournaments so ticker can render them
+    // Normalize golf tournaments so ticker can render them
     return (
       data?.events?.map((e: any) => ({
         id: e.id,
-        label: e.label,
-        startDate: e.startDate,
-        endDate: e.endDate,
+        label: e.label || e.name || "PGA Tournament",
+        startDate: e.startDate || e.start || e.date || null,
+        endDate: e.endDate || e.end || null,
         league: { slug: "pga" },
       })) || []
     );
-  } catch {
+  } catch (err) {
+    console.error("Golf fetch error:", err);
     return [];
   }
 }
 
 export async function GET(request: NextRequest) {
-const golfEvents = await fetchGolf();
-console.log("GOLF EVENTS RAW:", golfEvents.length, golfEvents[0]);
   const results = await Promise.all([
-    // ⭐ Fetch all non-golf leagues
+    // Fetch all non-golf leagues
     ...Object.entries(LEAGUES).map(async ([key, path]) => {
       const events = await fetchLeague(path);
       console.log(`${key}: ${events.length}`);
       return events;
     }),
 
-    // ⭐ Fetch golf separately
+    // Fetch golf separately
     fetchGolf(),
   ]);
 

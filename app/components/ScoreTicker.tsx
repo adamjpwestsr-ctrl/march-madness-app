@@ -21,7 +21,9 @@ const SPORTS = {
   F1: { slug: "f1", icon: "🏎️" },
   INDY: { slug: "indycar", icon: "🏎️" },
   NASCAR: { slug: "nascar.cup", icon: "🏁" },
-};
+} as const;
+
+type SportKey = keyof typeof SPORTS;
 
 export default function ScoreTicker() {
   const [games, setGames] = useState<any[]>([]);
@@ -66,7 +68,6 @@ export default function ScoreTicker() {
 
   return (
     <div className="relative w-full max-w-full overflow-hidden py-2 min-h-[40px] bg-slate-900/60 border-t border-b border-slate-800 backdrop-blur group">
-      {/* Fade edges */}
       <div className="absolute left-0 top-0 w-16 h-full bg-gradient-to-r from-slate-900 to-transparent pointer-events-none" />
       <div className="absolute right-0 top-0 w-16 h-full bg-gradient-to-l from-slate-900 to-transparent pointer-events-none" />
 
@@ -90,9 +91,11 @@ export default function ScoreTicker() {
               );
 
               const slug = game?.league?.slug?.toLowerCase() || "";
-              const sportKey = Object.keys(SPORTS).find((k) =>
+
+              const sportKey = (Object.keys(SPORTS) as SportKey[]).find((k) =>
                 slug.includes(SPORTS[k].slug)
               );
+
               const icon = sportKey ? SPORTS[sportKey].icon : "🏆";
 
               const isLive = game.status?.type?.state === "in";

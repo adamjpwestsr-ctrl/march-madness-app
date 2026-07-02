@@ -50,14 +50,12 @@ export default function ScoreTicker() {
       const recent = events.filter((game: any) => {
         const date = resolveDate(game);
 
-        // ⭐ PGA tournaments often have missing or weird dates — ALWAYS include them
         const isGolf =
           game?.league?.slug === "pga" ||
           game?.league?.name === "pga" ||
           (game?.league?.slug || "").toLowerCase().includes("pga");
 
         if (isGolf) return true;
-
         if (!date) return false;
 
         const d = new Date(date);
@@ -90,7 +88,7 @@ export default function ScoreTicker() {
         ) : (
           <div
             key={games.length}
-            className="flex items-center gap-8 whitespace-nowrap animate-ticker group-hover:[animation-play-state:paused] w-[100vw] max-w-[100vw] overflow-hidden"
+            className="flex items-center gap-8 whitespace-nowrap animate-ticker group-hover:[animation-play-state:paused]"
           >
             {games.map((game: any) => {
               const comp = game.competitions?.[0];
@@ -114,7 +112,6 @@ export default function ScoreTicker() {
 
               const icon = sportKey ? SPORTS[sportKey].icon : "🏆";
 
-              // ⭐ PGA rendering — guaranteed to show now
               const isGolf =
                 sportKey === "GOLF" ||
                 slugCandidates.some((slug) => slug.includes("pga"));
@@ -152,7 +149,6 @@ export default function ScoreTicker() {
                 );
               }
 
-              // 🏈 Team-based rendering
               const home = comp?.competitors?.find(
                 (c: any) => c.homeAway === "home"
               );

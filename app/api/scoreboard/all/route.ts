@@ -52,7 +52,7 @@ async function fetchGolf() {
         label: e.label || e.name || "PGA Tournament",
         startDate: e.startDate || e.start || e.date || null,
         endDate: e.endDate || e.end || null,
-        league: { slug: "pga" },
+        league: { slug: "pga", name: "PGA Tour" },
       })) || []
     );
   } catch (err) {
@@ -76,5 +76,25 @@ export async function GET(request: NextRequest) {
 
   const allEvents = results.flat();
 
-  return NextResponse.json({ events: allEvents });
+  // 🧩 Normalize league info for all events
+  const normalized = allEvents.map((game: any) => {
+    const comp = game.competitions?.[0];
+    const leagueSlug =
+      game?.league?.slug ||
+      comp?.league?.slug ||
+      comp?.sport?.slug ||
+      "unknown";
+    const leagueName =
+      game?.league?.name ||
+      comp?.league?.name ||
+      comp?.sport?.name ||
+      "Unknown League";
+
+    return {
+      ...game,
+      league: { slug: leagueSlug, name: leagueName },
+    };
+  });
+
+  return NextResponse.json({ events: normalized });
 }

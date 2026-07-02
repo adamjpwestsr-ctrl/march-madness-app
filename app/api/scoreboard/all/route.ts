@@ -19,7 +19,9 @@ const LEAGUES = {
   F1: "racing/f1",
   INDY: "racing/indycar",
   NASCAR: "racing/nascar.cup",
-};
+} as const;
+
+type LeagueKey = keyof typeof LEAGUES;
 
 async function fetchLeague(path: string) {
   const url = `https://site.api.espn.com/apis/site/v2/sports/${path}/scoreboard`;
@@ -37,7 +39,7 @@ async function fetchLeague(path: string) {
 export async function GET(request: NextRequest) {
   const allEvents: any[] = [];
 
-  for (const key of Object.keys(LEAGUES)) {
+  for (const key of Object.keys(LEAGUES) as LeagueKey[]) {
     const events = await fetchLeague(LEAGUES[key]);
     allEvents.push(...events);
   }

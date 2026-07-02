@@ -48,7 +48,7 @@ export default function ScoreTicker() {
             game.startDate ||
             game.competitions?.[0]?.startDate
         );
-        return date >= cutoff && date <= now;
+        return date >= cutoff && date <= new Date(now.getTime() + 6 * 60 * 60 * 1000);
       });
 
       setGames(recent);

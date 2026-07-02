@@ -7,7 +7,7 @@ const SPORTS = {
   NBA: { slug: "nba", icon: "🏀" },
   NFL: { slug: "nfl", icon: "🏈" },
   NHL: { slug: "nhl", icon: "🏒" },
-  NCAAM: { slug: "mens-college-basketball", icon: "🎓🏀" },
+  NCAAM: { slug: "mens-college-basketball", icon: "🎓" },
   GOLF: { slug: "pga", icon: "⛳" },
   TENNIS_ATP: { slug: "tennis", icon: "🎾" },
   EPL: { slug: "eng.1", icon: "⚽" },
@@ -21,22 +21,11 @@ const SPORTS = {
 
 type SportKey = keyof typeof SPORTS;
 
+// 🔥 CHANGE THIS TO TEST ANY SPORT
+const TARGET_SPORT: SportKey = "GOLF";
+
 export default function ScoreTicker() {
   const [games, setGames] = useState<any[]>([]);
-
-  const extractDate = (game: any) => {
-    const comp = game.competitions?.[0];
-
-    return (
-      game.date ||
-      game.startDate ||
-      comp?.date ||
-      comp?.startDate ||
-      comp?.startTime ||
-      comp?.status?.startTime ||
-      null
-    );
-  };
 
   const fetchScores = async () => {
     try {
@@ -46,18 +35,29 @@ export default function ScoreTicker() {
       const data = await res.json();
       const events = data?.events || [];
 
-      const now = new Date();
-      const cutoff = new Date(now.getTime() - 48 * 60 * 60 * 1000);
-      const buffer = new Date(now.getTime() + 6 * 60 * 60 * 1000);
+      // 🔍 Extract slug candidates for each event
+      const filtered = events.filter((game: any) => {
+        const comp = game.competitions?.[0];
 
-      const recent = events.filter((game: any) => {
-        const raw = extractDate(game);
-        if (!raw) return false;
-        const date = new Date(raw);
-        return date >= cutoff && date <= buffer;
+        const slugCandidates = [
+          game?.league?.slug,
+          game?.league?.name,
+          comp?.league?.slug,
+          comp?.league?.name,
+          comp?.sport?.slug,
+          comp?.sport?.name,
+        ]
+          .filter(Boolean)
+          .map((s: string) => s.toLowerCase());
+
+        return slugCandidates.some((slug) =>
+          slug.includes(SPORTS[TARGET_SPORT].slug.toLowerCase())
+        );
       });
 
-      setGames(recent);
+      console.log("FILTERED EVENTS FOR", TARGET_SPORT, filtered);
+
+      setGames(filtered);
     } catch (err) {
       console.error("Unified scoreboard error:", err);
       setGames([]);
@@ -78,7 +78,7 @@ export default function ScoreTicker() {
       <div className="w-full overflow-hidden">
         {games.length === 0 ? (
           <div className="text-slate-500 text-sm px-6">
-            No recent or live scores available.
+            No {TARGET_SPORT} scores available.
           </div>
         ) : (
           <div
@@ -96,35 +96,12 @@ export default function ScoreTicker() {
 
               if (!home?.team || !away?.team) return null;
 
-              const slugCandidates = [
-                game?.league?.slug,
-                game?.league?.name,
-                comp?.league?.slug,
-                comp?.league?.name,
-                comp?.sport?.slug,
-                comp?.sport?.name,
-              ]
-                .filter(Boolean)
-                .map((s: string) => s.toLowerCase());
-
-              const sportKey = (Object.keys(SPORTS) as SportKey[]).find((k) =>
-                slugCandidates.some((slug) =>
-                  slug.includes(SPORTS[k].slug.toLowerCase())
-                )
-              );
-
-              const icon = sportKey ? SPORTS[sportKey].icon : "🏆";
-
-              const isLive = game.status?.type?.state === "in";
-              const isFinal = game.status?.type?.state === "post";
-              const isUpcoming = game.status?.type?.state === "pre";
-
               return (
                 <div
                   key={`${game.id}-${Math.random()}`}
                   className="flex items-center gap-3 px-6 text-sm text-slate-300"
                 >
-                  <span className="text-xl">{icon}</span>
+                  <span className="text-xl">{SPORTS[TARGET_SPORT].icon}</span>
 
                   {away.team.logo && (
                     <img
@@ -147,23 +124,6 @@ export default function ScoreTicker() {
                   )}
                   <span>{home.team.abbreviation}</span>
                   <span className="font-bold text-white">{home.score}</span>
-
-                  {isLive && (
-                    <span className="flex items-center gap-1 text-red-400 font-semibold">
-                      <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                      LIVE
-                    </span>
-                  )}
-                  {isFinal && (
-                    <span className="text-slate-400 text-xs font-semibold">
-                      FINAL
-                    </span>
-                  )}
-                  {isUpcoming && (
-                    <span className="text-slate-500 text-xs">
-                      {game.status?.type?.shortDetail}
-                    </span>
-                  )}
                 </div>
               );
             })}

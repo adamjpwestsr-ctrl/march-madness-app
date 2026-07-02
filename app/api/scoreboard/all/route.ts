@@ -7,6 +7,7 @@ const LEAGUES = {
   NHL: "hockey/nhl",
   NCAAM: "basketball/mens-college-basketball",
 
+  // Golf handled separately below
   GOLF: "golf/pga",
 
   TENNIS_ATP: "tennis/atp",
@@ -36,15 +37,42 @@ async function fetchLeague(path: string) {
   }
 }
 
+// 🟢 Custom handler for PGA tournaments
+async function fetchGolf() {
+  const url = "https://site.api.espn.com/apis/site/v2/sports/golf/pga/scoreboard";
+
+  try {
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) return [];
+    const data = await res.json();
+
+    // Normalize golf tournaments to match other sports
+    return (
+      data?.events?.map((e: any) => ({
+        id: e.id,
+        label: e.label,
+        startDate: e.startDate,
+        endDate: e.endDate,
+        league: { slug: "pga" },
+      })) || []
+    );
+  } catch {
+    return [];
+  }
+}
+
 export async function GET(request: NextRequest) {
-  // Run all ESPN calls in parallel
-  const results = await Promise.all(
-    (Object.keys(LEAGUES) as LeagueKey[]).map(async (key) => {
-      const events = await fetchLeague(LEAGUES[key]);
-      console.log(`${key}: ${events.length}`);
-      return events;
-    })
-  );
+  // Run all ESPN calls in parallel, with golf handled separately
+  const results = await Promise.all([
+    ...Object.entries(LEAGUES)
+      .filter(([key]) => key !== "GOLF")
+      .map(async ([key, path]) => {
+        const events = await fetchLeague(path);
+        console.log(`${key}: ${events.length}`);
+        return events;
+      }),
+    fetchGolf(),
+  ]);
 
   // Flatten all event arrays into one
   const allEvents = results.flat();

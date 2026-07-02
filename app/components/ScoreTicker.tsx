@@ -7,7 +7,7 @@ const SPORTS = {
   NBA: { slug: "nba", icon: "🏀" },
   NFL: { slug: "nfl", icon: "🏈" },
   NHL: { slug: "nhl", icon: "🏒" },
-  NCAAM: { slug: "mens-college-basketball", icon: "🎓" },
+  NCAAM: { slug: "mens-college-basketball", icon: "🎓🏀" },
 
   GOLF: { slug: "pga", icon: "⛳" },
 
@@ -41,6 +41,7 @@ export default function ScoreTicker() {
 
       const now = new Date();
       const cutoff = new Date(now.getTime() - 48 * 60 * 60 * 1000);
+      const buffer = new Date(now.getTime() + 6 * 60 * 60 * 1000);
 
       const recent = events.filter((game: any) => {
         const date = new Date(
@@ -48,7 +49,7 @@ export default function ScoreTicker() {
             game.startDate ||
             game.competitions?.[0]?.startDate
         );
-        return date >= cutoff && date <= new Date(now.getTime() + 6 * 60 * 60 * 1000);
+        return date >= cutoff && date <= buffer;
       });
 
       setGames(recent);
@@ -67,11 +68,12 @@ export default function ScoreTicker() {
   const marqueeGames = games.length ? [...games, ...games] : [];
 
   return (
-    <div className="relative w-full max-w-full overflow-hidden py-2 min-h-[40px] bg-slate-900/60 border-t border-b border-slate-800 backdrop-blur group">
+    <div className="relative w-full overflow-hidden py-2 min-h-[40px] bg-slate-900/60 border-t border-b border-slate-800 backdrop-blur group">
+      {/* Fade edges */}
       <div className="absolute left-0 top-0 w-16 h-full bg-gradient-to-r from-slate-900 to-transparent pointer-events-none" />
       <div className="absolute right-0 top-0 w-16 h-full bg-gradient-to-l from-slate-900 to-transparent pointer-events-none" />
 
-      <div className="w-full max-w-full overflow-hidden">
+      <div className="w-full overflow-hidden">
         {marqueeGames.length === 0 ? (
           <div className="text-slate-500 text-sm px-6">
             No recent or live scores available.
@@ -79,7 +81,7 @@ export default function ScoreTicker() {
         ) : (
           <div
             key={games.length}
-            className="flex items-center gap-8 whitespace-nowrap animate-ticker group-hover:[animation-play-state:paused]"
+            className="flex items-center gap-8 whitespace-nowrap animate-ticker group-hover:[animation-play-state:paused] max-w-[100vw]"
           >
             {marqueeGames.map((game: any) => {
               const comp = game.competitions?.[0];
@@ -91,10 +93,12 @@ export default function ScoreTicker() {
               );
 
               const slug = game?.league?.slug?.toLowerCase() || "";
+              const leagueName = game?.league?.name?.toLowerCase() || "";
 
-              const sportKey = (Object.keys(SPORTS) as SportKey[]).find((k) =>
-                slug.includes(SPORTS[k].slug)
-              );
+              const sportKey = (Object.keys(SPORTS) as SportKey[]).find((k) => {
+                const s = SPORTS[k].slug.toLowerCase();
+                return slug.includes(s) || leagueName.includes(s);
+              });
 
               const icon = sportKey ? SPORTS[sportKey].icon : "🏆";
 

@@ -60,6 +60,7 @@ export default function ScoreTicker() {
 
   return (
     <div className="relative w-full overflow-hidden py-2 min-h-[40px] bg-slate-900/60 border-t border-b border-slate-800 backdrop-blur group">
+      {/* Fade edges */}
       <div className="absolute left-0 top-0 w-16 h-full bg-gradient-to-r from-slate-900 to-transparent pointer-events-none" />
       <div className="absolute right-0 top-0 w-16 h-full bg-gradient-to-l from-slate-900 to-transparent pointer-events-none" />
 
@@ -71,7 +72,7 @@ export default function ScoreTicker() {
         ) : (
           <div
             key={games.length}
-            className="flex items-center gap-8 whitespace-nowrap animate-ticker group-hover:[animation-play-state:paused]"
+            className="flex items-center gap-8 whitespace-nowrap animate-ticker group-hover:[animation-play-state:paused] w-[100vw] max-w-[100vw] overflow-hidden"
           >
             {games.map((game: any) => {
               const comp = game.competitions?.[0];
@@ -84,14 +85,31 @@ export default function ScoreTicker() {
 
               if (!home?.team || !away?.team) return null;
 
-              const slug =
-                game?.league?.slug?.toLowerCase() ||
-                comp?.league?.slug?.toLowerCase() ||
-                comp?.sport?.slug?.toLowerCase() ||
-                "";
+              // Debug logging to inspect ESPN data
+              console.log("GAME RAW:", {
+                id: game.id,
+                league: game.league,
+                sport: comp?.sport,
+                compLeague: comp?.league,
+              });
+
+              const slugCandidates = [
+                game?.league?.slug,
+                game?.league?.name,
+                comp?.league?.slug,
+                comp?.league?.name,
+                comp?.sport?.slug,
+                comp?.sport?.name,
+              ]
+                .filter(Boolean)
+                .map((s: string) => s.toLowerCase());
+
+              console.log("SLUG CANDIDATES:", game.id, slugCandidates);
 
               const sportKey = (Object.keys(SPORTS) as SportKey[]).find((k) =>
-                slug.includes(SPORTS[k].slug)
+                slugCandidates.some((slug) =>
+                  slug.includes(SPORTS[k].slug.toLowerCase())
+                )
               );
 
               const icon = sportKey ? SPORTS[sportKey].icon : "🏆";
@@ -155,20 +173,6 @@ export default function ScoreTicker() {
       <style jsx>{`
         .animate-ticker {
           animation: ticker 120s linear infinite;
-          mask-image: linear-gradient(
-            to right,
-            transparent 0%,
-            black 10%,
-            black 90%,
-            transparent 100%
-          );
-          -webkit-mask-image: linear-gradient(
-            to right,
-            transparent 0%,
-            black 10%,
-            black 90%,
-            transparent 100%
-          );
         }
         @keyframes ticker {
           0% {

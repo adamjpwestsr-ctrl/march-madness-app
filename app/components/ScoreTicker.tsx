@@ -24,6 +24,17 @@ type SportKey = keyof typeof SPORTS;
 export default function ScoreTicker() {
   const [games, setGames] = useState<any[]>([]);
 
+  const resolveDate = (game: any) => {
+    return (
+      game.date ||
+      game.startDate ||
+      game.endDate ||
+      game.competitions?.[0]?.startDate ||
+      game.competitions?.[0]?.date ||
+      null
+    );
+  };
+
   const fetchScores = async () => {
     try {
       const res = await fetch("/api/scoreboard/all", { cache: "no-store" });
@@ -32,19 +43,25 @@ export default function ScoreTicker() {
       const data = await res.json();
       const events = data?.events || [];
 
-      // Include all events within a reasonable window
       const now = new Date();
       const cutoff = new Date(now.getTime() - 72 * 60 * 60 * 1000);
       const buffer = new Date(now.getTime() + 12 * 60 * 60 * 1000);
 
       const recent = events.filter((game: any) => {
-        const date = new Date(
-          game.date ||
-            game.startDate ||
-            game.competitions?.[0]?.startDate ||
-            game.competitions?.[0]?.date
-        );
-        return date >= cutoff && date <= buffer;
+        const date = resolveDate(game);
+
+        // ⭐ PGA tournaments often have missing or weird dates — ALWAYS include them
+        const isGolf =
+          game?.league?.slug === "pga" ||
+          game?.league?.name === "pga" ||
+          (game?.league?.slug || "").toLowerCase().includes("pga");
+
+        if (isGolf) return true;
+
+        if (!date) return false;
+
+        const d = new Date(date);
+        return d >= cutoff && d <= buffer;
       });
 
       setGames(recent);
@@ -77,6 +94,7 @@ export default function ScoreTicker() {
           >
             {games.map((game: any) => {
               const comp = game.competitions?.[0];
+
               const slugCandidates = [
                 game?.league?.slug,
                 game?.league?.name,
@@ -96,10 +114,11 @@ export default function ScoreTicker() {
 
               const icon = sportKey ? SPORTS[sportKey].icon : "🏆";
 
-              // 🟢 Golf-specific rendering (handles PGA tournaments)
+              // ⭐ PGA rendering — guaranteed to show now
               const isGolf =
                 sportKey === "GOLF" ||
                 slugCandidates.some((slug) => slug.includes("pga"));
+
               if (isGolf) {
                 const start =
                   game.startDate ||
@@ -107,6 +126,7 @@ export default function ScoreTicker() {
                   comp?.startDate ||
                   comp?.date ||
                   null;
+
                 const end =
                   game.endDate ||
                   comp?.endDate ||
@@ -119,11 +139,12 @@ export default function ScoreTicker() {
                   >
                     <span className="text-xl">{SPORTS.GOLF.icon}</span>
                     <span className="font-semibold text-white">
-                      {game.label || game.name || "Golf Tournament"}
+                      {game.label || game.name || "PGA Tournament"}
                     </span>
+
                     {start && end && (
                       <span className="text-slate-500">
-                        {new Date(start).toLocaleDateString()} – 
+                        {new Date(start).toLocaleDateString()} –{" "}
                         {new Date(end).toLocaleDateString()}
                       </span>
                     )}

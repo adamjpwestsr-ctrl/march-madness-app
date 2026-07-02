@@ -24,7 +24,9 @@ const LEAGUES = {
 type LeagueKey = keyof typeof LEAGUES;
 
 async function fetchLeague(path: string) {
+
   const url = `https://site.api.espn.com/apis/site/v2/sports/${path}/scoreboard`;
+	console.log(`${key}: ${events.length}`);
 
   try {
     const res = await fetch(url, { cache: "no-store" });

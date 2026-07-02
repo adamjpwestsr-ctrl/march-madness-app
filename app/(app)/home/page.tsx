@@ -66,10 +66,12 @@ export default async function HomePage() {
       </section>
 
       {/* 🏆 LIVE SCORE TICKER */}
-      <section className="z-20 bg-slate-950/90 backdrop-blur border-b border-slate-800 relative overflow-hidden">
+      <section className="z-20 w-full max-w-full bg-slate-950/90 backdrop-blur border-y border-slate-800 overflow-x-hidden overflow-y-visible relative">
         <div className="absolute left-0 top-0 w-12 h-full bg-gradient-to-r from-slate-950 to-transparent pointer-events-none" />
         <div className="absolute right-0 top-0 w-12 h-full bg-gradient-to-l from-slate-950 to-transparent pointer-events-none" />
-        <ScoreTicker />
+        <div className="mx-auto w-full">
+          <ScoreTicker />
+        </div>
       </section>
 
       {/* SPOTLIGHT BANNER */}

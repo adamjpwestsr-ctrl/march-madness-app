@@ -7,7 +7,7 @@ const SPORTS = {
   NBA: { slug: "nba", icon: "🏀" },
   NFL: { slug: "nfl", icon: "🏈" },
   NHL: { slug: "nhl", icon: "🏒" },
-  NCAAM: { slug: "mens-college-basketball", icon: "🎓" },
+  NCAAM: { slug: "mens-college-basketball", icon: "🎓🏀" },
   GOLF: { slug: "pga", icon: "⛳" },
   TENNIS_ATP: { slug: "tennis", icon: "🎾" },
   EPL: { slug: "eng.1", icon: "⚽" },
@@ -24,6 +24,20 @@ type SportKey = keyof typeof SPORTS;
 export default function ScoreTicker() {
   const [games, setGames] = useState<any[]>([]);
 
+  const extractDate = (game: any) => {
+    const comp = game.competitions?.[0];
+
+    return (
+      game.date ||
+      game.startDate ||
+      comp?.date ||
+      comp?.startDate ||
+      comp?.startTime ||
+      comp?.status?.startTime ||
+      null
+    );
+  };
+
   const fetchScores = async () => {
     try {
       const res = await fetch("/api/scoreboard/all", { cache: "no-store" });
@@ -37,11 +51,9 @@ export default function ScoreTicker() {
       const buffer = new Date(now.getTime() + 6 * 60 * 60 * 1000);
 
       const recent = events.filter((game: any) => {
-        const date = new Date(
-          game.date ||
-            game.startDate ||
-            game.competitions?.[0]?.startDate
-        );
+        const raw = extractDate(game);
+        if (!raw) return false;
+        const date = new Date(raw);
         return date >= cutoff && date <= buffer;
       });
 
@@ -60,7 +72,6 @@ export default function ScoreTicker() {
 
   return (
     <div className="relative w-full overflow-hidden py-2 min-h-[40px] bg-slate-900/60 border-t border-b border-slate-800 backdrop-blur group">
-      {/* Fade edges */}
       <div className="absolute left-0 top-0 w-16 h-full bg-gradient-to-r from-slate-900 to-transparent pointer-events-none" />
       <div className="absolute right-0 top-0 w-16 h-full bg-gradient-to-l from-slate-900 to-transparent pointer-events-none" />
 
@@ -85,14 +96,6 @@ export default function ScoreTicker() {
 
               if (!home?.team || !away?.team) return null;
 
-              // Debug logging to inspect ESPN data
-              console.log("GAME RAW:", {
-                id: game.id,
-                league: game.league,
-                sport: comp?.sport,
-                compLeague: comp?.league,
-              });
-
               const slugCandidates = [
                 game?.league?.slug,
                 game?.league?.name,
@@ -103,8 +106,6 @@ export default function ScoreTicker() {
               ]
                 .filter(Boolean)
                 .map((s: string) => s.toLowerCase());
-
-              console.log("SLUG CANDIDATES:", game.id, slugCandidates);
 
               const sportKey = (Object.keys(SPORTS) as SportKey[]).find((k) =>
                 slugCandidates.some((slug) =>

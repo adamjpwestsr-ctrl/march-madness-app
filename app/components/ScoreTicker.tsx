@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 
 const SPORTS = {
+  MLB: { path: "baseball/mlb", icon: "⚾️" },
   NBA: { path: "basketball/nba", icon: "🏀" },
   NFL: { path: "football/nfl", icon: "🏈" },
-  MLB: { path: "baseball/mlb", icon: "⚾️" },
   NHL: { path: "hockey/nhl", icon: "🏒" },
   NCAAM: { path: "basketball/mens-college-basketball", icon: "🎓" },
 };
@@ -18,11 +18,20 @@ export default function ScoreTicker() {
   const fetchScores = async () => {
     const sport = sportKeys[sportIndex];
     try {
-      const url = `https://site.api.espn.com/apis/v2/sports/${SPORTS[sport].path}/scoreboard`;
-      const res = await fetch(url);
+      // ✅ ESPN v1 endpoint (still active)
+      const url = `https://site.api.espn.com/apis/site/v1/sports/${SPORTS[sport].path}/scoreboard`;
+      const res = await fetch(url, { cache: "no-store" });
       const data = await res.json();
-      setGames(data?.events || []);
-    } catch {
+
+      if (!data?.events?.length) {
+        console.warn("No events found for", sport);
+        setGames([]);
+        return;
+      }
+
+      setGames(data.events);
+    } catch (err) {
+      console.error("Ticker load failed:", err);
       setGames([]);
     }
   };
@@ -35,6 +44,9 @@ export default function ScoreTicker() {
     }, 20000);
 
     const refresh = setInterval(fetchScores, 60000);
+
+    // second pull after mount to catch late data
+    setTimeout(fetchScores, 5000);
 
     return () => {
       clearInterval(rotate);

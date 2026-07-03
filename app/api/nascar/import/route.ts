@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabaseServerClient";
 import { parse } from "csv-parse/sync";
 
 export async function POST(req: Request) {

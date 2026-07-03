@@ -1,7 +1,7 @@
 import NascarDriverSelection from "@/app/components/NascarDriverSelection";
 import NascarLiveLeaderboard from "@/app/(app)/sports/nascar/NascarLiveLeaderboard";
 import { getNascarLeaderboard } from "@/app/api/nascar/route";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabaseServerClient";
 
 export default async function NascarDashboard() {
   const supabase = createClient();

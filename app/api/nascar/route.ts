@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabaseServerClient";
 
 //
 // 1. Insert or update race results

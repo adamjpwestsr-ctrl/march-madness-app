@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabaseServerClient";
+import { createClient } from "@/lib/supabase/server";
 
 export default async function NascarHistoryPage() {
   const supabase = createClient();

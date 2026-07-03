@@ -1,128 +1,45 @@
-"use server";
+import { NextResponse } from "next/server";
+import {
+  submitNascarRaceResults,
+  calculateNascarPoints,
+} from "./actions";
 
-import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
+    const { type, raceId, results } = body;
 
-//
-// 1. Insert or update race results
-//
-export async function submitNascarRaceResults(raceId: string, results: any[]) {
-  const supabase = await createSupabaseServerClient();
+    if (!type) {
+      return NextResponse.json({ error: "Missing type" }, { status: 400 });
+    }
 
-  const payload = results.map((r) => ({
-    race_id: raceId,
-    driver_id: r.driver_id,
-    driver_name: r.driver_name,
-    led_laps: r.led_laps,
-    stage_wins: r.stage_wins,
-    race_win: r.race_win,
-  }));
+    if (type === "submit-results") {
+      if (!raceId || !results) {
+        return NextResponse.json(
+          { error: "Missing raceId or results" },
+          { status: 400 }
+        );
+      }
 
-  const { error } = await supabase
-    .from("nascar_driver_performance")
-    .upsert(payload, { onConflict: "race_id,driver_id" });
+      const res = await submitNascarRaceResults(raceId, results);
+      return NextResponse.json(res);
+    }
 
-  if (error) {
-    console.error("Error inserting NASCAR results:", error);
-    throw new Error("Failed to submit NASCAR results");
+    if (type === "calculate-points") {
+      if (!raceId) {
+        return NextResponse.json(
+          { error: "Missing raceId" },
+          { status: 400 }
+        );
+      }
+
+      const res = await calculateNascarPoints(raceId);
+      return NextResponse.json(res);
+    }
+
+    return NextResponse.json({ error: "Unknown type" }, { status: 400 });
+  } catch (err: any) {
+    console.error("NASCAR route error:", err);
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
-
-  return { success: true };
-}
-
-//
-// 2. Calculate points for all users who made picks
-//
-export async function calculateNascarPoints(raceId: string) {
-  const supabase = await createSupabaseServerClient();
-
-  const { data: picks, error: picksError } = await supabase
-    .from("nascar_picks")
-    .select("*")
-    .eq("race_id", raceId);
-
-  if (picksError) {
-    console.error("Error fetching NASCAR picks:", picksError);
-    throw new Error("Failed to fetch picks");
-  }
-
-  if (!picks || picks.length === 0) {
-    return { success: true, message: "No picks for this race" };
-  }
-
-  const { data: perf, error: perfError } = await supabase
-    .from("nascar_driver_performance")
-    .select("*")
-    .eq("race_id", raceId);
-
-  if (perfError) {
-    console.error("Error fetching NASCAR performance:", perfError);
-    throw new Error("Failed to fetch performance");
-  }
-
-  const perfMap = new Map();
-  perf?.forEach((p) => {
-    perfMap.set(p.driver_id, p.total_points);
-  });
-
-  const pointsPayload = picks.map((pick) => ({
-    user_id: pick.user_id,
-    race_id: raceId,
-    driver_id: pick.driver_id,
-    points: perfMap.get(pick.driver_id) || 0,
-  }));
-
-  const { error: pointsError } = await supabase
-    .from("nascar_points")
-    .insert(pointsPayload);
-
-  if (pointsError) {
-    console.error("Error inserting NASCAR points:", pointsError);
-    throw new Error("Failed to insert points");
-  }
-
-  return { success: true };
-}
-
-//
-// 3. User makes a pick
-//
-export async function submitNascarPick(userId: string, raceId: string, driverId: string) {
-  const supabase = await createSupabaseServerClient();
-
-  const { error } = await supabase
-    .from("nascar_picks")
-    .upsert(
-      {
-        user_id: userId,
-        race_id: raceId,
-        driver_id: driverId,
-      },
-      { onConflict: "user_id,race_id" }
-    );
-
-  if (error) {
-    console.error("Error submitting NASCAR pick:", error);
-    throw new Error("Failed to submit pick");
-  }
-
-  return { success: true };
-}
-
-//
-// 4. Get leaderboard
-//
-export async function getNascarLeaderboard() {
-  const supabase = await createSupabaseServerClient();
-
-  const { data, error } = await supabase
-    .from("nascar_leaderboard")
-    .select("*")
-    .order("total_points", { ascending: false });
-
-  if (error) {
-    console.error("Error fetching NASCAR leaderboard:", error);
-    throw new Error("Failed to fetch leaderboard");
-  }
-
-  return data;
 }

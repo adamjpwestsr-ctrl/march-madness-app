@@ -76,7 +76,7 @@ export default function ScoreTicker() {
   }, []);
 
   return (
-    <div className="relative w-full max-w-full overflow-x-hidden overflow-y-visible py-2 min-h-[40px] bg-slate-900/60 border-t border-b border-slate-800 backdrop-blur group">
+    <div className="relative w-full overflow-hidden py-2 min-h-[40px] bg-slate-900/60 border-t border-b border-slate-800 backdrop-blur group">
       <div className="absolute left-0 top-0 w-16 h-full bg-gradient-to-r from-slate-900 to-transparent pointer-events-none" />
       <div className="absolute right-0 top-0 w-16 h-full bg-gradient-to-l from-slate-900 to-transparent pointer-events-none" />
 
@@ -88,7 +88,7 @@ export default function ScoreTicker() {
         ) : (
           <div
             key={games.length}
-            className="flex items-center gap-8 whitespace-nowrap animate-ticker group-hover:[animation-play-state:paused] w-fit"
+            className="flex items-center gap-8 whitespace-nowrap animate-ticker group-hover:[animation-play-state:paused] w-full min-w-full"
           >
             {games.map((game: any) => {
               const comp = game.competitions?.[0];

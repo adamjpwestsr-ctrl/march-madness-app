@@ -49,13 +49,29 @@ export default function ScoreTicker() {
 
       const recent = events.filter((game: any) => {
         const date = resolveDate(game);
+        const leagueSlug = (game?.league?.slug || "").toLowerCase();
 
         const isGolf =
-          game?.league?.slug === "pga" ||
-          game?.league?.name === "pga" ||
-          (game?.league?.slug || "").toLowerCase().includes("pga");
+          leagueSlug.includes("pga") ||
+          (game?.league?.name || "").toLowerCase().includes("pga");
 
-        if (isGolf) return true;
+        const isTennis = leagueSlug.includes("tennis");
+        const isSoccer =
+          leagueSlug.includes("fifa") ||
+          leagueSlug.includes("uefa") ||
+          leagueSlug.includes("eng.1") ||
+          leagueSlug.includes("usa.1");
+
+        // Always include Golf, Tennis, and Soccer when present
+        if (isGolf || isTennis || isSoccer) return true;
+
+        // F1 and NASCAR only on weekends
+        const isF1 = leagueSlug.includes("f1");
+        const isNASCAR = leagueSlug.includes("nascar");
+        const day = now.getDay(); // 0=Sun, 6=Sat
+        const isWeekend = day === 6 || day === 0;
+        if ((isF1 || isNASCAR) && isWeekend) return true;
+
         if (!date) return false;
 
         const d = new Date(date);
@@ -215,7 +231,7 @@ export default function ScoreTicker() {
 
       <style jsx>{`
         .animate-ticker {
-          animation: ticker 120s linear infinite;
+          animation: ticker 60s linear infinite;
         }
         @keyframes ticker {
           0% {

@@ -42,7 +42,7 @@ export default async function HomePage() {
     "Player";
 
   return (
-    <div className="space-y-12 pb-20">
+    <div className="space-y-12 pb-20 max-w-6xl mx-auto px-4">
 
       {/* HERO + STATS */}
       <section className="space-y-6">
@@ -66,12 +66,10 @@ export default async function HomePage() {
       </section>
 
       {/* 🏆 LIVE SCORE TICKER */}
-      <section className="z-20 w-full max-w-full bg-slate-950/90 backdrop-blur border-y border-slate-800 overflow-x-hidden overflow-y-visible relative">
+      <section className="z-20 w-full bg-slate-950/90 backdrop-blur border-y border-slate-800 overflow-x-hidden overflow-y-visible relative rounded-xl">
         <div className="absolute left-0 top-0 w-12 h-full bg-gradient-to-r from-slate-950 to-transparent pointer-events-none" />
         <div className="absolute right-0 top-0 w-12 h-full bg-gradient-to-l from-slate-950 to-transparent pointer-events-none" />
-        <div className="mx-auto w-full">
-          <ScoreTicker />
-        </div>
+        <ScoreTicker />
       </section>
 
       {/* SPOTLIGHT BANNER */}

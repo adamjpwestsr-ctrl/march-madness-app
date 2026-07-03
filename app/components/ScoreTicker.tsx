@@ -8,15 +8,23 @@ const SPORTS = {
   NFL: { slug: "nfl", icon: "🏈" },
   NHL: { slug: "nhl", icon: "🏒" },
   NCAAM: { slug: "mens-college-basketball", icon: "🎓🏀" },
+
   GOLF: { slug: "pga", icon: "⛳" },
-  TENNIS_ATP: { slug: "tennis", icon: "🎾" },
+  GOLF_ALT: { slug: "golf", icon: "⛳" },
+
+  TENNIS_ATP: { slug: "atp", icon: "🎾" },
+  TENNIS_WTA: { slug: "wta", icon: "🎾" },
+  TENNIS_GENERIC: { slug: "tennis", icon: "🎾" },
+
   EPL: { slug: "eng.1", icon: "⚽" },
   MLS: { slug: "usa.1", icon: "⚽" },
   UCL: { slug: "uefa.1", icon: "⚽" },
-  FIFA: { slug: "fifa.worldcup", icon: "⚽" },
+  FIFA: { slug: "fifa", icon: "⚽" },
+  FIFA_WC: { slug: "fifa.worldcup", icon: "⚽" },
+
   F1: { slug: "f1", icon: "🏎️" },
   INDY: { slug: "indycar", icon: "🏎️" },
-  NASCAR: { slug: "nascar.cup", icon: "🏁" },
+  NASCAR: { slug: "nascar", icon: "🏁" },
 } as const;
 
 type SportKey = keyof typeof SPORTS;
@@ -53,23 +61,26 @@ export default function ScoreTicker() {
 
         const isGolf =
           leagueSlug.includes("pga") ||
-          (game?.league?.name || "").toLowerCase().includes("pga");
+          leagueSlug.includes("golf");
 
-        const isTennis = leagueSlug.includes("tennis");
+        const isTennis =
+          leagueSlug.includes("tennis") ||
+          leagueSlug.includes("atp") ||
+          leagueSlug.includes("wta");
+
         const isSoccer =
           leagueSlug.includes("fifa") ||
           leagueSlug.includes("uefa") ||
           leagueSlug.includes("eng.1") ||
           leagueSlug.includes("usa.1");
 
-        // Always include Golf, Tennis, and Soccer when present
         if (isGolf || isTennis || isSoccer) return true;
 
-        // F1 and NASCAR only on weekends
         const isF1 = leagueSlug.includes("f1");
         const isNASCAR = leagueSlug.includes("nascar");
-        const day = now.getDay(); // 0=Sun, 6=Sat
+        const day = now.getDay();
         const isWeekend = day === 6 || day === 0;
+
         if ((isF1 || isNASCAR) && isWeekend) return true;
 
         if (!date) return false;
@@ -103,7 +114,6 @@ export default function ScoreTicker() {
           </div>
         ) : (
           <div
-            key={games.length}
             className="flex items-center gap-8 whitespace-nowrap animate-ticker group-hover:[animation-play-state:paused] w-full min-w-full"
           >
             {games.map((game: any) => {
@@ -129,7 +139,7 @@ export default function ScoreTicker() {
               const icon = sportKey ? SPORTS[sportKey].icon : "🏆";
 
               const isGolf =
-                sportKey === "GOLF" ||
+                sportKey?.startsWith("GOLF") ||
                 slugCandidates.some((slug) => slug.includes("pga"));
 
               if (isGolf) {
@@ -150,7 +160,7 @@ export default function ScoreTicker() {
                     key={game.id}
                     className="flex items-center gap-3 px-6 text-sm text-slate-300"
                   >
-                    <span className="text-xl">{SPORTS.GOLF.icon}</span>
+                    <span className="text-xl">⛳</span>
                     <span className="font-semibold text-white">
                       {game.label || game.name || "PGA Tournament"}
                     </span>

@@ -127,6 +127,15 @@ export default function SidebarNav() {
           <Goal size={16} />
           NHL Weekly
         </Link>
+
+        {/* ⭐ NASCAR Weekly */}
+        <Link
+          href="/sports/nascar"
+          className="flex items-center gap-2 px-3 py-1 text-sm text-slate-400 hover:bg-slate-800 rounded-md"
+        >
+          <Flag size={16} />
+          NASCAR Weekly
+        </Link>
       </div>
 
       {link("/trivia", "Trivia", Brain)}

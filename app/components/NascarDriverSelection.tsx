@@ -77,6 +77,12 @@ export default function NascarDriverSelection({
           Your pick has been saved!
         </p>
       )}
+{status === "saved" && (
+  <p className="text-amber-300 mt-2 text-sm italic">
+    To my son — thank you for letting me build this NASCAR challenge for you. I love you. Go Bubba #23!
+  </p>
+)}
+
     </section>
   );
 }

@@ -15,6 +15,7 @@ import {
   FaBasketballBall,
   FaHockeyPuck,
   FaPhone,
+  FaFlag,
 } from "react-icons/fa";
 
 import { createClient } from "@supabase/supabase-js";
@@ -114,27 +115,28 @@ export default function AdminClient({ adminEmail }: { adminEmail: string }) {
 
   const sections = [
     {
-      title: "Sports Management",
-      icon: <FaFootballBall className="text-emerald-400 mr-2" />,
-      tools: [
-        { href: "/admin/golf/score-entry", label: "Golf Weekly — Score Entry", icon: <FaGolfBall /> },
-        { href: "/admin/golf/tournament-metadata", label: "Golf Weekly — Tournament Metadata", icon: <FaGolfBall /> },
+      {
+  title: "Sports Management",
+  icon: <FaFootballBall className="text-emerald-400 mr-2" />,
+  tools: [
+    { href: "/admin/golf/score-entry", label: "Golf Weekly — Score Entry", icon: <FaGolfBall /> },
+    { href: "/admin/golf/tournament-metadata", label: "Golf Weekly — Tournament Metadata", icon: <FaGolfBall /> },
+    { href: "/admin/golf/current-tournament", label: "Golf Weekly — Current Tournament", icon: <FaGolfBall /> },
 
-        // ⭐ NEW: Golf Weekly Current Tournament (moved from floating block)
-        { href: "/admin/golf/current-tournament", label: "Golf Weekly — Current Tournament", icon: <FaGolfBall /> },
+    { href: "/admin/mlb", label: "MLB Weekly Admin", icon: <FaBaseballBall /> },
+    { href: "/admin/mlb/derby", label: "MLB Derby Admin", icon: <FaBaseballBall /> },
 
-        { href: "/admin/mlb", label: "MLB Weekly Admin", icon: <FaBaseballBall /> },
+    { href: "/admin/nfl-weekly", label: "NFL Weekly Admin", icon: <FaFootballBall /> },
+    { href: "/admin/nba-weekly", label: "NBA Weekly Admin", icon: <FaBasketballBall /> },
+    { href: "/admin/nhl-weekly", label: "NHL Weekly Admin", icon: <FaHockeyPuck /> },
 
-        // ⭐ NEW: MLB Derby Admin
-        { href: "/admin/mlb/derby", label: "MLB Derby Admin", icon: <FaBaseballBall /> },
+    {/* ⭐ NASCAR Admin */}
+    { href: "/admin/nascar", label: "NASCAR Weekly Admin", icon: <FaFlag /> },
 
-        { href: "/admin/nfl-weekly", label: "NFL Weekly Admin", icon: <FaFootballBall /> },
-        { href: "/admin/nba-weekly", label: "NBA Weekly Admin", icon: <FaBasketballBall /> },
-        { href: "/admin/nhl-weekly", label: "NHL Weekly Admin", icon: <FaHockeyPuck /> },
-        { href: "/admin/weekly-challenge", label: "Weekly Challenge Admin", icon: <FaChartLine /> },
-        { href: "/admin/tournament-setup", label: "Tournament Setup", icon: <FaTools /> },
-      ],
-    },
+    { href: "/admin/weekly-challenge", label: "Weekly Challenge Admin", icon: <FaChartLine /> },
+    { href: "/admin/tournament-setup", label: "Tournament Setup", icon: <FaTools /> },
+  ],
+},
     {
       title: "System Tools",
       icon: <FaTools className="text-sky-400 mr-2" />,

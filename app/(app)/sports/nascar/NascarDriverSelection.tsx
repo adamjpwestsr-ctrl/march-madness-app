@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { submitNascarPick } from "@/app/api/nascar/route";
+import { submitNascarPick } from "@/app/api/nascar/actions";
 import NascarDriverGrid from "./NascarDriverGrid";
 
 export default function NascarDriverSelection({
@@ -61,3 +61,4 @@ export default function NascarDriverSelection({
     </section>
   );
 }
+

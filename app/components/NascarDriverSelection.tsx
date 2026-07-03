@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { submitNascarPick } from "@/app/actions/nascarChallengeActions";
+import { submitNascarPick } from "@/app/api/nascar/actions";
 
 export default function NascarDriverSelection({
   race,

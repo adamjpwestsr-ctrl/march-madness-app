@@ -1,12 +1,12 @@
 "use server";
 
-import { createClient } from "@/lib/supabaseServerClient";
+import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 
 /**
  * Submit a NASCAR pick for a user.
  */
 export async function submitNascarPick(userId: string, raceId: string, driverId: string) {
-  const supabase = await createClient();
+  const supabase = await createSupabaseServerClient();
 
   const { error } = await supabase
     .from("nascar_picks")
@@ -29,7 +29,7 @@ export async function submitNascarPick(userId: string, raceId: string, driverId:
  * Get the current NASCAR leaderboard.
  */
 export async function getNascarLeaderboard() {
-  const supabase = await createClient();
+  const supabase = await createSupabaseServerClient();
 
   const { data, error } = await supabase
     .from("nascar_points")
@@ -48,7 +48,7 @@ export async function getNascarLeaderboard() {
  * Get the user's pick for a specific race.
  */
 export async function getUserNascarPick(userId: string, raceId: string) {
-  const supabase = await createClient();
+  const supabase = await createSupabaseServerClient();
 
   const { data, error } = await supabase
     .from("nascar_picks")

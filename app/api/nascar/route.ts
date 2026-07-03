@@ -1,21 +1,12 @@
 "use server";
 
-import { createClient } from "@/lib/supabaseServerClient";
+import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 
 //
 // 1. Insert or update race results
 //
 export async function submitNascarRaceResults(raceId: string, results: any[]) {
-  const supabase = createClient();
-
-  // results = array of:
-  // {
-  //   driver_id: string,
-  //   driver_name: string,
-  //   led_laps: boolean,
-  //   stage_wins: number,
-  //   race_win: boolean
-  // }
+  const supabase = await createSupabaseServerClient();
 
   const payload = results.map((r) => ({
     race_id: raceId,
@@ -42,9 +33,8 @@ export async function submitNascarRaceResults(raceId: string, results: any[]) {
 // 2. Calculate points for all users who made picks
 //
 export async function calculateNascarPoints(raceId: string) {
-  const supabase = createClient();
+  const supabase = await createSupabaseServerClient();
 
-  // Get all picks for this race
   const { data: picks, error: picksError } = await supabase
     .from("nascar_picks")
     .select("*")
@@ -59,7 +49,6 @@ export async function calculateNascarPoints(raceId: string) {
     return { success: true, message: "No picks for this race" };
   }
 
-  // Get driver performance for this race
   const { data: perf, error: perfError } = await supabase
     .from("nascar_driver_performance")
     .select("*")
@@ -70,13 +59,11 @@ export async function calculateNascarPoints(raceId: string) {
     throw new Error("Failed to fetch performance");
   }
 
-  // Build a lookup map
   const perfMap = new Map();
   perf?.forEach((p) => {
     perfMap.set(p.driver_id, p.total_points);
   });
 
-  // Build points payload
   const pointsPayload = picks.map((pick) => ({
     user_id: pick.user_id,
     race_id: raceId,
@@ -84,7 +71,6 @@ export async function calculateNascarPoints(raceId: string) {
     points: perfMap.get(pick.driver_id) || 0,
   }));
 
-  // Insert points
   const { error: pointsError } = await supabase
     .from("nascar_points")
     .insert(pointsPayload);
@@ -101,7 +87,7 @@ export async function calculateNascarPoints(raceId: string) {
 // 3. User makes a pick
 //
 export async function submitNascarPick(userId: string, raceId: string, driverId: string) {
-  const supabase = createClient();
+  const supabase = await createSupabaseServerClient();
 
   const { error } = await supabase
     .from("nascar_picks")
@@ -126,7 +112,7 @@ export async function submitNascarPick(userId: string, raceId: string, driverId:
 // 4. Get leaderboard
 //
 export async function getNascarLeaderboard() {
-  const supabase = createClient();
+  const supabase = await createSupabaseServerClient();
 
   const { data, error } = await supabase
     .from("nascar_leaderboard")

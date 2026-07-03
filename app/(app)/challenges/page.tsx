@@ -68,6 +68,15 @@ export default function ChallengesHub() {
             desc="Track weekly picks across the NHL season."
             color="blue"
           />
+
+          {/* ⭐ NEW NASCAR WEEKLY CHALLENGE */}
+          <ChallengeItem
+            href="/sports/nascar"
+            icon={<Flag size={22} />}
+            title="NASCAR Weekly"
+            desc="Pick a driver each race and track your season performance."
+            color="rose"
+          />
         </div>
       </section>
 
@@ -142,6 +151,9 @@ function ChallengeItem({
     blue: "group-hover:border-blue-400/40 group-hover:bg-blue-500/10",
     fuchsia: "group-hover:border-fuchsia-400/40 group-hover:bg-fuchsia-500/10",
     yellow: "group-hover:border-yellow-400/40 group-hover:bg-yellow-500/10",
+
+    // ⭐ NEW NASCAR COLOR
+    rose: "group-hover:border-rose-400/40 group-hover:bg-rose-500/10",
   };
 
   return (

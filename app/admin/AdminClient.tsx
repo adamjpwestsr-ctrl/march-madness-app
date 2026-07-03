@@ -123,7 +123,6 @@ const sections = [
       { href: "/admin/nba-weekly", label: "NBA Weekly Admin", icon: <FaBasketballBall /> },
       { href: "/admin/nhl-weekly", label: "NHL Weekly Admin", icon: <FaHockeyPuck /> },
 
-      // ⭐ NASCAR Admin
       { href: "/admin/nascar", label: "NASCAR Weekly Admin", icon: <FaFlag /> },
 
       { href: "/admin/weekly-challenge", label: "Weekly Challenge Admin", icon: <FaChartLine /> },

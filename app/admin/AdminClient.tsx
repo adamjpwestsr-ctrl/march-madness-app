@@ -115,7 +115,6 @@ export default function AdminClient({ adminEmail }: { adminEmail: string }) {
 
   const sections = [
     {
-      {
   title: "Sports Management",
   icon: <FaFootballBall className="text-emerald-400 mr-2" />,
   tools: [

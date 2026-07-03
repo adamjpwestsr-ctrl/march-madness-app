@@ -70,7 +70,7 @@ export default async function NascarDashboard() {
       <NascarDriverSelection
         race={nextRace}
         drivers={drivers || []}
-        userId={userId}
+	userId={userId ?? ""}
       />
 
       {/* 🔥 LIVE LEADERBOARD PANEL */}

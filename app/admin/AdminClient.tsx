@@ -107,65 +107,97 @@ export default function AdminClient({ adminEmail }: { adminEmail: string }) {
     loadStats();
   }, []);
 
-const sections = [
-  {
-    title: "Sports Management",
-    icon: <FaFootballBall className="text-emerald-400 mr-2" />,
-    tools: [
-      { href: "/admin/golf/score-entry", label: "Golf Weekly — Score Entry", icon: <FaGolfBall /> },
-      { href: "/admin/golf/tournament-metadata", label: "Golf Weekly — Tournament Metadata", icon: <FaGolfBall /> },
-      { href: "/admin/golf/current-tournament", label: "Golf Weekly — Current Tournament", icon: <FaGolfBall /> },
+  // -----------------------------
+  // Search + Collapsible Sections
+  // -----------------------------
+  const [search, setSearch] = useState("");
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
 
-      { href: "/admin/mlb", label: "MLB Weekly Admin", icon: <FaBaseballBall /> },
-      { href: "/admin/mlb/derby", label: "MLB Derby Admin", icon: <FaBaseballBall /> },
+  const sections = [
+    {
+      title: "Sports Management",
+      icon: <FaFootballBall className="text-emerald-400 mr-2" />,
+      tools: [
+        { href: "/admin/golf/score-entry", label: "Golf Weekly — Score Entry", icon: <FaGolfBall /> },
+        { href: "/admin/golf/tournament-metadata", label: "Golf Weekly — Tournament Metadata", icon: <FaGolfBall /> },
+        { href: "/admin/golf/current-tournament", label: "Golf Weekly — Current Tournament", icon: <FaGolfBall /> },
 
-      { href: "/admin/nfl-weekly", label: "NFL Weekly Admin", icon: <FaFootballBall /> },
-      { href: "/admin/nba-weekly", label: "NBA Weekly Admin", icon: <FaBasketballBall /> },
-      { href: "/admin/nhl-weekly", label: "NHL Weekly Admin", icon: <FaHockeyPuck /> },
+        { href: "/admin/mlb", label: "MLB Weekly Admin", icon: <FaBaseballBall /> },
+        { href: "/admin/mlb/derby", label: "MLB Derby Admin", icon: <FaBaseballBall /> },
 
-      { href: "/admin/nascar", label: "NASCAR Weekly Admin", icon: <FaFlag /> },
+        { href: "/admin/nfl-weekly", label: "NFL Weekly Admin", icon: <FaFootballBall /> },
+        { href: "/admin/nba-weekly", label: "NBA Weekly Admin", icon: <FaBasketballBall /> },
+        { href: "/admin/nhl-weekly", label: "NHL Weekly Admin", icon: <FaHockeyPuck /> },
 
-      { href: "/admin/weekly-challenge", label: "Weekly Challenge Admin", icon: <FaChartLine /> },
-      { href: "/admin/tournament-setup", label: "Tournament Setup", icon: <FaTools /> },
-    ],
-  },
+        { href: "/admin/nascar", label: "NASCAR Weekly Admin", icon: <FaFlag /> },
 
-  {
-    title: "System Tools",
-    icon: <FaTools className="text-sky-400 mr-2" />,
-    tools: [
-      { href: "/admin/leaderboard", label: "Leaderboard Tools", icon: <FaChartLine /> },
-      { href: "/admin/scoring-audit", label: "Scoring Audit Log", icon: <FaTools /> },
-      { href: "/admin/mulligans", label: "Mulligan Approvals", icon: <FaTools /> },
-      { href: "/admin/snapshots", label: "Payout Snapshots", icon: <FaChartLine /> },
-      { href: "/admin/import", label: "Season Import Tool", icon: <FaTools /> },
-      { href: "/admin/notifications", label: "Push Notifications", icon: <FaPhone /> },
-    ],
-  },
+        { href: "/admin/weekly-challenge", label: "Weekly Challenge Admin", icon: <FaChartLine /> },
+        { href: "/admin/tournament-setup", label: "Tournament Setup", icon: <FaTools /> },
+      ],
+    },
 
-  {
-    title: "User & Forum Management",
-    icon: <FaUsers className="text-indigo-400 mr-2" />,
-    tools: [
-      { href: "/admin/users", label: "User Management", icon: <FaUserCog /> },
-      { href: "/admin/pending-users", label: "Pending Users", icon: <FaUsers /> },
-      { href: "/admin/players", label: "Player Management", icon: <FaUserCog /> },
-      { href: "/admin/forum", label: "Forum Moderation", icon: <FaQuestionCircle /> },
-    ],
-  },
+    {
+      title: "System Tools",
+      icon: <FaTools className="text-sky-400 mr-2" />,
+      tools: [
+        { href: "/admin/leaderboard", label: "Leaderboard Tools", icon: <FaChartLine /> },
+        { href: "/admin/scoring-audit", label: "Scoring Audit Log", icon: <FaTools /> },
+        { href: "/admin/mulligans", label: "Mulligan Approvals", icon: <FaTools /> },
+        { href: "/admin/snapshots", label: "Payout Snapshots", icon: <FaChartLine /> },
+        { href: "/admin/import", label: "Season Import Tool", icon: <FaTools /> },
+        { href: "/admin/notifications", label: "Push Notifications", icon: <FaPhone /> },
+      ],
+    },
 
-  {
-    title: "Miscellaneous",
-    icon: <FaQuestionCircle className="text-yellow-400 mr-2" />,
-    tools: [
-      { href: "/admin/trivia", label: "Trivia Management", icon: <FaQuestionCircle /> },
-      { href: "/admin/games", label: "Game Results", icon: <FaChartLine /> },
-      { href: "/admin/brackets", label: "Bracket Management", icon: <FaTools /> },
-      { href: "/admin/tools", label: "Bracket Tools & Simulations", icon: <FaTools /> },
-      { href: "/sports", label: "Other Sports", icon: <FaFootballBall /> },
-    ],
-  },
-];
+    {
+      title: "User & Forum Management",
+      icon: <FaUsers className="text-indigo-400 mr-2" />,
+      tools: [
+        { href: "/admin/users", label: "User Management", icon: <FaUserCog /> },
+        { href: "/admin/pending-users", label: "Pending Users", icon: <FaUsers /> },
+        { href: "/admin/players", label: "Player Management", icon: <FaUserCog /> },
+        { href: "/admin/forum", label: "Forum Moderation", icon: <FaQuestionCircle /> },
+      ],
+    },
+
+    {
+      title: "Miscellaneous",
+      icon: <FaQuestionCircle className="text-yellow-400 mr-2" />,
+      tools: [
+        { href: "/admin/trivia", label: "Trivia Management", icon: <FaQuestionCircle /> },
+        { href: "/admin/games", label: "Game Results", icon: <FaChartLine /> },
+        { href: "/admin/brackets", label: "Bracket Management", icon: <FaTools /> },
+        { href: "/admin/tools", label: "Bracket Tools & Simulations", icon: <FaTools /> },
+        { href: "/sports", label: "Other Sports", icon: <FaFootballBall /> },
+      ],
+    },
+  ];
+
+  const filteredSections = useMemo(() => {
+    if (!search.trim()) return sections;
+    const term = search.toLowerCase();
+    return sections
+      .map((section) => ({
+        ...section,
+        tools: section.tools.filter((t) => t.label.toLowerCase().includes(term)),
+      }))
+      .filter((section) => section.tools.length > 0);
+  }, [search]);
+
+  const toggleCollapse = (title: string) => {
+    setCollapsed((prev) => ({ ...prev, [title]: !prev[title] }));
+  };
+
+  // -----------------------------
+  // Render
+  // -----------------------------
+  return (
+    <div className="min-h-screen bg-slate-950 text-slate-100 p-10 font-sans">
+      <h1 className="text-4xl font-bold text-center mb-2">Admin Dashboard</h1>
+      <p className="text-center mb-8 opacity-80 text-sm">
+        Logged in as <strong>{adminEmail}</strong>
+      </p>
+
       {/* Search */}
       <div className="max-w-md mx-auto mb-10">
         <input

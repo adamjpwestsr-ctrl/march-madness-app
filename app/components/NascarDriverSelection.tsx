@@ -48,10 +48,9 @@ export default function NascarDriverSelection({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-  raceId: race.race_id,
-  driverId: selected,
-}),
-
+          raceId: race.race_id,
+          driverId: selected,
+        }),
       });
 
       const json = await res.json();
@@ -62,11 +61,9 @@ export default function NascarDriverSelection({
         return;
       }
 
-      // 🎉 Confetti celebration
       confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
       setStatus("saved");
 
-      // 💛 Show dedication pop‑up until user closes it
       setShowDedication(true);
     } catch (err) {
       console.error("Error submitting NASCAR pick:", err);
@@ -135,7 +132,6 @@ export default function NascarDriverSelection({
                     filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.6))",
                   }}
                   onError={(e) => {
-                    // fallback to SVG if PNG missing
                     (e.currentTarget as HTMLImageElement).src =
                       `/images/manufacturers/${d.manufacturer.toLowerCase()}.svg`;
                   }}
@@ -150,7 +146,6 @@ export default function NascarDriverSelection({
         })}
       </div>
 
-      {/* Confirmation popup */}
       {confirming && selected && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50">
           <div className="bg-slate-800 border border-emerald-400 rounded-xl p-6 text-center text-white">
@@ -209,7 +204,6 @@ export default function NascarDriverSelection({
         </div>
       )}
 
-      {/* Dedication pop‑up with fade animation and close button */}
       {showDedication && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50 transition-opacity duration-700 opacity-100">
           <div className="bg-slate-800 border border-amber-400 rounded-xl p-6 text-center text-white shadow-lg transition-all duration-700 transform opacity-100 scale-100">

@@ -48,10 +48,10 @@ export default function NascarDriverSelection({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userId,
-          raceId: race.race_id,
-          driverId: selected,
-        }),
+  raceId: race.race_id,
+  driverId: selected,
+}),
+
       });
 
       const json = await res.json();

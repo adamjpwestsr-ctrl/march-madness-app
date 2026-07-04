@@ -1,41 +1,42 @@
-CLASH (BOWMAN GRAY)  , FEB 1 , 8 PM 
-DUELS (DAYTONA)  , FEB 12 , 7 PM 
-DAYTONA 500  , FEB 15 , 2:30 PM 
-ECHOPARK (ATLANTA)  , FEB 22 , 3 PM 
-COTA (AUSTIN)  , MAR 1 , 3:30 PM 
-PHOENIX  , MAR 8 , 3:30 PM 
-LAS VEGAS  , MAR 15 , 4 PM 
-DARLINGTON  , MAR 22 , 3 PM 
-MARTINSVILLE  , MAR 29 , 3:30 PM 
-OFF WEEK  , APR 5,
-BRISTOL  , APR 12 , 3 PM 
-KANSAS  , APR 19 , 2 PM 
-TALLADEGA  , APR 26 , 3 PM 
-TEXAS  , MAY 3 , 3:30 PM 
-WATKINS GLEN  , MAY 10 , 3 PM 
-ALL-STAR DOVER  , MAY 17 , 3 PM 
-CHARLOTTE  , MAY 24 , 6 PM 
-NASHVILLE  , MAY 31 , 7 PM 
-MICHIGAN  , JUN 7 , 3 PM 
-POCONO  , JUN 14 , 3 PM 
-SAN DIEGO  , JUN 21 , 4 PM 
-SONOMA  , JUN 28 , 3:30 PM 
-CHICAGOLAND  , JUL 5 , 6 PM 
-ECHOPARK (ATLANTA)  , JUL 12 , 7 PM 
-NORTH WILKESBORO  , JUL 19 , 7 PM 
-INDIANAPOLIS  , JUL 26 , 2 PM 
-NO RACE - OFF WEEK, AUG 2,
-IOWA  , AUG 9 , 3:30 PM 
-RICHMOND  , AUG 15 , 7 PM 
-NEW HAMPSHIRE  , AUG 23 , 3 PM 
-DAYTONA  ,29-Aug, 7:30 PM 
-DARLINGTON  , SEP 6 , 5 PM 
-WWTR (ST. LOUIS)  , SEP 13 , 3 PM 
-BRISTOL  ,19-Sep, 7:30 PM 
-KANSAS  , SEP 27 , 3 PM 
-LAS VEGAS  , OCT 4 , 5:30 PM 
-CHARLOTTE  , OCT 11 , 3 PM 
-PHOENIX  , OCT 18 , 3 PM 
-TALLADEGA  , OCT 25 , 2 PM 
-MARTINSVILLE  , NOV 1 , 2 PM 
-HOMESTEAD-MIAMI  , NOV 8 , 3 PM 
+name,track,date,stages
+Clash at Bowman Gray Stadium,Bowman Gray Stadium,2/1/2026,3
+Daytona Duels,Daytona International Speedway,2/12/2026,3
+Daytona 500,Daytona International Speedway,2/15/2026,3
+EchoPark Automotive 400,Atlanta Motor Speedway,2/22/2026,3
+EchoPark Grand Prix,Circuit of the Americas,3/1/2026,3
+Shamrock 400,Phoenix Raceway,3/8/2026,3
+Pennzoil 400,Las Vegas Motor Speedway,3/15/2026,3
+Goodyear 400,Darlington Raceway,3/22/2026,3
+NOCO 400,Martinsville Speedway,3/29/2026,3
+Off Week,,4/5/2026,3
+Food City 500,Bristol Motor Speedway,4/12/2026,3
+AdventHealth 400,Kansas Speedway,4/19/2026,3
+GEICO 500,Talladega Superspeedway,4/26/2026,3
+Autotrader EchoPark Automotive 500,Texas Motor Speedway,5/3/2026,3
+Go Bowling at The Glen,Watkins Glen International,5/10/2026,3
+NASCAR All‑Star Race,Dover Motor Speedway,5/17/2026,3
+Coca‑Cola 600,Charlotte Motor Speedway,5/24/2026,4
+Ally 400,Nashville Superspeedway,5/31/2026,3
+FireKeepers Casino 400,Michigan International Speedway,6/7/2026,3
+HighPoint.com 400,Pocono Raceway,6/14/2026,3
+Southern California 400,San Diego Speedway,6/21/2026,3
+Toyota/Save Mart 350,Sonoma Raceway,6/28/2026,3
+Grant Park 165,Chicago Street Course,7/5/2026,3
+Quaker State 400,Atlanta Motor Speedway,7/12/2026,3
+North Wilkesboro 400,North Wilkesboro Speedway,7/19/2026,3
+Brickyard 400,Indianapolis Motor Speedway,7/26/2026,3
+Off Week,,8/2/2026,3
+Iowa Corn 350,Iowa Speedway,8/9/2026,3
+Cook Out 400,Richmond Raceway,8/15/2026,3
+USA Today 301,New Hampshire Motor Speedway,8/23/2026,3
+Coke Zero Sugar 400,Daytona International Speedway,8/29/2026,3
+Cook Out Southern 500,Darlington Raceway,9/6/2026,3
+Enjoy Illinois 300,World Wide Technology Raceway,9/13/2026,3
+Bass Pro Shops Night Race,Bristol Motor Speedway,9/19/2026,3
+Hollywood Casino 400,Kansas Speedway,9/27/2026,3
+South Point 400,Las Vegas Motor Speedway,10/4/2026,3
+Bank of America ROVAL 400,Charlotte Motor Speedway (Roval),10/11/2026,3
+Desert Diamond Casino West Valley 400,Phoenix Raceway,10/18/2026,3
+YellaWood 500,Talladega Superspeedway,10/25/2026,3
+Xfinity 500,Martinsville Speedway,11/1/2026,3
+Dixie Vodka 400,Homestead‑Miami Speedway,11/8/2026,3

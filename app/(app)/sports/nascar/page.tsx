@@ -1,6 +1,6 @@
 import NascarDriverSelection from "@/app/components/NascarDriverSelection";
 import NascarLiveLeaderboard from "@/app/(app)/sports/nascar/NascarLiveLeaderboard";
-import { getNascarLeaderboard } from "@/app/api/nascar/actions";
+import { getNascarLeaderboard, getNascarDrivers } from "@/app/api/nascar/actions";
 import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 
 export default async function NascarDashboard() {
@@ -15,11 +15,8 @@ export default async function NascarDashboard() {
     .limit(1)
     .single();
 
-  // 2. Get drivers (from ESPN or your static list)
-  const { data: drivers } = await supabase
-    .from("nascar_drivers")
-    .select("*")
-    .order("driver_name", { ascending: true });
+  // 2. Get drivers
+  const drivers = await getNascarDrivers();
 
   // 3. Get user pick
   const session = await supabase.auth.getUser();
@@ -27,13 +24,18 @@ export default async function NascarDashboard() {
 
   const { data: pick } = await supabase
     .from("nascar_picks")
-    .select("*")
+    .select("driver_id")
     .eq("user_id", userId)
-    .eq("race_id", nextRace?.id)
+    .eq("race_id", nextRace?.race_id)
     .single();
 
-  // 4. Leaderboard preview
-  const leaderboard = await getNascarLeaderboard();
+  // 4. Leaderboard preview — now safe
+  const leaderboard = await getNascarLeaderboard(nextRace?.race_id);
+
+  // Helper: find driver name for pick
+  const pickedDriverName = pick
+    ? drivers.find((d) => d.driver_id === pick.driver_id)?.driver_name
+    : null;
 
   return (
     <div className="space-y-10 pb-20 max-w-6xl mx-auto px-4">
@@ -59,7 +61,7 @@ export default async function NascarDashboard() {
 
         {pick ? (
           <p className="text-emerald-400 text-lg font-medium">
-            You picked {pick.driver_id}
+            You picked {pickedDriverName ?? pick.driver_id}
           </p>
         ) : (
           <p className="text-slate-400">You haven't picked a driver yet.</p>
@@ -70,12 +72,12 @@ export default async function NascarDashboard() {
       <NascarDriverSelection
         race={nextRace}
         drivers={drivers || []}
-	userId={userId ?? ""}
+        userId={userId ?? ""}
       />
 
       {/* 🔥 LIVE LEADERBOARD PANEL */}
       {nextRace && (
-        <NascarLiveLeaderboard raceId={nextRace.id} />
+        <NascarLiveLeaderboard raceId={nextRace.race_id} />
       )}
 
       {/* Leaderboard Preview */}
@@ -83,12 +85,16 @@ export default async function NascarDashboard() {
         <h2 className="text-xl font-semibold text-white mb-4">🏆 Leaderboard</h2>
 
         <div className="space-y-2">
-          {leaderboard.slice(0, 5).map((row: any, i: number) => (
-            <div key={i} className="flex justify-between text-slate-300">
-              <span>{row.user_id}</span>
-              <span className="font-semibold">{row.total_points} pts</span>
-            </div>
-          ))}
+          {leaderboard && leaderboard.length > 0 ? (
+            leaderboard.slice(0, 5).map((row: any, i: number) => (
+              <div key={i} className="flex justify-between text-slate-300">
+                <span>{row.user_id}</span>
+                <span className="font-semibold">{row.points} pts</span>
+              </div>
+            ))
+          ) : (
+            <p className="text-slate-400">No leaderboard data available yet.</p>
+          )}
         </div>
 
         <a

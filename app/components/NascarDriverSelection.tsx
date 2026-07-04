@@ -1,28 +1,52 @@
 "use client";
 
 import { useState } from "react";
-import { submitNascarPick } from "@/app/api/nascar/actions";
+import confetti from "canvas-confetti";
 
-export default function NascarDriverSelection({
-  race,
-  drivers,
-  userId,
-}: {
-  race: any;
-  drivers: any[];
-  userId: string;
-}) {
+export const dynamic = "force-dynamic";
+export default function NascarDriverSelection({ race, drivers, userId }) {
   const [selected, setSelected] = useState<string | null>(null);
+  const [confirming, setConfirming] = useState(false);
   const [status, setStatus] = useState<"idle" | "saving" | "saved">("idle");
 
-  const handlePick = async (driverId: string) => {
+  const handlePickClick = (driverId: string) => {
     setSelected(driverId);
-    setStatus("saving");
-
-    await submitNascarPick(userId, race.id, driverId);
-
-    setStatus("saved");
+    setConfirming(true);
   };
+
+  const handleConfirmSubmit = async () => {
+    if (!selected) return;
+
+    setStatus("saving");
+    setConfirming(false);
+
+    try {
+      const res = await fetch("/api/nascar/pick", {
+        method: "POST",
+        body: JSON.stringify({
+          userId,
+          raceId: race.race_id,
+          driverId: selected,
+        }),
+      });
+
+      const json = await res.json();
+
+      if (!json.success) {
+        console.error("Error submitting NASCAR pick:", json.error);
+        setStatus("idle");
+        return;
+      }
+
+      confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
+      setStatus("saved");
+    } catch (err) {
+      console.error("Error submitting NASCAR pick:", err);
+      setStatus("idle");
+    }
+  };
+
+  const handleCancel = () => setConfirming(false);
 
   if (!race) {
     return (
@@ -48,41 +72,118 @@ export default function NascarDriverSelection({
           return (
             <button
               key={d.driver_id}
-              onClick={() => handlePick(d.driver_id)}
-              className={`flex flex-col items-center gap-2 rounded-lg p-4 transition border
-                ${
-                  isSelected
-                    ? "bg-emerald-600/40 border-emerald-400"
-                    : "bg-slate-800/50 border-slate-700 hover:bg-slate-700/50"
-                }
-              `}
+              onClick={() => handlePickClick(d.driver_id)}
+              className={`flex flex-col items-center gap-2 rounded-lg p-4 transition border ${
+                isSelected
+                  ? "bg-emerald-600/40 border-emerald-400 ring-2 ring-emerald-400 shadow-[0_0_10px_#00ffcc]"
+                  : "bg-slate-800/50 border-slate-700 hover:bg-slate-700/50 hover:scale-105"
+              }`}
             >
-              <img
-                src={d.photoUrl}
-                alt={d.driverName}
-                className="w-16 h-16 rounded-full object-cover"
-              />
-              <span className="text-white font-medium">{d.driverName}</span>
+              {/* Number above manufacturer logo */}
+              <div className="flex flex-col items-center justify-center w-20 h-24">
+                <span
+                  className="font-extrabold italic text-6xl mb-1"
+                  style={{
+                    fontFamily: "'Impact', 'Bebas Neue', sans-serif",
+                    transform: "skew(-10deg)",
+                    background:
+                      d.manufacturer.toLowerCase() === "chevrolet"
+                        ? "linear-gradient(180deg, #fff 0%, #f5d142 45%, #b8860b 100%)"
+                        : d.manufacturer.toLowerCase() === "ford"
+                        ? "linear-gradient(180deg, #fff 0%, #93c5fd 45%, #1e3a8a 100%)"
+                        : "linear-gradient(180deg, #fff 0%, #d1d5db 45%, #374151 100%)",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                  }}
+                >
+                  {d.number}
+                </span>
+
+                <img
+                  src={`/images/manufacturers/${d.manufacturer.toLowerCase()}.png`}
+                  alt={d.manufacturer}
+                  className="w-full h-12 object-contain"
+                  style={{
+                    filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.6))",
+                  }}
+                />
+              </div>
+
+              <span className="text-white font-medium">{d.driver_name}</span>
+              <span className="text-slate-400 text-sm">#{d.number}</span>
+              <span className="text-slate-500 text-xs">{d.team}</span>
             </button>
           );
         })}
       </div>
 
-      {status === "saving" && (
-        <p className="text-emerald-400 mt-4">Saving your pick...</p>
+      {/* Confirmation popup */}
+      {confirming && selected && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50">
+          <div className="bg-slate-800 border border-emerald-400 rounded-xl p-6 text-center text-white">
+            <h3 className="text-lg font-semibold mb-4">
+              Your pick for this event:
+            </h3>
+
+            <div className="rounded-lg border border-emerald-400 p-4 mb-4">
+              <p className="text-5xl font-extrabold italic mb-2">
+                {drivers.find((d) => d.driver_id === selected)?.number}
+              </p>
+
+              <img
+                src={`/images/manufacturers/${drivers.find((d) => d.driver_id === selected)?.manufacturer.toLowerCase()}.png`}
+                alt="logo"
+                className="w-16 h-16 mx-auto mb-2 object-contain"
+              />
+
+              <p className="font-semibold">
+                {drivers.find((d) => d.driver_id === selected)?.driver_name}
+              </p>
+
+              <p className="text-slate-400 text-sm">
+                #{drivers.find((d) => d.driver_id === selected)?.number}
+              </p>
+
+              <p className="text-slate-500 text-xs">
+                {drivers.find((d) => d.driver_id === selected)?.team}
+              </p>
+            </div>
+
+            <p className="text-amber-300 mb-4">
+              Are you sure you want this pick?
+            </p>
+
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={handleConfirmSubmit}
+                className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 rounded-lg font-semibold"
+              >
+                Yes — Submit
+              </button>
+
+              <button
+                onClick={handleCancel}
+                className="px-4 py-2 bg-red-500 hover:bg-red-600 rounded-lg font-semibold"
+              >
+                No — Change
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {status === "saved" && (
-        <p className="text-emerald-400 mt-4 font-semibold">
-          Your pick has been saved!
-        </p>
-      )}
-{status === "saved" && (
-  <p className="text-amber-300 mt-2 text-sm italic">
-    To my son — thank you for letting me build this NASCAR challenge for you. I love you. Go Bubba #23!
-  </p>
-)}
+        <>
+          <p className="text-emerald-400 mt-4 font-semibold">
+            Your pick has been saved!
+          </p>
 
+          <p className="text-amber-300 mt-2 text-sm italic">
+            To my son — thank you for letting me build this NASCAR challenge for you.  
+            I love you. Go Bubba #23!
+          </p>
+        </>
+      )}
     </section>
   );
 }

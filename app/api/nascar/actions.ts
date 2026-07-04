@@ -4,8 +4,13 @@ import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 
 /**
  * Submit a NASCAR pick for a user.
+ * (Now safe for Route Handler usage — no thrown errors, no cookie writes)
  */
-export async function submitNascarPick(userId: string, raceId: string, driverId: string) {
+export async function submitNascarPick(
+  userId: string,
+  raceId: string,
+  driverId: string
+) {
   const supabase = await createSupabaseServerClient();
 
   const { error } = await supabase
@@ -19,29 +24,33 @@ export async function submitNascarPick(userId: string, raceId: string, driverId:
 
   if (error) {
     console.error("Error submitting NASCAR pick:", error);
-    throw new Error("Failed to submit NASCAR pick");
+    return { success: false, error };
   }
 
   return { success: true };
 }
 
 /**
- * Get the current NASCAR leaderboard.
+ * Get the current NASCAR leaderboard for a race.
  */
-export async function getNascarLeaderboard() {
+export async function getNascarLeaderboard(raceId?: string) {
   const supabase = await createSupabaseServerClient();
 
-  const { data, error } = await supabase
+  const query = supabase
     .from("nascar_points")
     .select("user_id, race_id, points")
     .order("points", { ascending: false });
 
+  if (raceId) query.eq("race_id", raceId);
+
+  const { data, error } = await query;
+
   if (error) {
     console.error("Error fetching NASCAR leaderboard:", error);
-    throw new Error("Failed to fetch leaderboard");
+    return [];
   }
 
-  return data;
+  return data ?? [];
 }
 
 /**
@@ -68,7 +77,10 @@ export async function getUserNascarPick(userId: string, raceId: string) {
 /**
  * Insert or update race results.
  */
-export async function submitNascarRaceResults(raceId: string, results: any[]) {
+export async function submitNascarRaceResults(
+  raceId: string,
+  results: any[]
+) {
   const supabase = await createSupabaseServerClient();
 
   const payload = results.map((r) => ({
@@ -86,7 +98,7 @@ export async function submitNascarRaceResults(raceId: string, results: any[]) {
 
   if (error) {
     console.error("Error inserting NASCAR results:", error);
-    throw new Error("Failed to submit NASCAR results");
+    return { success: false, error };
   }
 
   return { success: true };
@@ -105,7 +117,7 @@ export async function calculateNascarPoints(raceId: string) {
 
   if (picksError) {
     console.error("Error fetching NASCAR picks:", picksError);
-    throw new Error("Failed to fetch picks");
+    return { success: false, error: picksError };
   }
 
   if (!picks || picks.length === 0) {
@@ -119,7 +131,7 @@ export async function calculateNascarPoints(raceId: string) {
 
   if (perfError) {
     console.error("Error fetching NASCAR performance:", perfError);
-    throw new Error("Failed to fetch performance");
+    return { success: false, error: perfError };
   }
 
   const perfMap = new Map();
@@ -140,8 +152,29 @@ export async function calculateNascarPoints(raceId: string) {
 
   if (pointsError) {
     console.error("Error inserting NASCAR points:", pointsError);
-    throw new Error("Failed to insert points");
+    return { success: false, error: pointsError };
   }
 
   return { success: true };
+}
+
+/**
+ * Get all NASCAR drivers
+ */
+export async function getNascarDrivers() {
+  const supabase = await createSupabaseServerClient();
+
+  const { data, error } = await supabase
+    .from("nascar_drivers")
+    .select(
+      "driver_id, driver_name, number, team, manufacturer, photo_url"
+    )
+    .order("number");
+
+  if (error) {
+    console.error("Error fetching NASCAR drivers:", error);
+    return null;
+  }
+
+  return data;
 }

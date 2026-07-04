@@ -8,8 +8,23 @@ export default function NascarLiveLeaderboard({ raceId }: { raceId: string }) {
 
   const fetchLeaderboard = async () => {
     try {
-      const res = await fetch(`/api/nascar?type=live-leaderboard&raceId=${raceId}`);
-      const data = await res.json();
+const res = await fetch(`/api/nascar?type=live-leaderboard&raceId=${raceId}`);
+if (!res.ok) {
+  console.error("Leaderboard fetch failed:", res.status);
+  setRows([]);
+  setLoading(false);
+  return;
+}
+
+let data = [];
+try {
+  data = await res.json();
+} catch (err) {
+  console.error("Failed to parse leaderboard JSON:", err);
+  data = [];
+}
+setRows(data || []);
+setLoading(false);
       setRows(data || []);
       setLoading(false);
     } catch (err) {

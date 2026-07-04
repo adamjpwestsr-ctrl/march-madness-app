@@ -3,24 +3,35 @@
 import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 
 /**
- * Submit a NASCAR pick for a user.
- * (Now safe for Route Handler usage — no thrown errors, no cookie writes)
+ * Submit a NASCAR pick for the authenticated user.
  */
-export async function submitNascarPick(
-  userId: string,
-  raceId: string,
-  driverId: string
-) {
+export async function submitNascarPick(raceId: string, driverId: string) {
   const supabase = await createSupabaseServerClient();
 
+  // Get authenticated user
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    console.error("Not authenticated");
+    return { success: false, error: "Not authenticated" };
+  }
+
+  const userId = user.id;
+
+  // UPSERT pick (correct conflict target)
   const { error } = await supabase
     .from("nascar_picks")
-    .upsert({
-      user_id: userId,
-      race_id: raceId,
-      driver_id: driverId,
-      updated_at: new Date().toISOString(),
-    });
+    .upsert(
+      {
+        user_id: userId,
+        race_id: raceId,
+        driver_id: driverId,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id,race_id" }
+    );
 
   if (error) {
     console.error("Error submitting NASCAR pick:", error);
@@ -56,13 +67,19 @@ export async function getNascarLeaderboard(raceId?: string) {
 /**
  * Get the user's pick for a specific race.
  */
-export async function getUserNascarPick(userId: string, raceId: string) {
+export async function getUserNascarPick(raceId: string) {
   const supabase = await createSupabaseServerClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return null;
 
   const { data, error } = await supabase
     .from("nascar_picks")
     .select("*")
-    .eq("user_id", userId)
+    .eq("user_id", user.id)
     .eq("race_id", raceId)
     .single();
 
@@ -77,10 +94,7 @@ export async function getUserNascarPick(userId: string, raceId: string) {
 /**
  * Insert or update race results.
  */
-export async function submitNascarRaceResults(
-  raceId: string,
-  results: any[]
-) {
+export async function submitNascarRaceResults(raceId: string, results: any[]) {
   const supabase = await createSupabaseServerClient();
 
   const payload = results.map((r) => ({
@@ -159,7 +173,7 @@ export async function calculateNascarPoints(raceId: string) {
 }
 
 /**
- * Get all NASCAR drivers
+ * Get all NASCAR drivers.
  */
 export async function getNascarDrivers() {
   const supabase = await createSupabaseServerClient();

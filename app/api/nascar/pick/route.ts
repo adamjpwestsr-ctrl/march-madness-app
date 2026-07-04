@@ -22,7 +22,6 @@ export async function POST(req: Request) {
     }
   );
 
-  // Get authenticated user
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -32,7 +31,6 @@ export async function POST(req: Request) {
   }
 
   const userId = user.id;
-
   const body = await req.json();
   const raceId = body.raceId;
   const driverId = body.driverId;
@@ -44,7 +42,6 @@ export async function POST(req: Request) {
     );
   }
 
-  // UPSERT pick (correct conflict target)
   const { error } = await supabase
     .from("nascar_picks")
     .upsert(
@@ -52,10 +49,9 @@ export async function POST(req: Request) {
         user_id: userId,
         race_id: raceId,
         driver_id: driverId,
+        updated_at: new Date().toISOString(),
       },
-      {
-        onConflict: "user_id,race_id",
-      }
+      { onConflict: "user_id,race_id" }
     );
 
   if (error) {

@@ -66,9 +66,8 @@ export default function NascarDriverSelection({
       confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
       setStatus("saved");
 
-      // 💛 Show dedication pop‑up with fade animation
+      // 💛 Show dedication pop‑up until user closes it
       setShowDedication(true);
-      setTimeout(() => setShowDedication(false), 6000);
     } catch (err) {
       console.error("Error submitting NASCAR pick:", err);
       setStatus("idle");
@@ -76,6 +75,7 @@ export default function NascarDriverSelection({
   };
 
   const handleCancel = () => setConfirming(false);
+  const handleCloseDedication = () => setShowDedication(false);
 
   if (!race) {
     return (
@@ -134,6 +134,11 @@ export default function NascarDriverSelection({
                   style={{
                     filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.6))",
                   }}
+                  onError={(e) => {
+                    // fallback to SVG if PNG missing
+                    (e.currentTarget as HTMLImageElement).src =
+                      `/images/manufacturers/${d.manufacturer.toLowerCase()}.svg`;
+                  }}
                 />
               </div>
 
@@ -162,6 +167,10 @@ export default function NascarDriverSelection({
                 src={`/images/manufacturers/${drivers.find((d) => d.driver_id === selected)?.manufacturer.toLowerCase()}.png`}
                 alt="logo"
                 className="w-16 h-16 mx-auto mb-2 object-contain"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).src =
+                    `/images/manufacturers/${drivers.find((d) => d.driver_id === selected)?.manufacturer.toLowerCase()}.svg`;
+                }}
               />
 
               <p className="font-semibold">
@@ -200,14 +209,20 @@ export default function NascarDriverSelection({
         </div>
       )}
 
-      {/* Dedication pop‑up with fade animation */}
+      {/* Dedication pop‑up with fade animation and close button */}
       {showDedication && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50 transition-opacity duration-700 opacity-100">
           <div className="bg-slate-800 border border-amber-400 rounded-xl p-6 text-center text-white shadow-lg transition-all duration-700 transform opacity-100 scale-100">
-            <p className="text-amber-300 italic text-lg">
+            <p className="text-amber-300 italic text-lg mb-4">
               To my son — thank you for letting me build this NASCAR challenge for you.  
               I love you. Go Bubba #23!
             </p>
+            <button
+              onClick={handleCloseDedication}
+              className="mt-2 px-4 py-2 bg-amber-400 hover:bg-amber-500 text-slate-900 font-semibold rounded-lg transition-colors duration-300"
+            >
+              Close
+            </button>
           </div>
         </div>
       )}

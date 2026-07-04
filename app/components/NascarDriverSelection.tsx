@@ -3,7 +3,30 @@
 import { useState } from "react";
 import confetti from "canvas-confetti";
 
-export default function NascarDriverSelection({ race, drivers, userId }) {
+interface Driver {
+  driver_id: string;
+  driver_name: string;
+  number: number;
+  manufacturer: string;
+  team: string;
+}
+
+interface Race {
+  race_id: string;
+  name: string;
+}
+
+interface NascarDriverSelectionProps {
+  race: Race;
+  drivers: Driver[];
+  userId: string;
+}
+
+export default function NascarDriverSelection({
+  race,
+  drivers,
+  userId,
+}: NascarDriverSelectionProps) {
   const [selected, setSelected] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [status, setStatus] = useState<"idle" | "saving" | "saved">("idle");
@@ -22,6 +45,7 @@ export default function NascarDriverSelection({ race, drivers, userId }) {
     try {
       const res = await fetch("/api/nascar/pick", {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId,
           raceId: race.race_id,
@@ -78,7 +102,6 @@ export default function NascarDriverSelection({ race, drivers, userId }) {
                   : "bg-slate-800/50 border-slate-700 hover:bg-slate-700/50 hover:scale-105"
               }`}
             >
-              {/* Number above manufacturer logo */}
               <div className="flex flex-col items-center justify-center w-20 h-24">
                 <span
                   className="font-extrabold italic text-6xl mb-1"
@@ -116,7 +139,6 @@ export default function NascarDriverSelection({ race, drivers, userId }) {
         })}
       </div>
 
-      {/* Confirmation popup */}
       {confirming && selected && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50">
           <div className="bg-slate-800 border border-emerald-400 rounded-xl p-6 text-center text-white">

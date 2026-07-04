@@ -1,49 +1,66 @@
-import { NextResponse } from "next/server";
-import { submitNascarPick } from "../actions";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
 export async function POST(req: Request) {
-  try {
-    const { userId, raceId, driverId } = await req.json();
+  const cookieStore = await cookies();
 
-    // Validate input
-    if (!userId || !raceId || !driverId) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Missing userId, raceId, or driverId",
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
         },
-        { status: 400 }
-      );
-    }
-
-    // Execute pick submission
-    const result = await submitNascarPick(userId, raceId, driverId);
-
-    // If submitNascarPick returned an error
-    if (!result || result.success === false) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: result?.error || "Failed to submit NASCAR pick",
+        set(name: string, value: string, options: any) {
+          cookieStore.set({ name, value, ...options });
         },
-        { status: 500 }
-      );
-    }
-
-    // SUCCESS — always return a consistent JSON payload
-    return NextResponse.json({
-      success: true,
-      message: "NASCAR pick submitted successfully",
-    });
-  } catch (err: any) {
-    console.error("NASCAR pick route error:", err);
-
-    return NextResponse.json(
-      {
-        success: false,
-        error: err?.message || "Unexpected server error",
+        remove(name: string, options: any) {
+          cookieStore.set({ name, value: "", ...options });
+        },
       },
-      { status: 500 }
+    }
+  );
+
+  // Get authenticated user
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return Response.json({ error: "Not authenticated" }, { status: 401 });
+  }
+
+  const userId = user.id;
+
+  const body = await req.json();
+  const raceId = body.raceId;
+  const driverId = body.driverId;
+
+  if (!raceId || !driverId) {
+    return Response.json(
+      { error: "Missing raceId or driverId" },
+      { status: 400 }
     );
   }
+
+  // UPSERT pick (correct conflict target)
+  const { error } = await supabase
+    .from("nascar_picks")
+    .upsert(
+      {
+        user_id: userId,
+        race_id: raceId,
+        driver_id: driverId,
+      },
+      {
+        onConflict: "user_id,race_id",
+      }
+    );
+
+  if (error) {
+    return Response.json({ error: error.message }, { status: 500 });
+  }
+
+  return Response.json({ success: true });
 }

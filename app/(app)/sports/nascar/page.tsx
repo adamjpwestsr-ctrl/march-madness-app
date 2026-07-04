@@ -33,9 +33,9 @@ export default async function NascarDashboard() {
   const leaderboard = await getNascarLeaderboard(nextRace?.race_id);
 
   // Helper: find driver name for pick
-  const pickedDriverName = pick
-    ? drivers.find((d) => d.driver_id === pick.driver_id)?.driver_name
-    : null;
+const pickedDriverName = pick
+  ? (drivers ?? []).find((d) => d.driver_id === pick.driver_id)?.driver_name
+  : null;
 
   return (
     <div className="space-y-10 pb-20 max-w-6xl mx-auto px-4">

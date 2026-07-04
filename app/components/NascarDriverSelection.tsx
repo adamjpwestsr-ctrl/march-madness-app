@@ -30,6 +30,7 @@ export default function NascarDriverSelection({
   const [selected, setSelected] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [status, setStatus] = useState<"idle" | "saving" | "saved">("idle");
+  const [showDedication, setShowDedication] = useState(false);
 
   const handlePickClick = (driverId: string) => {
     setSelected(driverId);
@@ -61,8 +62,13 @@ export default function NascarDriverSelection({
         return;
       }
 
+      // 🎉 Confetti celebration
       confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
       setStatus("saved");
+
+      // 💛 Show dedication pop‑up with fade animation
+      setShowDedication(true);
+      setTimeout(() => setShowDedication(false), 6000);
     } catch (err) {
       console.error("Error submitting NASCAR pick:", err);
       setStatus("idle");
@@ -139,6 +145,7 @@ export default function NascarDriverSelection({
         })}
       </div>
 
+      {/* Confirmation popup */}
       {confirming && selected && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50">
           <div className="bg-slate-800 border border-emerald-400 rounded-xl p-6 text-center text-white">
@@ -193,17 +200,22 @@ export default function NascarDriverSelection({
         </div>
       )}
 
-      {status === "saved" && (
-        <>
-          <p className="text-emerald-400 mt-4 font-semibold">
-            Your pick has been saved!
-          </p>
+      {/* Dedication pop‑up with fade animation */}
+      {showDedication && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50 transition-opacity duration-700 opacity-100">
+          <div className="bg-slate-800 border border-amber-400 rounded-xl p-6 text-center text-white shadow-lg transition-all duration-700 transform opacity-100 scale-100">
+            <p className="text-amber-300 italic text-lg">
+              To my son — thank you for letting me build this NASCAR challenge for you.  
+              I love you. Go Bubba #23!
+            </p>
+          </div>
+        </div>
+      )}
 
-          <p className="text-amber-300 mt-2 text-sm italic">
-            To my son — thank you for letting me build this NASCAR challenge for you.  
-            I love you. Go Bubba #23!
-          </p>
-        </>
+      {status === "saved" && (
+        <p className="text-emerald-400 mt-4 font-semibold">
+          Your pick has been saved!
+        </p>
       )}
     </section>
   );

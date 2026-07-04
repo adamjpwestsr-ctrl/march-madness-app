@@ -3,6 +3,8 @@ import NascarLiveLeaderboard from "@/app/(app)/sports/nascar/NascarLiveLeaderboa
 import { getNascarLeaderboard, getNascarDrivers } from "@/app/api/nascar/actions";
 import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 
+export const dynamic = "force-dynamic";
+
 export default async function NascarDashboard() {
   const supabase = await createSupabaseServerClient();
 

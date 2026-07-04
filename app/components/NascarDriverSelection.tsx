@@ -3,7 +3,6 @@
 import { useState } from "react";
 import confetti from "canvas-confetti";
 
-export const dynamic = "force-dynamic";
 export default function NascarDriverSelection({ race, drivers, userId }) {
   const [selected, setSelected] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);

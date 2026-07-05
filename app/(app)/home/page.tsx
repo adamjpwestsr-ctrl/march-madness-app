@@ -110,6 +110,34 @@ export default async function HomePage() {
         <RealActivityFeed userId={String(userId)} />
       </section>
 
+{/* HELP & INFO */}
+<section className="border border-slate-800 rounded-xl p-4 bg-slate-900/40">
+  <details className="group">
+    <summary className="cursor-pointer text-slate-300 font-semibold text-sm flex items-center justify-between">
+      Help & Info
+      <span className="text-slate-500 group-open:rotate-90 transition-transform">›</span>
+    </summary>
+
+    <div className="mt-4 space-y-2 text-sm text-slate-400 pl-2">
+      <a href="/challenge-overview" className="block underline hover:text-slate-300">
+        Challenge Overview
+      </a>
+      <a href="/scoring" className="block underline hover:text-slate-300">
+        How Scoring Works
+      </a>
+      <a href="/season-rules" className="block underline hover:text-slate-300">
+        Season Rules
+      </a>
+      <a href="/quick-start" className="block underline hover:text-slate-300">
+        New User Quick Start
+      </a>
+      <a href="/support" className="block underline hover:text-slate-300">
+        Support Center
+      </a>
+    </div>
+  </details>
+</section>
+
       {/* FOOTER */}
       <section className="border-t border-slate-800 pt-6 mt-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">

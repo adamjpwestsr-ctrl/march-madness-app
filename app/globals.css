@@ -1,24 +1,23 @@
 @import "tailwindcss";
 
+/* -------------------------------------------------
+   CORE ANIMATIONS & EFFECTS
+--------------------------------------------------*/
+
 /* Moving logo animation */
 .moving-logo {
   position: absolute;
-  top: 35%; /* moves logo up so it slides between the text */
+  top: 35%;
   left: 0;
   transform: translateY(-50%);
   animation: slideAcross 5s linear forwards;
 }
-
 @keyframes slideAcross {
-  0% {
-    transform: translate(-350px, -50%);
-  }
-  100% {
-    transform: translate(calc(100vw + 350px), -50%);
-  }
+  0% { transform: translate(-350px, -50%); }
+  100% { transform: translate(calc(100vw + 350px), -50%); }
 }
 
-/* Shake animation for invalid admin code */
+/* Shake animation */
 @keyframes shake {
   0% { transform: translateX(0); }
   20% { transform: translateX(-4px); }
@@ -27,182 +26,225 @@
   80% { transform: translateX(4px); }
   100% { transform: translateX(0); }
 }
-
 .animate-shake {
   animation: shake 0.3s ease-in-out;
 }
-/* Soft fade-in for tiles */
-@keyframes fadeInSoft {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
 
+/* Soft fade-in */
+@keyframes fadeInSoft {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 .fade-in-soft {
   animation: fadeInSoft 0.6s ease-out forwards;
 }
 
-/* Gentle glow pulse for hero tile */
+/* Glow pulse */
 @keyframes glowPulse {
-  0% {
-    box-shadow: 0 0 0px rgba(16, 185, 129, 0.0);
-  }
-  50% {
-    box-shadow: 0 0 18px rgba(16, 185, 129, 0.25);
-  }
-  100% {
-    box-shadow: 0 0 0px rgba(16, 185, 129, 0.0);
-  }
+  0% { box-shadow: 0 0 0px rgba(16,185,129,0); }
+  50% { box-shadow: 0 0 18px rgba(16,185,129,0.25); }
+  100% { box-shadow: 0 0 0px rgba(16,185,129,0); }
 }
-
 .glow-pulse {
   animation: glowPulse 4s ease-in-out infinite;
 }
 
-/* Soft parallax hover */
+/* Parallax hover */
 .parallax-hover {
   transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
-
 .parallax-hover:hover {
   transform: translateY(-3px) scale(1.01);
-}@layer utilities {
-  .animate-pulse-slow {
-    animation: pulseSlow 8s ease-in-out infinite;
-  }
-  @keyframes pulseSlow {
-    0%, 100% { opacity: 0.9; }
-    50% { opacity: 1; }
-  }
-
-  .animate-slow-pan {
-    animation: slowPan 18s linear infinite;
-  }
-  @keyframes slowPan {
-    0% { transform: translate(0%, 0%); }
-    50% { transform: translate(3%, 3%); }
-    100% { transform: translate(0%, 0%); }
-  }
-
-  .animate-fade-in {
-    animation: fadeIn 0.6s ease-out;
-  }
-  @keyframes fadeIn {
-    0% { opacity: 0; transform: translateY(10px); }
-    100% { opacity: 1; transform: translateY(0); }
-  }
 }
-@layer utilities {
-  /* Fade-in animation */
-  .animate-fade-in {
-    animation: fadeIn 0.6s ease-out;
-  }
-  @keyframes fadeIn {
-    0% { opacity: 0; transform: translateY(10px); }
-    100% { opacity: 1; transform: translateY(0); }
-  }
 
-  /* HERO SPOTLIGHT EFFECT */
-  .hero-spotlight {
-    background: radial-gradient(
-      circle at 30% 20%,
-      rgba(255, 255, 255, 0.12),
-      transparent 60%
-    );
-    animation: spotlightMove 14s ease-in-out infinite;
-  }
-
-  @keyframes spotlightMove {
-    0% { transform: translate(-10%, -10%); }
-    50% { transform: translate(10%, 10%); }
-    100% { transform: translate(-10%, -10%); }
-  }
-}
-@layer utilities {
-  /* Fade-in animation */
-  .animate-fade-in {
-    animation: fadeIn 0.6s ease-out;
-  }
-  @keyframes fadeIn {
-    0% { opacity: 0; transform: translateY(10px); }
-    100% { opacity: 1; transform: translateY(0); }
-  }
-
-  /* Hero Spotlight */
-  .hero-spotlight {
-    background: radial-gradient(
-      circle at 30% 20%,
-      rgba(255, 255, 255, 0.12),
-      transparent 60%
-    );
-    animation: spotlightMove 14s ease-in-out infinite;
-  }
-  @keyframes spotlightMove {
-    0% { transform: translate(-10%, -10%); }
-    50% { transform: translate(10%, 10%); }
-    100% { transform: translate(-10%, -10%); }
-  }
-
-  /* Neon Glow Outline */
-  .neon-glow {
-    box-shadow:
-      0 0 12px rgba(16, 185, 129, 0.6),
-      0 0 24px rgba(16, 185, 129, 0.4),
-      0 0 36px rgba(16, 185, 129, 0.2);
-    transition: box-shadow 0.3s ease;
-  }
-  .neon-glow:hover {
-    box-shadow:
-      0 0 16px rgba(16, 185, 129, 0.8),
-      0 0 32px rgba(16, 185, 129, 0.6),
-      0 0 48px rgba(16, 185, 129, 0.4);
-  }
-}
-@layer utilities {
-  /* Fade-in animation */
-  .animate-fade-in {
-    animation: fadeIn 0.6s ease-out;
-  }
-  @keyframes fadeIn {
-    0% { opacity: 0; transform: translateY(10px); }
-    100% { opacity: 1; transform: translateY(0); }
-  }
-
-  /* Stationary hero spotlight */
-  .hero-spotlight {
-    background: radial-gradient(
-      circle at 30% 20%,
-      rgba(255, 255, 255, 0.12),
-      transparent 60%
-    );
-  }
-
-  /* Neon Glow Outline */
-  .neon-glow {
-    box-shadow:
-      0 0 12px rgba(16, 185, 129, 0.6),
-      0 0 24px rgba(16, 185, 129, 0.4),
-      0 0 36px rgba(16, 185, 129, 0.2);
-    transition: box-shadow 0.3s ease;
-  }
-  .neon-glow:hover {
-    box-shadow:
-      0 0 16px rgba(16, 185, 129, 0.8),
-      0 0 32px rgba(16, 185, 129, 0.6),
-      0 0 48px rgba(16, 185, 129, 0.4);
-  }
-}
+/* Badge pop */
 @keyframes pop {
   0% { transform: scale(0.5); opacity: 0; }
   80% { transform: scale(1.1); opacity: 1; }
   100% { transform: scale(1); }
 }
-
 .badge-pop {
   animation: pop 0.4s ease-out;
+}
+
+/* -------------------------------------------------
+   BACKGROUND MOTION
+--------------------------------------------------*/
+
+@keyframes slow-pan {
+  0% { transform: scale(1.05) translateY(0); }
+  50% { transform: scale(1.05) translateY(-20px); }
+  100% { transform: scale(1.05) translateY(0); }
+}
+.animate-slow-pan {
+  animation: slow-pan 18s ease-in-out infinite;
+}
+
+/* Spotlight */
+.hero-spotlight {
+  background: radial-gradient(
+    circle at 30% 20%,
+    rgba(255,255,255,0.12),
+    transparent 60%
+  );
+  animation: spotlightMove 14s ease-in-out infinite;
+}
+@keyframes spotlightMove {
+  0% { transform: translate(-10%, -10%); }
+  50% { transform: translate(10%, 10%); }
+  100% { transform: translate(-10%, -10%); }
+}
+
+/* -------------------------------------------------
+   FLOATING ICONS
+--------------------------------------------------*/
+
+.floating-icons {
+  position: absolute;
+  inset: 0;
+}
+.float-icon {
+  position: absolute;
+  font-size: 2.5rem;
+  opacity: 0.15;
+  animation: float 8s ease-in-out infinite;
+}
+.float-icon:nth-child(1) { top: 10%; left: 20%; animation-delay: 0s; }
+.float-icon:nth-child(2) { top: 30%; left: 70%; animation-delay: 1s; }
+.float-icon:nth-child(3) { top: 60%; left: 15%; animation-delay: 2s; }
+.float-icon:nth-child(4) { top: 75%; left: 55%; animation-delay: 3s; }
+.float-icon:nth-child(5) { top: 40%; left: 40%; animation-delay: 4s; }
+
+@keyframes float {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-15px); }
+  100% { transform: translateY(0); }
+}
+
+/* -------------------------------------------------
+   MODAL ANIMATIONS
+--------------------------------------------------*/
+
+@keyframes scale-in {
+  0% { transform: scale(0.85); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.animate-scale-in {
+  animation: scale-in 0.25s ease-out forwards;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-fade-in {
+  animation: fade-in 0.4s ease-out forwards;
+}
+
+/* -------------------------------------------------
+   NEON EFFECTS
+--------------------------------------------------*/
+
+.neon-border {
+  border: 2px solid rgba(16,185,129,0.4);
+  box-shadow: 0 0 20px rgba(16,185,129,0.3);
+  animation: neon-pulse 3s ease-in-out infinite;
+}
+@keyframes neon-pulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(16,185,129,0.3); }
+  50% { box-shadow: 0 0 35px rgba(16,185,129,0.6); }
+}
+
+.neon-glow {
+  box-shadow:
+    0 0 12px rgba(16,185,129,0.6),
+    0 0 24px rgba(16,185,129,0.4),
+    0 0 36px rgba(16,185,129,0.2);
+  transition: box-shadow 0.3s ease;
+}
+.neon-glow:hover {
+  box-shadow:
+    0 0 16px rgba(16,185,129,0.8),
+    0 0 32px rgba(16,185,129,0.6),
+    0 0 48px rgba(16,185,129,0.4);
+}
+
+/* -------------------------------------------------
+   3D TILT HOVER (STEP 1)
+--------------------------------------------------*/
+
+.tilt-card {
+  transition: transform 0.25s ease;
+  transform-style: preserve-3d;
+}
+.tilt-card:hover {
+  transform: perspective(800px) rotateX(6deg) rotateY(-6deg) scale(1.02);
+}
+
+/* -------------------------------------------------
+   PARTICLE BURSTS (STEP 2)
+--------------------------------------------------*/
+
+@keyframes burst {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}
+
+.burst {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: #10b981; /* emerald */
+  border-radius: 50%;
+  animation: burst 0.6s ease-out forwards;
+  pointer-events: none;
+}
+
+/* -------------------------------------------------
+   TEAM-COLOR REACTIVE GRADIENTS (STEP 4)
+--------------------------------------------------*/
+
+.team-gradient {
+  background: linear-gradient(135deg, var(--team1), var(--team2));
+  transition: background 0.4s ease;
+}
+
+/* -------------------------------------------------
+   ESPN BROADCAST SLIDE-UP (STEP 7)
+--------------------------------------------------*/
+
+@keyframes slide-up {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.slide-up {
+  animation: slide-up 0.6s ease-out forwards;
+}
+
+/* -------------------------------------------------
+   CYBER-SPORTS NEON GRID (STEP 8)
+--------------------------------------------------*/
+
+.neon-grid {
+  background-image:
+    linear-gradient(#0f172a 2px, transparent 2px),
+    linear-gradient(90deg, #0f172a 2px, transparent 2px);
+  background-size: 40px 40px;
+  opacity: 0.15;
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
 }

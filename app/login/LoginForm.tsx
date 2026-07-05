@@ -6,9 +6,10 @@ import { loginWithEmail, verifyAdminCode } from "./actions";
 
 type LoginFormProps = {
   onStepChange?: (step: "email" | "admin") => void;
+  onEmailChange?: (email: string) => void;
 };
 
-export default function LoginForm({ onStepChange }: LoginFormProps) {
+export default function LoginForm({ onStepChange, onEmailChange }: LoginFormProps) {
   const [email, setEmail] = useState("");
   const [adminCode, setAdminCode] = useState("");
   const [step, setStep] = useState<"email" | "admin">("email");
@@ -25,7 +26,6 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
       formData.append("email", email);
 
       const res = await loginWithEmail(formData);
-      console.log("loginWithEmail response:", res);
 
       if (res.status === "needsAdminCode") {
         setStep("admin");
@@ -33,13 +33,12 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
         return;
       }
 
-	if (res.status === "needsName") {
-	  router.push(`/welcome-name?email=${encodeURIComponent(email)}`);
-	  return;
-	}
+      if (res.status === "needsName") {
+        router.push(`/welcome-name?email=${encodeURIComponent(email)}`);
+        return;
+      }
 
       if (res.status === "success") {
-        console.log("✅ Regular user login success — redirecting");
         router.push("/home");
         return;
       }
@@ -49,7 +48,6 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
         return;
       }
 
-      console.error("❌ Login failed:", res);
       setError("Something went wrong.");
     });
   };
@@ -64,10 +62,8 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
       formData.append("adminCode", adminCode);
 
       const res = await verifyAdminCode(formData);
-      console.log("verifyAdminCode response:", res);
 
       if (res.status === "success") {
-        console.log("✅ Admin login success — redirecting");
         router.push("/home");
         return;
       }
@@ -87,7 +83,6 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
         return;
       }
 
-      console.error("❌ Admin login failed:", res);
       setError("Something went wrong.");
     });
   };
@@ -107,7 +102,10 @@ export default function LoginForm({ onStepChange }: LoginFormProps) {
               transition-all duration-200
             "
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              onEmailChange?.(e.target.value);
+            }}
             disabled={isPending}
           />
 

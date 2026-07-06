@@ -138,6 +138,10 @@ export type MarchMadnessState = {
   openingRoundGames: TournamentGame[];
   regionalGames: Record<string, TournamentGame[]>;
 
+  // ⭐ ADDED — required by MarchMadnessClient.tsx
+  finalFourGames: TournamentGame[];
+  championshipGames: TournamentGame[];
+
   teams: TournamentTeam[];
 
   leaderboard: LeaderboardRow[];

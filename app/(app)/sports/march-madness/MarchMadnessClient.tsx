@@ -37,12 +37,13 @@ export function MarchMadnessClient() {
   /* ---------------------------------------------------
      ROUND SCROLL ANCHORS (for modal navigation)
   --------------------------------------------------- */
-  const roundRefs = {
-    2: useRef<HTMLDivElement>(null), // Round of 64
-    3: useRef<HTMLDivElement>(null), // Round of 32
-    4: useRef<HTMLDivElement>(null), // Sweet 16
-    5: useRef<HTMLDivElement>(null), // Elite 8
-  };
+const roundRefs: Record<number, React.RefObject<HTMLDivElement>> = {
+  2: useRef<HTMLDivElement>(null),
+  3: useRef<HTMLDivElement>(null),
+  4: useRef<HTMLDivElement>(null),
+  5: useRef<HTMLDivElement>(null),
+};
+
 
   const scrollToRound = (round: number) => {
     const ref = roundRefs[round];

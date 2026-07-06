@@ -15,16 +15,17 @@ export function OpeningRoundPanel({
 }) {
   const handlePick = (game: TournamentGame, winner: string) => {
     if (!winner || winner === 'TBD') return;
-    if (onPick) onPick(game.id, winner);
+    onPick?.(game.id, winner);
   };
 
   return (
-    <div className="rounded-2xl p-6 bg-gradient-to-br from-slate-900/60 to-slate-800/40 backdrop-blur-xl shadow-2xl space-y-8 border border-white/10">
-      <h2 className="text-3xl font-extrabold text-center uppercase tracking-wide text-white/90 drop-shadow-lg">
+    <div className="rounded-2xl p-4 bg-gradient-to-br from-slate-900/60 to-slate-800/40 backdrop-blur-xl shadow-xl border border-white/10 space-y-4">
+      <h2 className="text-xl font-extrabold text-center uppercase tracking-wide text-white/90">
         Opening Round
       </h2>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      {/* ⭐ 3 columns × 4 rows */}
+      <div className="grid grid-cols-3 grid-rows-4 gap-4">
         {games.map((g) => {
           const team1Name = g.team1 ?? 'TBD';
           const team2Name = g.team2 ?? 'TBD';
@@ -52,23 +53,23 @@ export function OpeningRoundPanel({
           return (
             <div
               key={g.id}
-              className="p-4 rounded-xl bg-white/5 border border-white/10 shadow-lg transition-all duration-200 hover:shadow-2xl hover:bg-white/10 hover:translate-y-0.5"
+              className="p-3 rounded-xl bg-white/5 border border-white/10 shadow-md"
             >
               {/* Team 1 */}
               <button
                 onClick={() => handlePick(g, team1Name)}
-                className={`flex justify-between items-center mb-3 w-full text-left px-3 py-2 rounded-lg transition-all duration-200
+                className={`flex justify-between items-center mb-2 w-full text-left px-2 py-1 rounded-lg transition
                   ${
                     isTeam1Picked
-                      ? 'bg-green-600/40 border border-green-400 scale-[1.03] shadow-lg'
-                      : 'hover:bg-white/20 hover:scale-[1.02]'
+                      ? 'bg-green-600/40 border border-green-400'
+                      : 'hover:bg-white/10'
                   }
                 `}
               >
                 <span className="text-xs opacity-70">
                   {seed1 ? `#${seed1}` : ''}
                 </span>
-                <span className="text-sm font-semibold flex items-center gap-2">
+                <span className="text-sm font-semibold flex items-center gap-1">
                   {team1Name}
                   {isTeam1Picked && (
                     <span className="text-green-300 font-bold">✓</span>
@@ -79,18 +80,18 @@ export function OpeningRoundPanel({
               {/* Team 2 */}
               <button
                 onClick={() => handlePick(g, team2Name)}
-                className={`flex justify-between items-center w-full text-left px-3 py-2 rounded-lg transition-all duration-200
+                className={`flex justify-between items-center w-full text-left px-2 py-1 rounded-lg transition
                   ${
                     isTeam2Picked
-                      ? 'bg-green-600/40 border border-green-400 scale-[1.03] shadow-lg'
-                      : 'hover:bg-white/20 hover:scale-[1.02]'
+                      ? 'bg-green-600/40 border border-green-400'
+                      : 'hover:bg-white/10'
                   }
                 `}
               >
                 <span className="text-xs opacity-70">
                   {seed2 ? `#${seed2}` : ''}
                 </span>
-                <span className="text-sm font-semibold flex items-center gap-2">
+                <span className="text-sm font-semibold flex items-center gap-1">
                   {team2Name}
                   {isTeam2Picked && (
                     <span className="text-green-300 font-bold">✓</span>
@@ -100,12 +101,12 @@ export function OpeningRoundPanel({
 
               {/* Score / Status */}
               {liveMatch ? (
-                <div className="mt-3 text-sm font-bold text-center">
+                <div className="mt-2 text-sm font-bold text-center">
                   {liveMatch.home_score} – {liveMatch.away_score}
                   <div className="text-xs opacity-70">{liveMatch.status}</div>
                 </div>
               ) : g.winner ? (
-                <div className="mt-3 text-center space-y-1">
+                <div className="mt-2 text-center space-y-1">
                   <div className="text-green-400 font-bold text-xs">
                     Winner: {g.winner}
                   </div>
@@ -117,7 +118,7 @@ export function OpeningRoundPanel({
                   )}
                 </div>
               ) : (
-                <div className="mt-3 opacity-70 text-xs text-center">
+                <div className="mt-2 opacity-70 text-xs text-center">
                   Pick a winner…
                 </div>
               )}

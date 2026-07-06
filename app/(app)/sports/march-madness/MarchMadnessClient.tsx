@@ -1,14 +1,18 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import {
   MarchMadnessState,
   LeaderboardRow,
   LiveGameSummary,
+  TournamentGame,
 } from '@/lib/marchMadnessTypes';
 
 import { OpeningRoundPanel } from '@/components/march-madness/OpeningRoundPanel';
 import { RegionBracketPanel } from '@/components/march-madness/RegionBracketPanel';
+import { FinalFourPanel } from '@/components/march-madness/FinalFourPanel';
+import { ChampionshipPanel } from '@/components/march-madness/ChampionshipPanel';
+
 import { LiveTicker } from '@/components/march-madness/LiveTicker';
 import { LeaderboardPreview } from '@/components/march-madness/LeaderboardPreview';
 import MyPicksSidebar from '@/components/march-madness/MyPicksSidebar';
@@ -30,6 +34,30 @@ export function MarchMadnessClient() {
 
   const regionOrder = ['East', 'West', 'South', 'Midwest'];
 
+  /* ---------------------------------------------------
+     ROUND SCROLL ANCHORS (for modal navigation)
+  --------------------------------------------------- */
+  const roundRefs = {
+    2: useRef<HTMLDivElement>(null), // Round of 64
+    3: useRef<HTMLDivElement>(null), // Round of 32
+    4: useRef<HTMLDivElement>(null), // Sweet 16
+    5: useRef<HTMLDivElement>(null), // Elite 8
+  };
+
+  const scrollToRound = (round: number) => {
+    const ref = roundRefs[round];
+    if (ref?.current) {
+      ref.current.scrollIntoView({
+        behavior: 'smooth',
+        inline: 'center',
+        block: 'nearest',
+      });
+    }
+  };
+
+  /* ---------------------------------------------------
+     LOAD GLOBAL STATE
+  --------------------------------------------------- */
   useEffect(() => {
     (async () => {
       try {
@@ -70,6 +98,9 @@ export function MarchMadnessClient() {
     })();
   }, []);
 
+  /* ---------------------------------------------------
+     LOAD LEADERBOARD + LIVE SCORES
+  --------------------------------------------------- */
   useEffect(() => {
     const load = async () => {
       try {
@@ -97,6 +128,9 @@ export function MarchMadnessClient() {
     return () => clearInterval(interval);
   }, []);
 
+  /* ---------------------------------------------------
+     BRACKET CREATION
+  --------------------------------------------------- */
   const handleCreateBracket = async () => {
     try {
       const res = await fetch('/api/march-madness/bracket-list', {
@@ -122,6 +156,9 @@ export function MarchMadnessClient() {
     }
   };
 
+  /* ---------------------------------------------------
+     PICK HANDLERS (ADVANCEMENT)
+  --------------------------------------------------- */
   const handlePick = (gameId: string, winner: string) => {
     if (!winner || winner === 'TBD') return;
 
@@ -133,6 +170,8 @@ export function MarchMadnessClient() {
       const allGames = [
         ...prev.openingRoundGames,
         ...Object.values(prev.regionalGames).flat(),
+        ...prev.finalFourGames,
+        ...prev.championshipGames,
       ];
 
       const sourceGame = allGames.find((g) => g.id === gameId);
@@ -141,66 +180,45 @@ export function MarchMadnessClient() {
       const targetGameId = sourceGame.winner_to_game_id;
 
       const updatedRegional = { ...prev.regionalGames };
+      const updatedFinalFour = [...prev.finalFourGames];
+      const updatedChampionship = [...prev.championshipGames];
+
+      const updateGame = (g: TournamentGame) => {
+        const updatedGame = { ...g };
+        if (!updatedGame.team1 || updatedGame.team1 === 'TBD') {
+          updatedGame.team1 = winner;
+        } else if (!updatedGame.team2 || updatedGame.team2 === 'TBD') {
+          updatedGame.team2 = winner;
+        }
+        return updatedGame;
+      };
 
       for (const regionKey of Object.keys(updatedRegional)) {
-        updatedRegional[regionKey] = updatedRegional[regionKey].map((g) => {
-          if (g.id !== targetGameId) return g;
-
-          const updatedGame = { ...g };
-
-          // ✅ Always write winner into the first available slot by name
-          if (!updatedGame.team1 || updatedGame.team1 === 'TBD') {
-            updatedGame.team1 = winner;
-          } else if (!updatedGame.team2 || updatedGame.team2 === 'TBD') {
-            updatedGame.team2 = winner;
-          }
-
-          return updatedGame;
-        });
+        updatedRegional[regionKey] = updatedRegional[regionKey].map((g) =>
+          g.id === targetGameId ? updateGame(g) : g
+        );
       }
+
+      updatedFinalFour.forEach((g, idx) => {
+        if (g.id === targetGameId) updatedFinalFour[idx] = updateGame(g);
+      });
+
+      updatedChampionship.forEach((g, idx) => {
+        if (g.id === targetGameId) updatedChampionship[idx] = updateGame(g);
+      });
 
       return {
         ...prev,
         regionalGames: updatedRegional,
+        finalFourGames: updatedFinalFour,
+        championshipGames: updatedChampionship,
       };
     });
   };
 
-  const handleSave = async () => {
-    if (!activeBracketId) {
-      console.error('No active bracket selected');
-      return;
-    }
-
-    const formattedPicks = Object.entries(picks).map(([gameId, winner]) => ({
-      game_id: gameId,
-      selected_team: winner,
-    }));
-
-    try {
-      const res = await fetch(
-        `/api/march-madness/brackets/${activeBracketId}/picks`,
-        {
-          method: 'POST',
-          body: JSON.stringify({
-            picks: formattedPicks,
-            tiebreaker_score: null,
-          }),
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
-
-      if (!res.ok) {
-        console.error('SAVE PICKS FAILED:', await res.text());
-        return;
-      }
-
-      console.log('Picks saved!');
-    } catch (err) {
-      console.error('SAVE PICKS ERROR:', err);
-    }
-  };
-
+  /* ---------------------------------------------------
+     REGION PROGRESS
+  --------------------------------------------------- */
   const getRegionProgress = (region: string) => {
     if (!state) return { total: 0, picked: 0 };
     const games = state.regionalGames[region] ?? [];
@@ -209,6 +227,9 @@ export function MarchMadnessClient() {
     return { total, picked };
   };
 
+  /* ---------------------------------------------------
+     LOADING
+  --------------------------------------------------- */
   if (loading || !state) {
     return (
       <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center">
@@ -223,8 +244,13 @@ export function MarchMadnessClient() {
     ? leaderboard
     : leaderboard.filter((row) => row.has_paid);
 
+  /* ---------------------------------------------------
+     RENDER UI
+  --------------------------------------------------- */
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 to-slate-900 text-white flex flex-col gap-8">
+
+      {/* Header */}
       <header className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-white/10 backdrop-blur-xl">
         <div>
           <h1 className="text-4xl font-extrabold tracking-tight drop-shadow">
@@ -273,42 +299,31 @@ export function MarchMadnessClient() {
         </div>
       </header>
 
+      {/* Live ticker */}
       <section className="px-6">
         <LiveTicker />
       </section>
 
-      <main className="flex flex-col lg:flex-row gap-8 px-6 pb-10">
-        <div className="w-full lg:w-80">
-          <MyPicksSidebar
+      {/* Main 3-column layout */}
+      <main className="grid grid-cols-[300px_1fr_300px] gap-8 px-6 pb-10">
+
+        {/* Opening Round */}
+        <div className="space-y-6">
+          <OpeningRoundPanel
+            games={state.openingRoundGames}
+            live={live}
             picks={picks}
-            games={[
-              ...state.openingRoundGames,
-              ...Object.values(state.regionalGames).flat()
-            ]}
-            teams={state.teams}
-            onJumpToGame={(gameId) => {
-              const el = document.getElementById(`game-${gameId}`);
-              el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }}
+            onPick={handlePick}
           />
         </div>
 
-        <div className="flex-1 space-y-12">
-          {state.openingRoundGames?.length > 0 && (
-            <OpeningRoundPanel
-              games={state.openingRoundGames}
-              live={live}
-              picks={picks}
-              onPick={handlePick}
-            />
-          )}
-
+        {/* Center column */}
+        <div className="space-y-12">
+          {/* Regions */}
           <section className="space-y-4">
-            <h2 className="text-2xl font-bold tracking-wide">
-              Regions
-            </h2>
+            <h2 className="text-2xl font-bold tracking-wide">Regions</h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 gap-6">
               {regionOrder.map((region) => {
                 const progress = getRegionProgress(region);
                 const total = progress.total || 1;
@@ -347,9 +362,37 @@ export function MarchMadnessClient() {
               })}
             </div>
           </section>
+
+          {/* Final Four */}
+          <FinalFourPanel games={state.finalFourGames} onPick={handlePick} />
+
+          {/* Championship */}
+          <ChampionshipPanel
+            game={state.championshipGames[0]}
+            onPick={handlePick}
+          />
+        </div>
+
+        {/* My Picks */}
+        <div className="space-y-6">
+          <MyPicksSidebar
+            picks={picks}
+            games={[
+              ...state.openingRoundGames,
+              ...Object.values(state.regionalGames).flat(),
+              ...state.finalFourGames,
+              ...state.championshipGames,
+            ]}
+            teams={state.teams}
+            onJumpToGame={(gameId) => {
+              const el = document.getElementById(`game-${gameId}`);
+              el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }}
+          />
         </div>
       </main>
 
+      {/* Leaderboard */}
       <section className="px-6 pb-10 space-y-4">
         <div className="flex justify-end">
           <button
@@ -363,6 +406,7 @@ export function MarchMadnessClient() {
         <LeaderboardPreview rows={visibleLeaderboard} />
       </section>
 
+      {/* REGION MODAL */}
       {showRegionModal && activeRegion && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/70 animate-fade-in">
           <div className="relative w-[95%] max-w-6xl h-[85vh] bg-slate-900/95 border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
@@ -378,14 +422,17 @@ export function MarchMadnessClient() {
               </button>
             </div>
 
+            {/* Modal content with round anchors */}
             <div className="p-6 h-[80vh] overflow-auto">
-              <RegionBracketPanel
-                region={activeRegion}
-                games={state.regionalGames[activeRegion] ?? []}
-                picks={picks}
-                onPick={handlePick}
-                teams={state.teams}
-              />
+              <div ref={roundRefs[2]}>
+                <RegionBracketPanel
+                  region={activeRegion}
+                  games={state.regionalGames[activeRegion] ?? []}
+                  picks={picks}
+                  onPick={handlePick}
+                  teams={state.teams}
+                />
+              </div>
             </div>
           </div>
         </div>

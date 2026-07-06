@@ -38,7 +38,8 @@ export default function MyPicksSidebar({
   };
 
   return (
-    <div className="rounded-2xl bg-slate-900/60 backdrop-blur-xl border border-white/10 shadow-xl p-4 space-y-4">
+    <div className="rounded-2xl bg-slate-900/60 backdrop-blur-xl border border-white/10 shadow-xl p-4 space-y-4 h-full flex flex-col">
+
       {/* Header */}
       <button
         onClick={() => setOpen(!open)}
@@ -54,8 +55,10 @@ export default function MyPicksSidebar({
         )}
       </button>
 
+      {/* Scrollable content */}
       {open && (
-        <div className="space-y-6">
+        <div className="relative flex-1 overflow-y-auto space-y-6 pr-1">
+
           {Object.keys(picksByRound)
             .map(Number)
             .sort((a, b) => a - b)
@@ -65,7 +68,8 @@ export default function MyPicksSidebar({
                   {roundNames[round] ?? `Round ${round}`}
                 </h3>
 
-                {picksByRound[round].map((g) => {
+                {/* ⭐ Limit to 10 picks per round */}
+                {picksByRound[round].slice(0, 10).map((g) => {
                   const winner = picks[g.id];
                   const winnerTeam = teams.find((t) => t.team === winner);
 
@@ -118,6 +122,9 @@ export default function MyPicksSidebar({
                 })}
               </div>
             ))}
+
+          {/* Bottom fade indicator */}
+          <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-slate-900/80 to-transparent" />
         </div>
       )}
     </div>

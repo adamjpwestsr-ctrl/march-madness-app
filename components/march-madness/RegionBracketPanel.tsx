@@ -1,247 +1,244 @@
 'use client';
 
+import { useRef } from 'react';
 import { TournamentGame, TournamentTeam } from '@/lib/marchMadnessTypes';
 
 export function RegionBracketPanel({
   region,
   games,
+  picks,
   onPick,
-  picks = {},
   teams,
 }: {
   region: string;
   games: TournamentGame[];
+  picks: Record<string, string>;
   onPick?: (gameId: string, winner: string) => void;
-  picks?: Record<string, string>;
   teams: TournamentTeam[];
 }) {
-  const filteredGames = games.filter((g) => g.region === region);
+  // Scroll anchors for each round
+  const roundRefs: Record<number, React.RefObject<HTMLDivElement>> = {};
+  const rounds = groupRoundsBySeed(games);
 
-  const rounds: Record<number, TournamentGame[]> = {};
-  filteredGames.forEach((g) => {
-    const r = g.round ?? 0;
-    if (!rounds[r]) rounds[r] = [];
-    rounds[r].push(g);
+  Object.keys(rounds).forEach((round) => {
+    roundRefs[Number(round)] = useRef<HTMLDivElement>(null);
   });
-
-  const roundOrder = Object.keys(rounds)
-    .map(Number)
-    .sort((a, b) => a - b);
 
   const handlePick = (game: TournamentGame, winner: string) => {
     if (!winner || winner === 'TBD') return;
-    if (onPick) onPick(game.id, winner);
+    onPick?.(game.id, winner);
   };
 
-  const regionAccent =
-    region === 'East'
-      ? 'blue'
-      : region === 'West'
-      ? 'amber'
-      : region === 'South'
-      ? 'red'
-      : 'emerald';
-
-  const regionGradient =
-    region === 'East'
-      ? 'from-blue-900/60 to-slate-900/40'
-      : region === 'West'
-      ? 'from-amber-900/60 to-slate-900/40'
-      : region === 'South'
-      ? 'from-red-900/60 to-slate-900/40'
-      : 'from-emerald-900/60 to-slate-900/40';
+  const scrollToRound = (round: number) => {
+    const ref = roundRefs[round];
+    if (ref?.current) {
+      ref.current.scrollIntoView({
+        behavior: 'smooth',
+        inline: 'center',
+        block: 'nearest',
+      });
+    }
+  };
 
   return (
-    <div
-      className={`rounded-2xl p-6 bg-gradient-to-br ${regionGradient} backdrop-blur-xl shadow-2xl border border-white/10`}
-    >
-      <h2
-        className={`text-4xl font-extrabold text-center uppercase tracking-wide text-${regionAccent}-300 drop-shadow-lg`}
-      >
+    <div className="rounded-2xl p-6 bg-gradient-to-br from-slate-900/70 to-slate-800/40 backdrop-blur-xl shadow-2xl border border-white/10">
+      <h2 className="text-4xl font-extrabold text-center uppercase tracking-wide text-white mb-6">
         {region}
       </h2>
 
-      <div className="flex flex-row gap-8 overflow-x-auto snap-x snap-mandatory pb-4">
-        {roundOrder.map((round, idx) => {
-          const nextRoundExists = idx < roundOrder.length - 1;
+      {/* Horizontal ESPN-style bracket */}
+      <div className="flex flex-row gap-10 overflow-x-auto snap-x snap-mandatory pb-4">
 
-          return (
-            <div
-              key={round}
-              className="flex-shrink-0 snap-center min-w-[300px] space-y-4 relative"
-            >
-              <h3 className="text-lg font-bold text-center text-white/80 tracking-wide">
-                {roundLabel(round)}
-              </h3>
+        {Object.keys(rounds)
+          .map(Number)
+          .sort((a, b) => a - b)
+          .map((round, idx, arr) => {
+            const nextRound = arr[idx + 1];
+            const roundGames = rounds[round];
 
-              {nextRoundExists && (
-                <div className="hidden md:block absolute top-12 right-[-20px] h-[calc(100%-2rem)] border-r border-white/10 opacity-40" />
-              )}
+            const isRoundComplete = roundGames.every((g) => picks[g.id]);
 
-              {rounds[round].map((g) => {
-                const seed1 = g.seed1 ?? null;
-                const seed2 = g.seed2 ?? null;
+            return (
+              <div
+                key={round}
+                ref={roundRefs[round]}
+                className="flex-shrink-0 snap-center min-w-[280px] space-y-4 relative"
+              >
+                <h3 className="text-lg font-bold text-center text-white/80 tracking-wide">
+                  {roundLabel(round)}
+                </h3>
 
-                const team1Name = g.team1 ?? 'TBD';
-                const team2Name = g.team2 ?? 'TBD';
+                {roundGames.map((pair, pairIndex) => (
+                  <div key={pairIndex} className="space-y-4">
+                    {pair.map((g) => {
+                      const team1 = g.team1 ?? 'TBD';
+                      const team2 = g.team2 ?? 'TBD';
 
-                const team1Obj = teams.find((t) => t.id === g.team1_id);
-                const team2Obj = teams.find((t) => t.id === g.team2_id);
+                      const seed1 = g.seed1 ?? null;
+                      const seed2 = g.seed2 ?? null;
 
-                const isTeam1Picked =
-                  picks[g.id] === team1Name || g.winner === team1Name;
-                const isTeam2Picked =
-                  picks[g.id] === team2Name || g.winner === team2Name;
+                      const team1Obj = teams.find((t) => t.team === team1);
+                      const team2Obj = teams.find((t) => t.team === team2);
 
-                const isUpset =
-                  g.winner &&
-                  seed1 &&
-                  seed2 &&
-                  ((g.winner === team1Name && seed1 > seed2) ||
-                    (g.winner === team2Name && seed2 > seed1));
+                      const isTeam1Picked =
+                        picks[g.id] === team1 || g.winner === team1;
+                      const isTeam2Picked =
+                        picks[g.id] === team2 || g.winner === team2;
 
-                if (g.is_placeholder) {
-                  return (
-                    <div
-                      key={g.id}
-                      className="p-4 rounded-xl bg-slate-800/40 border border-white/10 text-center text-white/50 shadow-lg"
-                    >
-                      Placeholder Game
-                    </div>
-                  );
-                }
+                      return (
+                        <div
+                          key={g.id}
+                          id={`game-${g.id}`}
+                          className="relative p-4 rounded-xl bg-white/5 border border-white/10 shadow-lg transition-all duration-200 hover:bg-white/10"
+                        >
+                          {/* ESPN horizontal connectors */}
+                          {nextRound && (
+                            <div className="absolute right-[-24px] top-1/2 w-6 border-t border-white/20"></div>
+                          )}
 
-                const team1NeedsOpening = seed1 !== null && seed1 >= 17;
-                const team2NeedsOpening = seed2 !== null && seed2 >= 17;
-                const waitingOnOpeningRound =
-                  (team1NeedsOpening || team2NeedsOpening) && !g.winner;
+                          {/* Team 1 */}
+                          <button
+                            onClick={() => handlePick(g, team1)}
+                            className={`flex items-center justify-between gap-3 w-full text-left px-3 py-2 rounded-lg transition
+                              ${
+                                isTeam1Picked
+                                  ? 'bg-emerald-600/40 border border-emerald-400 shadow-md'
+                                  : 'hover:bg-white/20'
+                              }
+                            `}
+                          >
+                            {team1Obj?.logo_url && (
+                              <img
+                                src={team1Obj.logo_url}
+                                alt={team1}
+                                className="w-6 h-6 rounded-sm object-contain"
+                              />
+                            )}
+                            <span className="font-semibold text-white">
+                              {team1}
+                            </span>
+                            {seed1 && (
+                              <span className="text-xs px-2 py-0.5 rounded-md bg-white/10 border border-white/20 text-white/80">
+                                #{seed1}
+                              </span>
+                            )}
+                            {isTeam1Picked && (
+                              <span className="text-green-300 font-bold text-lg">
+                                ✓
+                              </span>
+                            )}
+                          </button>
 
-                if (round === 2 && waitingOnOpeningRound) {
-                  return (
-                    <div
-                      key={g.id}
-                      className="p-4 rounded-xl bg-white/5 border border-white/10 text-center text-white/60 shadow-lg"
-                    >
-                      Awaiting Opening Round Winner…
-                    </div>
-                  );
-                }
+                          {/* Team 2 */}
+                          <button
+                            onClick={() => handlePick(g, team2)}
+                            className={`flex items-center justify-between gap-3 w-full text-left px-3 py-2 rounded-lg transition
+                              ${
+                                isTeam2Picked
+                                  ? 'bg-emerald-600/40 border border-emerald-400 shadow-md'
+                                  : 'hover:bg-white/20'
+                              }
+                            `}
+                          >
+                            {team2Obj?.logo_url && (
+                              <img
+                                src={team2Obj.logo_url}
+                                alt={team2}
+                                className="w-6 h-6 rounded-sm object-contain"
+                              />
+                            )}
+                            <span className="font-semibold text-white">
+                              {team2}
+                            </span>
+                            {seed2 && (
+                              <span className="text-xs px-2 py-0.5 rounded-md bg-white/10 border border-white/20 text-white/80">
+                                #{seed2}
+                              </span>
+                            )}
+                            {isTeam2Picked && (
+                              <span className="text-green-300 font-bold text-lg">
+                                ✓
+                              </span>
+                            )}
+                          </button>
 
-                const isTopSibling = g.game_number % 2 === 1;
-
-                return (
-                  <div
-                    key={g.id}
-                    className="relative p-4 rounded-xl bg-white/5 border border-white/10 shadow-lg transition-all duration-200 hover:shadow-2xl hover:bg-white/10"
-                  >
-                    {nextRoundExists && (
-                      <div className="hidden md:block absolute right-[-24px] top-1/2 w-6 border-t border-white/20"></div>
-                    )}
-
-                    {nextRoundExists && isTopSibling && (
-                      <div className="hidden md:block absolute right-[-24px] top-0 bottom-0 border-r border-white/20"></div>
-                    )}
-
-                    <button
-                      onClick={() => handlePick(g, team1Name)}
-                      className={`
-                        flex flex-wrap items-center justify-between gap-3
-                        whitespace-normal leading-tight min-h-[52px]
-                        w-full text-left px-3 py-2 rounded-lg transition-all duration-200
-                        ${
-                          isTeam1Picked
-                            ? `bg-${regionAccent}-600/40 border border-${regionAccent}-400 scale-[1.03] shadow-lg`
-                            : 'hover:bg-white/20 hover:scale-[1.02]'
-                        }
-                      `}
-                    >
-                      {team1Obj?.logo_url && (
-                        <img
-                          src={team1Obj.logo_url}
-                          alt={team1Name}
-                          className="w-6 h-6 rounded-sm object-contain"
-                        />
-                      )}
-
-                      <span className="flex flex-col flex-wrap items-start gap-1 whitespace-normal leading-tight">
-                        <span className="font-semibold">{team1Name}</span>
-
-                        {seed1 && (
-                          <span className="text-xs px-2 py-0.5 rounded-md bg-white/10 border border-white/20">
-                            #{seed1}
-                          </span>
-                        )}
-                      </span>
-
-                      {isTeam1Picked && (
-                        <span className="text-green-300 font-bold text-lg">✓</span>
-                      )}
-                    </button>
-
-                    <button
-                      onClick={() => handlePick(g, team2Name)}
-                      className={`
-                        flex flex-wrap items-center justify-between gap-3
-                        whitespace-normal leading-tight min-h-[52px]
-                        w-full text-left px-3 py-2 rounded-lg transition-all duration-200
-                        ${
-                          isTeam2Picked
-                            ? `bg-${regionAccent}-600/40 border border-${regionAccent}-400 scale-[1.03] shadow-lg`
-                            : 'hover:bg-white/20 hover:scale-[1.02]'
-                        }
-                      `}
-                    >
-                      {team2Obj?.logo_url && (
-                        <img
-                          src={team2Obj.logo_url}
-                          alt={team2Name}
-                          className="w-6 h-6 rounded-sm object-contain"
-                        />
-                      )}
-
-                      <span className="flex flex-col flex-wrap items-start gap-1 whitespace-normal leading-tight">
-                        <span className="font-semibold">{team2Name}</span>
-
-                        {seed2 && (
-                          <span className="text-xs px-2 py-0.5 rounded-md bg-white/10 border border-white/20">
-                            #{seed2}
-                          </span>
-                        )}
-                      </span>
-
-                      {isTeam2Picked && (
-                        <span className="text-green-300 font-bold text-lg">✓</span>
-                      )}
-                    </button>
-
-                    {g.winner && (
-                      <div className="mt-3 text-center space-y-1">
-                        <div className="text-green-400 font-bold text-sm">
-                          Winner: {g.winner}
+                          {/* Winner */}
+                          {g.winner && (
+                            <div className="mt-3 text-center text-green-400 font-bold text-sm">
+                              Winner: {g.winner}
+                            </div>
+                          )}
                         </div>
-
-                        {isUpset && (
-                          <div className="text-xs font-bold text-amber-300 uppercase tracking-wide">
-                            Upset!
-                          </div>
-                        )}
-                      </div>
-                    )}
+                      );
+                    })}
                   </div>
-                );
-              })}
-            </div>
-          );
-        })}
+                ))}
+
+                {/* ⭐ Next Round Button (Option B) */}
+                {isRoundComplete && nextRound && (
+                  <div className="pt-2 text-center space-y-2">
+                    <div className="text-white/70 text-sm">
+                      {roundLabel(round)} Complete
+                    </div>
+                    <button
+                      onClick={() => scrollToRound(nextRound)}
+                      className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg hover:bg-white/20 transition shadow-md text-white text-sm font-semibold"
+                    >
+                      Continue to {roundLabel(nextRound)}
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
       </div>
     </div>
   );
 }
 
+/* -----------------------------
+   Seed-based pairing algorithm
+----------------------------- */
+function groupRoundsBySeed(games: TournamentGame[]) {
+  const rounds: Record<number, TournamentGame[]> = {};
+
+  games.forEach((g) => {
+    const r = g.round ?? 0;
+    if (!rounds[r]) rounds[r] = [];
+    rounds[r].push(g);
+  });
+
+  const paired: Record<number, TournamentGame[][]> = {};
+
+  Object.keys(rounds)
+    .map(Number)
+    .forEach((round) => {
+      const roundGames = rounds[round];
+
+      // Sort by seed (fallback to game_number)
+      const sorted = [...roundGames].sort((a, b) => {
+        const aSeed = Math.min(a.seed1 ?? 99, a.seed2 ?? 99);
+        const bSeed = Math.min(b.seed1 ?? 99, b.seed2 ?? 99);
+        return aSeed - bSeed;
+      });
+
+      // Pair games: [game1, game2], [game3, game4], ...
+      const pairs: TournamentGame[][] = [];
+      for (let i = 0; i < sorted.length; i += 2) {
+        pairs.push([sorted[i], sorted[i + 1]]);
+      }
+
+      paired[round] = pairs;
+    });
+
+  return paired;
+}
+
+/* -----------------------------
+   Round Labels
+----------------------------- */
 function roundLabel(round: number) {
   switch (round) {
-    case 1:
-      return 'Opening Round';
     case 2:
       return 'Round of 64';
     case 3:
@@ -250,10 +247,6 @@ function roundLabel(round: number) {
       return 'Sweet 16';
     case 5:
       return 'Elite 8';
-    case 6:
-      return 'Final Four';
-    case 7:
-      return 'Championship';
     default:
       return `Round ${round}`;
   }

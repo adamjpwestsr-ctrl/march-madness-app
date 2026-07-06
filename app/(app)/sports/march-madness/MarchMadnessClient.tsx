@@ -342,94 +342,94 @@ export function MarchMadnessClient() {
         <LiveTicker />
       </section>
 
-      {/* Main 3-column layout */}
-      <main className="flex gap-8 px-6 pb-10 items-start max-w-[1600px] mx-auto">
+     {/* Main 3-column layout */}
+<main className="flex flex-wrap gap-8 px-6 pb-10 items-start justify-center max-w-[1600px] mx-auto overflow-x-hidden">
 
-        {/* Opening Round */}
-        <div className="flex-[0.6] min-w-[500px] space-y-6 rounded-2xl p-5 bg-gradient-to-br from-slate-900/60 to-slate-800/40 backdrop-blur-xl border border-white/10 shadow-xl">
-          <OpeningRoundPanel
-            games={state.openingRoundGames}
-            live={live}
-            picks={picks}
-            onPick={handlePick}
-          />
-        </div>
+  {/* Opening Round */}
+  <div className="flex-[0.55] min-w-[480px] max-w-[700px] space-y-6 rounded-2xl p-5 bg-gradient-to-br from-slate-900/60 to-slate-800/40 backdrop-blur-xl border border-white/10 shadow-xl">
+    <OpeningRoundPanel
+      games={state.openingRoundGames}
+      live={live}
+      picks={picks}
+      onPick={handlePick}
+    />
+  </div>
 
-        {/* Regions + Finals */}
-        <div className="flex-[0.4] min-w-[400px] space-y-8 rounded-2xl p-5 bg-gradient-to-br from-slate-900/60 to-slate-800/40 backdrop-blur-xl border border-white/10 shadow-xl">
+  {/* Regions + Finals */}
+  <div className="flex-[0.35] min-w-[380px] max-w-[600px] space-y-8 rounded-2xl p-5 bg-gradient-to-br from-slate-900/60 to-slate-800/40 backdrop-blur-xl border border-white/10 shadow-xl">
+    {/* Regions */}
+    <section className="space-y-4">
+      <h2 className="text-2xl font-bold tracking-wide">Regions</h2>
 
-          {/* Regions */}
-          <section className="space-y-4">
-            <h2 className="text-2xl font-bold tracking-wide">Regions</h2>
+      <div className="grid grid-cols-2 gap-6">
+        {regionOrder.map((region) => {
+          const progress = getRegionProgress(region);
+          const total = progress.total || 1;
+          const pct = Math.round((progress.picked / total) * 100);
 
-            <div className="grid grid-cols-2 gap-6">
-              {regionOrder.map((region) => {
-                const progress = getRegionProgress(region);
-                const total = progress.total || 1;
-                const pct = Math.round((progress.picked / total) * 100);
+          return (
+            <button
+              key={region}
+              onClick={() => {
+                setActiveRegion(region);
+                setShowRegionModal(true);
+              }}
+              className="relative rounded-2xl p-4 bg-slate-900/70 border border-white/10 shadow-xl hover:shadow-2xl hover:bg-slate-800/80 transition flex flex-col gap-3 text-left"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-lg font-bold uppercase tracking-wide">
+                  {region}
+                </span>
+                <span className="text-xs text-white/60">
+                  {progress.picked}/{progress.total} picks
+                </span>
+              </div>
 
-                return (
-                  <button
-                    key={region}
-                    onClick={() => {
-                      setActiveRegion(region);
-                      setShowRegionModal(true);
-                    }}
-                    className="relative rounded-2xl p-4 bg-slate-900/70 border border-white/10 shadow-xl hover:shadow-2xl hover:bg-slate-800/80 transition flex flex-col gap-3 text-left"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-lg font-bold uppercase tracking-wide">
-                        {region}
-                      </span>
-                      <span className="text-xs text-white/60">
-                        {progress.picked}/{progress.total} picks
-                      </span>
-                    </div>
+              <div className="w-full h-2 rounded-full bg-slate-700 overflow-hidden">
+                <div
+                  className="h-2 bg-emerald-500 transition-all"
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
 
-                    <div className="w-full h-2 rounded-full bg-slate-700 overflow-hidden">
-                      <div
-                        className="h-2 bg-emerald-500 transition-all"
-                        style={{ width: `${pct}%` }}
-                      />
-                    </div>
+              <p className="text-xs text-white/60">
+                Tap to open full {region} bracket
+              </p>
+            </button>
+          );
+        })}
+      </div>
+    </section>
 
-                    <p className="text-xs text-white/60">
-                      Tap to open full {region} bracket
-                    </p>
-                  </button>
-                );
-              })}
-            </div>
-          </section>
+    {/* Final Four */}
+    <FinalFourPanel games={state.finalFourGames} onPick={handlePick} />
 
-          {/* Final Four */}
-          <FinalFourPanel games={state.finalFourGames} onPick={handlePick} />
+    {/* Championship */}
+    <ChampionshipPanel
+      game={state.championshipGames[0]}
+      onPick={handlePick}
+    />
+  </div>
 
-          {/* Championship */}
-          <ChampionshipPanel
-            game={state.championshipGames[0]}
-            onPick={handlePick}
-          />
-        </div>
+  {/* My Picks Sidebar */}
+  <div className="w-full sm:w-[280px] md:w-[300px] space-y-6">
+    <MyPicksSidebar
+      picks={picks}
+      games={[
+        ...state.openingRoundGames,
+        ...Object.values(state.regionalGames).flat(),
+        ...state.finalFourGames,
+        ...state.championshipGames,
+      ]}
+      teams={state.teams}
+      onJumpToGame={(gameId) => {
+        const el = document.getElementById(`game-${gameId}`);
+        el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }}
+    />
+  </div>
+</main>
 
-        {/* My Picks Sidebar */}
-        <div className="w-[300px] space-y-6">
-          <MyPicksSidebar
-            picks={picks}
-            games={[
-              ...state.openingRoundGames,
-              ...Object.values(state.regionalGames).flat(),
-              ...state.finalFourGames,
-              ...state.championshipGames,
-            ]}
-            teams={state.teams}
-            onJumpToGame={(gameId) => {
-              const el = document.getElementById(`game-${gameId}`);
-              el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }}
-          />
-        </div>
-      </main>
 
       {/* Leaderboard */}
       <section className="px-6 pb-10 space-y-4">

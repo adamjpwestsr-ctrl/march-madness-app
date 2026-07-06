@@ -128,104 +128,142 @@ const roundRefs: Record<number, React.RefObject<HTMLDivElement | null>> = {
     return () => clearInterval(interval);
   }, []);
 
-  /* ---------------------------------------------------
-     BRACKET CREATION
-  --------------------------------------------------- */
-  const handleCreateBracket = async () => {
-    try {
-      const res = await fetch('/api/march-madness/bracket-list', {
+/* ---------------------------------------------------
+   BRACKET CREATION
+--------------------------------------------------- */
+const handleCreateBracket = async () => {
+  try {
+    const res = await fetch('/api/march-madness/bracket-list', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        bracket_name: 'My Bracket',
+        icon: '🏀',
+        tiebreaker_score: 120,
+      }),
+    });
+
+    const json = await res.json();
+
+    if (res.ok) {
+      setBrackets((prev) => [...prev, json]);
+      setActiveBracketId(json.bracket_id);
+    } else {
+      console.error('CREATE BRACKET ERROR:', json.error);
+    }
+  } catch (err) {
+    console.error('CREATE BRACKET FAILED:', err);
+  }
+};
+
+/* ---------------------------------------------------
+   PICK HANDLERS (ADVANCEMENT)
+--------------------------------------------------- */
+const handlePick = (gameId: string, winner: string) => {
+  if (!winner || winner === 'TBD') return;
+
+  setPicks((prev) => ({ ...prev, [gameId]: winner }));
+
+  setState((prev) => {
+    if (!prev) return prev;
+
+    const allGames = [
+      ...prev.openingRoundGames,
+      ...Object.values(prev.regionalGames).flat(),
+      ...prev.finalFourGames,
+      ...prev.championshipGames,
+    ];
+
+    const sourceGame = allGames.find((g) => g.id === gameId);
+    if (!sourceGame || !sourceGame.winner_to_game_id) return prev;
+
+    const targetGameId = sourceGame.winner_to_game_id;
+
+    const updatedRegional = { ...prev.regionalGames };
+    const updatedFinalFour = [...prev.finalFourGames];
+    const updatedChampionship = [...prev.championshipGames];
+
+    const updateGame = (g: TournamentGame) => {
+      const updatedGame = { ...g };
+      if (!updatedGame.team1 || updatedGame.team1 === 'TBD') {
+        updatedGame.team1 = winner;
+      } else if (!updatedGame.team2 || updatedGame.team2 === 'TBD') {
+        updatedGame.team2 = winner;
+      }
+      return updatedGame;
+    };
+
+    for (const regionKey of Object.keys(updatedRegional)) {
+      updatedRegional[regionKey] = updatedRegional[regionKey].map((g) =>
+        g.id === targetGameId ? updateGame(g) : g
+      );
+    }
+
+    updatedFinalFour.forEach((g, idx) => {
+      if (g.id === targetGameId) updatedFinalFour[idx] = updateGame(g);
+    });
+
+    updatedChampionship.forEach((g, idx) => {
+      if (g.id === targetGameId) updatedChampionship[idx] = updateGame(g);
+    });
+
+    return {
+      ...prev,
+      regionalGames: updatedRegional,
+      finalFourGames: updatedFinalFour,
+      championshipGames: updatedChampionship,
+    };
+  });
+};
+
+/* ---------------------------------------------------
+   SAVE PICKS
+--------------------------------------------------- */
+const handleSave = async () => {
+  if (!activeBracketId) {
+    console.error('No active bracket selected');
+    return;
+  }
+
+  const formattedPicks = Object.entries(picks).map(([gameId, winner]) => ({
+    game_id: gameId,
+    selected_team: winner,
+  }));
+
+  try {
+    const res = await fetch(
+      `/api/march-madness/brackets/${activeBracketId}/picks`,
+      {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          bracket_name: 'My Bracket',
-          icon: '🏀',
-          tiebreaker_score: 120,
+          picks: formattedPicks,
+          tiebreaker_score: null,
         }),
-      });
-
-      const json = await res.json();
-
-      if (res.ok) {
-        setBrackets((prev) => [...prev, json]);
-        setActiveBracketId(json.bracket_id);
-      } else {
-        console.error('CREATE BRACKET ERROR:', json.error);
       }
-    } catch (err) {
-      console.error('CREATE BRACKET FAILED:', err);
+    );
+
+    if (!res.ok) {
+      console.error('SAVE PICKS FAILED:', await res.text());
+      return;
     }
-  };
 
-  /* ---------------------------------------------------
-     PICK HANDLERS (ADVANCEMENT)
-  --------------------------------------------------- */
-  const handlePick = (gameId: string, winner: string) => {
-    if (!winner || winner === 'TBD') return;
+    console.log('Picks saved!');
+  } catch (err) {
+    console.error('SAVE PICKS ERROR:', err);
+  }
+};
 
-    setPicks((prev) => ({ ...prev, [gameId]: winner }));
-
-    setState((prev) => {
-      if (!prev) return prev;
-
-      const allGames = [
-        ...prev.openingRoundGames,
-        ...Object.values(prev.regionalGames).flat(),
-        ...prev.finalFourGames,
-        ...prev.championshipGames,
-      ];
-
-      const sourceGame = allGames.find((g) => g.id === gameId);
-      if (!sourceGame || !sourceGame.winner_to_game_id) return prev;
-
-      const targetGameId = sourceGame.winner_to_game_id;
-
-      const updatedRegional = { ...prev.regionalGames };
-      const updatedFinalFour = [...prev.finalFourGames];
-      const updatedChampionship = [...prev.championshipGames];
-
-      const updateGame = (g: TournamentGame) => {
-        const updatedGame = { ...g };
-        if (!updatedGame.team1 || updatedGame.team1 === 'TBD') {
-          updatedGame.team1 = winner;
-        } else if (!updatedGame.team2 || updatedGame.team2 === 'TBD') {
-          updatedGame.team2 = winner;
-        }
-        return updatedGame;
-      };
-
-      for (const regionKey of Object.keys(updatedRegional)) {
-        updatedRegional[regionKey] = updatedRegional[regionKey].map((g) =>
-          g.id === targetGameId ? updateGame(g) : g
-        );
-      }
-
-      updatedFinalFour.forEach((g, idx) => {
-        if (g.id === targetGameId) updatedFinalFour[idx] = updateGame(g);
-      });
-
-      updatedChampionship.forEach((g, idx) => {
-        if (g.id === targetGameId) updatedChampionship[idx] = updateGame(g);
-      });
-
-      return {
-        ...prev,
-        regionalGames: updatedRegional,
-        finalFourGames: updatedFinalFour,
-        championshipGames: updatedChampionship,
-      };
-    });
-  };
-
-  /* ---------------------------------------------------
-     REGION PROGRESS
-  --------------------------------------------------- */
-  const getRegionProgress = (region: string) => {
-    if (!state) return { total: 0, picked: 0 };
-    const games = state.regionalGames[region] ?? [];
-    const total = games.length;
-    const picked = games.filter((g) => picks[g.id]).length;
-    return { total, picked };
-  };
+/* ---------------------------------------------------
+   REGION PROGRESS
+--------------------------------------------------- */
+const getRegionProgress = (region: string) => {
+  if (!state) return { total: 0, picked: 0 };
+  const games = state.regionalGames[region] ?? [];
+  const total = games.length;
+  const picked = games.filter((g) => picks[g.id]).length;
+  return { total, picked };
+};
 
   /* ---------------------------------------------------
      LOADING

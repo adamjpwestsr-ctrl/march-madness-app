@@ -212,7 +212,7 @@ export default function LoginPage() {
       {/* ABOUT MODAL */}
       {showAbout && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 animate-fade-in">
-          <div className="bg-slate-800 p-6 rounded-xl max-w-lg w-full text-white shadow-xl border border-slate-700 animate-scale-in slide-up">
+	<div className="bg-slate-800 p-6 rounded-xl w-[90%] max-w-2xl max-h-[80vh] overflow-y-auto modal-scroll text-white shadow-xl border border-slate-700 animate-scale-in slide-up">
             <h2 className="text-2xl font-bold mb-4 text-center">About BracketBoss</h2>
 
             <p className="text-slate-300 text-sm mb-5 leading-relaxed text-center">

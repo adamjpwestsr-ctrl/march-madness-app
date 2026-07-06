@@ -29,6 +29,8 @@ export function MarchMadnessClient() {
   const [picks, setPicks] = useState<Record<string, string>>({});
   const [brackets, setBrackets] = useState<any[]>([]);
 
+  const [showRegionModal, setShowRegionModal] = useState(false);
+
   const regionOrder = ['East', 'West', 'South', 'Midwest'];
 
   // -----------------------------
@@ -324,53 +326,113 @@ export function MarchMadnessClient() {
           />
         </div>
 
-{/* Right column */}
-<div className="flex-1 space-y-12">
+        {/* RIGHT COLUMN */}
+        <div className="flex-1 space-y-12">
 
-  {/* Opening Round */}
-  {state.openingRoundGames?.length > 0 && (
-    <OpeningRoundPanel
-      games={state.openingRoundGames}
-      live={live}
-      picks={picks}
-      onPick={handlePick}
-    />
-  )}
+          {/* Opening Round (compact card) */}
+          {state.openingRoundGames?.length > 0 && (
+            <OpeningRoundPanel
+              games={state.openingRoundGames}
+              live={live}
+              picks={picks}
+              onPick={handlePick}
+            />
+          )}
 
-  {/* Regional Brackets */}
-  {regionOrder.map((region) => (
-    <div
-      key={region}
-      className={`transition-opacity duration-300 ${
-        activeRegion === region ? 'opacity-100' : 'opacity-40'
-      }`}
-    >
-      <RegionBracketPanel
-        region={region}
-        games={state.regionalGames[region] ?? []}
-        picks={picks}
-        onPick={handlePick}
-        teams={state.teams}
-      />
+          {/* Regional Cards (ESPN-style) */}
+          <section className="space-y-4">
+            <h2 className="text-2xl font-bold tracking-wide">
+              Regions
+            </h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+              {regionOrder.map((region) => {
+                const progress = getRegionProgress(region);
+                const total = progress.total || 1;
+                const pct = Math.round((progress.picked / total) * 100);
+
+                return (
+                  <button
+                    key={region}
+                    onClick={() => {
+                      setActiveRegion(region);
+                      setShowRegionModal(true);
+                    }}
+                    className="relative rounded-2xl p-4 bg-slate-900/70 border border-white/10 shadow-xl hover:shadow-2xl hover:bg-slate-800/80 transition flex flex-col gap-3 text-left"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-lg font-bold uppercase tracking-wide">
+                        {region}
+                      </span>
+                      <span className="text-xs text-white/60">
+                        {progress.picked}/{progress.total} picks
+                      </span>
+                    </div>
+
+                    {/* Progress bar */}
+                    <div className="w-full h-2 rounded-full bg-slate-700 overflow-hidden">
+                      <div
+                        className="h-2 bg-emerald-500 transition-all"
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+
+                    {/* Mini bracket hint */}
+                    <p className="text-xs text-white/60">
+                      Tap to open full {region} bracket
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        </div>
+      </main>
+
+      {/* Bottom strip */}
+      <section className="px-6 pb-10 space-y-4">
+        <div className="flex justify-end">
+          <button
+            onClick={() => setShowUnpaid(!showUnpaid)}
+            className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg hover:bg-white/20 transition shadow-md"
+          >
+            {showUnpaid ? 'Hide Unpaid' : 'Show Unpaid'}
+          </button>
+        </div>
+
+        <LeaderboardPreview rows={visibleLeaderboard} />
+      </section>
+
+      {/* REGION MODAL (FULL BRACKET) */}
+      {showRegionModal && activeRegion && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/70 animate-fade-in">
+          <div className="relative w-[95%] max-w-6xl max-h-[90vh] bg-slate-900/95 border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
+            {/* Modal header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-slate-900/90">
+              <h2 className="text-2xl font-bold uppercase tracking-wide">
+                {activeRegion} Bracket
+              </h2>
+              <button
+                onClick={() => setShowRegionModal(false)}
+                className="text-sm px-3 py-1 rounded-lg bg-white/10 hover:bg-white/20 border border-white/20"
+              >
+                Close
+              </button>
+            </div>
+
+            {/* Modal content */}
+            <div className="p-6 overflow-auto">
+              <RegionBracketPanel
+                region={activeRegion}
+                games={state.regionalGames[activeRegion] ?? []}
+                picks={picks}
+                onPick={handlePick}
+                teams={state.teams}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
-  ))}
-</div>   
-</main>  
-
-{/* Bottom strip */}
-<section className="px-6 pb-10 space-y-4">
-  <div className="flex justify-end">
-    <button
-      onClick={() => setShowUnpaid(!showUnpaid)}
-      className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg hover:bg-white/20 transition shadow-md"
-    >
-      {showUnpaid ? 'Hide Unpaid' : 'Show Unpaid'}
-    </button>
-  </div>
-
-  <LeaderboardPreview rows={visibleLeaderboard} />
-</section>
-
-</div>
-);
+  );
 }

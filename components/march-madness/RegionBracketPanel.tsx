@@ -56,7 +56,10 @@ export function RegionBracketPanel({
             const nextRound = arr[idx + 1];
             const roundGames = rounds[round];
 
-            const isRoundComplete = roundGames.every((g) => picks[g.id]);
+	const isRoundComplete = roundGames.every((pair) =>
+  	pair.every((g) => picks[g.id])
+		);
+
 
             return (
               <div
@@ -199,7 +202,7 @@ export function RegionBracketPanel({
 /* -----------------------------
    Seed-based pairing algorithm
 ----------------------------- */
-function groupRoundsBySeed(games: TournamentGame[]) {
+function groupRoundsBySeed(games: TournamentGame[]): Record<number, TournamentGame[][]> {
   const rounds: Record<number, TournamentGame[]> = {};
 
   games.forEach((g) => {

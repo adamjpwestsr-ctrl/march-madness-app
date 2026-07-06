@@ -40,13 +40,14 @@ export default async function HomePage() {
     "Player";
 
   return (
-<div className="min-h-screen bg-gradient-to-br from-slate-950 to-slate-900 text-white overflow-x-hidden">
-  <main className="flex flex-col gap-12 pb-20 px-8 max-w-[1800px] mx-auto">
+    <div className="min-h-screen w-full bg-gradient-to-br from-slate-950 to-slate-900 text-white overflow-x-hidden">
 
+      {/* MAIN CONTENT — MATCHES MARCH MADNESS */}
+      <main className="flex flex-col gap-12 pb-20 px-10 lg:px-16 xl:px-20 2xl:px-24 w-full max-w-none">
 
         {/* HERO + STATS */}
-        <section className="space-y-6">
-          <div className="rounded-2xl border border-slate-800 bg-gradient-to-br from-slate-900/80 via-slate-900/40 to-emerald-700/30 p-8 shadow-xl shadow-emerald-900/40 relative overflow-hidden">
+        <section className="space-y-6 w-full">
+          <div className="rounded-2xl border border-slate-800 bg-gradient-to-br from-slate-900/80 via-slate-900/40 to-emerald-700/30 p-8 shadow-xl shadow-emerald-900/40 relative overflow-hidden w-full">
             <div className="pointer-events-none absolute -top-10 -right-10 w-40 h-40 bg-emerald-500/20 blur-3xl" />
             <div className="pointer-events-none absolute -bottom-16 -left-16 w-52 h-52 bg-sky-500/10 blur-3xl" />
 
@@ -73,22 +74,22 @@ export default async function HomePage() {
         </section>
 
         {/* SPOTLIGHT BANNER */}
-        <section>
+        <section className="w-full">
           <SpotlightBanner />
         </section>
 
         {/* QUICK ACTIONS */}
-        <section>
+        <section className="w-full">
           <QuickActions />
         </section>
 
         {/* YOUR PICKS */}
-        <section>
+        <section className="w-full">
           <YourPicksWidget userId={String(userId)} />
         </section>
 
         {/* WEEKLY + TRIVIA */}
-        <section className="grid gap-6 md:grid-cols-2">
+        <section className="grid gap-6 md:grid-cols-2 w-full">
           <Link href="/challenges" className="block">
             <WeeklyBanner />
           </Link>
@@ -99,19 +100,19 @@ export default async function HomePage() {
         </section>
 
         {/* FEATURED SPORTS */}
-        <section>
+        <section className="w-full">
           <Link href="/sports" className="block">
             <FeaturedSports />
           </Link>
         </section>
 
         {/* REAL ACTIVITY FEED */}
-        <section>
+        <section className="w-full">
           <RealActivityFeed userId={String(userId)} />
         </section>
 
         {/* HELP & INFO */}
-        <section className="border border-slate-800 rounded-xl p-4 bg-slate-900/40">
+        <section className="border border-slate-800 rounded-xl p-4 bg-slate-900/40 w-full">
           <details className="group">
             <summary className="cursor-pointer text-slate-300 font-semibold text-sm flex items-center justify-between">
               Help & Info
@@ -139,7 +140,7 @@ export default async function HomePage() {
         </section>
 
         {/* FOOTER */}
-        <section className="border-t border-slate-800 pt-6 mt-4">
+        <section className="border-t border-slate-800 pt-6 mt-4 w-full">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <h2 className="text-sm font-semibold text-slate-300">
@@ -152,6 +153,7 @@ export default async function HomePage() {
             </div>
           </div>
         </section>
+
       </main>
     </div>
   );

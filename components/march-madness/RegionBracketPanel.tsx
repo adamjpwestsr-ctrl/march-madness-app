@@ -30,7 +30,21 @@ export function RegionBracketPanel({
 
   const handlePick = (game: TournamentGame, winner: string) => {
     if (!winner || winner === 'TBD') return;
+
+    // Save pick to parent
     if (onPick) onPick(game.id, winner);
+
+    // ⭐ Immediate winner advancement (visual propagation)
+    if (game.winner_to_game_id) {
+      const nextGame = games.find((g) => g.id === game.winner_to_game_id);
+      if (nextGame) {
+        if (!nextGame.team1_id) {
+          nextGame.team1 = winner;
+        } else if (!nextGame.team2_id) {
+          nextGame.team2 = winner;
+        }
+      }
+    }
   };
 
   // Region accent colors + gradient themes
@@ -54,7 +68,7 @@ export function RegionBracketPanel({
 
   return (
     <div
-      className={`rounded-2xl p-6 bg-gradient-to-br ${regionGradient} backdrop-blur-xl shadow-2xl space-y-10 border border-white/10`}
+      className={`rounded-2xl p-6 bg-gradient-to-br ${regionGradient} backdrop-blur-xl shadow-2xl border border-white/10`}
     >
       {/* Region Header */}
       <h2
@@ -63,13 +77,16 @@ export function RegionBracketPanel({
         {region}
       </h2>
 
-      {/* Bracket Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-6 gap-8">
+      {/* ⭐ Horizontal ESPN-style bracket */}
+      <div className="flex flex-row gap-8 overflow-x-auto overflow-y-auto snap-x snap-mandatory max-h-[80vh] pb-4">
         {roundOrder.map((round, idx) => {
           const nextRoundExists = idx < roundOrder.length - 1;
 
           return (
-            <div key={round} className="space-y-4 relative">
+            <div
+              key={round}
+              className="flex-shrink-0 snap-center min-w-[300px] space-y-4 relative"
+            >
               {/* Round Label */}
               <h3 className="text-lg font-bold text-center text-white/80 tracking-wide">
                 {roundLabel(round)}
@@ -103,9 +120,7 @@ export function RegionBracketPanel({
                   ((g.winner === team1Name && seed1 > seed2) ||
                     (g.winner === team2Name && seed2 > seed1));
 
-                // ------------------------------------------------------------
-                // STEP 4: PLACEHOLDER GAME HANDLING
-                // ------------------------------------------------------------
+                // Placeholder game
                 if (g.is_placeholder) {
                   return (
                     <div
@@ -117,12 +132,9 @@ export function RegionBracketPanel({
                   );
                 }
 
-                // ------------------------------------------------------------
-                // STEP 2: ROUND OF 64 VISIBILITY LOGIC
-                // ------------------------------------------------------------
+                // Awaiting Opening Round
                 const team1NeedsOpening = seed1 !== null && seed1 >= 17;
                 const team2NeedsOpening = seed2 !== null && seed2 >= 17;
-
                 const waitingOnOpeningRound =
                   (team1NeedsOpening || team2NeedsOpening) && !g.winner;
 
@@ -137,25 +149,8 @@ export function RegionBracketPanel({
                   );
                 }
 
-                // ------------------------------------------------------------
-                // STEP 6: CLASSIC NCAA CONNECTORS
-                // ------------------------------------------------------------
-
-                // ACTIVE LOGIC: Sequential game_number pairing
+                // Classic NCAA connectors
                 const isTopSibling = g.game_number % 2 === 1;
-
-                // COMMENTED OUT: Custom pairing logic
-                //
-                // const customPairMap: Record<string, string> = {
-                //   'game-id-1': 'game-id-2',
-                //   'game-id-3': 'game-id-4',
-                //   ...
-                // };
-                //
-                // const isTopSibling_ALT = customPairMap[g.id] !== undefined;
-                //
-                // Use this instead:
-                // const isTopSibling = isTopSibling_ALT;
 
                 return (
                   <div
@@ -246,7 +241,7 @@ export function RegionBracketPanel({
                       )}
                     </button>
 
-                    {/* Winner + Upset Tag */}
+                    {/* ⭐ Winner + Upset Tag */}
                     {g.winner && (
                       <div className="mt-3 text-center space-y-1">
                         <div className="text-green-400 font-bold text-sm">

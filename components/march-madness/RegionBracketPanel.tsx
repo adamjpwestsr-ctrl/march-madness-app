@@ -30,24 +30,9 @@ export function RegionBracketPanel({
 
   const handlePick = (game: TournamentGame, winner: string) => {
     if (!winner || winner === 'TBD') return;
-
-    // Save pick to parent
     if (onPick) onPick(game.id, winner);
-
-    // ⭐ Immediate winner advancement (visual propagation)
-    if (game.winner_to_game_id) {
-      const nextGame = games.find((g) => g.id === game.winner_to_game_id);
-      if (nextGame) {
-        if (!nextGame.team1_id) {
-          nextGame.team1 = winner;
-        } else if (!nextGame.team2_id) {
-          nextGame.team2 = winner;
-        }
-      }
-    }
   };
 
-  // Region accent colors + gradient themes
   const regionAccent =
     region === 'East'
       ? 'blue'
@@ -70,15 +55,13 @@ export function RegionBracketPanel({
     <div
       className={`rounded-2xl p-6 bg-gradient-to-br ${regionGradient} backdrop-blur-xl shadow-2xl border border-white/10`}
     >
-      {/* Region Header */}
       <h2
         className={`text-4xl font-extrabold text-center uppercase tracking-wide text-${regionAccent}-300 drop-shadow-lg`}
       >
         {region}
       </h2>
 
-      {/* ⭐ Horizontal ESPN-style bracket */}
-      <div className="flex flex-row gap-8 overflow-x-auto overflow-y-auto snap-x snap-mandatory max-h-[80vh] pb-4">
+      <div className="flex flex-row gap-8 overflow-x-auto snap-x snap-mandatory pb-4">
         {roundOrder.map((round, idx) => {
           const nextRoundExists = idx < roundOrder.length - 1;
 
@@ -87,17 +70,14 @@ export function RegionBracketPanel({
               key={round}
               className="flex-shrink-0 snap-center min-w-[300px] space-y-4 relative"
             >
-              {/* Round Label */}
               <h3 className="text-lg font-bold text-center text-white/80 tracking-wide">
                 {roundLabel(round)}
               </h3>
 
-              {/* Vertical connector line between columns */}
               {nextRoundExists && (
                 <div className="hidden md:block absolute top-12 right-[-20px] h-[calc(100%-2rem)] border-r border-white/10 opacity-40" />
               )}
 
-              {/* Games */}
               {rounds[round].map((g) => {
                 const seed1 = g.seed1 ?? null;
                 const seed2 = g.seed2 ?? null;
@@ -120,7 +100,6 @@ export function RegionBracketPanel({
                   ((g.winner === team1Name && seed1 > seed2) ||
                     (g.winner === team2Name && seed2 > seed1));
 
-                // Placeholder game
                 if (g.is_placeholder) {
                   return (
                     <div
@@ -132,7 +111,6 @@ export function RegionBracketPanel({
                   );
                 }
 
-                // Awaiting Opening Round
                 const team1NeedsOpening = seed1 !== null && seed1 >= 17;
                 const team2NeedsOpening = seed2 !== null && seed2 >= 17;
                 const waitingOnOpeningRound =
@@ -149,7 +127,6 @@ export function RegionBracketPanel({
                   );
                 }
 
-                // Classic NCAA connectors
                 const isTopSibling = g.game_number % 2 === 1;
 
                 return (
@@ -157,17 +134,14 @@ export function RegionBracketPanel({
                     key={g.id}
                     className="relative p-4 rounded-xl bg-white/5 border border-white/10 shadow-lg transition-all duration-200 hover:shadow-2xl hover:bg-white/10"
                   >
-                    {/* Horizontal connector */}
                     {nextRoundExists && (
                       <div className="hidden md:block absolute right-[-24px] top-1/2 w-6 border-t border-white/20"></div>
                     )}
 
-                    {/* Vertical connector (only for top sibling) */}
                     {nextRoundExists && isTopSibling && (
                       <div className="hidden md:block absolute right-[-24px] top-0 bottom-0 border-r border-white/20"></div>
                     )}
 
-                    {/* Team 1 */}
                     <button
                       onClick={() => handlePick(g, team1Name)}
                       className={`
@@ -204,7 +178,6 @@ export function RegionBracketPanel({
                       )}
                     </button>
 
-                    {/* Team 2 */}
                     <button
                       onClick={() => handlePick(g, team2Name)}
                       className={`
@@ -241,7 +214,6 @@ export function RegionBracketPanel({
                       )}
                     </button>
 
-                    {/* ⭐ Winner + Upset Tag */}
                     {g.winner && (
                       <div className="mt-3 text-center space-y-1">
                         <div className="text-green-400 font-bold text-sm">

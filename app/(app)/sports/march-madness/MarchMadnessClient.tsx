@@ -13,9 +13,6 @@ import { LiveTicker } from '@/components/march-madness/LiveTicker';
 import { LeaderboardPreview } from '@/components/march-madness/LeaderboardPreview';
 import MyPicksSidebar from '@/components/march-madness/MyPicksSidebar';
 
-// ------------------------------------------------------
-// MAIN CLIENT COMPONENT (FULLY POLISHED)
-// ------------------------------------------------------
 export function MarchMadnessClient() {
   const [state, setState] = useState<MarchMadnessState | null>(null);
   const [leaderboard, setLeaderboard] = useState<LeaderboardRow[]>([]);
@@ -33,9 +30,6 @@ export function MarchMadnessClient() {
 
   const regionOrder = ['East', 'West', 'South', 'Midwest'];
 
-  // -----------------------------
-  // LOAD GLOBAL STATE
-  // -----------------------------
   useEffect(() => {
     (async () => {
       try {
@@ -56,12 +50,10 @@ export function MarchMadnessClient() {
         setState(json);
         setBrackets(json.brackets ?? []);
 
-        // ⭐ Auto-select first bracket so UI hydrates
         if (!activeBracketId && json.brackets?.length) {
           setActiveBracketId(json.brackets[0].bracket_id);
         }
 
-        // ⭐ Auto-select first region so bracket renders
         if (!activeRegion && json.regionalGames) {
           const firstRegion = Object.keys(json.regionalGames).find(
             (r) => json.regionalGames[r]?.length
@@ -70,7 +62,6 @@ export function MarchMadnessClient() {
             setActiveRegion(firstRegion);
           }
         }
-
       } catch (err) {
         console.error('STATE ERROR:', err);
       } finally {
@@ -79,9 +70,6 @@ export function MarchMadnessClient() {
     })();
   }, []);
 
-  // -----------------------------
-  // LOAD LEADERBOARD + LIVE SCORES
-  // -----------------------------
   useEffect(() => {
     const load = async () => {
       try {
@@ -109,9 +97,6 @@ export function MarchMadnessClient() {
     return () => clearInterval(interval);
   }, []);
 
-  // -----------------------------
-  // BRACKET CREATION
-  // -----------------------------
   const handleCreateBracket = async () => {
     try {
       const res = await fetch('/api/march-madness/bracket-list', {
@@ -137,16 +122,11 @@ export function MarchMadnessClient() {
     }
   };
 
-  // -----------------------------
-  // PICK HANDLERS
-  // -----------------------------
   const handlePick = (gameId: string, winner: string) => {
     if (!winner || winner === 'TBD') return;
 
-    // 1. Update picks
     setPicks((prev) => ({ ...prev, [gameId]: winner }));
 
-    // 2. Update downstream Round-of-64 game immediately
     setState((prev) => {
       if (!prev) return prev;
 
@@ -168,9 +148,10 @@ export function MarchMadnessClient() {
 
           const updatedGame = { ...g };
 
-          if (!updatedGame.team1_id) {
+          // ✅ Always write winner into the first available slot by name
+          if (!updatedGame.team1 || updatedGame.team1 === 'TBD') {
             updatedGame.team1 = winner;
-          } else if (!updatedGame.team2_id) {
+          } else if (!updatedGame.team2 || updatedGame.team2 === 'TBD') {
             updatedGame.team2 = winner;
           }
 
@@ -220,9 +201,6 @@ export function MarchMadnessClient() {
     }
   };
 
-  // -----------------------------
-  // REGION PROGRESS
-  // -----------------------------
   const getRegionProgress = (region: string) => {
     if (!state) return { total: 0, picked: 0 };
     const games = state.regionalGames[region] ?? [];
@@ -231,9 +209,6 @@ export function MarchMadnessClient() {
     return { total, picked };
   };
 
-  // -----------------------------
-  // LOADING STATE
-  // -----------------------------
   if (loading || !state) {
     return (
       <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center">
@@ -248,12 +223,8 @@ export function MarchMadnessClient() {
     ? leaderboard
     : leaderboard.filter((row) => row.has_paid);
 
-  // -----------------------------
-  // RENDER UI (FULL POLISH)
-  // -----------------------------
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 to-slate-900 text-white flex flex-col gap-8">
-      {/* Header */}
       <header className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-white/10 backdrop-blur-xl">
         <div>
           <h1 className="text-4xl font-extrabold tracking-tight drop-shadow">
@@ -302,15 +273,11 @@ export function MarchMadnessClient() {
         </div>
       </header>
 
-      {/* Live ticker */}
       <section className="px-6">
         <LiveTicker />
       </section>
 
-      {/* Main content */}
       <main className="flex flex-col lg:flex-row gap-8 px-6 pb-10">
-
-        {/* LEFT COLUMN — Picks Summary */}
         <div className="w-full lg:w-80">
           <MyPicksSidebar
             picks={picks}
@@ -326,10 +293,7 @@ export function MarchMadnessClient() {
           />
         </div>
 
-        {/* RIGHT COLUMN */}
         <div className="flex-1 space-y-12">
-
-          {/* Opening Round (compact card) */}
           {state.openingRoundGames?.length > 0 && (
             <OpeningRoundPanel
               games={state.openingRoundGames}
@@ -339,7 +303,6 @@ export function MarchMadnessClient() {
             />
           )}
 
-          {/* Regional Cards (ESPN-style) */}
           <section className="space-y-4">
             <h2 className="text-2xl font-bold tracking-wide">
               Regions
@@ -369,7 +332,6 @@ export function MarchMadnessClient() {
                       </span>
                     </div>
 
-                    {/* Progress bar */}
                     <div className="w-full h-2 rounded-full bg-slate-700 overflow-hidden">
                       <div
                         className="h-2 bg-emerald-500 transition-all"
@@ -377,7 +339,6 @@ export function MarchMadnessClient() {
                       />
                     </div>
 
-                    {/* Mini bracket hint */}
                     <p className="text-xs text-white/60">
                       Tap to open full {region} bracket
                     </p>
@@ -389,7 +350,6 @@ export function MarchMadnessClient() {
         </div>
       </main>
 
-      {/* Bottom strip */}
       <section className="px-6 pb-10 space-y-4">
         <div className="flex justify-end">
           <button
@@ -403,11 +363,9 @@ export function MarchMadnessClient() {
         <LeaderboardPreview rows={visibleLeaderboard} />
       </section>
 
-      {/* REGION MODAL (FULL BRACKET) */}
       {showRegionModal && activeRegion && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/70 animate-fade-in">
-          <div className="relative w-[95%] max-w-6xl max-h-[90vh] bg-slate-900/95 border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
-            {/* Modal header */}
+          <div className="relative w-[95%] max-w-6xl h-[85vh] bg-slate-900/95 border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
             <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-slate-900/90">
               <h2 className="text-2xl font-bold uppercase tracking-wide">
                 {activeRegion} Bracket
@@ -420,8 +378,7 @@ export function MarchMadnessClient() {
               </button>
             </div>
 
-            {/* Modal content */}
-            <div className="p-6 overflow-auto">
+            <div className="p-6 h-[80vh] overflow-auto">
               <RegionBracketPanel
                 region={activeRegion}
                 games={state.regionalGames[activeRegion] ?? []}

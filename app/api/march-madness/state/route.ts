@@ -222,15 +222,18 @@ export async function GET() {
   // 🔟 FINAL PAYLOAD
   // -----------------------------
   const state: MarchMadnessState = {
-    brackets,
-    openingRoundGames,
-    regionalGames: regionalGamesByRegion,
-    teams,
-    leaderboard,
-    mulligans,
-    lockState,
-    liveSummary,
-  };
+  brackets,
+  openingRoundGames,
+  regionalGames: regionalGamesByRegion,
+  finalFourGames,
+  championshipGames,
+  teams,
+  leaderboard,
+  mulligans,
+  lockState,
+  liveSummary,
+};
+
 
   return NextResponse.json(state);
 }

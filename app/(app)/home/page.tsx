@@ -40,8 +40,9 @@ export default async function HomePage() {
     "Player";
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 to-slate-900 text-white overflow-x-hidden">
-      <main className="flex flex-col gap-12 pb-20 px-6 max-w-[1600px] mx-auto">
+<div className="min-h-screen bg-gradient-to-br from-slate-950 to-slate-900 text-white overflow-x-hidden">
+  <main className="flex flex-col gap-12 pb-20 px-8 max-w-[1800px] mx-auto">
+
 
         {/* HERO + STATS */}
         <section className="space-y-6">

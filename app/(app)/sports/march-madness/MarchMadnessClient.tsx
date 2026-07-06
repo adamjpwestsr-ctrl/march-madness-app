@@ -184,7 +184,7 @@ export function MarchMadnessClient() {
       </section>
 
       {/* Main layout */}
-      <main className="flex flex-wrap gap-8 px-6 pb-10 items-start justify-center max-w-[1600px] mx-auto">
+      <main className="flex flex-wrap gap-8 px-8 pb-10 items-start justify-center max-w-[1800px] mx-auto overflow-x-hidden">
 
         {/* Opening Round */}
         <div className="flex-[0.55] min-w-[480px] max-w-[700px] space-y-6 rounded-2xl p-5 bg-gradient-to-br from-slate-900/60 to-slate-800/40 backdrop-blur-xl border border-white/10 shadow-xl">

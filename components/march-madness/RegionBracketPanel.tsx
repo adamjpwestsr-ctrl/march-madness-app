@@ -17,7 +17,7 @@ export function RegionBracketPanel({
   teams: TournamentTeam[];
 }) {
   // Scroll anchors for each round
-  const roundRefs: Record<number, React.RefObject<HTMLDivElement>> = {};
+  const roundRefs: Record<number, React.RefObject<HTMLDivElement | null>> = {};
   const rounds = groupRoundsBySeed(games);
 
   Object.keys(rounds).forEach((round) => {

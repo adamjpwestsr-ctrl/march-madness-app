@@ -126,7 +126,7 @@ export async function GET() {
       .map(normalizeGame);
 
   // -----------------------------
-  // 4️⃣ GROUP REGIONAL GAMES BY REGION — **FIXED**
+  // 4️⃣ GROUP REGIONAL GAMES BY REGION
   // -----------------------------
   const regionalGamesByRegion: Record<string, TournamentGame[]> = {
     East: [],
@@ -137,7 +137,7 @@ export async function GET() {
   };
 
   (gamesData ?? [])
-    .filter((g) => (g.round ?? 0) >= 2)
+    .filter((g) => (g.round ?? 0) >= 2 && (g.round ?? 0) <= 5)
     .forEach((g) => {
       const region =
         typeof g.region === 'string'
@@ -152,7 +152,23 @@ export async function GET() {
     });
 
   // -----------------------------
-  // 5️⃣ FETCH TEAMS
+  // ⭐ 5️⃣ FINAL FOUR (round = 6)
+  // -----------------------------
+  const finalFourGames: TournamentGame[] =
+    (gamesData ?? [])
+      .filter((g) => g.round === 6)
+      .map(normalizeGame);
+
+  // -----------------------------
+  // ⭐ 6️⃣ CHAMPIONSHIP (round = 7)
+  // -----------------------------
+  const championshipGames: TournamentGame[] =
+    (gamesData ?? [])
+      .filter((g) => g.round === 7)
+      .map(normalizeGame);
+
+  // -----------------------------
+  // 7️⃣ FETCH TEAMS
   // -----------------------------
   const { data: teamsData, error: teamsError } = await supabase
     .from('v_tournament_teams')
@@ -165,7 +181,7 @@ export async function GET() {
   const teams: TournamentTeam[] = (teamsData ?? []) as TournamentTeam[];
 
   // -----------------------------
-  // 6️⃣ FETCH LEADERBOARD
+  // 8️⃣ FETCH LEADERBOARD
   // -----------------------------
   const { data: leaderboardData, error: leaderboardError } = await supabase
     .from('leaderboard')
@@ -193,7 +209,7 @@ export async function GET() {
     })) ?? [];
 
   // -----------------------------
-  // 7️⃣ FETCH MULLIGANS
+  // 9️⃣ FETCH MULLIGANS
   // -----------------------------
   const { data: mulligansData, error: mulliganError } = await supabase
     .from('bracket_mulligans')
@@ -206,12 +222,12 @@ export async function GET() {
   const mulligans: MulliganSummary[] = (mulligansData ?? []) as MulliganSummary[];
 
   // -----------------------------
-  // 8️⃣ LIVE SUMMARY (placeholder)
+  // 🔟 LIVE SUMMARY (placeholder)
   // -----------------------------
   const liveSummary: LiveGameSummary[] = [];
 
   // -----------------------------
-  // 9️⃣ LOCK STATE
+  // 1️⃣1️⃣ LOCK STATE
   // -----------------------------
   const lockState = {
     bracketsOpen: true,
@@ -219,21 +235,22 @@ export async function GET() {
   };
 
   // -----------------------------
-  // 🔟 FINAL PAYLOAD
+  // 1️⃣2️⃣ FINAL PAYLOAD
   // -----------------------------
   const state: MarchMadnessState = {
-  brackets,
-  openingRoundGames,
-  regionalGames: regionalGamesByRegion,
-  finalFourGames,
-  championshipGames,
-  teams,
-  leaderboard,
-  mulligans,
-  lockState,
-  liveSummary,
-};
+    brackets,
+    openingRoundGames,
+    regionalGames: regionalGamesByRegion,
 
+    finalFourGames,
+    championshipGames,
+
+    teams,
+    leaderboard,
+    mulligans,
+    lockState,
+    liveSummary,
+  };
 
   return NextResponse.json(state);
 }

@@ -40,10 +40,9 @@ export default async function HomePage() {
     "Player";
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-slate-950 to-slate-900 text-white overflow-x-hidden">
-
-      {/* MAIN CONTENT — MATCHES MARCH MADNESS */}
-      <main className="flex flex-col gap-12 pb-20 px-10 lg:px-16 xl:px-20 2xl:px-24 w-full max-w-none">
+    <div className="min-h-screen w-full flex bg-gradient-to-br from-slate-950 to-slate-900 text-white overflow-x-hidden">
+      {/* MAIN CONTENT — full-width beside sidebar */}
+      <div className="flex-1 flex flex-col gap-12 pb-20 px-10 lg:px-16 xl:px-20 2xl:px-24 w-full">
 
         {/* HERO + STATS */}
         <section className="space-y-6 w-full">
@@ -154,7 +153,7 @@ export default async function HomePage() {
           </div>
         </section>
 
-      </main>
+      </div>
     </div>
   );
 }

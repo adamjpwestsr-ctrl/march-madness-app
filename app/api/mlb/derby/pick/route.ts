@@ -1,30 +1,35 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 
-// GET: fetch current user's pick for the active event
+// GET — fetch the current user's pick for the event
 export async function GET(req: Request) {
   const supabase = await createSupabaseServerClient();
 
-  // Get the authenticated user
+  // Get authenticated user
   const {
     data: { user },
     error: userError,
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    return NextResponse.json({ error: "User not authenticated" }, { status: 401 });
+    return NextResponse.json(
+      { error: "User not authenticated" },
+      { status: 401 }
+    );
   }
 
-  // Optionally, you can pass event_id as a query param
+  // Optional event_id query param
   const { searchParams } = new URL(req.url);
   const eventId = searchParams.get("event_id");
 
-  const query = supabase
+  let query = supabase
     .from("mlb_derby_picks")
     .select("*")
     .eq("user_id", user.id);
 
-  if (eventId) query.eq("event_id", Number(eventId));
+  if (eventId) {
+    query = query.eq("event_id", Number(eventId));
+  }
 
   const { data, error } = await query.maybeSingle();
 
@@ -36,7 +41,7 @@ export async function GET(req: Request) {
   return NextResponse.json({ pick: data || null });
 }
 
-// POST: create or update user's pick
+// POST — save or update user's pick
 export async function POST(req: Request) {
   const supabase = await createSupabaseServerClient();
   const body = await req.json();
@@ -50,17 +55,23 @@ export async function POST(req: Request) {
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    return NextResponse.json({ error: "User not authenticated" }, { status: 401 });
+    return NextResponse.json(
+      { error: "User not authenticated" },
+      { status: 401 }
+    );
   }
 
   if (!event_id || !player_id || !predicted_hr_total) {
     return NextResponse.json(
-      { error: "Missing required fields: event_id, player_id, predicted_hr_total" },
+      {
+        error:
+          "Missing required fields: event_id, player_id, predicted_hr_total",
+      },
       { status: 400 }
     );
   }
 
-  // Upsert (replace existing pick for this user/event)
+  // Upsert using your unique constraint (user_id, event_id)
   const { data, error } = await supabase
     .from("mlb_derby_picks")
     .upsert(
@@ -70,7 +81,10 @@ export async function POST(req: Request) {
         player_id: Number(player_id),
         predicted_hr_total: Number(predicted_hr_total),
       },
-      { onConflict: ["user_id", "event_id"] }
+      {
+        // IMPORTANT: Supabase requires a comma-separated string, not an array
+        onConflict: "user_id,event_id",
+      }
     )
     .select()
     .single();

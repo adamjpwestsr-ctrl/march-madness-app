@@ -29,6 +29,11 @@ export function MarchMadnessClient() {
   const [showRegionModal, setShowRegionModal] = useState(false);
   const [showPicksDrawer, setShowPicksDrawer] = useState(false);
 
+  // NEW: focused layer for Rolodex tilt/focus
+  const [focusedLayer, setFocusedLayer] = useState<
+    'opening' | 'regions' | 'finalfour' | 'championship' | null
+  >(null);
+
   const regionOrder = ['East', 'West', 'South', 'Midwest'];
   const roundRefs: Record<number, React.RefObject<HTMLDivElement | null>> = {
     2: useRef<HTMLDivElement>(null),
@@ -44,6 +49,7 @@ export function MarchMadnessClient() {
     }
   };
 
+  // LOAD STATE
   useEffect(() => {
     (async () => {
       try {
@@ -53,9 +59,13 @@ export function MarchMadnessClient() {
         const json = await res.json();
         setState(json);
         setBrackets(json.brackets ?? []);
-        if (!activeBracketId && json.brackets?.length) setActiveBracketId(json.brackets[0].bracket_id);
+        if (!activeBracketId && json.brackets?.length) {
+          setActiveBracketId(json.brackets[0].bracket_id);
+        }
         if (!activeRegion && json.regionalGames) {
-          const firstRegion = Object.keys(json.regionalGames).find((r) => json.regionalGames[r]?.length);
+          const firstRegion = Object.keys(json.regionalGames).find(
+            (r) => json.regionalGames[r]?.length
+          );
           if (firstRegion) setActiveRegion(firstRegion);
         }
       } catch (err) {
@@ -66,6 +76,7 @@ export function MarchMadnessClient() {
     })();
   }, []);
 
+  // LIVE + LEADERBOARD REFRESH
   useEffect(() => {
     const load = async () => {
       try {
@@ -73,8 +84,12 @@ export function MarchMadnessClient() {
           fetch('/api/march-madness/state?all=true', { cache: 'no-store' }),
           fetch('/api/march-madness/live', { cache: 'no-store' }),
         ]);
-        if (stateRes.ok) setLeaderboard((await stateRes.json()).leaderboard ?? []);
-        if (liveRes.ok) setLive(await liveRes.json());
+        if (stateRes.ok) {
+          setLeaderboard((await stateRes.json()).leaderboard ?? []);
+        }
+        if (liveRes.ok) {
+          setLive(await liveRes.json());
+        }
       } catch (err) {
         console.error('LIVE/LEADERBOARD ERROR:', err);
       }
@@ -84,6 +99,7 @@ export function MarchMadnessClient() {
     return () => clearInterval(interval);
   }, []);
 
+  // HANDLE PICK + PROPAGATION
   const handlePick = (gameId: string, winner: string) => {
     if (!winner || winner === 'TBD') return;
     setPicks((prev) => ({ ...prev, [gameId]: winner }));
@@ -98,25 +114,57 @@ export function MarchMadnessClient() {
       const sourceGame = allGames.find((g) => g.id === gameId);
       if (!sourceGame || !sourceGame.winner_to_game_id) return prev;
       const targetGameId = sourceGame.winner_to_game_id;
+
       const updateGame = (g: TournamentGame) => {
         const updated = { ...g };
         if (!updated.team1 || updated.team1 === 'TBD') updated.team1 = winner;
         else if (!updated.team2 || updated.team2 === 'TBD') updated.team2 = winner;
         return updated;
       };
+
       const updatedRegional = Object.fromEntries(
         Object.entries(prev.regionalGames).map(([r, games]) => [
           r,
           games.map((g) => (g.id === targetGameId ? updateGame(g) : g)),
         ])
       );
+
+      const updatedRegionalWithPropagation = Object.fromEntries(
+        Object.entries(updatedRegional).map(([region, games]) => {
+          const nextRoundGames = games.map((g) => {
+            if (g.winner_to_game_id && picks[g.id]) {
+              return games.map((target) =>
+                target.id === g.winner_to_game_id
+                  ? {
+                      ...target,
+                      team1:
+                        !target.team1 || target.team1 === 'TBD'
+                          ? picks[g.id]
+                          : target.team1,
+                    }
+                  : target
+              );
+            }
+            return games;
+          });
+          return [region, nextRoundGames.flat()];
+        })
+      );
+
       const updatedFinalFour = prev.finalFourGames.map((g) =>
         g.id === targetGameId ? updateGame(g) : g
       );
+
       const updatedChampionship = prev.championshipGames.map((g) =>
         g.id === targetGameId ? updateGame(g) : g
       );
-      return { ...prev, regionalGames: updatedRegional, finalFourGames: updatedFinalFour, championshipGames: updatedChampionship };
+
+      return {
+        ...prev,
+        regionalGames: updatedRegionalWithPropagation,
+        finalFourGames: updatedFinalFour,
+        championshipGames: updatedChampionship,
+      };
     });
   };
 
@@ -128,6 +176,41 @@ export function MarchMadnessClient() {
     return { total, picked };
   };
 
+  // AUTO-SCROLL LOGIC
+  const isOpeningRoundComplete = state?.openingRoundGames.every((g) => picks[g.id]);
+  const isRegionsComplete = Object.values(state?.regionalGames ?? {})
+    .flat()
+    .every((g) => picks[g.id]);
+  const isFinalFourComplete = state?.finalFourGames.every((g) => picks[g.id]);
+
+  useEffect(() => {
+    if (isOpeningRoundComplete) {
+      document.getElementById('regions-layer')?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      });
+    }
+  }, [isOpeningRoundComplete]);
+
+  useEffect(() => {
+    if (isRegionsComplete) {
+      document.getElementById('finalfour-layer')?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      });
+    }
+  }, [isRegionsComplete]);
+
+  useEffect(() => {
+    if (isFinalFourComplete) {
+      document.getElementById('championship-layer')?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      });
+    }
+  }, [isFinalFourComplete]);
+
+  // LOADING SCREEN
   if (loading || !state) {
     return (
       <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center">
@@ -138,15 +221,19 @@ export function MarchMadnessClient() {
     );
   }
 
-  const visibleLeaderboard = showUnpaid ? leaderboard : leaderboard.filter((r) => r.has_paid);
-
+  const visibleLeaderboard = showUnpaid
+    ? leaderboard
+    : leaderboard.filter((r) => r.has_paid);
+  // MAIN RENDER
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 to-slate-900 text-white flex flex-col gap-8 overflow-x-hidden">
 
       {/* Header */}
       <header className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-white/10 backdrop-blur-xl">
         <div>
-          <h1 className="text-4xl font-extrabold tracking-tight drop-shadow">March Madness Bracket</h1>
+          <h1 className="text-4xl font-extrabold tracking-tight drop-shadow">
+            March Madness Bracket
+          </h1>
           <p className="text-sm text-white/60 mt-1">
             {state.lockState.bracketsOpen ? 'Brackets open' : 'Brackets locked'}
           </p>
@@ -183,79 +270,174 @@ export function MarchMadnessClient() {
         <LiveTicker />
       </section>
 
-      {/* Main layout */}
-      <main className="flex flex-wrap gap-8 px-8 pb-10 items-start justify-center max-w-[1800px] mx-auto overflow-x-hidden">
+{/* Rolodex layered bracket */}
+<main className="w-full flex justify-center px-6 pb-10 overflow-x-hidden">
+  {/* Add perspective and preserve 3D depth */}
+  <div
+    className="relative w-full max-w-[1200px] mx-auto space-y-0"
+    style={{
+      perspective: '1200px',
+      transformStyle: 'preserve-3d',
+    }}
+  >
+    {/* Opening Round – top layer with strong tilt */}
+    <div
+      id="opening-layer"
+      onClick={() =>
+        setFocusedLayer((prev) => (prev === 'opening' ? null : 'opening'))
+      }
+      className={`relative transition-all duration-700 cursor-pointer ${
+        focusedLayer === 'opening'
+          ? 'z-50 scale-[1.02] opacity-100'
+          : `z-40 ${
+              isOpeningRoundComplete
+                ? 'scale-[0.95] opacity-70'
+                : 'scale-[1.0] opacity-100'
+            }`
+      }`}
+      style={{
+        transform: focusedLayer === 'opening' ? 'rotateY(0deg)' : 'rotateY(0deg)',
+        transformOrigin: 'center top',
+        boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
+      }}
+    >
+      <OpeningRoundPanel
+        games={state.openingRoundGames}
+        live={live}
+        picks={picks}
+        onPick={handlePick}
+      />
+    </div>
 
-        {/* Opening Round */}
-        <div className="flex-[0.55] min-w-[480px] max-w-[700px] space-y-6 rounded-2xl p-5 bg-gradient-to-br from-slate-900/60 to-slate-800/40 backdrop-blur-xl border border-white/10 shadow-xl">
-          <OpeningRoundPanel
-            games={state.openingRoundGames}
-            live={live}
-            picks={picks}
-            onPick={handlePick}
-          />
-        </div>
+    {/* Regions – second layer with stronger tilt */}
+    <div
+      id="regions-layer"
+      onClick={() =>
+        setFocusedLayer((prev) => (prev === 'regions' ? null : 'regions'))
+      }
+      className={`relative mt-[-80px] transition-all duration-700 cursor-pointer ${
+        focusedLayer === 'regions'
+          ? 'z-50 scale-[1.02] opacity-100'
+          : `z-30 ${
+              isOpeningRoundComplete
+                ? 'scale-[1.0] opacity-100'
+                : 'scale-[0.97] opacity-80'
+            }`
+      }`}
+      style={{
+        transform:
+          focusedLayer === 'regions' ? 'rotateY(0deg)' : 'rotateY(0deg)',
+        transformOrigin: 'center top',
+        boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
+      }}
+    >
+      <div className="rounded-2xl p-5 bg-gradient-to-br from-slate-900/80 to-slate-800/60 backdrop-blur-xl border border-white/10 shadow-xl">
+        <section className="space-y-4">
+          <h2 className="text-2xl font-bold tracking-wide">Regions</h2>
 
-        {/* Regions + Finals */}
-        <div className="flex-[0.35] min-w-[380px] max-w-[600px] space-y-8 rounded-2xl p-5 bg-gradient-to-br from-slate-900/60 to-slate-800/40 backdrop-blur-xl border border-white/10 shadow-xl">
+          <div className="grid grid-cols-2 gap-6">
+            {regionOrder.map((region) => {
+              const progress = getRegionProgress(region);
+              const total = progress.total || 1;
+              const pct = Math.round((progress.picked / total) * 100);
 
-          {/* Regions */}
-          <section className="space-y-4">
-            <h2 className="text-2xl font-bold tracking-wide">Regions</h2>
+              return (
+                <button
+                  key={region}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveRegion(region);
+                    setShowRegionModal(true);
+                  }}
+                  className="relative rounded-2xl p-4 bg-slate-900/70 border border-white/10 shadow-xl hover:shadow-2xl hover:bg-slate-800/80 transition flex flex-col gap-3 text-left"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-lg font-bold uppercase tracking-wide">
+                      {region}
+                    </span>
+                    <span className="text-xs text-white/60">
+                      {progress.picked}/{progress.total} picks
+                    </span>
+                  </div>
 
-            <div className="grid grid-cols-2 gap-6">
-              {regionOrder.map((region) => {
-                const progress = getRegionProgress(region);
-                const total = progress.total || 1;
-                const pct = Math.round((progress.picked / total) * 100);
+                  <div className="w-full h-2 rounded-full bg-slate-700 overflow-hidden">
+                    <div
+                      className="h-2 bg-emerald-500 transition-all"
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
 
-                return (
-                  <button
-                    key={region}
-                    onClick={() => {
-                      setActiveRegion(region);
-                      setShowRegionModal(true);
-                    }}
-                    className="relative rounded-2xl p-4 bg-slate-900/70 border border-white/10 shadow-xl hover:shadow-2xl hover:bg-slate-800/80 transition flex flex-col gap-3 text-left"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-lg font-bold uppercase tracking-wide">
-                        {region}
-                      </span>
-                      <span className="text-xs text-white/60">
-                        {progress.picked}/{progress.total} picks
-                      </span>
-                    </div>
+                  <p className="text-xs text-white/60">
+                    Tap to open full {region} bracket
+                  </p>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      </div>
+    </div>
 
-                    <div className="w-full h-2 rounded-full bg-slate-700 overflow-hidden">
-                      <div
-                        className="h-2 bg-emerald-500 transition-all"
-                        style={{ width: `${pct}%` }}
-                      />
-                    </div>
+    {/* Final Four – third layer with stronger tilt */}
+    <div
+      id="finalfour-layer"
+      onClick={() =>
+        setFocusedLayer((prev) => (prev === 'finalfour' ? null : 'finalfour'))
+      }
+      className={`relative mt-[-80px] transition-all duration-700 cursor-pointer ${
+        focusedLayer === 'finalfour'
+          ? 'z-50 scale-[1.02] opacity-100'
+          : `z-20 ${
+              isRegionsComplete
+                ? 'scale-[1.0] opacity-100'
+                : 'scale-[0.94] opacity-65'
+            }`
+      }`}
+      style={{
+        transform:
+          focusedLayer === 'finalfour' ? 'rotateY(0deg)' : 'rotateY(0deg)',
+        transformOrigin: 'center top',
+        boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
+      }}
+    >
+      <div className="rounded-2xl p-5 bg-gradient-to-br from-slate-900/70 to-slate-800/50 backdrop-blur-xl border border-white/10 shadow-xl">
+        <FinalFourPanel games={state.finalFourGames} onPick={handlePick} />
+      </div>
+    </div>
 
-                    <p className="text-xs text-white/60">
-                      Tap to open full {region} bracket
-                    </p>
-                  </button>
-                );
-              })}
-            </div>
-          </section>
-
-          {/* Final Four */}
-          <FinalFourPanel
-            games={state.finalFourGames}
-            onPick={handlePick}
-          />
-
-          {/* Championship */}
-          <ChampionshipPanel
-            game={state.championshipGames[0]}
-            onPick={handlePick}
-          />
-        </div>
-
+    {/* Championship – bottom layer with strongest tilt */}
+    <div
+      id="championship-layer"
+      onClick={() =>
+        setFocusedLayer((prev) =>
+          prev === 'championship' ? null : 'championship'
+        )
+      }
+      className={`relative mt-[-80px] transition-all duration-700 cursor-pointer ${
+        focusedLayer === 'championship'
+          ? 'z-50 scale-[1.02] opacity-100'
+          : `z-10 ${
+              isFinalFourComplete
+                ? 'scale-[1.0] opacity-100'
+                : 'scale-[0.9] opacity-55'
+            }`
+      }`}
+      style={{
+        transform:
+          focusedLayer === 'championship' ? 'rotateY(0deg)' : 'rotateY(0deg)',
+        transformOrigin: 'center top',
+        boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
+      }}
+    >
+      <div className="rounded-2xl p-5 bg-gradient-to-br from-slate-900/70 to-slate-800/50 backdrop-blur-xl border border-white/10 shadow-xl">
+        <ChampionshipPanel
+          game={state.championshipGames[0]}
+          onPick={handlePick}
+        />
+      </div>
+    </div>
+  </div>
+</main>
         {/* My Picks Drawer Button */}
         <button
           onClick={() => setShowPicksDrawer(true)}
@@ -290,8 +472,6 @@ export function MarchMadnessClient() {
           </div>
         )}
 
-      </main>
-
       {/* Leaderboard */}
       <section className="px-6 pb-10 space-y-4">
         <div className="flex justify-end">
@@ -305,82 +485,96 @@ export function MarchMadnessClient() {
 
         <LeaderboardPreview rows={visibleLeaderboard} />
       </section>
+      {/* REGION MODAL */}
+      {showRegionModal && activeRegion && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/70 animate-fade-in">
+          <div className="relative w-[95%] max-w-6xl h-[85vh] bg-slate-900/95 border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
 
-{/* REGION MODAL */}
-{showRegionModal && activeRegion && (
-  <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/70 animate-fade-in">
-    <div className="relative w-[95%] max-w-6xl h-[85vh] bg-slate-900/95 border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-slate-900/90">
+              <h2 className="text-2xl font-bold uppercase tracking-wide">
+                {activeRegion} Bracket
+              </h2>
 
-      {/* Modal Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-slate-900/90">
-        <h2 className="text-2xl font-bold uppercase tracking-wide">
-          {activeRegion} Bracket
-        </h2>
+              <button
+                onClick={() => setShowRegionModal(false)}
+                className="text-sm px-3 py-1 rounded-lg bg-white/10 hover:bg-white/20 border border-white/20"
+              >
+                Close
+              </button>
+            </div>
 
-        <button
-          onClick={() => setShowRegionModal(false)}
-          className="text-sm px-3 py-1 rounded-lg bg-white/10 hover:bg-white/20 border border-white/20"
-        >
-          Close
-        </button>
-      </div>
+            {/* Modal Content */}
+            <div className="p-6 h-[80vh] overflow-auto space-y-12">
 
-      {/* Modal Content */}
-      <div className="p-6 h-[80vh] overflow-auto space-y-12">
+              {/* Round of 64 */}
+              <div ref={roundRefs[2]}>
+                <h3 className="text-xl font-semibold mb-4">Round of 64</h3>
+                <RegionBracketPanel
+                  region={activeRegion}
+                  games={
+                    state.regionalGames[activeRegion]?.filter(
+                      (g) => g.round === 2
+                    ) ?? []
+                  }
+                  picks={picks}
+                  onPick={handlePick}
+                  teams={state.teams}
+                />
+              </div>
 
-        {/* Round of 64 */}
-        <div ref={roundRefs[2]}>
-          <h3 className="text-xl font-semibold mb-4">Round of 64</h3>
-          <RegionBracketPanel
-            region={activeRegion}
-            games={state.regionalGames[activeRegion]?.filter(g => g.round === 2) ?? []}
-            picks={picks}
-            onPick={handlePick}
-            teams={state.teams}
-          />
+              {/* Round of 32 */}
+              <div ref={roundRefs[3]}>
+                <h3 className="text-xl font-semibold mb-4">Round of 32</h3>
+                <RegionBracketPanel
+                  region={activeRegion}
+                  games={
+                    state.regionalGames[activeRegion]?.filter(
+                      (g) => g.round === 3
+                    ) ?? []
+                  }
+                  picks={picks}
+                  onPick={handlePick}
+                  teams={state.teams}
+                />
+              </div>
+
+              {/* Sweet 16 */}
+              <div ref={roundRefs[4]}>
+                <h3 className="text-xl font-semibold mb-4">Sweet 16</h3>
+                <RegionBracketPanel
+                  region={activeRegion}
+                  games={
+                    state.regionalGames[activeRegion]?.filter(
+                      (g) => g.round === 4
+                    ) ?? []
+                  }
+                  picks={picks}
+                  onPick={handlePick}
+                  teams={state.teams}
+                />
+              </div>
+
+              {/* Elite 8 */}
+              <div ref={roundRefs[5]}>
+                <h3 className="text-xl font-semibold mb-4">Elite 8</h3>
+                <RegionBracketPanel
+                  region={activeRegion}
+                  games={
+                    state.regionalGames[activeRegion]?.filter(
+                      (g) => g.round === 5
+                    ) ?? []
+                  }
+                  picks={picks}
+                  onPick={handlePick}
+                  teams={state.teams}
+                />
+              </div>
+
+            </div>
+          </div>
         </div>
-
-        {/* Round of 32 */}
-        <div ref={roundRefs[3]}>
-          <h3 className="text-xl font-semibold mb-4">Round of 32</h3>
-          <RegionBracketPanel
-            region={activeRegion}
-            games={state.regionalGames[activeRegion]?.filter(g => g.round === 3) ?? []}
-            picks={picks}
-            onPick={handlePick}
-            teams={state.teams}
-          />
-        </div>
-
-        {/* Sweet 16 */}
-        <div ref={roundRefs[4]}>
-          <h3 className="text-xl font-semibold mb-4">Sweet 16</h3>
-          <RegionBracketPanel
-            region={activeRegion}
-            games={state.regionalGames[activeRegion]?.filter(g => g.round === 4) ?? []}
-            picks={picks}
-            onPick={handlePick}
-            teams={state.teams}
-          />
-        </div>
-
-        {/* Elite 8 */}
-        <div ref={roundRefs[5]}>
-          <h3 className="text-xl font-semibold mb-4">Elite 8</h3>
-          <RegionBracketPanel
-            region={activeRegion}
-            games={state.regionalGames[activeRegion]?.filter(g => g.round === 5) ?? []}
-            picks={picks}
-            onPick={handlePick}
-            teams={state.teams}
-          />
-        </div>
-
-      </div>
-    </div>
-  </div>
-)}
-
+      )}
     </div>
   );
 }

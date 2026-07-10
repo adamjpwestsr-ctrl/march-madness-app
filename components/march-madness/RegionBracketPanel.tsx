@@ -3,7 +3,7 @@
 import { TournamentGame, TournamentTeam } from '@/lib/marchMadnessTypes';
 
 /* -------------------------------------------------------
-   Shared GameCard Component
+   Shared GameCard Component — compact version
 ------------------------------------------------------- */
 function GameCard({
   game,
@@ -36,16 +36,24 @@ function GameCard({
   return (
     <div
       id={`game-${game.id}`}
-      className="snap-center min-w-[260px] relative p-4 rounded-xl bg-white/5 border border-white/10 shadow-lg transition-all duration-200 hover:bg-white/10"
+      className="
+        relative p-3 rounded-lg
+        bg-gradient-to-br from-slate-900/80 to-slate-800/60
+        border border-slate-700/40 shadow-md
+        hover:shadow-emerald-900/40 hover:border-emerald-500/40
+        transition-all duration-200 hover:scale-[1.015]
+        space-y-2
+      "
     >
       {/* Team 1 */}
       <button
         onClick={() => handlePick(team1)}
-        className={`flex items-center justify-between gap-3 w-full text-left px-3 py-2 rounded-lg transition
+        className={`
+          flex items-center justify-between gap-2 w-full text-left px-2.5 py-1.5 rounded-lg transition
           ${
             isTeam1Picked
               ? 'bg-emerald-600/40 border border-emerald-400 shadow-md'
-              : 'hover:bg-white/20'
+              : 'hover:bg-white/10'
           }
         `}
       >
@@ -53,28 +61,34 @@ function GameCard({
           <img
             src={team1Obj.logo_url}
             alt={team1}
-            className="w-6 h-6 rounded-sm object-contain"
+            className="w-5 h-5 rounded-sm object-contain"
           />
         )}
-        <span className="font-semibold text-white">{team1}</span>
+
+        <span className="text-[0.85rem] font-semibold text-white tracking-wide truncate">
+          {team1}
+        </span>
+
         {seed1 && (
-          <span className="text-xs px-2 py-0.5 rounded-md bg-white/10 border border-white/20 text-white/80">
+          <span className="text-[0.7rem] px-2 py-0.5 rounded-md bg-white/10 border border-white/20 text-slate-300">
             #{seed1}
           </span>
         )}
+
         {isTeam1Picked && (
-          <span className="text-green-300 font-bold text-lg">✓</span>
+          <span className="text-emerald-300 font-bold text-base">✓</span>
         )}
       </button>
 
       {/* Team 2 */}
       <button
         onClick={() => handlePick(team2)}
-        className={`flex items-center justify-between gap-3 w-full text-left px-3 py-2 rounded-lg mt-2 transition
+        className={`
+          flex items-center justify-between gap-2 w-full text-left px-2.5 py-1.5 rounded-lg transition
           ${
             isTeam2Picked
               ? 'bg-emerald-600/40 border border-emerald-400 shadow-md'
-              : 'hover:bg-white/20'
+              : 'hover:bg-white/10'
           }
         `}
       >
@@ -82,23 +96,28 @@ function GameCard({
           <img
             src={team2Obj.logo_url}
             alt={team2}
-            className="w-6 h-6 rounded-sm object-contain"
+            className="w-5 h-5 rounded-sm object-contain"
           />
         )}
-        <span className="font-semibold text-white">{team2}</span>
+
+        <span className="text-[0.85rem] font-semibold text-white tracking-wide truncate">
+          {team2}
+        </span>
+
         {seed2 && (
-          <span className="text-xs px-2 py-0.5 rounded-md bg-white/10 border border-white/20 text-white/80">
+          <span className="text-[0.7rem] px-2 py-0.5 rounded-md bg-white/10 border border-white/20 text-slate-300">
             #{seed2}
           </span>
         )}
+
         {isTeam2Picked && (
-          <span className="text-green-300 font-bold text-lg">✓</span>
+          <span className="text-emerald-300 font-bold text-base">✓</span>
         )}
       </button>
 
       {/* Winner */}
       {(game.winner || picks[game.id]) && (
-        <div className="mt-3 text-center text-green-400 font-bold text-sm">
+        <div className="mt-1 text-center text-emerald-300 font-bold text-[0.75rem] tracking-wide">
           Winner: {picks[game.id] ?? game.winner}
         </div>
       )}
@@ -107,7 +126,7 @@ function GameCard({
 }
 
 /* -------------------------------------------------------
-   RegionBracketPanel — now clean + round‑focused
+   RegionBracketPanel — compact vertical container
 ------------------------------------------------------- */
 export function RegionBracketPanel({
   region,
@@ -117,15 +136,15 @@ export function RegionBracketPanel({
   teams,
 }: {
   region: string;
-  games: TournamentGame[]; // games for a single round only
+  games: TournamentGame[];
   picks: Record<string, string>;
   onPick?: (gameId: string, winner: string) => void;
   teams: TournamentTeam[];
 }) {
   if (!games.length) {
     return (
-      <div className="rounded-2xl p-6 bg-gradient-to-br from-slate-900/70 to-slate-800/40 backdrop-blur-xl shadow-2xl border border-white/10">
-        <h2 className="text-xl font-semibold text-center text-white/70">
+      <div className="rounded-2xl p-4 bg-gradient-to-br from-slate-900/70 to-slate-800/40 backdrop-blur-xl shadow-2xl border border-white/10">
+        <h2 className="text-[0.95rem] font-semibold text-center text-white/70">
           No games available for this round.
         </h2>
       </div>
@@ -133,10 +152,20 @@ export function RegionBracketPanel({
   }
 
   return (
-    <div className="rounded-2xl p-6 bg-gradient-to-br from-slate-900/70 to-slate-800/40 backdrop-blur-xl shadow-2xl border border-white/10">
+    <div
+      className="
+        rounded-2xl p-4
+        bg-gradient-to-br from-slate-900/70 to-slate-800/40
+        backdrop-blur-xl shadow-2xl border border-white/10
+        space-y-3
+      "
+    >
+      <h3 className="text-center text-[1rem] font-bold uppercase tracking-wide text-emerald-300">
+        {region}
+      </h3>
 
-      {/* Horizontal ESPN-style bracket */}
-      <div className="flex flex-row gap-6 overflow-x-auto snap-x snap-mandatory pb-2">
+      {/* Vertical grid instead of horizontal scroll */}
+      <div className="grid grid-cols-2 gap-4">
         {games.map((game) => (
           <GameCard
             key={game.id}

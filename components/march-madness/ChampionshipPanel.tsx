@@ -14,7 +14,7 @@ export function ChampionshipPanel({
 
   if (!game) {
     return (
-      <div className="rounded-2xl p-6 bg-slate-900/60 border border-white/10 shadow-xl text-center text-white/60">
+      <div className="rounded-2xl p-6 bg-gradient-to-br from-slate-900/70 to-slate-800/50 border border-white/10 shadow-xl text-center text-white/60">
         Championship game unavailable.
       </div>
     );
@@ -27,18 +27,18 @@ export function ChampionshipPanel({
   const isTeam2Picked = game.winner === team2;
 
   return (
-    <div className="rounded-2xl p-6 bg-slate-900/60 backdrop-blur-xl border border-white/10 shadow-xl space-y-6">
-      <h2 className="text-2xl font-bold text-center uppercase tracking-wide text-white">
+    <div className="rounded-2xl p-6 bg-gradient-to-br from-slate-900/70 to-slate-800/50 backdrop-blur-xl border border-white/10 shadow-2xl space-y-8">
+      <h2 className="text-2xl font-extrabold text-center uppercase tracking-wider text-emerald-300 drop-shadow-sm">
         Championship
       </h2>
 
-      {/* Final Matchup */}
       <div className="flex flex-col items-center gap-4">
 
         {/* Team 1 */}
         <button
           onClick={() => onPick?.(game.id, team1)}
-          className={`px-6 py-3 rounded-lg w-full max-w-xs text-center transition
+          className={`
+            px-6 py-3 rounded-lg w-full max-w-xs text-center transition
             ${
               isTeam1Picked
                 ? 'bg-emerald-600/40 border border-emerald-400 shadow-md'
@@ -46,16 +46,16 @@ export function ChampionshipPanel({
             }
           `}
         >
-          <span className="text-white font-semibold">{team1}</span>
+          <span className="text-white font-semibold tracking-wide">{team1}</span>
         </button>
 
-        {/* VS */}
-        <span className="text-white/60 font-semibold">vs</span>
+        <span className="text-slate-400 font-semibold">vs</span>
 
         {/* Team 2 */}
         <button
           onClick={() => onPick?.(game.id, team2)}
-          className={`px-6 py-3 rounded-lg w-full max-w-xs text-center transition
+          className={`
+            px-6 py-3 rounded-lg w-full max-w-xs text-center transition
             ${
               isTeam2Picked
                 ? 'bg-emerald-600/40 border border-emerald-400 shadow-md'
@@ -63,20 +63,20 @@ export function ChampionshipPanel({
             }
           `}
         >
-          <span className="text-white font-semibold">{team2}</span>
+          <span className="text-white font-semibold tracking-wide">{team2}</span>
         </button>
 
         {/* Winner */}
         {game.winner && (
-          <div className="text-green-400 font-bold text-sm mt-2">
+          <div className="text-emerald-300 font-bold text-sm mt-2 tracking-wide">
             Champion: {game.winner}
           </div>
         )}
       </div>
 
       {/* Tiebreaker */}
-      <div className="text-center space-y-2">
-        <label className="block text-sm text-white/70">
+      <div className="text-center space-y-3">
+        <label className="block text-sm text-slate-300 tracking-wide">
           Tiebreaker Score (Total Points)
         </label>
 
@@ -84,11 +84,14 @@ export function ChampionshipPanel({
           type="number"
           value={tiebreaker}
           onChange={(e) => setTiebreaker(e.target.value)}
-          className="w-32 text-center bg-slate-800 border border-white/20 rounded-lg py-1 text-white focus:outline-none focus:ring-2 focus:ring-emerald-400"
+          className="
+            w-32 text-center bg-slate-800 border border-white/20 rounded-lg py-1 
+            text-white focus:outline-none focus:ring-2 focus:ring-emerald-400
+          "
           placeholder="e.g. 142"
         />
 
-        <p className="text-xs text-white/50">
+        <p className="text-xs text-slate-500">
           Used only if multiple players pick the same champion.
         </p>
       </div>

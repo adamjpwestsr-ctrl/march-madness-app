@@ -19,8 +19,15 @@ export default function DerbyParticipantsManager({ eventId }: { eventId: number 
     const res = await fetch("/api/mlb/derby/participants", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ event_id: eventId, name, team, hr_count: hrCount, image_url: imageUrl }),
+      body: JSON.stringify({
+        event_id: eventId,
+        name,
+        team,
+        hr_count: hrCount,
+        image_url: imageUrl,
+      }),
     });
+
     const json = await res.json();
     if (json.participant) {
       setParticipants((prev) => [...prev, json.participant]);
@@ -86,12 +93,12 @@ export default function DerbyParticipantsManager({ eventId }: { eventId: number 
             {p.image_url && (
               <img
                 src={p.image_url}
-                alt={p.name}
+                alt={p.player_name}
                 className="w-16 h-16 rounded-full mb-2 object-cover"
               />
             )}
-            <p className="font-semibold text-slate-200">{p.name}</p>
-            <p className="text-slate-400 text-sm">{p.team}</p>
+            <p className="font-semibold text-slate-200">{p.player_name}</p>
+            <p className="text-slate-400 text-sm">{p.team_name}</p>
             <p className="text-emerald-400 text-sm font-medium">
               {p.hr_count} HR
             </p>

@@ -13,7 +13,7 @@ interface DerbyPlayer {
   id: number;
   player_name: string;
   team_name: string;
-  image_url: string;
+  image_url: string | null;
 }
 
 interface UserPick {
@@ -28,7 +28,6 @@ export default function MyDerbyPicks() {
   const [pick, setPick] = useState<UserPick | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Load event, players, and user pick
   useEffect(() => {
     (async () => {
       try {
@@ -37,9 +36,11 @@ export default function MyDerbyPicks() {
         setEvent(eventJson.event || null);
 
         if (eventJson.event) {
-          const playersRes = await fetch("/api/mlb/derby/players");
+          const playersRes = await fetch(
+            `/api/mlb/derby/participants?event_id=${eventJson.event.id}`
+          );
           const playersJson = await playersRes.json();
-          setPlayers(playersJson.players || []);
+          setPlayers(playersJson.participants || []);
 
           const pickRes = await fetch("/api/mlb/derby/pick");
           const pickJson = await pickRes.json();
@@ -52,6 +53,9 @@ export default function MyDerbyPicks() {
       }
     })();
   }, []);
+
+  const selectedPlayer =
+    pick && players.find((p) => p.id === pick.player_id);
 
   const getStatusBadge = () => {
     if (!event) return null;
@@ -81,9 +85,6 @@ export default function MyDerbyPicks() {
     }
   };
 
-  const selectedPlayer =
-    pick && players.find((p) => p.id === pick.player_id);
-
   return (
     <div className="rounded-xl bg-slate-900/70 border border-white/10 p-4 shadow-lg flex flex-col gap-4">
       <div className="flex items-center justify-between">
@@ -107,11 +108,17 @@ export default function MyDerbyPicks() {
         <div className="flex flex-col gap-4">
           {/* Player Info */}
           <div className="flex items-center gap-4">
-            <img
-              src={selectedPlayer.image_url}
-              alt={selectedPlayer.player_name}
-              className="w-20 h-20 rounded-lg object-cover border border-slate-700"
-            />
+            {selectedPlayer.image_url ? (
+              <img
+                src={selectedPlayer.image_url}
+                alt={selectedPlayer.player_name}
+                className="w-20 h-20 rounded-lg object-cover border border-slate-700"
+              />
+            ) : (
+              <div className="w-20 h-20 rounded-lg bg-slate-700 flex items-center justify-center text-xs text-slate-400">
+                No Image
+              </div>
+            )}
 
             <div className="text-sm">
               <p className="font-semibold text-white">
@@ -127,7 +134,7 @@ export default function MyDerbyPicks() {
             </div>
           </div>
 
-          {/* Final Result (if posted) */}
+          {/* Final Result */}
           {event.status === "results_posted" && (
             <div className="text-sm text-slate-300 border-t border-slate-800 pt-3">
               <p>

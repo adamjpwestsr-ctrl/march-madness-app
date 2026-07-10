@@ -13,7 +13,7 @@ interface DerbyPlayer {
   player_name: string;
   team_name: string;
   hr_count: number;
-  image_url: string;
+  image_url: string | null;
 }
 
 interface UserPick {
@@ -22,11 +22,7 @@ interface UserPick {
   predicted_hr_total: number;
 }
 
-export default function DerbyModal({
-  onClose,
-}: {
-  onClose: () => void;
-}) {
+export default function DerbyModal({ onClose }: { onClose: () => void }) {
   const [event, setEvent] = useState<DerbyEvent | null>(null);
   const [players, setPlayers] = useState<DerbyPlayer[]>([]);
   const [userPick, setUserPick] = useState<UserPick | null>(null);
@@ -41,7 +37,7 @@ export default function DerbyModal({
     setTimeout(() => setToast(null), 2500);
   };
 
-  // Load event, players, and user pick
+  // Load event, participants, and user pick
   useEffect(() => {
     (async () => {
       try {
@@ -50,9 +46,11 @@ export default function DerbyModal({
         setEvent(eventJson.event || null);
 
         if (eventJson.event) {
-          const playersRes = await fetch("/api/mlb/derby/players");
+          const playersRes = await fetch(
+            `/api/mlb/derby/participants?event_id=${eventJson.event.id}`
+          );
           const playersJson = await playersRes.json();
-          setPlayers(playersJson.players || []);
+          setPlayers(playersJson.participants || []);
 
           const pickRes = await fetch("/api/mlb/derby/pick");
           const pickJson = await pickRes.json();
@@ -140,11 +138,17 @@ export default function DerbyModal({
                     }`}
                     onClick={() => !isReadOnly && setSelectedPlayer(p.id)}
                   >
-                    <img
-                      src={p.image_url}
-                      alt={p.player_name}
-                      className="w-full h-40 object-cover rounded-md"
-                    />
+                    {p.image_url ? (
+                      <img
+                        src={p.image_url}
+                        alt={p.player_name}
+                        className="w-full h-40 object-cover rounded-md"
+                      />
+                    ) : (
+                      <div className="w-full h-40 bg-slate-700 rounded-md flex items-center justify-center text-slate-400 text-sm">
+                        No image
+                      </div>
+                    )}
 
                     <div className="text-sm">
                       <p className="font-semibold">{p.player_name}</p>

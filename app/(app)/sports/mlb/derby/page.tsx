@@ -2,19 +2,53 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
+
+// Lazy-load the modal to avoid hydration issues
+const DerbyModal = dynamic(() => import("../components/DerbyModal"), {
+  ssr: false,
+});
+
 
 export default function MLBHomeRunDerbyPage() {
   const [event, setEvent] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showModal, setShowModal] = useState(false);
+  const [selectedPlayer, setSelectedPlayer] = useState<number | null>(null);
 
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch("/api/mlb/derby/event");
-        if (!res.ok) throw new Error(`Error ${res.status}: ${res.statusText}`);
-        const data = await res.json();
-        setEvent(data.event ?? null);
+        // 1. Fetch event
+        const resEvent = await fetch("/api/mlb/derby/event");
+        if (!resEvent.ok)
+          throw new Error(`Error ${resEvent.status}: ${resEvent.statusText}`);
+
+        const eventData = await resEvent.json();
+        const derbyEvent = eventData.event;
+
+        if (!derbyEvent) {
+          setEvent(null);
+          return;
+        }
+
+        // 2. Fetch participants
+        const resPlayers = await fetch(
+          `/api/mlb/derby/participants?event_id=${derbyEvent.id}`
+        );
+        if (!resPlayers.ok)
+          throw new Error(
+            `Error ${resPlayers.status}: ${resPlayers.statusText}`
+          );
+
+        const playersData = await resPlayers.json();
+
+        // 3. Merge
+        setEvent({
+          ...derbyEvent,
+          players: playersData.participants ?? [],
+        });
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -22,6 +56,16 @@ export default function MLBHomeRunDerbyPage() {
       }
     })();
   }, []);
+
+  const handlePlayerClick = (playerId: number) => {
+    setSelectedPlayer(playerId);
+    setShowModal(true);
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    setSelectedPlayer(null);
+  };
 
   return (
     <div className="min-h-screen bg-slate-950 text-white px-6 py-8 flex flex-col gap-8">
@@ -59,18 +103,39 @@ export default function MLBHomeRunDerbyPage() {
             </p>
           </div>
 
+          {/* Participants */}
           <div>
             <h3 className="text-lg font-semibold mb-2">Participants</h3>
+
             {event.players?.length ? (
-              <ul className="space-y-2">
+              <ul className="space-y-3">
                 {event.players.map((p: any) => (
                   <li
                     key={p.id}
-                    className="flex items-center justify-between bg-slate-800/40 px-3 py-2 rounded-lg"
+                    onClick={() => handlePlayerClick(p.id)}
+                    className="flex items-center justify-between bg-slate-800/40 px-3 py-2 rounded-lg cursor-pointer hover:bg-slate-700 transition"
                   >
-                    <span>{p.name}</span>
-                    <span className="text-slate-400 text-sm">
-                      {p.team_abbr}
+                    <div className="flex items-center gap-3">
+                      {p.image_url ? (
+                        <img
+                          src={p.image_url}
+                          alt={p.player_name}
+                          className="w-12 h-12 rounded-full object-cover border border-white/10"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 rounded-full bg-slate-700 flex items-center justify-center text-xs text-slate-400">
+                          No Image
+                        </div>
+                      )}
+
+                      <div>
+                        <p className="font-medium">{p.player_name}</p>
+                        <p className="text-slate-400 text-sm">{p.team_name}</p>
+                      </div>
+                    </div>
+
+                    <span className="text-emerald-400 font-semibold text-sm">
+                      {p.hr_count} HR
                     </span>
                   </li>
                 ))}
@@ -82,6 +147,7 @@ export default function MLBHomeRunDerbyPage() {
             )}
           </div>
 
+          {/* Results */}
           <div>
             <h3 className="text-lg font-semibold mb-2">Results</h3>
             {event.results ? (
@@ -103,6 +169,9 @@ export default function MLBHomeRunDerbyPage() {
           </Link>
         </div>
       )}
+
+      {/* Modal */}
+      {showModal && <DerbyModal onClose={closeModal} />}
     </div>
   );
 }

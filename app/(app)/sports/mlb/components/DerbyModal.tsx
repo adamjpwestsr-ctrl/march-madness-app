@@ -18,6 +18,8 @@ interface DerbyPlayer {
 
 interface UserPick {
   id: number;
+  user_id: string;
+  event_id: number;
   player_id: number;
   predicted_hr_total: number;
 }
@@ -37,23 +39,31 @@ export default function DerbyModal({ onClose }: { onClose: () => void }) {
     setTimeout(() => setToast(null), 2500);
   };
 
-  // Load event, participants, and user pick
+  // Load event, players, and user pick
   useEffect(() => {
     (async () => {
       try {
+        // 1. Load event
         const eventRes = await fetch("/api/mlb/derby/event");
         const eventJson = await eventRes.json();
         setEvent(eventJson.event || null);
 
         if (eventJson.event) {
+          const eventId = eventJson.event.id;
+
+          // 2. Load participants
           const playersRes = await fetch(
-            `/api/mlb/derby/participants?event_id=${eventJson.event.id}`
+            `/api/mlb/derby/participants?event_id=${eventId}`
           );
           const playersJson = await playersRes.json();
           setPlayers(playersJson.participants || []);
 
-          const pickRes = await fetch("/api/mlb/derby/pick");
+          // 3. Load user's pick (IMPORTANT: event_id required)
+          const pickRes = await fetch(
+            `/api/mlb/derby/pick?event_id=${eventId}`
+          );
           const pickJson = await pickRes.json();
+
           if (pickJson.pick) {
             setUserPick(pickJson.pick);
             setSelectedPlayer(pickJson.pick.player_id);

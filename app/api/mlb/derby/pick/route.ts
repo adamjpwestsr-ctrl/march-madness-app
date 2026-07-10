@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 
-// GET — fetch the current user's pick for the event
+// GET — fetch the current user's pick for a specific event
 export async function GET(req: Request) {
   const supabase = await createSupabaseServerClient();
 
@@ -18,20 +18,24 @@ export async function GET(req: Request) {
     );
   }
 
-  // Optional event_id query param
+  // Require event_id
   const { searchParams } = new URL(req.url);
   const eventId = searchParams.get("event_id");
 
-  let query = supabase
-    .from("mlb_derby_picks")
-    .select("*")
-    .eq("user_id", user.id);
-
-  if (eventId) {
-    query = query.eq("event_id", Number(eventId));
+  if (!eventId) {
+    return NextResponse.json(
+      { error: "Missing event_id" },
+      { status: 400 }
+    );
   }
 
-  const { data, error } = await query.maybeSingle();
+  // Fetch pick for THIS user + THIS event
+  const { data, error } = await supabase
+    .from("mlb_derby_picks")
+    .select("*")
+    .eq("user_id", user.id)
+    .eq("event_id", Number(eventId))
+    .maybeSingle();
 
   if (error) {
     console.error("GET /mlb/derby/pick error:", error);
@@ -82,7 +86,7 @@ export async function POST(req: Request) {
         predicted_hr_total: Number(predicted_hr_total),
       },
       {
-        // IMPORTANT: Supabase requires a comma-separated string, not an array
+        // Supabase requires comma-separated string for multi-column conflict
         onConflict: "user_id,event_id",
       }
     )

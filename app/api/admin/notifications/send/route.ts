@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/utils/supabase/server";
+import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 import admin from "firebase-admin";
 
 // -----------------------------
@@ -25,7 +25,7 @@ function isValidE164(number: string): boolean {
 
 export async function POST(req: Request) {
   try {
-    const supabase = await createClient();
+    const supabase = await createSupabaseServerClient();
     const { message, target, userId } = await req.json();
 
     let recipients: {

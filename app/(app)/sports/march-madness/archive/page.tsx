@@ -1,5 +1,5 @@
 // app/(app)/sports/march-madness/page.tsx
-import { createClient } from "@/utils/supabase/server";
+import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 import { redirect } from "next/navigation";
 import BracketClient from "./BracketClient";
 
@@ -8,7 +8,7 @@ export default async function BracketPage({
 }: {
   searchParams: { bid?: string };
 }) {
-  const supabase = await createClient();
+  const supabase = await createSupabaseServerClient();
 
   // Get session
   const {
@@ -32,7 +32,7 @@ export default async function BracketPage({
   if (!brackets || brackets.length === 0) {
     const createBracket = async () => {
       "use server";
-      const supabase = await createClient();
+      const supabase = await createSupabaseServerClient();
 
       const {
         data: { session },
@@ -107,7 +107,7 @@ export default async function BracketPage({
         <form
           action={async () => {
             "use server";
-            const supabase = await createClient();
+            const supabase = await createSupabaseServerClient();
 
             const {
               data: { session },

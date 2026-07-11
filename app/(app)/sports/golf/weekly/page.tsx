@@ -1,4 +1,4 @@
-import { createClient } from "@/utils/supabase/server";
+import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 import GolfWeeklyClient from "./GolfWeeklyClient";
 
 interface Tournament {
@@ -20,7 +20,7 @@ interface Player {
 
 export default async function GolfWeeklyPage() {
   try {
-    const supabase = await createClient();
+    const supabase = await createSupabaseServerClient();
     if (!supabase) {
       console.error("Supabase client failed to initialize");
       return (

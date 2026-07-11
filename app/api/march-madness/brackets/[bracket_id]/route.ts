@@ -19,7 +19,7 @@ export async function GET(
   const params =
     'then' in context.params ? await context.params : context.params;
 
-  const supabase = await createClient();
+  const supabase = createSupabaseServerClient();
   const bracketId = params.bracket_id;
 
   // FIXED VALIDATION BLOCK

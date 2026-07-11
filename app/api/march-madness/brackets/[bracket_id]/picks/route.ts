@@ -11,7 +11,7 @@ export async function POST(
   const params =
     'then' in context.params ? await context.params : context.params;
 
-  const supabase = await createClient();
+  const supabase = createSupabaseServerClient();
   const bracketId = params.bracket_id;
 
   if (!bracketId) {

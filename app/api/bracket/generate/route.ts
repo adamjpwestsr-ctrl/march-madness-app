@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/utils/supabase/server";
+import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 import { generateBracketStructure } from "@/lib/bracketUtils";
 
 /**
@@ -11,7 +11,7 @@ import { generateBracketStructure } from "@/lib/bracketUtils";
  *  - inserts into Supabase `games` table
  */
 export async function POST() {
-const supabase = await createClient();
+const supabase = await createSupabaseServerClient();
 
   // ---------------------------------------------------------
   // 1. Load true‑seed list (admin input)

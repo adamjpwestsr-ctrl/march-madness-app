@@ -4,57 +4,61 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 
-// Lazy-load the modal to avoid hydration issues
+// Lazy-load modal
 const DerbyModal = dynamic(() => import("../components/DerbyModal"), {
   ssr: false,
 });
-
 
 export default function MLBHomeRunDerbyPage() {
   const [event, setEvent] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
   const [showModal, setShowModal] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<number | null>(null);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        // 1. Fetch event
-        const resEvent = await fetch("/api/mlb/derby/event");
-        if (!resEvent.ok)
-          throw new Error(`Error ${resEvent.status}: ${resEvent.statusText}`);
+  const [userPick, setUserPick] = useState<any | null>(null);
 
-        const eventData = await resEvent.json();
-        const derbyEvent = eventData.event;
+  // Load event + participants + user pick
+  const loadDerbyData = async () => {
+    try {
+      // 1️⃣ Load event
+      const resEvent = await fetch("/api/mlb/derby/event");
+      const eventJson = await resEvent.json();
+      const derbyEvent = eventJson.event;
 
-        if (!derbyEvent) {
-          setEvent(null);
-          return;
-        }
-
-        // 2. Fetch participants
-        const resPlayers = await fetch(
-          `/api/mlb/derby/participants?event_id=${derbyEvent.id}`
-        );
-        if (!resPlayers.ok)
-          throw new Error(
-            `Error ${resPlayers.status}: ${resPlayers.statusText}`
-          );
-
-        const playersData = await resPlayers.json();
-
-        // 3. Merge
-        setEvent({
-          ...derbyEvent,
-          players: playersData.participants ?? [],
-        });
-      } catch (err: any) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
+      if (!derbyEvent) {
+        setEvent(null);
+        return;
       }
-    })();
+
+      // 2️⃣ Load participants
+      const resPlayers = await fetch(
+        `/api/mlb/derby/participants?event_id=${derbyEvent.id}`
+      );
+      const playersJson = await resPlayers.json();
+
+      // 3️⃣ Load user pick (IMPORTANT: event_id required)
+      const resPick = await fetch(
+        `/api/mlb/derby/pick?event_id=${derbyEvent.id}`
+      );
+      const pickJson = await resPick.json();
+
+      setEvent({
+        ...derbyEvent,
+        players: playersJson.participants ?? [],
+      });
+
+      setUserPick(pickJson.pick || null);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadDerbyData();
   }, []);
 
   const handlePlayerClick = (playerId: number) => {
@@ -65,7 +69,14 @@ export default function MLBHomeRunDerbyPage() {
   const closeModal = () => {
     setShowModal(false);
     setSelectedPlayer(null);
+
+    // Reload pick after modal save
+    loadDerbyData();
   };
+
+  const selectedPlayerObj =
+    userPick &&
+    event?.players?.find((p: any) => p.id === userPick.player_id);
 
   return (
     <div className="min-h-screen bg-slate-950 text-white px-6 py-8 flex flex-col gap-8">
@@ -94,6 +105,7 @@ export default function MLBHomeRunDerbyPage() {
         </div>
       ) : (
         <div className="rounded-xl bg-slate-900/70 border border-white/10 p-6 shadow-lg space-y-6">
+          {/* Event Header */}
           <div>
             <h2 className="text-xl font-semibold mb-2">
               {event.name || "Home Run Derby"}
@@ -101,6 +113,48 @@ export default function MLBHomeRunDerbyPage() {
             <p className="text-slate-400">
               {new Date(event.event_date).toLocaleDateString()} — {event.status}
             </p>
+          </div>
+
+          {/* User Pick */}
+          <div className="bg-slate-800/40 border border-white/10 rounded-lg p-4">
+            <h3 className="text-lg font-semibold mb-2">Your Pick</h3>
+
+            {!userPick ? (
+              <p className="text-slate-400 text-sm">
+                You haven’t made a pick yet.
+              </p>
+            ) : !selectedPlayerObj ? (
+              <p className="text-slate-400 text-sm">
+                Your selected player could not be found.
+              </p>
+            ) : (
+              <div className="flex items-center gap-4">
+                {selectedPlayerObj.image_url ? (
+                  <img
+                    src={selectedPlayerObj.image_url}
+                    alt={selectedPlayerObj.player_name}
+                    className="w-16 h-16 rounded-lg object-cover border border-slate-700"
+                  />
+                ) : (
+                  <div className="w-16 h-16 rounded-lg bg-slate-700 flex items-center justify-center text-xs text-slate-400">
+                    No Image
+                  </div>
+                )}
+
+                <div className="text-sm">
+                  <p className="font-semibold text-white">
+                    {selectedPlayerObj.player_name}
+                  </p>
+                  <p className="text-slate-400">{selectedPlayerObj.team_name}</p>
+                  <p className="text-slate-400">
+                    Predicted HRs:{" "}
+                    <span className="text-emerald-400 font-semibold">
+                      {userPick.predicted_hr_total}
+                    </span>
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Participants */}
@@ -171,7 +225,11 @@ export default function MLBHomeRunDerbyPage() {
       )}
 
       {/* Modal */}
-      {showModal && <DerbyModal onClose={closeModal} />}
+      {showModal && (
+        <DerbyModal
+          onClose={closeModal}
+        />
+      )}
     </div>
   );
 }

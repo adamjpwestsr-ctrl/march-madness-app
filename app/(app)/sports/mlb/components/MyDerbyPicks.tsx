@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 
 interface DerbyEvent {
   id: number;
+  event_year: number;
   status: "open" | "closed" | "results_posted";
-  winner_player_id: number | null;
-  winning_hr_total: number | null;
+  event_date: string;
 }
 
 interface DerbyPlayer {
@@ -18,6 +18,8 @@ interface DerbyPlayer {
 
 interface UserPick {
   id: number;
+  user_id: string;
+  event_id: number;
   player_id: number;
   predicted_hr_total: number;
 }
@@ -31,23 +33,32 @@ export default function MyDerbyPicks() {
   useEffect(() => {
     (async () => {
       try {
+        // 1️⃣ Fetch current Derby event
         const eventRes = await fetch("/api/mlb/derby/event");
         const eventJson = await eventRes.json();
-        setEvent(eventJson.event || null);
+        const derbyEvent = eventJson.event;
+        setEvent(derbyEvent || null);
 
-        if (eventJson.event) {
-          const playersRes = await fetch(
-            `/api/mlb/derby/participants?event_id=${eventJson.event.id}`
-          );
-          const playersJson = await playersRes.json();
-          setPlayers(playersJson.participants || []);
-
-          const pickRes = await fetch("/api/mlb/derby/pick");
-          const pickJson = await pickRes.json();
-          setPick(pickJson.pick || null);
+        if (!derbyEvent) {
+          setLoading(false);
+          return;
         }
+
+        // 2️⃣ Fetch participants for this event
+        const playersRes = await fetch(
+          `/api/mlb/derby/participants?event_id=${derbyEvent.id}`
+        );
+        const playersJson = await playersRes.json();
+        setPlayers(playersJson.participants || []);
+
+        // 3️⃣ Fetch user's pick for this event
+        const pickRes = await fetch(
+          `/api/mlb/derby/pick?event_id=${derbyEvent.id}`
+        );
+        const pickJson = await pickRes.json();
+        setPick(pickJson.pick || null);
       } catch (err) {
-        console.error("Error loading My Derby Picks:", err);
+        console.error("Error loading MyDerbyPicks:", err);
       } finally {
         setLoading(false);
       }
@@ -60,29 +71,25 @@ export default function MyDerbyPicks() {
   const getStatusBadge = () => {
     if (!event) return null;
 
-    if (event.status === "open") {
-      return (
-        <span className="px-2 py-1 text-xs rounded-md bg-emerald-600/20 text-emerald-400 border border-emerald-500/30">
-          Pending
-        </span>
-      );
-    }
+    const status = event.status;
+    const badgeStyles: Record<string, string> = {
+      open:
+        "px-2 py-1 text-xs rounded-md bg-emerald-600/20 text-emerald-400 border border-emerald-500/30",
+      closed:
+        "px-2 py-1 text-xs rounded-md bg-yellow-600/20 text-yellow-400 border border-yellow-500/30",
+      results_posted:
+        "px-2 py-1 text-xs rounded-md bg-sky-600/20 text-sky-400 border border-sky-500/30",
+    };
 
-    if (event.status === "closed") {
-      return (
-        <span className="px-2 py-1 text-xs rounded-md bg-yellow-600/20 text-yellow-400 border border-yellow-500/30">
-          Locked
-        </span>
-      );
-    }
-
-    if (event.status === "results_posted") {
-      return (
-        <span className="px-2 py-1 text-xs rounded-md bg-sky-600/20 text-sky-400 border border-sky-500/30">
-          Final
-        </span>
-      );
-    }
+    return (
+      <span className={badgeStyles[status]}>
+        {status === "open"
+          ? "Pending"
+          : status === "closed"
+          ? "Locked"
+          : "Final"}
+      </span>
+    );
   };
 
   return (

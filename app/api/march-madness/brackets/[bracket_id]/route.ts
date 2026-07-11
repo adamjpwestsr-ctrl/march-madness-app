@@ -6,6 +6,8 @@ import {
   TournamentTeam,
   LiveGameSummary,
 } from '@/lib/marchMadnessTypes';
+import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
+
 
 console.log("🔥 API HIT: /api/march-madness/brackets/[bracket_id]");
 

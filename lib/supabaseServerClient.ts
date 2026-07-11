@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 
 export function createSupabaseServerClient() {
-  const cookieStore = cookies(); // ✅ synchronous, not awaited
+  const cookieStore = cookies(); // MUST be synchronous
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -31,3 +31,4 @@ export function createSupabaseServerClient() {
     }
   );
 }
+

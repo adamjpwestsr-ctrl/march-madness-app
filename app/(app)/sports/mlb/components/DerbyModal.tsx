@@ -35,11 +35,24 @@ export default function DerbyModal({ onClose }: { onClose: () => void }) {
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
+  // ⭐ NEW: Session indicator
+  const [sessionUser, setSessionUser] = useState<any | null>(null);
+
   const showToast = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 1500);
   };
 
+  // Load session user
+  useEffect(() => {
+    (async () => {
+      const res = await fetch("/api/auth/user");
+      const json = await res.json();
+      setSessionUser(json.user || null);
+    })();
+  }, []);
+
+  // Load Derby data
   useEffect(() => {
     (async () => {
       try {
@@ -98,9 +111,9 @@ export default function DerbyModal({ onClose }: { onClose: () => void }) {
 
       setUserPick(json.pick);
       showToast("Pick Locked In!");
+
       confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
 
-      // Auto-close modal after short delay
       setTimeout(() => {
         onClose();
       }, 1500);
@@ -117,9 +130,22 @@ export default function DerbyModal({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 px-4 animate-fadeIn">
       <div className="bg-slate-900 border border-white/10 rounded-xl p-6 w-full max-w-3xl shadow-2xl relative animate-scaleIn">
-        {/* Header */}
+        
+        {/* ⭐ HEADER WITH SESSION INDICATOR */}
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Home Run Derby Picks</h2>
+          <div className="flex flex-col">
+            <h2 className="text-xl font-semibold">Home Run Derby Picks</h2>
+
+            {sessionUser && (
+              <span className="text-xs text-slate-400 mt-1">
+                Logged in as{" "}
+                <span className="text-sky-400 font-semibold">
+                  {sessionUser.email}
+                </span>
+              </span>
+            )}
+          </div>
+
           <button
             onClick={onClose}
             className="text-slate-400 hover:text-white text-lg transition-transform hover:scale-110"

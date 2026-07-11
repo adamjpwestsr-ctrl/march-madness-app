@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import confetti from "canvas-confetti";
 
 interface DerbyEvent {
   id: number;
@@ -36,14 +37,12 @@ export default function DerbyModal({ onClose }: { onClose: () => void }) {
 
   const showToast = (msg: string) => {
     setToast(msg);
-    setTimeout(() => setToast(null), 2500);
+    setTimeout(() => setToast(null), 1500);
   };
 
-  // Load event, players, and user pick
   useEffect(() => {
     (async () => {
       try {
-        // 1. Load event
         const eventRes = await fetch("/api/mlb/derby/event");
         const eventJson = await eventRes.json();
         setEvent(eventJson.event || null);
@@ -51,17 +50,13 @@ export default function DerbyModal({ onClose }: { onClose: () => void }) {
         if (eventJson.event) {
           const eventId = eventJson.event.id;
 
-          // 2. Load participants
           const playersRes = await fetch(
             `/api/mlb/derby/participants?event_id=${eventId}`
           );
           const playersJson = await playersRes.json();
           setPlayers(playersJson.participants || []);
 
-          // 3. Load user's pick (IMPORTANT: event_id required)
-          const pickRes = await fetch(
-            `/api/mlb/derby/pick?event_id=${eventId}`
-          );
+          const pickRes = await fetch(`/api/mlb/derby/pick?event_id=${eventId}`);
           const pickJson = await pickRes.json();
 
           if (pickJson.pick) {
@@ -101,8 +96,14 @@ export default function DerbyModal({ onClose }: { onClose: () => void }) {
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Save failed");
 
-      showToast("Pick saved!");
       setUserPick(json.pick);
+      showToast("Pick Locked In!");
+      confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
+
+      // Auto-close modal after short delay
+      setTimeout(() => {
+        onClose();
+      }, 1500);
     } catch (err: any) {
       showToast(err.message);
     } finally {
@@ -114,14 +115,14 @@ export default function DerbyModal({ onClose }: { onClose: () => void }) {
     event?.status === "closed" || event?.status === "results_posted";
 
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 px-4">
-      <div className="bg-slate-900 border border-white/10 rounded-xl p-6 w-full max-w-3xl shadow-2xl relative">
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 px-4 animate-fadeIn">
+      <div className="bg-slate-900 border border-white/10 rounded-xl p-6 w-full max-w-3xl shadow-2xl relative animate-scaleIn">
         {/* Header */}
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">Home Run Derby Picks</h2>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-white text-lg"
+            className="text-slate-400 hover:text-white text-lg transition-transform hover:scale-110"
           >
             ✕
           </button>
@@ -141,9 +142,9 @@ export default function DerbyModal({ onClose }: { onClose: () => void }) {
                 return (
                   <div
                     key={p.id}
-                    className={`rounded-xl bg-slate-800 border p-4 flex flex-col gap-3 transition cursor-pointer ${
+                    className={`rounded-xl border p-4 flex flex-col gap-3 transition cursor-pointer ${
                       isSelected
-                        ? "border-emerald-500 shadow-lg shadow-emerald-600/30"
+                        ? "border-emerald-500 shadow-lg shadow-emerald-600/30 animate-pulse"
                         : "border-slate-700 hover:border-slate-500"
                     }`}
                     onClick={() => !isReadOnly && setSelectedPlayer(p.id)}
@@ -167,7 +168,7 @@ export default function DerbyModal({ onClose }: { onClose: () => void }) {
                     </div>
 
                     {isSelected && (
-                      <span className="text-emerald-400 text-xs font-semibold">
+                      <span className="text-emerald-400 text-xs font-semibold animate-fadeIn">
                         Selected
                       </span>
                     )}
@@ -197,14 +198,13 @@ export default function DerbyModal({ onClose }: { onClose: () => void }) {
                 className={`mt-4 w-full py-3 rounded-lg font-semibold text-sm transition-all ${
                   saving
                     ? "bg-slate-800 text-slate-500 cursor-not-allowed"
-                    : "bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-600/30"
+                    : "bg-gradient-to-r from-emerald-500 to-sky-500 hover:opacity-90 text-white shadow-lg shadow-emerald-600/30"
                 }`}
               >
                 {saving ? "Saving..." : "Save Pick"}
               </button>
             )}
 
-            {/* Read-only message */}
             {isReadOnly && (
               <p className="mt-4 text-slate-400 text-sm text-center">
                 Picks are locked. Event is {event.status.replace("_", " ")}.
@@ -215,9 +215,9 @@ export default function DerbyModal({ onClose }: { onClose: () => void }) {
 
         {/* Toast */}
         {toast && (
-          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
-            <div className="px-4 py-2 rounded-lg bg-slate-900/90 border border-white/10 shadow-xl text-sm text-white animate-fadeIn">
-              {toast}
+          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-bounce">
+            <div className="px-6 py-3 rounded-lg bg-gradient-to-r from-emerald-500 to-sky-500 text-white font-semibold shadow-lg">
+              🎉 {toast}
             </div>
           </div>
         )}

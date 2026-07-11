@@ -7,6 +7,23 @@ interface DerbyEvent {
   event_year: number;
   event_date: string;
   status: "open" | "closed" | "results_posted";
+  winner_player_id?: number | null;
+  winning_hr_total?: number | null;
+}
+
+interface DerbyPlayer {
+  id: number;
+  player_name: string;
+  team_name: string;
+  image_url: string | null;
+}
+
+interface UserPick {
+  id: number;
+  user_id: string;
+  event_id: number;
+  player_id: number;
+  predicted_hr_total: number;
 }
 
 export default function DerbyCard({
@@ -17,16 +34,39 @@ export default function DerbyCard({
   onOpenResults: () => void;
 }) {
   const [event, setEvent] = useState<DerbyEvent | null>(null);
+  const [players, setPlayers] = useState<DerbyPlayer[]>([]);
+  const [userPick, setUserPick] = useState<UserPick | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch("/api/mlb/derby/event");
-        const json = await res.json();
-        setEvent(json.event || null);
+        // Load event
+        const resEvent = await fetch("/api/mlb/derby/event");
+        const eventJson = await resEvent.json();
+        const derbyEvent = eventJson.event;
+        setEvent(derbyEvent || null);
+
+        if (!derbyEvent) {
+          setLoading(false);
+          return;
+        }
+
+        // Load participants
+        const resPlayers = await fetch(
+          `/api/mlb/derby/participants?event_id=${derbyEvent.id}`
+        );
+        const playersJson = await resPlayers.json();
+        setPlayers(playersJson.participants || []);
+
+        // Load user pick
+        const resPick = await fetch(
+          `/api/mlb/derby/pick?event_id=${derbyEvent.id}`
+        );
+        const pickJson = await resPick.json();
+        setUserPick(pickJson.pick || null);
       } catch (err) {
-        console.error("Error loading Derby event:", err);
+        console.error("Error loading Derby card:", err);
       } finally {
         setLoading(false);
       }
@@ -50,25 +90,34 @@ export default function DerbyCard({
       case "results_posted":
         return (
           <span className="px-2 py-1 text-xs rounded-md bg-sky-600/20 text-sky-400 border border-sky-500/30">
-            Results Posted
+            Final
           </span>
         );
     }
   };
 
+  const selectedPlayer =
+    userPick && players.find((p) => p.id === userPick.player_id);
+
+  const winnerPlayer =
+    event?.winner_player_id &&
+    players.find((p) => p.id === event.winner_player_id);
+
   return (
     <div className="rounded-xl bg-slate-900/70 border border-white/10 p-4 shadow-lg flex flex-col gap-4">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold">Home Run Derby</h2>
         {!loading && event && statusBadge(event.status)}
       </div>
 
       {loading ? (
-	<p className="text-slate-400 text-sm">Loading Derby info…</p>
+        <p className="text-slate-400 text-sm">Loading Derby info…</p>
       ) : !event ? (
         <p className="text-slate-400 text-sm">No Derby event created yet.</p>
       ) : (
         <>
+          {/* Event Info */}
           <div className="text-slate-300 text-sm">
             <p>
               <span className="font-medium">Year:</span> {event.event_year}
@@ -79,14 +128,59 @@ export default function DerbyCard({
             </p>
           </div>
 
+          {/* User Pick */}
+          {userPick && selectedPlayer && (
+            <div className="bg-slate-800/40 border border-white/10 rounded-lg p-4 mt-2 flex items-center gap-4">
+              {selectedPlayer.image_url ? (
+                <img
+                  src={selectedPlayer.image_url}
+                  alt={selectedPlayer.player_name}
+                  className="w-16 h-16 rounded-lg object-cover border border-slate-700"
+                />
+              ) : (
+                <div className="w-16 h-16 rounded-lg bg-slate-700 flex items-center justify-center text-xs text-slate-400">
+                  No Image
+                </div>
+              )}
+
+              <div className="text-sm">
+                <p className="font-semibold text-white">
+                  {selectedPlayer.player_name}
+                </p>
+                <p className="text-slate-400">{selectedPlayer.team_name}</p>
+                <p className="text-slate-400">
+                  Predicted HRs:{" "}
+                  <span className="text-emerald-400 font-semibold">
+                    {userPick.predicted_hr_total}
+                  </span>
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Results */}
+          {event.status === "results_posted" && winnerPlayer && (
+            <div className="bg-slate-800/40 border border-white/10 rounded-lg p-4 mt-2 text-sm">
+              <p className="text-sky-400 font-semibold">
+                Winner: {winnerPlayer.player_name}
+              </p>
+              <p className="text-slate-300">
+                Winning HR Total:{" "}
+                <span className="text-sky-400 font-semibold">
+                  {event.winning_hr_total}
+                </span>
+              </p>
+            </div>
+          )}
+
           {/* Buttons */}
           <div className="flex flex-col gap-2 mt-2">
             {event.status === "open" && (
               <button
                 onClick={onOpenPicks}
-                className="w-full py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm transition-all shadow-lg shadow-emerald-600/30"
+                className="w-full py-2 rounded-lg bg-gradient-to-r from-emerald-500 to-sky-500 hover:opacity-90 text-white font-semibold text-sm transition-all shadow-lg shadow-emerald-600/30"
               >
-                Make Picks
+                {userPick ? "Change Pick" : "Make Pick"}
               </button>
             )}
 

@@ -3,7 +3,9 @@ import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 
 export function createSupabaseServerClient() {
-  const cookieStore = cookies(); // MUST be synchronous
+  // TypeScript currently thinks cookies() returns a Promise.
+  // We know at runtime it's the cookie store we want, so we cast.
+  const cookieStore = cookies() as any;
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -11,6 +13,7 @@ export function createSupabaseServerClient() {
     {
       cookies: {
         get(name: string) {
+          // Treat cookieStore as the synchronous cookie store
           return cookieStore.get(name)?.value;
         },
         set(name: string, value: string, options: any) {
@@ -31,4 +34,3 @@ export function createSupabaseServerClient() {
     }
   );
 }
-

@@ -7,6 +7,10 @@ interface DerbyEvent {
   event_year: number;
   status: "open" | "closed" | "results_posted";
   event_date: string;
+
+  // ⭐ Added fields so TypeScript matches your API + Admin page
+  winner_player_id?: number | null;
+  winning_hr_total?: number | null;
 }
 
 interface DerbyPlayer {
@@ -142,25 +146,27 @@ export default function MyDerbyPicks() {
           </div>
 
           {/* Final Result */}
-          {event.status === "results_posted" && (
-            <div className="text-sm text-slate-300 border-t border-slate-800 pt-3">
-              <p>
-                Winner:{" "}
-                <span className="font-semibold text-sky-400">
-                  {
-                    players.find((p) => p.id === event.winner_player_id)
-                      ?.player_name
-                  }
-                </span>
-              </p>
-              <p>
-                Winning HR Total:{" "}
-                <span className="font-semibold text-sky-400">
-                  {event.winning_hr_total}
-                </span>
-              </p>
-            </div>
-          )}
+          {event.status === "results_posted" &&
+            event.winner_player_id &&
+            event.winning_hr_total !== null && (
+              <div className="text-sm text-slate-300 border-t border-slate-800 pt-3">
+                <p>
+                  Winner:{" "}
+                  <span className="font-semibold text-sky-400">
+                    {
+                      players.find((p) => p.id === event.winner_player_id)
+                        ?.player_name
+                    }
+                  </span>
+                </p>
+                <p>
+                  Winning HR Total:{" "}
+                  <span className="font-semibold text-sky-400">
+                    {event.winning_hr_total}
+                  </span>
+                </p>
+              </div>
+            )}
         </div>
       )}
     </div>

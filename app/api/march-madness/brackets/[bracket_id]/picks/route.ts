@@ -1,6 +1,8 @@
 // app/api/march-madness/brackets/[bracket_id]/picks/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabaseServer';
+import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
+
 
 export async function POST(
   request: NextRequest,

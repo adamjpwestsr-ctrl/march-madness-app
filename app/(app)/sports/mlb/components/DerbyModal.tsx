@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import confetti from "canvas-confetti";
-import { createSupabaseBrowserClient } from "@/lib/supabaseServerClient";
+import { createSupabaseBrowserClient } from "@/lib/supabaseBrowserClient";
 import { useSupabaseSession } from "@/app/hooks/useSupabaseSession";
 
 interface DerbyEvent {

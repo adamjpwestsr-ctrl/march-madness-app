@@ -1,9 +1,14 @@
 // utils/firebase.ts
 
 import { initializeApp, getApps } from "firebase/app";
-import { getMessaging, isSupported } from "firebase/messaging";
+import {
+  getMessaging,
+  getToken,
+  deleteToken,
+  isSupported,
+} from "firebase/messaging";
+import { createSupabaseBrowserClient } from "@/lib/supabaseBrowserClient";
 
-// Use environment variables (required for Vercel)
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN!,
@@ -11,11 +16,41 @@ const firebaseConfig = {
   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET!,
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID!,
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID!,
-  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID!,
 };
 
-// Prevent double initialization
 const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 
-// Messaging must be loaded conditionally
-export const messaging = (await isSupported()) ? getMessaging(app) : null;
+export async function getFcmTokenForUser() {
+  const supported = await isSupported();
+  if (!supported) return null;
+
+  const messaging = getMessaging(app);
+  const supabase = createSupabaseBrowserClient();
+
+  // Get current Supabase user
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  // Delete any existing token to force regeneration
+  try {
+    await deleteToken(messaging);
+  } catch {
+    // Ignore if no token exists
+  }
+
+  // Request a fresh token
+  const token = await getToken(messaging, {
+    vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY!,
+  });
+
+  if (!token) return null;
+
+  // Save token to Supabase users table
+  await supabase
+    .from("users")
+    .update({ fcm_token: token })
+    .eq("user_id", user.id);
+
+  console.log("🔥 New FCM token generated:", token);
+  return token;
+}

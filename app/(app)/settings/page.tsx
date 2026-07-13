@@ -1,18 +1,16 @@
-import SettingsSection from "@/app/components/SettingsSection";
-import {
-  getUserProfile,
-  updateUserProfile,
-  initializeUsername,
-  getUserBadges,
-} from "./actions";
-import { getCurrentUserSession } from "@/lib/getCurrentUserSession";
+// app/(app)/settings/page.tsx
 import SettingsClient from "./SettingsClient";
+import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 
 export default async function SettingsPage() {
- const session = await getCurrentUserSession();
+  // Use unified Supabase Auth session
+  const supabase = await createSupabaseServerClient();
 
-  if (!session) {
-    // Not logged in; you can redirect to /login if you prefer
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
     return (
       <p className="text-slate-400">
         You need to be logged in to manage your settings.
@@ -20,25 +18,26 @@ export default async function SettingsPage() {
     );
   }
 
-  const userId = session.userId;
+  // Load full profile from your users table
+  const { data: profile, error } = await supabase
+    .from("users")
+    .select("*")
+    .eq("user_id", user.id)
+    .maybeSingle();
 
-  const profile = await getUserProfile(userId);
-  const finalUsername =
-  profile.username || (await initializeUsername(userId));
+  if (error || !profile) {
+    return (
+      <p className="text-slate-400">
+        Unable to load your profile. Please try again.
+      </p>
+    );
+  }
 
- const badges = await getUserBadges();
-
+  // Pass unified-auth data to client
   return (
     <SettingsClient
-      userId={userId}
-      initialUsername={finalUsername}
-      initialEmail={profile.email}
-      initialPhoneNumber={profile.phone_number ?? ""}
-      initialEmailNotifications={profile.email_notifications}
-      initialPushNotifications={profile.push_notifications}
-      initialFavoriteSport={profile.favorite_sport}
-      initialTheme={profile.theme}
-      initialBadges={badges}
+      supabaseUser={user}
+      profile={profile}
     />
   );
 }

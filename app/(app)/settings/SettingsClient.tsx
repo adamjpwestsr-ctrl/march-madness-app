@@ -3,120 +3,61 @@
 import { useEffect, useState } from "react";
 import SettingsSection from "@/app/components/SettingsSection";
 import { updateUserProfile } from "./actions";
-import { messaging } from "@/utils/firebase";
-import { getToken } from "firebase/messaging";
+import { getFcmTokenForUser } from "@/utils/firebase";
+import { createSupabaseBrowserClient } from "@/lib/supabaseBrowserClient";
 
-type SettingsClientProps = {
-  userId: number;
-  initialUsername: string;
-  initialEmail: string;
-  initialPhoneNumber: string;
-  initialEmailNotifications: boolean;
-  initialPushNotifications: boolean;
-  initialFavoriteSport: string;
-  initialTheme: string;
-  initialBadges: any[];
-};
+export default function SettingsClient() {
+  const supabase = createSupabaseBrowserClient();
 
-export default function SettingsClient({
-  userId,
-  initialUsername,
-  initialEmail,
-  initialPhoneNumber,
-  initialEmailNotifications,
-  initialPushNotifications,
-  initialFavoriteSport,
-  initialTheme,
-  initialBadges,
-}: SettingsClientProps) {
   const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState<any | null>(null);
+  const [profile, setProfile] = useState<any | null>(null);
 
-  const [username, setUsername] = useState(initialUsername);
-  const [email] = useState(initialEmail);
-  const [phoneNumber, setPhoneNumber] = useState(initialPhoneNumber);
+  // Load Supabase user + profile
+  useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
 
-  const [emailNotifications, setEmailNotifications] = useState(
-    initialEmailNotifications
-  );
-  const [pushNotifications, setPushNotifications] = useState(
-    initialPushNotifications
-  );
-  const [favoriteSport, setFavoriteSport] = useState(initialFavoriteSport);
-  const [theme, setTheme] = useState(initialTheme);
-  const [badges, setBadges] = useState<any[]>(initialBadges);
+      if (user) {
+        const { data: dbUser } = await supabase
+          .from("users")
+          .select("*")
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        setProfile(dbUser);
+      }
+    })();
+  }, []);
+
+  // Auto-refresh FCM token when push notifications enabled
+  useEffect(() => {
+    if (profile?.push_notifications) {
+      getFcmTokenForUser();
+    }
+  }, [profile?.push_notifications]);
+
+  if (!user || !profile) {
+    return (
+      <div className="text-slate-400 text-sm">
+        Loading your settings…
+      </div>
+    );
+  }
 
   async function saveField(field: string, value: any) {
     setLoading(true);
     try {
-      await updateUserProfile(userId, { [field]: value });
+      await updateUserProfile(user.id, { [field]: value });
+
+      setProfile((prev: any) => ({
+        ...prev,
+        [field]: value,
+      }));
     } finally {
       setLoading(false);
     }
-  }
-
-  function normalizePhone(num: string): string {
-    return num.trim();
-  }
-
-  function isValidE164(num: string): boolean {
-    return /^\+[1-9]\d{1,14}$/.test(num);
-  }
-
-  async function handlePhoneBlur() {
-    const normalized = normalizePhone(phoneNumber);
-
-    if (!normalized) return;
-
-    if (!isValidE164(normalized)) {
-      alert(
-        "Phone numbers must be in international format.\nExample: +12035551234"
-      );
-      return;
-    }
-
-    await saveField("phone_number", normalized);
-  }
-
-  async function requestPushPermission() {
-    try {
-      const permission = await Notification.requestPermission();
-
-      if (permission !== "granted") {
-        alert(
-          "Push notifications are blocked. Enable them in your browser settings."
-        );
-        return;
-      }
-
-      if (!messaging) {
-        console.warn("Firebase messaging is not supported in this browser.");
-        return;
-      }
-
-      const token = await getToken(messaging, {
-        vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY,
-      });
-
-      if (!token) {
-        alert("Unable to get device token.");
-        return;
-      }
-
-      await saveField("fcm_token", token);
-      console.log("FCM token saved:", token);
-    } catch (err) {
-      console.error("Error getting FCM token:", err);
-    }
-  }
-
-  useEffect(() => {
-    if (pushNotifications) {
-      requestPushPermission();
-    }
-  }, [pushNotifications]);
-
-  if (loading) {
-    // Optional: you can make this more granular per field
   }
 
   return (
@@ -133,25 +74,24 @@ export default function SettingsClient({
           <div>
             <p className="text-sm text-slate-400">Display Name</p>
             <input
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              onBlur={() => saveField("username", username)}
+              value={profile.username}
+              onChange={(e) => saveField("username", e.target.value)}
               className="bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm w-full"
             />
           </div>
 
           <div>
             <p className="text-sm text-slate-400">Email</p>
-            <p className="text-lg font-medium">{email}</p>
+            <p className="text-lg font-medium">{user.email}</p>
           </div>
 
           <div>
             <p className="text-sm text-slate-400 mb-2">Badges Earned</p>
-            {badges.length === 0 ? (
+            {profile.badges?.length === 0 ? (
               <p className="text-slate-500 text-sm">No badges earned yet.</p>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                {badges.map((badge) => (
+                {profile.badges.map((badge: any) => (
                   <div
                     key={badge.badge_name}
                     className={`flex flex-col items-center bg-slate-900 border border-slate-800 rounded-lg p-3 ${badge.color_class}`}
@@ -182,18 +122,14 @@ export default function SettingsClient({
             </div>
 
             <button
-              onClick={() => {
-                const newVal = !emailNotifications;
-                setEmailNotifications(newVal);
-                saveField("email_notifications", newVal);
-              }}
+              onClick={() => saveField("email_notifications", !profile.email_notifications)}
               className={`w-12 h-6 rounded-full transition ${
-                emailNotifications ? "bg-emerald-600" : "bg-slate-700"
+                profile.email_notifications ? "bg-emerald-600" : "bg-slate-700"
               } relative`}
             >
               <span
                 className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition ${
-                  emailNotifications ? "translate-x-6" : ""
+                  profile.email_notifications ? "translate-x-6" : ""
                 }`}
               />
             </button>
@@ -209,38 +145,29 @@ export default function SettingsClient({
               </div>
 
               <button
-                onClick={() => {
-                  const newVal = !pushNotifications;
-                  setPushNotifications(newVal);
-                  saveField("push_notifications", newVal);
-                }}
+                onClick={() => saveField("push_notifications", !profile.push_notifications)}
                 className={`w-12 h-6 rounded-full transition ${
-                  pushNotifications ? "bg-emerald-600" : "bg-slate-700"
+                  profile.push_notifications ? "bg-emerald-600" : "bg-slate-700"
                 } relative`}
               >
                 <span
                   className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition ${
-                    pushNotifications ? "translate-x-6" : ""
+                    profile.push_notifications ? "translate-x-6" : ""
                   }`}
                 />
               </button>
             </div>
 
-            {pushNotifications && (
+            {profile.push_notifications && (
               <div>
                 <p className="text-sm text-slate-400">Phone Number</p>
                 <input
                   type="tel"
                   placeholder="+12035551234"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  onBlur={handlePhoneBlur}
+                  value={profile.phone_number || ""}
+                  onChange={(e) => saveField("phone_number", e.target.value)}
                   className="bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm w-full"
                 />
-                <p className="text-xs text-slate-500 mt-1">
-                  Enter your number in international format (E.164).  
-                  Example: +1 for U.S., +44 for U.K.
-                </p>
               </div>
             )}
           </div>
@@ -252,11 +179,8 @@ export default function SettingsClient({
           <div>
             <p className="font-medium mb-2">Favorite Sport</p>
             <select
-              value={favoriteSport}
-              onChange={(e) => {
-                setFavoriteSport(e.target.value);
-                saveField("favorite_sport", e.target.value);
-              }}
+              value={profile.favorite_sport}
+              onChange={(e) => saveField("favorite_sport", e.target.value)}
               className="bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm"
             >
               <option>NBA</option>
@@ -270,12 +194,9 @@ export default function SettingsClient({
             <p className="font-medium mb-2">Theme</p>
             <div className="flex gap-3">
               <button
-                onClick={() => {
-                  setTheme("dark");
-                  saveField("theme", "dark");
-                }}
+                onClick={() => saveField("theme", "dark")}
                 className={`px-4 py-2 rounded-lg text-sm ${
-                  theme === "dark"
+                  profile.theme === "dark"
                     ? "bg-slate-800"
                     : "bg-slate-900 border border-slate-700"
                 }`}
@@ -284,12 +205,9 @@ export default function SettingsClient({
               </button>
 
               <button
-                onClick={() => {
-                  setTheme("light");
-                  saveField("theme", "light");
-                }}
+                onClick={() => saveField("theme", "light")}
                 className={`px-4 py-2 rounded-lg text-sm ${
-                  theme === "light"
+                  profile.theme === "light"
                     ? "bg-slate-800"
                     : "bg-slate-900 border border-slate-700"
                 }`}

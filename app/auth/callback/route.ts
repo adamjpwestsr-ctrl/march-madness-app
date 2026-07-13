@@ -1,9 +1,10 @@
-// 🔥 Fully corrected Supabase callback route
-// 🔥 Ensures Supabase auth cookie + mm_session cookie both sync correctly
+// 🔥 Unified Supabase callback route
+// 🔥 Removes mm_session and uses Supabase Auth only
+// 🔥 Automatically regenerates FCM token after login
 
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
+import { getFcmTokenForUser } from "@/utils/firebase";
 
 export async function GET(request: Request) {
   console.log("🔥 CALLBACK ROUTE HIT");
@@ -11,62 +12,39 @@ export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
 
-  console.log("➡️ Received code:", code);
-
   if (!code) {
-    console.log("❌ No code found — redirecting to /login");
     return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/login`);
   }
 
-  // Initialize Supabase SSR client
-  console.log("🔧 Initializing Supabase client...");
   const supabase = await createSupabaseServerClient();
 
-  // Exchange magic link code for session
-  console.log("🔄 Exchanging code for session...");
   const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
-  console.log("📦 Exchange result:", { data, error });
-
   if (error || !data?.session) {
-    console.error("❌ Magic link callback error:", error);
     return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/login`);
   }
 
   const user = data.session.user;
   const email = user.email?.toLowerCase();
 
-  console.log("📧 Authenticated email:", email);
-
   if (!email) {
-    console.log("❌ No email found in session — redirecting");
     return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/login`);
   }
 
   // Look up user in DB
-  console.log("🔍 Looking up user in DB...");
-  const { data: dbUser, error: dbError } = await supabase
+  const { data: dbUser } = await supabase
     .from("users")
     .select("*")
     .eq("email", email)
     .maybeSingle();
 
-  console.log("📦 DB lookup result:", { dbUser, dbError });
-
-  if (dbError) {
-    console.error("❌ DB lookup error:", dbError);
-    return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/login`);
-  }
-
   let userRecord = dbUser;
 
   // Create user if not found
   if (!dbUser) {
-    console.log("🆕 User not found — creating new user record");
-
     const username = email.split("@")[0];
 
-    const { data: newUser, error: insertError } = await supabase
+    const { data: newUser } = await supabase
       .from("users")
       .insert({
         email,
@@ -77,59 +55,30 @@ export async function GET(request: Request) {
       .select()
       .single();
 
-    console.log("📦 Insert result:", { newUser, insertError });
-
-    if (insertError) {
-      console.error("❌ User insert error:", insertError);
-      return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/login`);
-    }
-
     userRecord = newUser;
   }
 
   // Ensure username exists
   if (userRecord && !userRecord.username) {
-    console.log("🛠 Generating missing username...");
-
     const username = email.split("@")[0];
 
-    const { error: updateError } = await supabase
+    await supabase
       .from("users")
       .update({ username })
       .eq("user_id", userRecord.user_id);
 
-    console.log("📦 Username update result:", { updateError });
-
     userRecord.username = username;
   }
 
-  // ⭐ CRITICAL FIX: Sync Supabase auth cookies to browser
-  console.log("🍪 Syncing Supabase auth cookies...");
-  const response = NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/bracket`);
-
-  // This ensures the Supabase auth cookie is forwarded to the browser
-  await supabase.auth.setSession(data.session);
-
-  // ⭐ Your custom mm_session cookie (unchanged)
-  console.log("🍪 Setting mm_session cookie...");
-  const cookieStore = await cookies();
-
-  cookieStore.set(
-    "mm_session",
-    JSON.stringify({
-      userId: userRecord.user_id,
-      email: userRecord.email,
-      isAdmin: userRecord.is_admin ?? false,
-    }),
-    {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-    }
+  // Sync Supabase auth cookies
+  const response = NextResponse.redirect(
+    `${process.env.NEXT_PUBLIC_SITE_URL}/bracket`
   );
 
-  console.log("✅ Cookies synced successfully. Redirecting to /bracket");
+  await supabase.auth.setSession(data.session);
+
+  // 🔥 Automatically regenerate FCM token for this user
+  await getFcmTokenForUser();
 
   return response;
 }

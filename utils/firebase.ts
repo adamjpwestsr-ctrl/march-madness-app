@@ -1,12 +1,6 @@
 // utils/firebase.ts
-
 import { initializeApp, getApps } from "firebase/app";
-import {
-  getMessaging,
-  getToken,
-  deleteToken,
-  isSupported,
-} from "firebase/messaging";
+import { getMessaging, getToken, isSupported } from "firebase/messaging";
 import { createSupabaseBrowserClient } from "@/lib/supabaseBrowserClient";
 
 const firebaseConfig = {
@@ -27,30 +21,23 @@ export async function getFcmTokenForUser() {
   const messaging = getMessaging(app);
   const supabase = createSupabaseBrowserClient();
 
-  // Get current Supabase user
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  // Delete any existing token to force regeneration
-  try {
-    await deleteToken(messaging);
-  } catch {
-    // Ignore if no token exists
-  }
+  const permission = await Notification.requestPermission();
+  if (permission !== "granted") return null;
 
-  // Request a fresh token
   const token = await getToken(messaging, {
     vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY!,
   });
 
   if (!token) return null;
 
-  // Save token to Supabase users table
   await supabase
     .from("users")
     .update({ fcm_token: token })
     .eq("user_id", user.id);
 
-  console.log("🔥 New FCM token generated:", token);
+  console.log("🔥 FCM token for user", user.id, token);
   return token;
 }

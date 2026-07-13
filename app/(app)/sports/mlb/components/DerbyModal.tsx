@@ -2,6 +2,12 @@
 
 import { useEffect, useState } from "react";
 import confetti from "canvas-confetti";
+import { createBrowserClient } from "@supabase/ssr";
+
+const supabaseBrowser = createBrowserClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 interface DerbyEvent {
   id: number;
@@ -35,7 +41,7 @@ export default function DerbyModal({ onClose }: { onClose: () => void }) {
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
-  // ⭐ NEW: Session indicator
+  // SSR user (same identity as Settings page)
   const [sessionUser, setSessionUser] = useState<any | null>(null);
 
   const showToast = (msg: string) => {
@@ -43,7 +49,7 @@ export default function DerbyModal({ onClose }: { onClose: () => void }) {
     setTimeout(() => setToast(null), 1500);
   };
 
-  // Load session user
+  // Load SSR session user (same identity Settings uses)
   useEffect(() => {
     (async () => {
       const res = await fetch("/api/auth/user");
@@ -52,30 +58,64 @@ export default function DerbyModal({ onClose }: { onClose: () => void }) {
     })();
   }, []);
 
-  // Load Derby data
+  // ⭐ Cross‑page identity verification
+  useEffect(() => {
+    (async () => {
+      if (!sessionUser) return;
+
+      const { data: browserSession } = await supabaseBrowser.auth.getUser();
+
+      if (browserSession?.user?.email !== sessionUser.email) {
+        console.warn(
+          "⚠ Session mismatch detected between Settings and Derby modal",
+          {
+            settingsEmail: sessionUser.email,
+            browserEmail: browserSession?.user?.email,
+          }
+        );
+      }
+    })();
+  }, [sessionUser]);
+
+  // Load Derby data directly from Supabase
   useEffect(() => {
     (async () => {
       try {
-        const eventRes = await fetch("/api/mlb/derby/event");
-        const eventJson = await eventRes.json();
-        setEvent(eventJson.event || null);
+        // Load event
+        const { data: eventData } = await supabaseBrowser
+          .from("mlb_derby_events")
+          .select("*")
+          .order("event_date", { ascending: false })
+          .limit(1)
+          .maybeSingle();
 
-        if (eventJson.event) {
-          const eventId = eventJson.event.id;
+        setEvent(eventData || null);
 
-          const playersRes = await fetch(
-            `/api/mlb/derby/participants?event_id=${eventId}`
-          );
-          const playersJson = await playersRes.json();
-          setPlayers(playersJson.participants || []);
+        if (eventData) {
+          const eventId = eventData.id;
 
-          const pickRes = await fetch(`/api/mlb/derby/pick?event_id=${eventId}`);
-          const pickJson = await pickRes.json();
+          // Load players
+          const { data: playersData } = await supabaseBrowser
+            .from("mlb_derby_participants")
+            .select("*")
+            .eq("event_id", eventId);
 
-          if (pickJson.pick) {
-            setUserPick(pickJson.pick);
-            setSelectedPlayer(pickJson.pick.player_id);
-            setPredictedHR(pickJson.pick.predicted_hr_total);
+          setPlayers(playersData || []);
+
+          // Load user pick
+          if (sessionUser) {
+            const { data: pickData } = await supabaseBrowser
+              .from("mlb_derby_picks")
+              .select("*")
+              .eq("user_id", sessionUser.id)
+              .eq("event_id", eventId)
+              .maybeSingle();
+
+            if (pickData) {
+              setUserPick(pickData);
+              setSelectedPlayer(pickData.player_id);
+              setPredictedHR(pickData.predicted_hr_total);
+            }
           }
         }
       } catch (err) {
@@ -84,7 +124,7 @@ export default function DerbyModal({ onClose }: { onClose: () => void }) {
         setLoading(false);
       }
     })();
-  }, []);
+  }, [sessionUser]);
 
   const handleSave = async () => {
     if (!event) return;
@@ -96,20 +136,20 @@ export default function DerbyModal({ onClose }: { onClose: () => void }) {
     setSaving(true);
 
     try {
-      const res = await fetch("/api/mlb/derby/pick", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const { data, error } = await supabaseBrowser
+        .from("mlb_derby_picks")
+        .upsert({
+          user_id: sessionUser.id,
           event_id: event.id,
           player_id: selectedPlayer,
           predicted_hr_total: predictedHR,
-        }),
-      });
+        })
+        .select()
+        .single();
 
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "Save failed");
+      if (error) throw new Error(error.message);
 
-      setUserPick(json.pick);
+      setUserPick(data);
       showToast("Pick Locked In!");
 
       confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
@@ -131,7 +171,7 @@ export default function DerbyModal({ onClose }: { onClose: () => void }) {
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 px-4 animate-fadeIn">
       <div className="bg-slate-900 border border-white/10 rounded-xl p-6 w-full max-w-3xl shadow-2xl relative animate-scaleIn">
         
-        {/* ⭐ HEADER WITH SESSION INDICATOR */}
+        {/* HEADER */}
         <div className="flex justify-between items-center mb-4">
           <div className="flex flex-col">
             <h2 className="text-xl font-semibold">Home Run Derby Picks</h2>

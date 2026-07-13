@@ -4,54 +4,31 @@ import { useEffect, useState } from "react";
 import SettingsSection from "@/app/components/SettingsSection";
 import { updateUserProfile } from "./actions";
 import { getFcmTokenForUser } from "@/utils/firebase";
-import { createSupabaseBrowserClient } from "@/lib/supabaseBrowserClient";
 
-export default function SettingsClient() {
-  const supabase = createSupabaseBrowserClient();
+type SettingsClientProps = {
+  supabaseUser: any;
+  profile: any;
+};
 
+export default function SettingsClient({ supabaseUser, profile }: SettingsClientProps) {
   const [loading, setLoading] = useState(false);
-  const [user, setUser] = useState<any | null>(null);
-  const [profile, setProfile] = useState<any | null>(null);
 
-  // Load Supabase user + profile
-  useEffect(() => {
-    (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-
-      if (user) {
-        const { data: dbUser } = await supabase
-          .from("users")
-          .select("*")
-          .eq("user_id", user.id)
-          .maybeSingle();
-
-        setProfile(dbUser);
-      }
-    })();
-  }, []);
+  // Local editable profile state
+  const [localProfile, setLocalProfile] = useState(profile);
 
   // Auto-refresh FCM token when push notifications enabled
   useEffect(() => {
-    if (profile?.push_notifications) {
+    if (localProfile?.push_notifications) {
       getFcmTokenForUser();
     }
-  }, [profile?.push_notifications]);
-
-  if (!user || !profile) {
-    return (
-      <div className="text-slate-400 text-sm">
-        Loading your settings…
-      </div>
-    );
-  }
+  }, [localProfile?.push_notifications]);
 
   async function saveField(field: string, value: any) {
     setLoading(true);
     try {
-      await updateUserProfile(user.id, { [field]: value });
+      await updateUserProfile(supabaseUser.id, { [field]: value });
 
-      setProfile((prev: any) => ({
+      setLocalProfile((prev: any) => ({
         ...prev,
         [field]: value,
       }));
@@ -74,7 +51,7 @@ export default function SettingsClient() {
           <div>
             <p className="text-sm text-slate-400">Display Name</p>
             <input
-              value={profile.username}
+              value={localProfile.username}
               onChange={(e) => saveField("username", e.target.value)}
               className="bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm w-full"
             />
@@ -82,16 +59,16 @@ export default function SettingsClient() {
 
           <div>
             <p className="text-sm text-slate-400">Email</p>
-            <p className="text-lg font-medium">{user.email}</p>
+            <p className="text-lg font-medium">{supabaseUser.email}</p>
           </div>
 
           <div>
             <p className="text-sm text-slate-400 mb-2">Badges Earned</p>
-            {profile.badges?.length === 0 ? (
+            {localProfile.badges?.length === 0 ? (
               <p className="text-slate-500 text-sm">No badges earned yet.</p>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                {profile.badges.map((badge: any) => (
+                {localProfile.badges.map((badge: any) => (
                   <div
                     key={badge.badge_name}
                     className={`flex flex-col items-center bg-slate-900 border border-slate-800 rounded-lg p-3 ${badge.color_class}`}
@@ -122,14 +99,16 @@ export default function SettingsClient() {
             </div>
 
             <button
-              onClick={() => saveField("email_notifications", !profile.email_notifications)}
+              onClick={() =>
+                saveField("email_notifications", !localProfile.email_notifications)
+              }
               className={`w-12 h-6 rounded-full transition ${
-                profile.email_notifications ? "bg-emerald-600" : "bg-slate-700"
+                localProfile.email_notifications ? "bg-emerald-600" : "bg-slate-700"
               } relative`}
             >
               <span
                 className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition ${
-                  profile.email_notifications ? "translate-x-6" : ""
+                  localProfile.email_notifications ? "translate-x-6" : ""
                 }`}
               />
             </button>
@@ -145,26 +124,28 @@ export default function SettingsClient() {
               </div>
 
               <button
-                onClick={() => saveField("push_notifications", !profile.push_notifications)}
+                onClick={() =>
+                  saveField("push_notifications", !localProfile.push_notifications)
+                }
                 className={`w-12 h-6 rounded-full transition ${
-                  profile.push_notifications ? "bg-emerald-600" : "bg-slate-700"
+                  localProfile.push_notifications ? "bg-emerald-600" : "bg-slate-700"
                 } relative`}
               >
                 <span
                   className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition ${
-                    profile.push_notifications ? "translate-x-6" : ""
+                    localProfile.push_notifications ? "translate-x-6" : ""
                   }`}
                 />
               </button>
             </div>
 
-            {profile.push_notifications && (
+            {localProfile.push_notifications && (
               <div>
                 <p className="text-sm text-slate-400">Phone Number</p>
                 <input
                   type="tel"
                   placeholder="+12035551234"
-                  value={profile.phone_number || ""}
+                  value={localProfile.phone_number || ""}
                   onChange={(e) => saveField("phone_number", e.target.value)}
                   className="bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm w-full"
                 />
@@ -179,7 +160,7 @@ export default function SettingsClient() {
           <div>
             <p className="font-medium mb-2">Favorite Sport</p>
             <select
-              value={profile.favorite_sport}
+              value={localProfile.favorite_sport}
               onChange={(e) => saveField("favorite_sport", e.target.value)}
               className="bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm"
             >
@@ -196,7 +177,7 @@ export default function SettingsClient() {
               <button
                 onClick={() => saveField("theme", "dark")}
                 className={`px-4 py-2 rounded-lg text-sm ${
-                  profile.theme === "dark"
+                  localProfile.theme === "dark"
                     ? "bg-slate-800"
                     : "bg-slate-900 border border-slate-700"
                 }`}
@@ -207,7 +188,7 @@ export default function SettingsClient() {
               <button
                 onClick={() => saveField("theme", "light")}
                 className={`px-4 py-2 rounded-lg text-sm ${
-                  profile.theme === "light"
+                  localProfile.theme === "light"
                     ? "bg-slate-800"
                     : "bg-slate-900 border border-slate-700"
                 }`}

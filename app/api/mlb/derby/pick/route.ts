@@ -8,18 +8,12 @@ export async function GET(req: Request) {
   const eventIdParam = searchParams.get("event_id");
 
   if (!eventIdParam) {
-    return NextResponse.json(
-      { error: "Missing event_id" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Missing event_id" }, { status: 400 });
   }
 
   const eventId = Number(eventIdParam);
   if (Number.isNaN(eventId)) {
-    return NextResponse.json(
-      { error: "Invalid event_id" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Invalid event_id" }, { status: 400 });
   }
 
   // Get current auth user (Supabase Auth)
@@ -29,26 +23,33 @@ export async function GET(req: Request) {
   } = await supabase.auth.getUser();
 
   if (authError || !user) {
-    return NextResponse.json(
-      { error: "Not authenticated" },
-      { status: 401 }
-    );
+    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  // 🔑 Critical: filter by BOTH user_id (UUID) and event_id
+  // ⭐ CRITICAL: Look up the user row using auth_id
+  const { data: dbUser } = await supabase
+    .from("users")
+    .select("*")
+    .eq("auth_id", user.id)
+    .maybeSingle();
+
+  if (!dbUser) {
+    return NextResponse.json({ error: "User not found" }, { status: 404 });
+  }
+
+  // ⭐ Use auth_id (UUID) as the Derby user_id
+  const derbyUserId = dbUser.auth_id;
+
   const { data, error } = await supabase
     .from("mlb_derby_picks")
     .select("*")
-    .eq("user_id", user.id)
+    .eq("user_id", derbyUserId)
     .eq("event_id", eventId)
     .maybeSingle();
 
   if (error) {
     console.error("GET /mlb/derby/pick error:", error);
-    return NextResponse.json(
-      { error: error.message },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
   return NextResponse.json({ pick: data ?? null }, { status: 200 });
@@ -79,10 +80,7 @@ export async function POST(req: Request) {
     Number.isNaN(playerId) ||
     Number.isNaN(predictedTotal)
   ) {
-    return NextResponse.json(
-      { error: "Invalid numeric values" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Invalid numeric values" }, { status: 400 });
   }
 
   // Get current auth user (Supabase Auth)
@@ -92,32 +90,40 @@ export async function POST(req: Request) {
   } = await supabase.auth.getUser();
 
   if (authError || !user) {
-    return NextResponse.json(
-      { error: "Not authenticated" },
-      { status: 401 }
-    );
+    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  // 🔑 First, check if this user already has a pick for this event
+  // ⭐ CRITICAL: Look up the user row using auth_id
+  const { data: dbUser } = await supabase
+    .from("users")
+    .select("*")
+    .eq("auth_id", user.id)
+    .maybeSingle();
+
+  if (!dbUser) {
+    return NextResponse.json({ error: "User not found" }, { status: 404 });
+  }
+
+  // ⭐ Use auth_id (UUID) as the Derby user_id
+  const derbyUserId = dbUser.auth_id;
+
+  // Check if this user already has a pick for this event
   const { data: existingPick, error: existingError } = await supabase
     .from("mlb_derby_picks")
     .select("*")
-    .eq("user_id", user.id)
+    .eq("user_id", derbyUserId)
     .eq("event_id", eventId)
     .maybeSingle();
 
   if (existingError) {
     console.error("POST /mlb/derby/pick existing error:", existingError);
-    return NextResponse.json(
-      { error: existingError.message },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: existingError.message }, { status: 500 });
   }
 
   let result;
 
   if (existingPick) {
-    // ✅ Update ONLY this user's pick for this event
+    // Update existing pick
     const { data, error } = await supabase
       .from("mlb_derby_picks")
       .update({
@@ -130,19 +136,16 @@ export async function POST(req: Request) {
 
     if (error) {
       console.error("POST /mlb/derby/pick update error:", error);
-      return NextResponse.json(
-        { error: error.message },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
     result = data;
   } else {
-    // ✅ Insert a NEW pick for this user + event
+    // Insert new pick
     const { data, error } = await supabase
       .from("mlb_derby_picks")
       .insert({
-        user_id: user.id, // Supabase Auth UUID
+        user_id: derbyUserId, // ⭐ UUID from auth_id
         event_id: eventId,
         player_id: playerId,
         predicted_hr_total: predictedTotal,
@@ -152,17 +155,11 @@ export async function POST(req: Request) {
 
     if (error) {
       console.error("POST /mlb/derby/pick insert error:", error);
-      return NextResponse.json(
-        { error: error.message },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
     result = data;
   }
 
-  return NextResponse.json(
-    { pick: result, success: true },
-    { status: 200 }
-  );
+  return NextResponse.json({ pick: result, success: true }, { status: 200 });
 }

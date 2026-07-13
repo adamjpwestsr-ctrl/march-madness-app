@@ -2,12 +2,8 @@
 
 import { useEffect, useState } from "react";
 import confetti from "canvas-confetti";
-import { createBrowserClient } from "@supabase/ssr";
-
-const supabaseBrowser = createBrowserClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+import { createSupabaseBrowserClient } from "@/lib/supabaseServerClient";
+import { useSupabaseSession } from "@/app/hooks/useSupabaseSession";
 
 interface DerbyEvent {
   id: number;
@@ -32,6 +28,9 @@ interface UserPick {
 }
 
 export default function DerbyModal({ onClose }: { onClose: () => void }) {
+  const supabase = createSupabaseBrowserClient();
+  const { session, loading: sessionLoading } = useSupabaseSession();
+
   const [event, setEvent] = useState<DerbyEvent | null>(null);
   const [players, setPlayers] = useState<DerbyPlayer[]>([]);
   const [userPick, setUserPick] = useState<UserPick | null>(null);
@@ -41,48 +40,19 @@ export default function DerbyModal({ onClose }: { onClose: () => void }) {
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
-  // SSR user (same identity as Settings page)
-  const [sessionUser, setSessionUser] = useState<any | null>(null);
-
   const showToast = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 1500);
   };
 
-  // Load SSR session user (same identity Settings uses)
+  // ⭐ Load Derby data ONLY after Supabase session is confirmed
   useEffect(() => {
-    (async () => {
-      const res = await fetch("/api/auth/user");
-      const json = await res.json();
-      setSessionUser(json.user || null);
-    })();
-  }, []);
+    if (sessionLoading || !session) return;
 
-  // ⭐ Cross‑page identity verification
-  useEffect(() => {
-    (async () => {
-      if (!sessionUser) return;
-
-      const { data: browserSession } = await supabaseBrowser.auth.getUser();
-
-      if (browserSession?.user?.email !== sessionUser.email) {
-        console.warn(
-          "⚠ Session mismatch detected between Settings and Derby modal",
-          {
-            settingsEmail: sessionUser.email,
-            browserEmail: browserSession?.user?.email,
-          }
-        );
-      }
-    })();
-  }, [sessionUser]);
-
-  // Load Derby data directly from Supabase
-  useEffect(() => {
     (async () => {
       try {
         // Load event
-        const { data: eventData } = await supabaseBrowser
+        const { data: eventData } = await supabase
           .from("mlb_derby_events")
           .select("*")
           .order("event_date", { ascending: false })
@@ -95,7 +65,7 @@ export default function DerbyModal({ onClose }: { onClose: () => void }) {
           const eventId = eventData.id;
 
           // Load players
-          const { data: playersData } = await supabaseBrowser
+          const { data: playersData } = await supabase
             .from("mlb_derby_participants")
             .select("*")
             .eq("event_id", eventId);
@@ -103,19 +73,17 @@ export default function DerbyModal({ onClose }: { onClose: () => void }) {
           setPlayers(playersData || []);
 
           // Load user pick
-          if (sessionUser) {
-            const { data: pickData } = await supabaseBrowser
-              .from("mlb_derby_picks")
-              .select("*")
-              .eq("user_id", sessionUser.id)
-              .eq("event_id", eventId)
-              .maybeSingle();
+          const { data: pickData } = await supabase
+            .from("mlb_derby_picks")
+            .select("*")
+            .eq("user_id", session.user.id)
+            .eq("event_id", eventId)
+            .maybeSingle();
 
-            if (pickData) {
-              setUserPick(pickData);
-              setSelectedPlayer(pickData.player_id);
-              setPredictedHR(pickData.predicted_hr_total);
-            }
+          if (pickData) {
+            setUserPick(pickData);
+            setSelectedPlayer(pickData.player_id);
+            setPredictedHR(pickData.predicted_hr_total);
           }
         }
       } catch (err) {
@@ -124,10 +92,10 @@ export default function DerbyModal({ onClose }: { onClose: () => void }) {
         setLoading(false);
       }
     })();
-  }, [sessionUser]);
+  }, [session, sessionLoading]);
 
   const handleSave = async () => {
-    if (!event) return;
+    if (!event || !session) return;
     if (!selectedPlayer || !predictedHR) {
       showToast("Please select a player and enter HR prediction.");
       return;
@@ -136,10 +104,10 @@ export default function DerbyModal({ onClose }: { onClose: () => void }) {
     setSaving(true);
 
     try {
-      const { data, error } = await supabaseBrowser
+      const { data, error } = await supabase
         .from("mlb_derby_picks")
         .upsert({
-          user_id: sessionUser.id,
+          user_id: session.user.id,
           event_id: event.id,
           player_id: selectedPlayer,
           predicted_hr_total: predictedHR,
@@ -154,9 +122,7 @@ export default function DerbyModal({ onClose }: { onClose: () => void }) {
 
       confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
 
-      setTimeout(() => {
-        onClose();
-      }, 1500);
+      setTimeout(() => onClose(), 1500);
     } catch (err: any) {
       showToast(err.message);
     } finally {
@@ -167,23 +133,40 @@ export default function DerbyModal({ onClose }: { onClose: () => void }) {
   const isReadOnly =
     event?.status === "closed" || event?.status === "results_posted";
 
+  // ⭐ Show session loading state
+  if (sessionLoading) {
+    return (
+      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 px-4">
+        <p className="text-slate-400 text-sm">Checking login session…</p>
+      </div>
+    );
+  }
+
+  // ⭐ If no session, block modal
+  if (!session) {
+    return (
+      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 px-4">
+        <p className="text-slate-400 text-sm">
+          Session expired. Please log in again.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 px-4 animate-fadeIn">
       <div className="bg-slate-900 border border-white/10 rounded-xl p-6 w-full max-w-3xl shadow-2xl relative animate-scaleIn">
         
-        {/* HEADER */}
+        {/* Header */}
         <div className="flex justify-between items-center mb-4">
           <div className="flex flex-col">
             <h2 className="text-xl font-semibold">Home Run Derby Picks</h2>
-
-            {sessionUser && (
-              <span className="text-xs text-slate-400 mt-1">
-                Logged in as{" "}
-                <span className="text-sky-400 font-semibold">
-                  {sessionUser.email}
-                </span>
+            <span className="text-xs text-slate-400 mt-1">
+              Logged in as{" "}
+              <span className="text-sky-400 font-semibold">
+                {session.user.email}
               </span>
-            )}
+            </span>
           </div>
 
           <button

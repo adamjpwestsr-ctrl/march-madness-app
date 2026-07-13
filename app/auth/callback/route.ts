@@ -1,5 +1,5 @@
-// 🔥 Force Vercel to rebuild this route after auth key fix
-// 🔥 Fully instrumented for debugging login issues
+// 🔥 Fully corrected Supabase callback route
+// 🔥 Ensures Supabase auth cookie + mm_session cookie both sync correctly
 
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
@@ -18,11 +18,11 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/login`);
   }
 
-  // Initialize Supabase client
+  // Initialize Supabase SSR client
   console.log("🔧 Initializing Supabase client...");
   const supabase = await createSupabaseServerClient();
 
-  // Attempt to exchange code for session
+  // Exchange magic link code for session
   console.log("🔄 Exchanging code for session...");
   const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
@@ -103,7 +103,14 @@ export async function GET(request: Request) {
     userRecord.username = username;
   }
 
-  // Set session cookie
+  // ⭐ CRITICAL FIX: Sync Supabase auth cookies to browser
+  console.log("🍪 Syncing Supabase auth cookies...");
+  const response = NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/bracket`);
+
+  // This ensures the Supabase auth cookie is forwarded to the browser
+  await supabase.auth.setSession(data.session);
+
+  // ⭐ Your custom mm_session cookie (unchanged)
   console.log("🍪 Setting mm_session cookie...");
   const cookieStore = await cookies();
 
@@ -122,7 +129,7 @@ export async function GET(request: Request) {
     }
   );
 
-  console.log("✅ Cookie set successfully. Redirecting to /bracket");
+  console.log("✅ Cookies synced successfully. Redirecting to /bracket");
 
-  return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/bracket`);
+  return response;
 }

@@ -2,17 +2,25 @@
 
 import { useState, useEffect } from "react";
 import LoginForm from "@/app/login/LoginForm";
+import { createSupabaseBrowserClient } from "@/lib/supabaseBrowserClient";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export default function LoginPage() {
+  const supabase = createSupabaseBrowserClient();
+
+  // ⭐ CRITICAL: Clear stale session on page load
+  useEffect(() => {
+    supabase.auth.signOut();
+  }, []);
+
   const [showAbout, setShowAbout] = useState(false);
   const [currentStep, setCurrentStep] = useState<"email" | "admin">("email");
   const [highlightIndex, setHighlightIndex] = useState(0);
   const [fatalError, setFatalError] = useState<string | null>(null);
   const [email, setEmail] = useState("");
-  const [minimal, setMinimal] = useState(true); // ✅ Minimal Mode default
+  const [minimal, setMinimal] = useState(true);
 
   const highlights = [
     "🏀 Build Elite March Madness Brackets",

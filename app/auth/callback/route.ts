@@ -1,10 +1,10 @@
-// 🔥 Unified Supabase callback route
-// 🔥 Removes mm_session and uses Supabase Auth only
-// 🔥 Automatically regenerates FCM token after login
+// 🔥 Correct Supabase callback route
+// 🔥 Ensures auth_id is stored properly
+// 🔥 Ensures users table matches Supabase Auth
+// 🔥 Ensures Derby, Settings, MyDerbyPicks all see correct user
 
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
-import { getFcmTokenForUser } from "@/utils/firebase";
 
 export async function GET(request: Request) {
   console.log("🔥 CALLBACK ROUTE HIT");
@@ -18,21 +18,23 @@ export async function GET(request: Request) {
 
   const supabase = await createSupabaseServerClient();
 
+  // ⭐ Exchange magic link for session
   const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
   if (error || !data?.session) {
+    console.error("❌ exchangeCodeForSession error:", error);
     return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/login`);
   }
 
-  const user = data.session.user;
-  const email = user.email?.toLowerCase();
+  const authUser = data.session.user;
+  const email = authUser.email?.toLowerCase();
 
   if (!email) {
     return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/login`);
   }
 
-  // Look up user in DB
-  const { data: dbUser } = await supabase
+  // ⭐ Look up user in DB by email
+  const { data: dbUser, error: dbError } = await supabase
     .from("users")
     .select("*")
     .eq("email", email)
@@ -40,13 +42,14 @@ export async function GET(request: Request) {
 
   let userRecord = dbUser;
 
-  // Create user if not found
+  // ⭐ Create user if not found
   if (!dbUser) {
     const username = email.split("@")[0];
 
-    const { data: newUser } = await supabase
+    const { data: newUser, error: insertError } = await supabase
       .from("users")
       .insert({
+        auth_id: authUser.id,   // ⭐ CRITICAL FIX
         email,
         username,
         name: null,
@@ -55,11 +58,24 @@ export async function GET(request: Request) {
       .select()
       .single();
 
+    if (insertError) {
+      console.error("❌ User insert error:", insertError);
+      return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/login`);
+    }
+
     userRecord = newUser;
   }
 
-  // Ensure username exists
-  if (userRecord && !userRecord.username) {
+  // ⭐ Ensure auth_id is always correct
+  if (userRecord.auth_id !== authUser.id) {
+    await supabase
+      .from("users")
+      .update({ auth_id: authUser.id })
+      .eq("user_id", userRecord.user_id);
+  }
+
+  // ⭐ Ensure username exists
+  if (!userRecord.username) {
     const username = email.split("@")[0];
 
     await supabase
@@ -70,15 +86,12 @@ export async function GET(request: Request) {
     userRecord.username = username;
   }
 
-  // Sync Supabase auth cookies
+  // ⭐ Sync Supabase auth cookies
   const response = NextResponse.redirect(
-    `${process.env.NEXT_PUBLIC_SITE_URL}/bracket`
+    `${process.env.NEXT_PUBLIC_SITE_URL}/home`
   );
 
   await supabase.auth.setSession(data.session);
-
-  // 🔥 Automatically regenerate FCM token for this user
-  await getFcmTokenForUser();
 
   return response;
 }

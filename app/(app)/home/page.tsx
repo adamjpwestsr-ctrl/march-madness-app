@@ -10,16 +10,17 @@ import RealActivityFeed from "@/app/components/RealActivityFeed";
 import ScoreTicker from "@/app/components/ScoreTicker";
 import SpotlightBanner from "@/app/components/SpotlightBanner";
 
-import { getCurrentUserSession } from "@/lib/getCurrentUserSession";
-import {
-  getUserProfile,
-  initializeUsername,
-} from "@/app/(app)/settings/actions";
+import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 
 export default async function HomePage() {
-  const session = await getCurrentUserSession();
+  const supabase = await createSupabaseServerClient();
 
-  if (!session) {
+  // ⭐ Get Supabase Auth session
+  const {
+    data: { user: authUser },
+  } = await supabase.auth.getUser();
+
+  if (!authUser) {
     return (
       <div className="text-white p-10 text-center">
         <p>You are not logged in.</p>
@@ -30,13 +31,27 @@ export default async function HomePage() {
     );
   }
 
-  const userId = session.userId;
-  const profile = await getUserProfile(userId);
-  const finalUsername = profile.username || (await initializeUsername(userId));
+  // ⭐ Look up user row using auth_id (UUID)
+  const { data: dbUser } = await supabase
+    .from("users")
+    .select("*")
+    .eq("auth_id", authUser.id)
+    .maybeSingle();
+
+  if (!dbUser) {
+    return (
+      <div className="text-white p-10 text-center">
+        <p>Your account is not fully set up.</p>
+        <a href="/welcome-name" className="text-emerald-400 underline">
+          Complete Setup
+        </a>
+      </div>
+    );
+  }
 
   const displayName =
-    finalUsername?.trim() ||
-    profile.email?.split("@")[0] ||
+    dbUser.username?.trim() ||
+    dbUser.email?.split("@")[0] ||
     "Player";
 
   return (
@@ -60,7 +75,8 @@ export default async function HomePage() {
           </p>
         </div>
 
-        <UserStats userId={String(userId)} />
+        {/* ⭐ Use internal numeric user_id for stats */}
+        <UserStats userId={String(dbUser.user_id)} />
       </section>
 
       {/* 🏆 LIVE SCORE TICKER */}
@@ -82,7 +98,8 @@ export default async function HomePage() {
 
       {/* YOUR PICKS */}
       <section>
-        <YourPicksWidget userId={String(userId)} />
+        {/* ⭐ Use internal numeric user_id */}
+        <YourPicksWidget userId={String(dbUser.user_id)} />
       </section>
 
       {/* WEEKLY + TRIVIA */}
@@ -105,7 +122,8 @@ export default async function HomePage() {
 
       {/* REAL ACTIVITY FEED */}
       <section>
-        <RealActivityFeed userId={String(userId)} />
+        {/* ⭐ Use internal numeric user_id */}
+        <RealActivityFeed userId={String(dbUser.user_id)} />
       </section>
 
       {/* HELP & INFO */}

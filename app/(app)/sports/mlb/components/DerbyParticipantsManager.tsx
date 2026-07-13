@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 
 export default function DerbyParticipantsManager({ eventId }: { eventId: number }) {
   const [participants, setParticipants] = useState<any[]>([]);
-  const [name, setName] = useState("");
-  const [team, setTeam] = useState("");
+  const [playerName, setPlayerName] = useState("");
+  const [teamName, setTeamName] = useState("");
   const [hrCount, setHrCount] = useState<number>(0);
   const [imageUrl, setImageUrl] = useState("");
 
@@ -21,8 +21,8 @@ export default function DerbyParticipantsManager({ eventId }: { eventId: number 
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         event_id: eventId,
-        name,
-        team,
+        player_name: playerName,
+        team_name: teamName,
         hr_count: hrCount,
         image_url: imageUrl,
       }),
@@ -31,8 +31,8 @@ export default function DerbyParticipantsManager({ eventId }: { eventId: number 
     const json = await res.json();
     if (json.participant) {
       setParticipants((prev) => [...prev, json.participant]);
-      setName("");
-      setTeam("");
+      setPlayerName("");
+      setTeamName("");
       setHrCount(0);
       setImageUrl("");
     }
@@ -52,14 +52,14 @@ export default function DerbyParticipantsManager({ eventId }: { eventId: number 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <input
           placeholder="Player Name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
+          value={playerName}
+          onChange={(e) => setPlayerName(e.target.value)}
           className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200"
         />
         <input
           placeholder="Team"
-          value={team}
-          onChange={(e) => setTeam(e.target.value)}
+          value={teamName}
+          onChange={(e) => setTeamName(e.target.value)}
           className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200"
         />
         <input

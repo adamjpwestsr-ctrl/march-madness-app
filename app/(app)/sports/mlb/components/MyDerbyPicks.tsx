@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createSupabaseBrowserClient } from "@/lib/supabaseBrowserClient";
+import { useSupabaseSession } from "@/app/hooks/useSupabaseSession";
 
 interface DerbyEvent {
   id: number;
   event_year: number;
   status: "open" | "closed" | "results_posted";
   event_date: string;
-
-  // ⭐ Added fields so TypeScript matches your API + Admin page
   winner_player_id?: number | null;
   winning_hr_total?: number | null;
 }
@@ -29,14 +29,34 @@ interface UserPick {
 }
 
 export default function MyDerbyPicks() {
+  const supabase = createSupabaseBrowserClient();
+  const { session, loading: sessionLoading } = useSupabaseSession();
+
   const [event, setEvent] = useState<DerbyEvent | null>(null);
   const [players, setPlayers] = useState<DerbyPlayer[]>([]);
   const [pick, setPick] = useState<UserPick | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (sessionLoading || !session) return;
+
     (async () => {
       try {
+        // ⭐ Load user row to get auth_id
+        const { data: dbUser } = await supabase
+          .from("users")
+          .select("*")
+          .eq("auth_id", session.user.id)
+          .maybeSingle();
+
+        if (!dbUser) {
+          console.error("User row not found for auth_id:", session.user.id);
+          setLoading(false);
+          return;
+        }
+
+        const derbyUserId = dbUser.auth_id;
+
         // 1️⃣ Fetch current Derby event
         const eventRes = await fetch("/api/mlb/derby/event");
         const eventJson = await eventRes.json();
@@ -48,26 +68,29 @@ export default function MyDerbyPicks() {
           return;
         }
 
-        // 2️⃣ Fetch participants for this event
+        // 2️⃣ Fetch participants
         const playersRes = await fetch(
           `/api/mlb/derby/participants?event_id=${derbyEvent.id}`
         );
         const playersJson = await playersRes.json();
         setPlayers(playersJson.participants || []);
 
-        // 3️⃣ Fetch user's pick for this event
-        const pickRes = await fetch(
-          `/api/mlb/derby/pick?event_id=${derbyEvent.id}`
-        );
-        const pickJson = await pickRes.json();
-        setPick(pickJson.pick || null);
+        // 3️⃣ Fetch user's pick using auth_id (UUID)
+        const pickRes = await supabase
+          .from("mlb_derby_picks")
+          .select("*")
+          .eq("user_id", derbyUserId)
+          .eq("event_id", derbyEvent.id)
+          .maybeSingle();
+
+        setPick(pickRes.data || null);
       } catch (err) {
         console.error("Error loading MyDerbyPicks:", err);
       } finally {
         setLoading(false);
       }
     })();
-  }, []);
+  }, [session, sessionLoading]);
 
   const selectedPlayer =
     pick && players.find((p) => p.id === pick.player_id);

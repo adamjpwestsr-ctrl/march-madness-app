@@ -51,6 +51,20 @@ export default function DerbyModal({ onClose }: { onClose: () => void }) {
 
     (async () => {
       try {
+        // ⭐ Load user row to get auth_id
+        const { data: dbUser } = await supabase
+          .from("users")
+          .select("*")
+          .eq("auth_id", session.user.id)
+          .maybeSingle();
+
+        if (!dbUser) {
+          console.error("User row not found for auth_id:", session.user.id);
+          return;
+        }
+
+        const derbyUserId = dbUser.auth_id; // ⭐ UUID used for Derby picks
+
         // Load event
         const { data: eventData } = await supabase
           .from("mlb_derby_events")
@@ -72,11 +86,11 @@ export default function DerbyModal({ onClose }: { onClose: () => void }) {
 
           setPlayers(playersData || []);
 
-          // Load user pick
+          // ⭐ Load user pick using auth_id (UUID)
           const { data: pickData } = await supabase
             .from("mlb_derby_picks")
             .select("*")
-            .eq("user_id", session.user.id)
+            .eq("user_id", derbyUserId)
             .eq("event_id", eventId)
             .maybeSingle();
 
@@ -104,10 +118,21 @@ export default function DerbyModal({ onClose }: { onClose: () => void }) {
     setSaving(true);
 
     try {
+      // ⭐ Load user row again to get auth_id
+      const { data: dbUser } = await supabase
+        .from("users")
+        .select("*")
+        .eq("auth_id", session.user.id)
+        .maybeSingle();
+
+      if (!dbUser) throw new Error("User not found");
+
+      const derbyUserId = dbUser.auth_id;
+
       const { data, error } = await supabase
         .from("mlb_derby_picks")
         .upsert({
-          user_id: session.user.id,
+          user_id: derbyUserId, // ⭐ UUID
           event_id: event.id,
           player_id: selectedPlayer,
           predicted_hr_total: predictedHR,

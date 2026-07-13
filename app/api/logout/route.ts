@@ -7,11 +7,17 @@ export async function POST() {
   // Clear Supabase session
   await supabase.auth.signOut();
 
-  // Clear browser cookies
-  return NextResponse.json({ success: true }, {
-    headers: {
-      "Set-Cookie": "sb-access-token=; Max-Age=0; Path=/;",
-      "Set-Cookie": "sb-refresh-token=; Max-Age=0; Path=/;",
-    }
-  });
+  // Clear cookies properly
+  const response = NextResponse.json({ success: true });
+
+  response.headers.append(
+    "Set-Cookie",
+    "sb-access-token=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax;"
+  );
+  response.headers.append(
+    "Set-Cookie",
+    "sb-refresh-token=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax;"
+  );
+
+  return response;
 }

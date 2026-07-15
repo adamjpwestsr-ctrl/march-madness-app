@@ -9,6 +9,9 @@ interface DerbyEvent {
   id: number;
   event_year: number;
   status: "open" | "closed" | "results_posted";
+  event_date?: string;
+  winner_player_id?: number | null;
+  winning_hr_total?: number | null;
 }
 
 interface DerbyPlayer {

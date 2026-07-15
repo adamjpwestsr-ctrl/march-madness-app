@@ -8,8 +8,8 @@ interface DerbyEvent {
   event_year: number;
   event_date: string;
   status: "open" | "closed" | "results_posted";
-  winner_player_id?: number | null;
-  winning_hr_total?: number | null;
+  winner_player_id: number | null;
+  winning_hr_total: number | null;
 }
 
 interface DerbyPlayer {
@@ -48,6 +48,7 @@ export default function DerbyCard({
     "You called the Derby like a pro."
   ];
 
+  // Rotate hype lines
   useEffect(() => {
     const interval = setInterval(() => {
       setHypeIndex((i) => (i + 1) % hypeLines.length);
@@ -57,23 +58,23 @@ export default function DerbyCard({
 
   // Winner confetti
   useEffect(() => {
-    if (
-      event?.status === "results_posted" &&
-      userPick &&
-      event.winner_player_id &&
-      userPick.player_id === event.winner_player_id
-    ) {
+    if (!event || !userPick) return;
+    if (event.status !== "results_posted") return;
+    if (event.winner_player_id === null) return;
+
+    if (userPick.player_id === event.winner_player_id) {
       confetti({ particleCount: 150, spread: 80, origin: { y: 0.4 } });
     }
   }, [event, userPick]);
 
+  // Load Derby data
   useEffect(() => {
     (async () => {
       try {
         const resEvent = await fetch("/api/mlb/derby/event");
         const eventJson = await resEvent.json();
-        const derbyEvent = eventJson.event;
-        setEvent(derbyEvent || null);
+        const derbyEvent: DerbyEvent | null = eventJson.event ?? null;
+        setEvent(derbyEvent);
 
         if (!derbyEvent) {
           setLoading(false);
@@ -84,13 +85,15 @@ export default function DerbyCard({
           `/api/mlb/derby/participants?event_id=${derbyEvent.id}`
         );
         const playersJson = await resPlayers.json();
-        setPlayers(playersJson.participants || []);
+        const participants: DerbyPlayer[] = playersJson.participants ?? [];
+        setPlayers(participants);
 
         const resPick = await fetch(
           `/api/mlb/derby/pick?event_id=${derbyEvent.id}`
         );
         const pickJson = await resPick.json();
-        setUserPick(pickJson.pick || null);
+        const pick: UserPick | null = pickJson.pick ?? null;
+        setUserPick(pick);
       } catch (err) {
         console.error("Error loading Derby card:", err);
       } finally {
@@ -99,41 +102,25 @@ export default function DerbyCard({
     })();
   }, []);
 
-  const statusBadge = (status: DerbyEvent["status"]) => {
-    switch (status) {
-      case "open":
-        return (
-          <span className="px-2 py-1 text-xs rounded-md bg-emerald-600/20 text-emerald-400 border border-emerald-500/30">
-            Open
-          </span>
-        );
-      case "closed":
-        return (
-          <span className="px-2 py-1 text-xs rounded-md bg-yellow-600/20 text-yellow-400 border border-yellow-500/30">
-            Closed
-          </span>
-        );
-      case "results_posted":
-        return (
-          <span className="px-2 py-1 text-xs rounded-md bg-sky-600/20 text-sky-400 border border-sky-500/30">
-            Final
-          </span>
-        );
-    }
-  };
+  // Safe selected player
+  const selectedPlayer: DerbyPlayer | undefined =
+    userPick ? players.find((p) => p.id === userPick.player_id) : undefined;
 
-  const selectedPlayer =
-    userPick && players.find((p) => p.id === userPick.player_id);
+  // Safe winner player
+  const winnerPlayer: DerbyPlayer | undefined =
+    event?.winner_player_id !== null
+      ? players.find((p) => p.id === event.winner_player_id)
+      : undefined;
 
-  const winnerPlayer =
-    event?.winner_player_id &&
-    players.find((p) => p.id === event.winner_player_id);
-
-  const userPickedWinner =
-    event?.status === "results_posted" &&
-    userPick &&
-    event.winner_player_id &&
-    userPick.player_id === event.winner_player_id;
+  // Safe winner check
+  const userPickedWinner: boolean =
+    Boolean(
+      event &&
+        event.status === "results_posted" &&
+        event.winner_player_id !== null &&
+        userPick &&
+        userPick.player_id === event.winner_player_id
+    );
 
   return (
     <div className="rounded-xl bg-slate-900/70 border border-white/10 p-4 shadow-lg flex flex-col gap-4 relative overflow-hidden">
@@ -148,7 +135,23 @@ export default function DerbyCard({
       {/* Header */}
       <div className="flex items-center justify-between relative z-10">
         <h2 className="text-xl font-semibold">Home Run Derby</h2>
-        {!loading && event && statusBadge(event.status)}
+        {!loading && event && (
+          <span
+            className={`px-2 py-1 text-xs rounded-md border ${
+              event.status === "open"
+                ? "bg-emerald-600/20 text-emerald-400 border-emerald-500/30"
+                : event.status === "closed"
+                ? "bg-yellow-600/20 text-yellow-400 border-yellow-500/30"
+                : "bg-sky-600/20 text-sky-400 border-sky-500/30"
+            }`}
+          >
+            {event.status === "open"
+              ? "Open"
+              : event.status === "closed"
+              ? "Closed"
+              : "Final"}
+          </span>
+        )}
       </div>
 
       {loading ? (
@@ -214,7 +217,7 @@ export default function DerbyCard({
           )}
 
           {/* 🔥 HYPE BLOCK */}
-          {userPickedWinner && (
+          {userPickedWinner && winnerPlayer && (
             <div className="mt-4 p-4 rounded-xl bg-emerald-900/40 border border-emerald-600/40 text-emerald-300 text-sm font-semibold animate-fadeIn shadow-lg relative overflow-hidden">
 
               {/* Spotlight Glow */}
@@ -226,7 +229,7 @@ export default function DerbyCard({
               roaring fans, and pure electricity. But when the dust settled,
               one slugger stood above the rest:{" "}
               <span className="text-white font-bold">
-                {winnerPlayer?.player_name}
+                {winnerPlayer.player_name}
               </span>
               . And one legend in our league called it perfectly:{" "}
               <span className="text-white font-bold">YOU</span> nailed the

@@ -15,22 +15,18 @@ export async function GET() {
   const weekStart = getWeekStart();
 
   try {
-    // ------------------------------------------------------------
-    // 1. Fetch existing weekly challenge
-    // ------------------------------------------------------------
+    // 1. Fetch existing weekly challenge (safe)
     let { data: challenge, error: challengeError } = await supabase
       .from("weekly_challenges")
       .select("*")
       .eq("week_start", weekStart)
-      .single();
+      .maybeSingle(); // <-- FIXED
 
     if (challengeError) {
-      console.error("Weekly challenge fetch error:", challengeError.message);
+      console.error("Weekly challenge fetch error:", challengeError);
     }
 
-    // ------------------------------------------------------------
     // 2. If no challenge exists, create one
-    // ------------------------------------------------------------
     if (!challenge) {
       type TriviaIdRow = { id: number };
 
@@ -40,7 +36,11 @@ export async function GET() {
       ) as { data: TriviaIdRow[] | null; error?: any };
 
       if (randomError) {
-        console.error("RPC get_random_trivia_ids error:", randomError.message);
+        console.error("RPC get_random_trivia_ids error:", randomError);
+        return NextResponse.json(
+          { weekStart, questions: [], error: "RPC failed" },
+          { status: 200 }
+        );
       }
 
       if (!randomQs || randomQs.length === 0) {
@@ -51,6 +51,7 @@ export async function GET() {
         );
       }
 
+      // Attempt insert (may fail due to RLS)
       const { data: newChallenge, error: insertError } = await supabase
         .from("weekly_challenges")
         .insert({
@@ -58,18 +59,29 @@ export async function GET() {
           question_ids: randomQs.map((q) => q.id),
         })
         .select()
-        .single();
+        .maybeSingle(); // <-- FIXED
 
       if (insertError) {
-        console.error("Insert weekly challenge error:", insertError.message);
+        console.error(
+          "Insert weekly challenge error (likely RLS):",
+          insertError
+        );
+
+        // Return safe fallback instead of crashing page
+        return NextResponse.json(
+          {
+            weekStart,
+            questions: [],
+            error: "RLS prevented weekly challenge creation",
+          },
+          { status: 200 }
+        );
       }
 
       challenge = newChallenge;
     }
 
-    // ------------------------------------------------------------
     // 3. Fetch questions for the challenge
-    // ------------------------------------------------------------
     const ids = Array.isArray(challenge?.question_ids)
       ? challenge.question_ids
       : [];
@@ -77,7 +89,7 @@ export async function GET() {
     if (ids.length === 0) {
       console.warn("Weekly challenge has no question_ids.");
       return NextResponse.json(
-        { weekStart, questions: [] },
+        { weekStart, questions: [], error: "Empty weekly challenge" },
         { status: 200 }
       );
     }
@@ -88,7 +100,7 @@ export async function GET() {
       .in("id", ids);
 
     if (questionError) {
-      console.error("Trivia question fetch error:", questionError.message);
+      console.error("Trivia question fetch error:", questionError);
     }
 
     return NextResponse.json({

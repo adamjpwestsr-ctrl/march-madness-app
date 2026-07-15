@@ -49,6 +49,7 @@ console.log("DAILY ROUTE HIT");
     const question = data?.[0];
 
     if (!question) {
+console.log("DAILY ROUTE HIT");
       return NextResponse.json(
         { error: "No trivia questions available" },
         { status: 404 }

@@ -108,9 +108,9 @@ export default function DerbyCard({
 
   // Safe winner player
   const winnerPlayer: DerbyPlayer | undefined =
-    event?.winner_player_id !== null
-      ? players.find((p) => p.id === event.winner_player_id)
-      : undefined;
+  event && event.winner_player_id !== null
+    ? players.find((p) => p.id === event.winner_player_id)
+    : undefined;
 
   // Safe winner check
   const userPickedWinner: boolean =

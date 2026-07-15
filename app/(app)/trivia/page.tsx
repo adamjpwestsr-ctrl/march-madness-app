@@ -55,7 +55,7 @@ export default function TriviaHub() {
       <section className="grid gap-6 md:grid-cols-2">
        {/* <Link href="/trivia/game?mode=daily" className="block">
           <DailyChallenge displayName={displayName} />
-        </Link> */}
+        </Link>
 
         <Link href="/challenges/weekly" className="block">
           {loading && (
@@ -77,7 +77,7 @@ export default function TriviaHub() {
               weeklyQuestions={weekly.questions}
             />
           )}
-        </Link>
+        </Link> */}
       </section>
 
       {/* Trivia Modes */}

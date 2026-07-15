@@ -42,7 +42,6 @@ export default function MyDerbyPicks() {
 
     (async () => {
       try {
-        // ⭐ Load user row to get auth_id
         const { data: dbUser } = await supabase
           .from("users")
           .select("*")
@@ -57,7 +56,6 @@ export default function MyDerbyPicks() {
 
         const derbyUserId = dbUser.auth_id;
 
-        // 1️⃣ Fetch current Derby event
         const eventRes = await fetch("/api/mlb/derby/event");
         const eventJson = await eventRes.json();
         const derbyEvent = eventJson.event;
@@ -68,14 +66,12 @@ export default function MyDerbyPicks() {
           return;
         }
 
-        // 2️⃣ Fetch participants
         const playersRes = await fetch(
           `/api/mlb/derby/participants?event_id=${derbyEvent.id}`
         );
         const playersJson = await playersRes.json();
         setPlayers(playersJson.participants || []);
 
-        // 3️⃣ Fetch user's pick using auth_id (UUID)
         const pickRes = await supabase
           .from("mlb_derby_picks")
           .select("*")
@@ -188,6 +184,40 @@ export default function MyDerbyPicks() {
                     {event.winning_hr_total}
                   </span>
                 </p>
+              </div>
+            )}
+
+          {/* 🔥 HYPE BLOCK — User Picked Correct Winner */}
+          {event?.status === "results_posted" &&
+            event.winner_player_id &&
+            selectedPlayer?.id === event.winner_player_id && (
+              <div className="mt-4 p-4 rounded-xl bg-emerald-900/40 border border-emerald-600/40 text-emerald-300 text-sm font-semibold animate-fadeIn">
+                🎉 The 2026 MLB Home Run Derby was absolute chaos — moonshots,
+                roaring fans, and pure electricity. But when the dust settled,
+                one slugger stood above the rest:{" "}
+                <span className="text-white font-bold">
+                  {selectedPlayer.player_name}
+                </span>
+                . And one legend in our league called it perfectly:{" "}
+                <span className="text-white font-bold">YOU</span> nailed the
+                winning pick!
+              </div>
+            )}
+
+          {/* 😢 Consolation Block — User Did NOT Pick Winner */}
+          {event?.status === "results_posted" &&
+            event.winner_player_id &&
+            selectedPlayer?.id !== event.winner_player_id && (
+              <div className="mt-4 p-4 rounded-xl bg-slate-800/60 border border-slate-700 text-slate-300 text-sm animate-fadeIn">
+                The 2026 MLB Home Run Derby crowned{" "}
+                <span className="text-sky-400 font-bold">
+                  {
+                    players.find((p) => p.id === event.winner_player_id)
+                      ?.player_name
+                  }
+                </span>{" "}
+                as the champion! Your pick put up a fight — better luck next
+                time!
               </div>
             )}
         </div>

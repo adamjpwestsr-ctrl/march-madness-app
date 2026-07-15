@@ -40,6 +40,38 @@ export default function DerbyModal({ onClose }: { onClose: () => void }) {
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
+  // 🎉 Flair state
+  const [hypeIndex, setHypeIndex] = useState(0);
+  const hypeLines = [
+    "Moonshots. Madness. Magic.",
+    "Crowd roaring. Lights blazing.",
+    "One champion. One perfect pick.",
+    "You called the Derby like a pro."
+  ];
+
+  // 🎉 Rotate hype lines
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setHypeIndex((i) => (i + 1) % hypeLines.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // 🎉 Winner confetti + audio stinger
+  useEffect(() => {
+    if (
+      event?.status === "results_posted" &&
+      selectedPlayer &&
+      selectedPlayer === event.winner_player_id
+    ) {
+      confetti({ particleCount: 200, spread: 100, origin: { y: 0.4 } });
+
+      const audio = new Audio("/crowd-cheer.mp3");
+      audio.volume = 0.4;
+      audio.play();
+    }
+  }, [event, selectedPlayer]);
+
   const showToast = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 1500);
@@ -51,7 +83,6 @@ export default function DerbyModal({ onClose }: { onClose: () => void }) {
 
     (async () => {
       try {
-        // ⭐ Load user row to get auth_id
         const { data: dbUser } = await supabase
           .from("users")
           .select("*")
@@ -63,9 +94,8 @@ export default function DerbyModal({ onClose }: { onClose: () => void }) {
           return;
         }
 
-        const derbyUserId = dbUser.auth_id; // ⭐ UUID used for Derby picks
+        const derbyUserId = dbUser.auth_id;
 
-        // Load event
         const { data: eventData } = await supabase
           .from("mlb_derby_events")
           .select("*")
@@ -78,7 +108,6 @@ export default function DerbyModal({ onClose }: { onClose: () => void }) {
         if (eventData) {
           const eventId = eventData.id;
 
-          // Load players
           const { data: playersData } = await supabase
             .from("mlb_derby_participants")
             .select("*")
@@ -86,7 +115,6 @@ export default function DerbyModal({ onClose }: { onClose: () => void }) {
 
           setPlayers(playersData || []);
 
-          // ⭐ Load user pick using auth_id (UUID)
           const { data: pickData } = await supabase
             .from("mlb_derby_picks")
             .select("*")
@@ -118,7 +146,6 @@ export default function DerbyModal({ onClose }: { onClose: () => void }) {
     setSaving(true);
 
     try {
-      // ⭐ Load user row again to get auth_id
       const { data: dbUser } = await supabase
         .from("users")
         .select("*")
@@ -132,7 +159,7 @@ export default function DerbyModal({ onClose }: { onClose: () => void }) {
       const { data, error } = await supabase
         .from("mlb_derby_picks")
         .upsert({
-          user_id: derbyUserId, // ⭐ UUID
+          user_id: derbyUserId,
           event_id: event.id,
           player_id: selectedPlayer,
           predicted_hr_total: predictedHR,
@@ -158,7 +185,6 @@ export default function DerbyModal({ onClose }: { onClose: () => void }) {
   const isReadOnly =
     event?.status === "closed" || event?.status === "results_posted";
 
-  // ⭐ Show session loading state
   if (sessionLoading) {
     return (
       <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 px-4">
@@ -167,7 +193,6 @@ export default function DerbyModal({ onClose }: { onClose: () => void }) {
     );
   }
 
-  // ⭐ If no session, block modal
   if (!session) {
     return (
       <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 px-4">
@@ -181,9 +206,20 @@ export default function DerbyModal({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 px-4 animate-fadeIn">
       <div className="bg-slate-900 border border-white/10 rounded-xl p-6 w-full max-w-3xl shadow-2xl relative animate-scaleIn">
-        
+
+        {/* Stadium Background */}
+        <div
+          className="absolute inset-0 bg-cover bg-center opacity-10 pointer-events-none"
+          style={{ backgroundImage: "url('/stadium-lights.png')" }}
+        ></div>
+
+        {/* Spotlight Beam */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="w-full h-40 bg-gradient-to-b from-emerald-500/20 to-transparent blur-xl"></div>
+        </div>
+
         {/* Header */}
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-center mb-4 relative z-10">
           <div className="flex flex-col">
             <h2 className="text-xl font-semibold">Home Run Derby Picks</h2>
             <span className="text-xs text-slate-400 mt-1">
@@ -209,16 +245,17 @@ export default function DerbyModal({ onClose }: { onClose: () => void }) {
         ) : (
           <>
             {/* Player Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 max-h-[55vh] overflow-y-auto pr-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 max-h-[55vh] overflow-y-auto pr-1 relative z-10">
               {players.map((p) => {
                 const isSelected = selectedPlayer === p.id;
+                const isWinner = event?.winner_player_id === p.id;
 
                 return (
                   <div
                     key={p.id}
                     className={`rounded-xl border p-4 flex flex-col gap-3 transition cursor-pointer ${
-                      isSelected
-                        ? "border-emerald-500 shadow-lg shadow-emerald-600/30 animate-pulse"
+                      isWinner
+                        ? "border-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.6)] animate-pulse"
                         : "border-slate-700 hover:border-slate-500"
                     }`}
                     onClick={() => !isReadOnly && setSelectedPlayer(p.id)}
@@ -252,7 +289,7 @@ export default function DerbyModal({ onClose }: { onClose: () => void }) {
             </div>
 
             {/* HR Prediction */}
-            <div className="mt-4">
+            <div className="mt-4 relative z-10">
               <label className="text-sm text-slate-300">Predicted HR Total</label>
               <input
                 type="number"
@@ -280,10 +317,64 @@ export default function DerbyModal({ onClose }: { onClose: () => void }) {
             )}
 
             {isReadOnly && (
-              <p className="mt-4 text-slate-400 text-sm text-center">
+              <p className="mt-4 text-slate-400 text-sm text-center relative z-10">
                 Picks are locked. Event is {event.status.replace("_", " ")}.
               </p>
             )}
+
+            {/* 🔥 HYPE BLOCK — User Picked Correct Winner */}
+            {event?.status === "results_posted" &&
+              event.winner_player_id &&
+              selectedPlayer &&
+              selectedPlayer === event.winner_player_id && (
+                <div className="mt-6 p-5 rounded-xl bg-emerald-900/40 border border-emerald-600/40 text-emerald-300 text-sm font-semibold animate-fadeIn shadow-lg relative overflow-hidden">
+
+                  {/* Spotlight Glow */}
+                  <div className="absolute inset-0 pointer-events-none">
+                    <div className="w-64 h-64 bg-emerald-500/20 blur-3xl rounded-full mx-auto mt-10"></div>
+                  </div>
+
+                  🎉 The 2026 MLB Home Run Derby was absolute chaos — moonshots,
+                  roaring fans, and pure electricity. But when the dust settled,
+                  one slugger stood above the rest:{" "}
+                  <span className="text-white font-bold">
+                    {players.find((p) => p.id === event.winner_player_id)?.player_name}
+                  </span>
+                  . And one legend in our league called it perfectly:{" "}
+                  <span className="text-white font-bold">YOU</span> nailed the
+                  winning pick!
+
+                  {/* Trophy Burst */}
+                  <div className="flex items-center justify-center mt-4 animate-fadeIn">
+                    <span className="text-4xl animate-trophyPulse">🏆</span>
+                  </div>
+
+                  {/* Derby Oracle Badge */}
+                  <div className="mt-2 inline-block px-3 py-1 rounded-full bg-gradient-to-r from-emerald-500 to-sky-500 text-black text-xs font-bold shadow-lg text-center mx-auto">
+                    🔮 Derby Oracle
+                  </div>
+
+                  {/* Rotating Hype Lines */}
+                  <p className="text-center text-emerald-300 text-sm mt-3 animate-fadeIn">
+                    {hypeLines[hypeIndex]}
+                  </p>
+                </div>
+              )}
+
+            {/* 😢 Consolation Block — User Did NOT Pick Winner */}
+            {event?.status === "results_posted" &&
+              event.winner_player_id &&
+              selectedPlayer &&
+              selectedPlayer !== event.winner_player_id && (
+                <div className="mt-6 p-5 rounded-xl bg-slate-800/60 border border-slate-700 text-slate-300 text-sm animate-fadeIn shadow-lg relative z-10">
+                  The 2026 MLB Home Run Derby crowned{" "}
+                  <span className="text-sky-400 font-bold">
+                    {players.find((p) => p.id === event.winner_player_id)?.player_name}
+                  </span>{" "}
+                  as the champion! Your pick put up a fight — better luck next
+                  time!
+                </div>
+              )}
           </>
         )}
 

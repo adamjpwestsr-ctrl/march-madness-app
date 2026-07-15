@@ -1,63 +1,71 @@
-// app/api/trivia/daily/route.ts
-
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 
-
 export async function GET() {
-console.log("DAILY ROUTE HIT");
+  console.log("DAILY ROUTE HIT");
+
   const supabase = await createSupabaseServerClient();
 
   try {
-    // 1️⃣ Get total count of trivia questions
-    const { count, error: countError } = await supabase
+    // -----------------------------
+    // 1. Get ALL daily question IDs
+    // -----------------------------
+    const { data: dailyRows, error: dailyError } = await supabase
       .from("trivia_daily_questions")
-      .select("*", { count: "exact", head: true });
+      .select("question_id");
 
-    if (countError) {
-      console.error("Trivia daily - count error:", countError);
+    if (dailyError) {
+      console.error("Daily list error:", dailyError);
       return NextResponse.json(
-        { error: "Failed to count trivia questions" },
+        { error: "Failed to load daily question list" },
         { status: 500 }
       );
     }
 
-    if (!count || count === 0) {
+    if (!dailyRows || dailyRows.length === 0) {
       return NextResponse.json(
-        { error: "No trivia questions available" },
+        { error: "No daily trivia questions available" },
         { status: 404 }
       );
     }
 
-    // 2️⃣ Pick a random index
-    const randomIndex = Math.floor(Math.random() * count);
+    // -----------------------------
+    // 2. Pick a random ID
+    // -----------------------------
+    const randomRow =
+      dailyRows[Math.floor(Math.random() * dailyRows.length)];
 
-    // 3️⃣ Fetch exactly that one row
-    const { data, error } = await supabase
+    const randomId = randomRow.question_id;
+
+    // -----------------------------
+    // 3. Fetch that question
+    // -----------------------------
+    const { data: question, error: questionError } = await supabase
       .from("trivia_questions")
       .select("*")
-      .range(randomIndex, randomIndex); // single row at randomIndex
+      .eq("id", randomId)
+      .maybeSingle();
 
-    if (error) {
-      console.error("Trivia daily - select error:", error);
+    if (questionError) {
+      console.error("Daily question fetch error:", questionError);
       return NextResponse.json(
-        { error: "Failed to fetch trivia question" },
+        { error: "Failed to fetch daily trivia question" },
         { status: 500 }
       );
     }
 
-    const question = data?.[0];
-
     if (!question) {
-console.log("DAILY ROUTE HIT");
       return NextResponse.json(
-        { error: "No trivia questions available" },
+        { error: "Daily trivia question not found" },
         { status: 404 }
       );
     }
 
-    // 4️⃣ Return the random question
+    // -----------------------------
+    // 4. Return the question
+    // -----------------------------
     return NextResponse.json(question);
+
   } catch (err) {
     console.error("Trivia daily route crashed:", err);
     return NextResponse.json(

@@ -11,7 +11,7 @@ console.log("DAILY ROUTE HIT");
   try {
     // 1️⃣ Get total count of trivia questions
     const { count, error: countError } = await supabase
-      .from("trivia_questions")
+      .from("trivia_daily_questions")
       .select("*", { count: "exact", head: true });
 
     if (countError) {

@@ -2,6 +2,8 @@
 
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
+console.log("DAILY ROUTE HIT");
+
 
 export async function GET() {
   const supabase = await createSupabaseServerClient();

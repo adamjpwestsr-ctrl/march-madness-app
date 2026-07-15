@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
+console.log("WEEKLY ROUTE HIT");
 
 function getWeekStart() {
   const now = new Date();

@@ -11,29 +11,31 @@ function getWeekStart() {
 }
 
 export async function GET() {
-  console.log("WEEKLY ROUTE HIT");
-
   const supabase = await createSupabaseServerClient();
   const weekStart = getWeekStart();
 
   try {
-    // -----------------------------
-    // 1. Try to load existing weekly challenge
-    // -----------------------------
-    const { data: challenge } = await supabase
+    // 1. Try loading existing weekly challenge
+    const { data: challenge, error: challengeError } = await supabase
       .from("weekly_challenges")
       .select("*")
       .eq("week_start", weekStart)
       .maybeSingle();
 
-    // -----------------------------
-    // 2. If exists → fetch questions and return
-    // -----------------------------
-    if (challenge) {
-      const { data: questions } = await supabase
+    if (challengeError) {
+      console.error("Weekly challenge fetch error:", challengeError);
+    }
+
+    // 2. If challenge exists → fetch questions
+    if (challenge?.question_ids?.length > 0) {
+      const { data: questions, error: qErr } = await supabase
         .from("trivia_questions")
         .select("*")
         .in("id", challenge.question_ids);
+
+      if (qErr) {
+        console.error("Weekly question fetch error:", qErr);
+      }
 
       return NextResponse.json({
         weekStart,
@@ -41,18 +43,23 @@ export async function GET() {
       });
     }
 
-    // -----------------------------
-    // 3. No challenge exists → generate one safely
-    // -----------------------------
-    const { data: allQuestions } = await supabase
+    // 3. No challenge exists → generate one
+    const { data: allQuestions, error: allErr } = await supabase
       .from("trivia_questions")
       .select("id");
+
+    if (allErr) {
+      console.error("Fetch all trivia questions error:", allErr);
+      return NextResponse.json({
+        weekStart,
+        questions: [],
+      });
+    }
 
     if (!allQuestions || allQuestions.length === 0) {
       return NextResponse.json({
         weekStart,
         questions: [],
-        error: "No trivia questions available",
       });
     }
 
@@ -60,10 +67,7 @@ export async function GET() {
     const shuffled = [...allQuestions].sort(() => Math.random() - 0.5);
     const selected = shuffled.slice(0, 10).map((q) => q.id);
 
-    // -----------------------------
     // 4. Try inserting weekly challenge
-    //    If RLS blocks it → fallback safely
-    // -----------------------------
     const { data: newChallenge, error: insertError } = await supabase
       .from("weekly_challenges")
       .insert({
@@ -73,29 +77,17 @@ export async function GET() {
       .select()
       .maybeSingle();
 
-    if (insertError) {
-      console.error("Weekly insert blocked by RLS:", insertError);
+    // If RLS blocks insert → fallback
+    const finalIds = newChallenge?.question_ids ?? selected;
 
-      // Fallback: return questions without storing challenge
-      const { data: questions } = await supabase
-        .from("trivia_questions")
-        .select("*")
-        .in("id", selected);
-
-      return NextResponse.json({
-        weekStart,
-        questions: questions ?? [],
-        error: "Weekly challenge not saved due to RLS",
-      });
-    }
-
-    // -----------------------------
-    // 5. Return newly created challenge
-    // -----------------------------
-    const { data: questions } = await supabase
+    const { data: questions, error: qErr2 } = await supabase
       .from("trivia_questions")
       .select("*")
-      .in("id", newChallenge.question_ids);
+      .in("id", finalIds);
+
+    if (qErr2) {
+      console.error("Weekly fallback question fetch error:", qErr2);
+    }
 
     return NextResponse.json({
       weekStart,
@@ -104,9 +96,9 @@ export async function GET() {
 
   } catch (err) {
     console.error("Weekly route crashed:", err);
-    return NextResponse.json(
-      { weekStart: null, questions: [], error: "Server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({
+      weekStart,
+      questions: [],
+    });
   }
 }

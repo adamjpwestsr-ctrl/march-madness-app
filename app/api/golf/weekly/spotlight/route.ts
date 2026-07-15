@@ -76,7 +76,7 @@ export async function GET() {
     const { data: randomPlayer } = await supabase
       .from("golf_players")
       .select("name")
-      .order("random()")
+const { data: randomPlayer } = await supabase.rpc("get_random_golf_player");
       .limit(1)
       .maybeSingle();
 

@@ -11,109 +11,102 @@ function getWeekStart() {
 }
 
 export async function GET() {
-console.log("WEEKLY ROUTE HIT");
+  console.log("WEEKLY ROUTE HIT");
+
   const supabase = await createSupabaseServerClient();
   const weekStart = getWeekStart();
 
   try {
-    // 1. Fetch existing weekly challenge (safe)
-    let { data: challenge, error: challengeError } = await supabase
+    // -----------------------------
+    // 1. Try to load existing weekly challenge
+    // -----------------------------
+    const { data: challenge } = await supabase
       .from("weekly_challenges")
       .select("*")
       .eq("week_start", weekStart)
-      .maybeSingle(); // <-- FIXED
+      .maybeSingle();
 
-    if (challengeError) {
-      console.error("Weekly challenge fetch error:", challengeError);
+    // -----------------------------
+    // 2. If exists → fetch questions and return
+    // -----------------------------
+    if (challenge) {
+      const { data: questions } = await supabase
+        .from("trivia_questions")
+        .select("*")
+        .in("id", challenge.question_ids);
+
+      return NextResponse.json({
+        weekStart,
+        questions: questions ?? [],
+      });
     }
 
-    // 2. If no challenge exists, create one
-    if (!challenge) {
-      type TriviaIdRow = { id: number };
+    // -----------------------------
+    // 3. No challenge exists → generate one safely
+    // -----------------------------
+    const { data: allQuestions } = await supabase
+      .from("trivia_questions")
+      .select("id");
 
-      const { data: randomQs, error: randomError } = await supabase.rpc(
-        "get_random_trivia_ids",
-        { limit_count: 10 }
-      ) as { data: TriviaIdRow[] | null; error?: any };
-
-      if (randomError) {
-        console.error("RPC get_random_trivia_ids error:", randomError);
-        return NextResponse.json(
-          { weekStart, questions: [], error: "RPC failed" },
-          { status: 200 }
-        );
-      }
-
-      if (!randomQs || randomQs.length === 0) {
-        console.warn("No trivia questions returned from RPC.");
-        return NextResponse.json(
-          { weekStart, questions: [], error: "No trivia available" },
-          { status: 200 }
-        );
-      }
-
-      // Attempt insert (may fail due to RLS)
-      const { data: newChallenge, error: insertError } = await supabase
-        .from("weekly_challenges")
-        .insert({
-          week_start: weekStart,
-          question_ids: randomQs.map((q) => q.id),
-        })
-        .select()
-        .maybeSingle(); // <-- FIXED
-
-      if (insertError) {
-        console.error(
-          "Insert weekly challenge error (likely RLS):",
-          insertError
-        );
-
-        // Return safe fallback instead of crashing page
-        return NextResponse.json(
-          {
-            weekStart,
-            questions: [],
-            error: "RLS prevented weekly challenge creation",
-          },
-          { status: 200 }
-        );
-      }
-
-      challenge = newChallenge;
+    if (!allQuestions || allQuestions.length === 0) {
+      return NextResponse.json({
+        weekStart,
+        questions: [],
+        error: "No trivia questions available",
+      });
     }
 
-    // 3. Fetch questions for the challenge
-    const ids = Array.isArray(challenge?.question_ids)
-      ? challenge.question_ids
-      : [];
+    // Pick 10 random IDs
+    const shuffled = [...allQuestions].sort(() => Math.random() - 0.5);
+    const selected = shuffled.slice(0, 10).map((q) => q.id);
 
-    if (ids.length === 0) {
-      console.warn("Weekly challenge has no question_ids.");
-      return NextResponse.json(
-        { weekStart, questions: [], error: "Empty weekly challenge" },
-        { status: 200 }
-      );
+    // -----------------------------
+    // 4. Try inserting weekly challenge
+    //    If RLS blocks it → fallback safely
+    // -----------------------------
+    const { data: newChallenge, error: insertError } = await supabase
+      .from("weekly_challenges")
+      .insert({
+        week_start: weekStart,
+        question_ids: selected,
+      })
+      .select()
+      .maybeSingle();
+
+    if (insertError) {
+      console.error("Weekly insert blocked by RLS:", insertError);
+
+      // Fallback: return questions without storing challenge
+      const { data: questions } = await supabase
+        .from("trivia_questions")
+        .select("*")
+        .in("id", selected);
+
+      return NextResponse.json({
+        weekStart,
+        questions: questions ?? [],
+        error: "Weekly challenge not saved due to RLS",
+      });
     }
 
-    const { data: questions, error: questionError } = await supabase
+    // -----------------------------
+    // 5. Return newly created challenge
+    // -----------------------------
+    const { data: questions } = await supabase
       .from("trivia_questions")
       .select("*")
-      .in("id", ids);
-
-    if (questionError) {
-      console.error("Trivia question fetch error:", questionError);
-    }
+      .in("id", newChallenge.question_ids);
 
     return NextResponse.json({
       weekStart,
-      questions: questions || [],
+      questions: questions ?? [],
     });
 
   } catch (err) {
-    console.error("Weekly challenge route crashed:", err);
+    console.error("Weekly route crashed:", err);
     return NextResponse.json(
       { weekStart: null, questions: [], error: "Server error" },
-      { status: 200 }
+      { status: 500 }
     );
   }
 }

@@ -14,15 +14,31 @@ export async function GET() {
   const supabase = await createSupabaseServerClient();
   const weekStart = getWeekStart();
 
-  const { data: leaderboard } = await supabase
-    .from("weekly_challenge_results")
-    .select("*")
-    .eq("week_start", weekStart)
-    .order("score", { ascending: false })
-    .limit(10);
+  try {
+    const { data: leaderboard, error } = await supabase
+      .from("weekly_challenge_results")
+      .select("*")
+      .eq("week_start", weekStart)
+      .order("score", { ascending: false })
+      .limit(10);
 
-  return NextResponse.json({
-    weekStart,
-    leaderboard,
-  });
+    if (error) {
+      console.error("Weekly leaderboard fetch error:", error);
+      return NextResponse.json(
+        { weekStart, leaderboard: [], error: "Failed to load leaderboard" },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      weekStart,
+      leaderboard: leaderboard ?? [],
+    });
+  } catch (err) {
+    console.error("Weekly leaderboard route crashed:", err);
+    return NextResponse.json(
+      { weekStart, leaderboard: [], error: "Server error" },
+      { status: 500 }
+    );
+  }
 }

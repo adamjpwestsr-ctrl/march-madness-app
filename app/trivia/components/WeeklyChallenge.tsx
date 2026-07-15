@@ -31,42 +31,32 @@ export default function WeeklyChallenge({
     setPassed(0);
     setFinished(false);
     setAnswer("");
-
-    if (onStartWeekly) onStartWeekly();
+    onStartWeekly?.();
   };
 
-  // ⭐ If no questions yet, show loading
+  // 🟡 Loading or empty state
   if (!weeklyQuestions || weeklyQuestions.length === 0) {
     return (
-      <div style={{ marginTop: 24, textAlign: "center" }}>
-        <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 12 }}>
-          Weekly Challenge
-        </h2>
-        <p style={{ color: "#9ca3af" }}>Loading weekly challenge...</p>
+      <div className="text-center mt-6">
+        <h2 className="text-xl font-bold mb-2">Weekly Challenge</h2>
+        <p className="text-slate-400">Loading weekly challenge…</p>
       </div>
     );
   }
 
-  // ⭐ BEFORE STARTING — show Play button
+  // 🟢 Before starting
   if (!started) {
     return (
-      <div style={{ marginTop: 24, textAlign: "center" }}>
-        <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 12 }}>
+      <div className="text-center mt-6">
+        <h2 className="text-xl font-bold mb-2">
           Weekly Challenge — {weekStart}
         </h2>
-        <p style={{ color: "#9ca3af", marginBottom: 16 }}>
+        <p className="text-slate-400 mb-4">
           Ready to test your knowledge in this week’s themed round?
         </p>
         <button
           onClick={startChallenge}
-          style={{
-            padding: "10px 20px",
-            borderRadius: 999,
-            background: "#22c55e",
-            color: "#020617",
-            fontWeight: 700,
-            cursor: "pointer",
-          }}
+          className="px-5 py-2 rounded-full bg-emerald-500 text-slate-900 font-bold hover:bg-emerald-600 transition"
         >
           Play Weekly Challenge
         </button>
@@ -74,10 +64,12 @@ export default function WeeklyChallenge({
     );
   }
 
+  const q = weeklyQuestions[index];
+
   const submitAnswer = () => {
-    const q = weeklyQuestions[index];
+    if (!q) return;
     const normalized = answer.trim().toLowerCase();
-    const correctAns = q.correct_answer.trim().toLowerCase();
+    const correctAns = q.correct_answer?.trim().toLowerCase();
 
     if (normalized === correctAns) {
       setScore((s) => s + q.points);
@@ -98,109 +90,77 @@ export default function WeeklyChallenge({
 
   const finish = async () => {
     setFinished(true);
-
-    await fetch("/api/trivia/weekly/submit", {
-      method: "POST",
-      body: JSON.stringify({
-        displayName,
-        weekStart,
-        score,
-        correctCount: correct,
-        wrongCount: wrong,
-        passedCount: passed,
-      }),
-    });
+    try {
+      await fetch("/api/trivia/weekly/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          displayName,
+          weekStart,
+          score,
+          correctCount: correct,
+          wrongCount: wrong,
+          passedCount: passed,
+        }),
+      });
+    } catch (err) {
+      console.error("Weekly submit failed:", err);
+    }
   };
 
-  // ⭐ After finishing
+  // 🟣 Finished state
   if (finished) {
     return (
-      <div style={{ marginTop: 24 }}>
-        <h2 style={{ fontSize: 24, fontWeight: 700 }}>Weekly Challenge Complete</h2>
-        <p style={{ marginTop: 8 }}>Score: {score}</p>
-        <p>
-          C: {correct} W: {wrong} P: {passed}
+      <div className="mt-6 text-center">
+        <h2 className="text-2xl font-bold">Weekly Challenge Complete</h2>
+        <p className="mt-2 text-slate-300">Score: {score}</p>
+        <p className="text-slate-400">
+          ✅ {correct} • ❌ {wrong} • ⏭ {passed}
         </p>
       </div>
     );
   }
 
-  // ⭐ After answering all questions
+  // 🔵 End of questions
   if (index >= weeklyQuestions.length) {
     return (
-      <button
-        onClick={finish}
-        style={{
-          marginTop: 24,
-          padding: "10px 20px",
-          borderRadius: 999,
-          background: "#3b82f6",
-          color: "#020617",
-          fontWeight: 700,
-        }}
-      >
-        Submit Weekly Challenge
-      </button>
+      <div className="text-center mt-6">
+        <button
+          onClick={finish}
+          className="px-5 py-2 rounded-full bg-blue-500 text-slate-900 font-bold hover:bg-blue-600 transition"
+        >
+          Submit Weekly Challenge
+        </button>
+      </div>
     );
   }
 
-  // ⭐ Active question
-  const q = weeklyQuestions[index];
-
+  // 🟠 Active question
   return (
-    <div
-      style={{
-        marginTop: 24,
-        padding: 16,
-        borderRadius: 16,
-        background: "rgba(15,23,42,0.95)",
-        border: "1px solid #1f2937",
-      }}
-    >
-      <h2 style={{ fontSize: 20, fontWeight: 700 }}>
+    <div className="mt-6 p-4 rounded-xl bg-slate-900/90 border border-slate-700">
+      <h2 className="text-lg font-bold mb-2">
         Weekly Challenge — Question {index + 1} / {weeklyQuestions.length}
       </h2>
 
-      <p style={{ marginTop: 12 }}>{q.question}</p>
+      <p className="text-slate-200 mb-3">{q.question}</p>
 
       <input
         value={answer}
         onChange={(e) => setAnswer(e.target.value)}
         placeholder="Your answer"
-        style={{
-          width: "100%",
-          padding: 8,
-          marginTop: 12,
-          borderRadius: 6,
-          background: "#020617",
-          border: "1px solid #4b5563",
-          color: "#e5e7eb",
-        }}
+        className="w-full p-2 rounded-md bg-slate-950 border border-slate-600 text-slate-200 mb-3"
       />
 
-      <div style={{ display: "flex", gap: 12, marginTop: 12 }}>
+      <div className="flex gap-3">
         <button
           onClick={submitAnswer}
-          style={{
-            padding: "8px 16px",
-            borderRadius: 999,
-            background: "#22c55e",
-            color: "#020617",
-            fontWeight: 700,
-          }}
+          className="px-4 py-2 rounded-full bg-emerald-500 text-slate-900 font-bold hover:bg-emerald-600 transition"
         >
           Submit
         </button>
-
         <button
           onClick={pass}
-          style={{
-            padding: "8px 16px",
-            borderRadius: 999,
-            background: "#f97316",
-            color: "#020617",
-            fontWeight: 700,
-          }}
+          className="px-4 py-2 rounded-full bg-orange-500 text-slate-900 font-bold hover:bg-orange-600 transition"
         >
           Pass
         </button>

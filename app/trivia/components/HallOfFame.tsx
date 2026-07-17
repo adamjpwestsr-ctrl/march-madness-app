@@ -2,34 +2,55 @@
 
 import { useEffect, useState } from "react";
 
-type HallOfFameEntry = {
-  display_name: string;
-  score: number;
-  correct_count: number;
-  wrong_count: number;
-  passed_count: number;
-  created_at: string;
-};
-
 export default function HallOfFame() {
   const [hof, setHof] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
-      const res = await fetch("/api/trivia/hof");
-      const data = await res.json();
-      setHof(data);
+      try {
+        const res = await fetch("/api/trivia/hof", { cache: "no-store" });
+        const data = await res.json();
+        setHof(data);
+      } catch (err) {
+        console.error("HOF load error:", err);
+        setHof(null);
+      } finally {
+        setLoading(false);
+      }
     }
     load();
   }, []);
 
-  if (!hof) {
+  if (loading) {
     return (
       <div style={{ padding: 16, textAlign: "center", color: "#9ca3af" }}>
         Loading Hall of Fame…
       </div>
     );
   }
+
+  if (!hof) {
+    return (
+      <div
+        style={{
+          padding: 16,
+          textAlign: "center",
+          color: "#9ca3af",
+          border: "1px solid #1f2937",
+          borderRadius: 16,
+          background: "rgba(15,23,42,0.95)",
+        }}
+      >
+        No Hall of Fame data available yet.
+      </div>
+    );
+  }
+
+  const highest = hof.highestScore ?? {};
+  const mostCorrect = hof.mostCorrect ?? {};
+  const longest = hof.longestStreak ?? {};
+  const mostRuns = hof.mostRuns ?? {};
 
   return (
     <div
@@ -49,23 +70,23 @@ export default function HallOfFame() {
         <div>
           🏆 <strong>Highest Score Ever:</strong>{" "}
           <span style={{ color: "#22c55e" }}>
-            {hof.highestScore.display_name} — {hof.highestScore.score} pts
+            {highest.display_name ?? "—"} — {highest.score ?? 0} pts
           </span>
         </div>
 
         <div>
           🎯 <strong>Most Correct Answers:</strong>{" "}
-          {hof.mostCorrect.display_name} — {hof.mostCorrect.correct_count} correct
+          {mostCorrect.display_name ?? "—"} — {mostCorrect.correct_count ?? 0} correct
         </div>
 
         <div>
           🔥 <strong>Longest Streak:</strong>{" "}
-          {hof.longestStreak.display_name} — {hof.longestStreak.streak} in a row
+          {longest.display_name ?? "—"} — {longest.streak ?? 0} in a row
         </div>
 
         <div>
           📊 <strong>Most Runs Played:</strong>{" "}
-          {hof.mostRuns.display_name} — {hof.mostRuns.count} runs
+          {mostRuns.display_name ?? "—"} — {mostRuns.count ?? 0} runs
         </div>
       </div>
     </div>

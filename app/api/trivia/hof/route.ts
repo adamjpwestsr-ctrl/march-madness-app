@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { supabaseServerClient } from "@/lib/supabaseServerClient";
+import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 
 export async function GET() {
-  const supabase = supabaseServerClient();
+  const supabase = createSupabaseServerClient();
 
   const safe = (row: any, defaults: any) => row ?? defaults;
 

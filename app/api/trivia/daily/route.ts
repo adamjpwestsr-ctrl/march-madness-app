@@ -7,7 +7,7 @@ export async function GET() {
   try {
     // 1. Load daily question IDs (column is "question", not "question_id")
     const { data: dailyRows, error: dailyError } = await supabase
-      .from("trivia_daily_questions")
+      .from("trivia_daily_questions_dummy")
       .select("question");
 
     if (dailyError) {

@@ -15,22 +15,18 @@ export async function GET() {
   const weekStart = getWeekStart();
 
   try {
-    const { data: challenge, error: challengeError } = await supabase
+    const { data: challenge } = await supabase
       .from("weekly_challenges")
       .select("*")
       .eq("week_start", weekStart)
       .maybeSingle();
 
-    if (challengeError) console.error("Weekly challenge fetch error:", challengeError);
-
     // If challenge exists → fetch questions
     if (challenge?.question_ids?.length) {
-      const { data: questions, error: qErr } = await supabase
+      const { data: questions } = await supabase
         .from("trivia_questions")
-        .select("*")
+        .select("id, question, correct_answer, points")
         .in("id", challenge.question_ids);
-
-      if (qErr) console.error("Weekly question fetch error:", qErr);
 
       return NextResponse.json({
         weekStart,
@@ -39,14 +35,9 @@ export async function GET() {
     }
 
     // No challenge exists → generate one
-    const { data: allQuestions, error: allErr } = await supabase
+    const { data: allQuestions } = await supabase
       .from("trivia_questions")
-      .select("id");
-
-    if (allErr) {
-      console.error("Fetch all trivia questions error:", allErr);
-      return NextResponse.json({ weekStart, questions: [] });
-    }
+      .select("id, question, correct_answer, points");
 
     if (!allQuestions?.length) {
       return NextResponse.json({ weekStart, questions: [] });
@@ -55,23 +46,18 @@ export async function GET() {
     const shuffled = [...allQuestions].sort(() => Math.random() - 0.5);
     const selected = shuffled.slice(0, 10).map((q) => q.id);
 
-    // Try inserting weekly challenge
-    const { data: newChallenge, error: insertError } = await supabase
+    const { data: newChallenge } = await supabase
       .from("weekly_challenges")
       .insert({ week_start: weekStart, question_ids: selected })
       .select()
       .maybeSingle();
 
-    if (insertError) console.error("Weekly challenge insert error:", insertError);
-
     const finalIds = newChallenge?.question_ids ?? selected;
 
-    const { data: questions, error: qErr2 } = await supabase
+    const { data: questions } = await supabase
       .from("trivia_questions")
-      .select("*")
+      .select("id, question, correct_answer, points")
       .in("id", finalIds);
-
-    if (qErr2) console.error("Weekly fallback question fetch error:", qErr2);
 
     return NextResponse.json({
       weekStart,

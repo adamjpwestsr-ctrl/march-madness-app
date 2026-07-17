@@ -9,11 +9,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     (async () => {
-      // Get logged-in user
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Check if user has push notifications enabled
       const { data: dbUser } = await supabase
         .from("users")
         .select("push_notifications")
@@ -21,7 +19,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         .maybeSingle();
 
       if (dbUser?.push_notifications) {
-        await getFcmTokenForUser();   // ⭐ THIS IS STEP 2
+        await getFcmTokenForUser();
       }
     })();
   }, []);

@@ -39,7 +39,9 @@ export default function WeeklyChallenge({
     return (
       <div className="text-center mt-6">
         <h2 className="text-xl font-bold mb-2">Weekly Challenge</h2>
-        <p className="text-slate-400">Loading weekly challenge…</p>
+        <p className="text-slate-400">
+          Weekly challenge will appear once trivia questions are available.
+        </p>
       </div>
     );
   }
@@ -49,7 +51,7 @@ export default function WeeklyChallenge({
     return (
       <div className="text-center mt-6">
         <h2 className="text-xl font-bold mb-2">
-          Weekly Challenge — {weekStart}
+          Weekly Challenge — {weekStart ?? "Unknown Week"}
         </h2>
         <p className="text-slate-400 mb-4">
           Ready to test your knowledge in this week’s themed round?
@@ -69,10 +71,10 @@ export default function WeeklyChallenge({
   const submitAnswer = () => {
     if (!q) return;
     const normalized = answer.trim().toLowerCase();
-    const correctAns = q.correct_answer?.trim().toLowerCase();
+    const correctAns = (q.correct_answer ?? "").trim().toLowerCase();
 
-    if (normalized === correctAns) {
-      setScore((s) => s + q.points);
+    if (normalized === correctAns && correctAns !== "") {
+      setScore((s) => s + (q.points ?? 0));
       setCorrect((c) => c + 1);
     } else {
       setScore((s) => s - 1);
@@ -142,7 +144,7 @@ export default function WeeklyChallenge({
         Weekly Challenge — Question {index + 1} / {weeklyQuestions.length}
       </h2>
 
-      <p className="text-slate-200 mb-3">{q.question}</p>
+      <p className="text-slate-200 mb-3">{q.question ?? "No question text"}</p>
 
       <input
         value={answer}

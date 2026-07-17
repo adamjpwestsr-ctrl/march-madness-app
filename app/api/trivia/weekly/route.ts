@@ -77,7 +77,10 @@ export async function GET() {
       .select()
       .maybeSingle();
 
-    // If RLS blocks insert → fallback
+    if (insertError) {
+      console.error("Weekly challenge insert error:", insertError);
+    }
+
     const finalIds = newChallenge?.question_ids ?? selected;
 
     const { data: questions, error: qErr2 } = await supabase

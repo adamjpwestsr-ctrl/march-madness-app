@@ -25,7 +25,6 @@ export default function TriviaHub() {
 
         const json = await res.json();
 
-        // Validate shape
         if (!json || !json.weekStart || !Array.isArray(json.questions)) {
           throw new Error("Invalid weekly trivia format");
         }
@@ -53,11 +52,11 @@ export default function TriviaHub() {
 
       {/* Daily + Weekly */}
       <section className="grid gap-6 md:grid-cols-2">
-	<Link href="/trivia/game?mode=daily" className="block">
+        <Link href="/trivia/game?mode=daily" className="block">
           <DailyChallenge displayName={displayName} />
         </Link>
 
-        <Link href="/challenges/weekly" className="block">
+        <div className="block">
           {loading && (
             <div className="rounded-xl border border-slate-800 p-6 bg-slate-900/40 text-slate-400">
               Loading weekly challenge…
@@ -77,7 +76,7 @@ export default function TriviaHub() {
               weeklyQuestions={weekly.questions}
             />
           )}
-        </Link>
+        </div>
       </section>
 
       {/* Trivia Modes */}

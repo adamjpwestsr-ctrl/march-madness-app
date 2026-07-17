@@ -1,20 +1,17 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/utils/supabase/server";
+import { supabaseServerClient } from "@/lib/supabaseServerClient";
 
 export async function GET() {
-  const supabase = createClient();
+  const supabase = supabaseServerClient();
 
-  // Helper to safely unwrap rows
   const safe = (row: any, defaults: any) => row ?? defaults;
 
-  // Default objects to prevent null crashes
   const defaultHighest = { display_name: "—", score: 0 };
   const defaultMostCorrect = { display_name: "—", correct_count: 0 };
   const defaultLongest = { display_name: "—", streak: 0 };
   const defaultMostRuns = { display_name: "—", count: 0 };
 
   try {
-    // Highest Score Ever
     const { data: highestScore } = await supabase
       .from("trivia_runs")
       .select("display_name, score")
@@ -22,7 +19,6 @@ export async function GET() {
       .limit(1)
       .maybeSingle();
 
-    // Most Correct Answers
     const { data: mostCorrect } = await supabase
       .from("trivia_runs")
       .select("display_name, correct_count")
@@ -30,7 +26,6 @@ export async function GET() {
       .limit(1)
       .maybeSingle();
 
-    // Longest Streak
     const { data: longestStreak } = await supabase
       .from("trivia_runs")
       .select("display_name, streak")
@@ -38,7 +33,6 @@ export async function GET() {
       .limit(1)
       .maybeSingle();
 
-    // Most Runs Played
     const { data: mostRuns } = await supabase
       .from("trivia_runs")
       .select("display_name, count")
@@ -55,7 +49,6 @@ export async function GET() {
   } catch (err) {
     console.error("HOF API error:", err);
 
-    // Always return safe defaults even on API failure
     return NextResponse.json({
       highestScore: defaultHighest,
       mostCorrect: defaultMostCorrect,

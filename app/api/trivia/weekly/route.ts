@@ -15,18 +15,27 @@ export async function GET() {
   const weekStart = getWeekStart();
 
   try {
-    const { data: challenge } = await supabase
+    // 1. Try loading existing weekly challenge
+    const { data: challenge, error: challengeError } = await supabase
       .from("weekly_challenges")
       .select("*")
       .eq("week_start", weekStart)
       .maybeSingle();
 
-    // If challenge exists → fetch questions
-    if (challenge?.question_ids?.length) {
-      const { data: questions } = await supabase
+    if (challengeError) {
+      console.error("Weekly challenge fetch error:", challengeError);
+    }
+
+    // 2. If challenge exists → fetch questions
+    if (challenge?.question_ids?.length > 0) {
+      const { data: questions, error: qErr } = await supabase
         .from("trivia_questions")
         .select("id, question, correct_answer, points")
         .in("id", challenge.question_ids);
+
+      if (qErr) {
+        console.error("Weekly question fetch error:", qErr);
+      }
 
       return NextResponse.json({
         weekStart,
@@ -34,37 +43,68 @@ export async function GET() {
       });
     }
 
-    // No challenge exists → generate one
-    const { data: allQuestions } = await supabase
+    // 3. No challenge exists → generate one
+    const { data: allQuestions, error: allErr } = await supabase
       .from("trivia_questions")
       .select("id, question, correct_answer, points");
 
-    if (!allQuestions?.length) {
-      return NextResponse.json({ weekStart, questions: [] });
+    if (allErr) {
+      console.error("Fetch all trivia questions error:", allErr);
+      return NextResponse.json({
+        weekStart,
+        questions: [],
+        error: "Failed to load trivia questions",
+      });
     }
 
+    if (!allQuestions || allQuestions.length === 0) {
+      return NextResponse.json({
+        weekStart,
+        questions: [],
+        error: "No trivia questions available",
+      });
+    }
+
+    // Pick 10 random IDs
     const shuffled = [...allQuestions].sort(() => Math.random() - 0.5);
     const selected = shuffled.slice(0, 10).map((q) => q.id);
 
-    const { data: newChallenge } = await supabase
+    // 4. Try inserting weekly challenge
+    const { data: newChallenge, error: insertError } = await supabase
       .from("weekly_challenges")
-      .insert({ week_start: weekStart, question_ids: selected })
+      .insert({
+        week_start: weekStart,
+        question_ids: selected,
+      })
       .select()
       .maybeSingle();
 
+    if (insertError) {
+      console.error("Weekly insert blocked by RLS:", insertError);
+    }
+
     const finalIds = newChallenge?.question_ids ?? selected;
 
-    const { data: questions } = await supabase
+    const { data: questions, error: qErr2 } = await supabase
       .from("trivia_questions")
       .select("id, question, correct_answer, points")
       .in("id", finalIds);
+
+    if (qErr2) {
+      console.error("Weekly fallback question fetch error:", qErr2);
+    }
 
     return NextResponse.json({
       weekStart,
       questions: questions ?? [],
     });
+
   } catch (err) {
     console.error("Weekly route crashed:", err);
-    return NextResponse.json({ weekStart, questions: [] });
+    return NextResponse.json({
+      weekStart,
+      questions: [],
+      error: "Server error",
+    });
   }
 }

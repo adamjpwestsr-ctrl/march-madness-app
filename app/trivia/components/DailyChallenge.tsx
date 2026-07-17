@@ -6,22 +6,40 @@ export default function DailyChallenge({ displayName }: { displayName: string })
   const [question, setQuestion] = useState<any>(null);
   const [answer, setAnswer] = useState("");
   const [result, setResult] = useState<"correct" | "wrong" | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
-      const res = await fetch("/api/trivia/daily");
-      const data = await res.json();
-      setQuestion(data);
+      try {
+        const res = await fetch("/api/trivia/daily");
+        const data = await res.json();
+
+        // API returns { question: {...} } or { error: ... }
+        if (!data || data.error || !data.question) {
+          setError(data?.error ?? "Daily challenge unavailable");
+          return;
+        }
+
+        setQuestion(data.question);
+      } catch (err) {
+        setError("Failed to load daily challenge");
+      }
     }
+
     load();
   }, []);
 
+  // If API failed → render nothing (prevents hydration crash)
+  if (error) return null;
+
+  // If still loading → render nothing
+  if (!question) return null;
+
   const submit = async () => {
-    if (!answer.trim() || !question) return;
+    if (!answer.trim()) return;
 
     const normalized = answer.trim().toLowerCase();
     const correct = (question.correct_answer ?? "").trim().toLowerCase();
-
     const isCorrect = normalized === correct;
 
     setResult(isCorrect ? "correct" : "wrong");
@@ -35,23 +53,6 @@ export default function DailyChallenge({ displayName }: { displayName: string })
       }),
     });
   };
-
-  if (!question || !question.question) {
-    return (
-      <div
-        style={{
-          marginTop: 24,
-          padding: 16,
-          borderRadius: 16,
-          background: "rgba(15,23,42,0.95)",
-          border: "1px solid #1f2937",
-          color: "#9ca3af",
-        }}
-      >
-        Daily Challenge unavailable.
-      </div>
-    );
-  }
 
   return (
     <div
@@ -67,7 +68,9 @@ export default function DailyChallenge({ displayName }: { displayName: string })
         Daily Challenge Question
       </h2>
 
-      <p style={{ marginBottom: 12, color: "#e5e7eb" }}>{question.question}</p>
+      <p style={{ marginBottom: 12, color: "#e5e7eb" }}>
+        {question.question}
+      </p>
 
       {result === null ? (
         <>

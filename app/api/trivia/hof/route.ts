@@ -12,30 +12,35 @@ export async function GET() {
   const defaultMostRuns = { display_name: "—", count: 0 };
 
   try {
+    // Highest Score
     const { data: highestScore } = await supabase
-      .from("trivia_runs")
+      .from("trivia_rounds")
       .select("display_name, score")
       .order("score", { ascending: false })
       .limit(1)
       .maybeSingle();
 
+    // Most Correct Answers
     const { data: mostCorrect } = await supabase
-      .from("trivia_runs")
+      .from("trivia_rounds")
       .select("display_name, correct_count")
       .order("correct_count", { ascending: false })
       .limit(1)
       .maybeSingle();
 
+    // Longest Streak (correct_count - wrong_count)
     const { data: longestStreak } = await supabase
-      .from("trivia_runs")
-      .select("display_name, streak")
+      .from("trivia_rounds")
+      .select("display_name, (correct_count - wrong_count) as streak")
       .order("streak", { ascending: false })
       .limit(1)
       .maybeSingle();
 
+    // Most Runs Played
     const { data: mostRuns } = await supabase
-      .from("trivia_runs")
-      .select("display_name, count")
+      .from("trivia_rounds")
+      .select("display_name, count(*)")
+      .group("display_name")
       .order("count", { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -47,7 +52,7 @@ export async function GET() {
       mostRuns: safe(mostRuns, defaultMostRuns),
     });
   } catch (err) {
-    console.error("HOF API error:", err);
+    console.error("HOF Stats API error:", err);
 
     return NextResponse.json({
       highestScore: defaultHighest,

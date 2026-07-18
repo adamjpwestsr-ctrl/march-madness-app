@@ -1,172 +1,123 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function WeeklyChallenge({
   displayName,
-  weekStart,
-  weeklyQuestions,
-  onStartWeekly,
 }: {
   displayName: string;
-  weekStart: string | null;
-  weeklyQuestions: any[] | null;
-  onStartWeekly?: () => void;
 }) {
-  const [started, setStarted] = useState(false);
-  const [index, setIndex] = useState(0);
-  const [answer, setAnswer] = useState("");
-  const [score, setScore] = useState(0);
-  const [correct, setCorrect] = useState(0);
-  const [wrong, setWrong] = useState(0);
-  const [passed, setPassed] = useState(0);
-  const [finished, setFinished] = useState(false);
+  const [questions, setQuestions] = useState<any[]>([]);
+  const [weekStart, setWeekStart] = useState<string | null>(null);
+  const [theme, setTheme] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const startChallenge = () => {
-    setStarted(true);
-    setIndex(0);
-    setScore(0);
-    setCorrect(0);
-    setWrong(0);
-    setPassed(0);
-    setFinished(false);
-    setAnswer("");
-    onStartWeekly?.();
-  };
+  useEffect(() => {
+    let active = true;
 
-  // 🟡 Loading or empty state
-  if (!weeklyQuestions || weeklyQuestions.length === 0) {
-    return (
-      <div className="text-center mt-6">
-        <h2 className="text-xl font-bold mb-2">Weekly Challenge</h2>
-        <p className="text-slate-400">
-          Weekly challenge will appear once trivia questions are available.
-        </p>
-      </div>
-    );
-  }
+    async function load() {
+      try {
+        const res = await fetch("/api/trivia/weekly", { cache: "no-store" });
+        const data = await res.json();
 
-  // 🟢 Before starting
-  if (!started) {
-    return (
-      <div className="text-center mt-6">
-        <h2 className="text-xl font-bold mb-2">
-          Weekly Challenge — {weekStart ?? "Unknown Week"}
-        </h2>
-        <p className="text-slate-400 mb-4">
-          Ready to test your knowledge in this week’s themed round?
-        </p>
-        <button
-          onClick={startChallenge}
-          className="px-5 py-2 rounded-full bg-emerald-500 text-slate-900 font-bold hover:bg-emerald-600 transition"
-        >
-          Play Weekly Challenge
-        </button>
-      </div>
-    );
-  }
+        if (!active) return;
 
-  const q = weeklyQuestions[index];
+        if (data.error) {
+          setError(data.error);
+          setLoading(false);
+          return;
+        }
 
-  const submitAnswer = () => {
-    if (!q) return;
-    const normalized = answer.trim().toLowerCase();
-    const correctAns = (q.correct_answer ?? "").trim().toLowerCase();
+        if (!data.questions || data.questions.length === 0) {
+          setError("Weekly challenge unavailable");
+          setLoading(false);
+          return;
+        }
 
-    if (normalized === correctAns && correctAns !== "") {
-      setScore((s) => s + (q.points ?? 0));
-      setCorrect((c) => c + 1);
-    } else {
-      setScore((s) => s - 1);
-      setWrong((w) => w + 1);
+        setQuestions(data.questions);
+        setWeekStart(data.weekStart ?? null);
+        setTheme(data.theme ?? null);
+        setLoading(false);
+      } catch (err) {
+        if (active) {
+          setError("Failed to load weekly challenge");
+          setLoading(false);
+        }
+      }
     }
 
-    setAnswer("");
-    setIndex((i) => i + 1);
-  };
+    load();
+    return () => {
+      active = false;
+    };
+  }, []);
 
-  const pass = () => {
-    setPassed((p) => p + 1);
-    setIndex((i) => i + 1);
-  };
-
-  const finish = async () => {
-    setFinished(true);
-    try {
-      await fetch("/api/trivia/weekly/submit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          displayName,
-          weekStart,
-          score,
-          correctCount: correct,
-          wrongCount: wrong,
-          passedCount: passed,
-        }),
-      });
-    } catch (err) {
-      console.error("Weekly submit failed:", err);
-    }
-  };
-
-  // 🟣 Finished state
-  if (finished) {
+  // 🔒 Hydration-safe: render nothing until loading completes
+  if (loading) {
     return (
-      <div className="mt-6 text-center">
-        <h2 className="text-2xl font-bold">Weekly Challenge Complete</h2>
-        <p className="mt-2 text-slate-300">Score: {score}</p>
-        <p className="text-slate-400">
-          ✅ {correct} • ❌ {wrong} • ⏭ {passed}
-        </p>
+      <div className="text-slate-400 p-6">
+        Loading weekly challenge…
       </div>
     );
   }
 
-  // 🔵 End of questions
-  if (index >= weeklyQuestions.length) {
+  // 🔒 Hydration-safe: render nothing if API failed
+  if (error) {
     return (
-      <div className="text-center mt-6">
-        <button
-          onClick={finish}
-          className="px-5 py-2 rounded-full bg-blue-500 text-slate-900 font-bold hover:bg-blue-600 transition"
-        >
-          Submit Weekly Challenge
-        </button>
+      <div className="p-6 text-slate-400">
+        Weekly challenge unavailable — {error}.
       </div>
     );
   }
 
-  // 🟠 Active question
+  // 🔒 Hydration-safe: render nothing if questions missing
+  if (!questions || questions.length === 0) {
+    return (
+      <div className="p-6 text-slate-400">
+        Weekly challenge unavailable.
+      </div>
+    );
+  }
+
+  // 🟢 Valid weekly challenge — safe to render full UI
   return (
-    <div className="mt-6 p-4 rounded-xl bg-slate-900/90 border border-slate-700">
-      <h2 className="text-lg font-bold mb-2">
-        Weekly Challenge — Question {index + 1} / {weeklyQuestions.length}
+    <div
+      style={{
+        marginTop: 24,
+        padding: 16,
+        borderRadius: 16,
+        background: "rgba(15,23,42,0.95)",
+        border: "1px solid #1f2937",
+      }}
+    >
+      <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>
+        Weekly Challenge
       </h2>
 
-      <p className="text-slate-200 mb-3">{q.question ?? "No question text"}</p>
+      <p style={{ marginBottom: 12, color: "#e5e7eb" }}>
+        Week of {weekStart} — Good luck, {displayName}.
+      </p>
 
-      <input
-        value={answer}
-        onChange={(e) => setAnswer(e.target.value)}
-        placeholder="Your answer"
-        className="w-full p-2 rounded-md bg-slate-950 border border-slate-600 text-slate-200 mb-3"
-      />
+      {theme && (
+        <p style={{ marginBottom: 12, color: "#93c5fd" }}>
+          Theme: {theme}
+        </p>
+      )}
 
-      <div className="flex gap-3">
-        <button
-          onClick={submitAnswer}
-          className="px-4 py-2 rounded-full bg-emerald-500 text-slate-900 font-bold hover:bg-emerald-600 transition"
-        >
-          Submit
-        </button>
-        <button
-          onClick={pass}
-          className="px-4 py-2 rounded-full bg-orange-500 text-slate-900 font-bold hover:bg-orange-600 transition"
-        >
-          Pass
-        </button>
-      </div>
+      <ul className="space-y-3">
+        {questions.map((q) => (
+          <li
+            key={q.id}
+            className="p-3 rounded-lg bg-slate-800/40 border border-slate-700"
+          >
+            <p className="font-medium">{q.question}</p>
+            <p className="text-slate-400 text-sm">
+              Difficulty: {q.difficulty} • {q.points} pts
+            </p>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

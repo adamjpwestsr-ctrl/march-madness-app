@@ -6,40 +6,52 @@ export default function DailyChallenge({ displayName }: { displayName: string })
   const [question, setQuestion] = useState<any>(null);
   const [answer, setAnswer] = useState("");
   const [result, setResult] = useState<"correct" | "wrong" | null>(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let active = true;
+
     async function load() {
       try {
-        const res = await fetch("/api/trivia/daily");
+        const res = await fetch("/api/trivia/daily", { cache: "no-store" });
         const data = await res.json();
 
-        // API returns { question: {...} } or { error: ... }
-        if (!data || data.error || !data.question) {
-          setError(data?.error ?? "Daily challenge unavailable");
+        if (!active) return;
+
+        if (data.error) {
+          setError(data.error);
+          setLoading(false);
+          return;
+        }
+
+        if (!data.question) {
+          setError("Invalid daily question");
+          setLoading(false);
           return;
         }
 
         setQuestion(data.question);
+        setLoading(false);
       } catch (err) {
-        setError("Failed to load daily challenge");
+        if (active) {
+          setError("Failed to load daily challenge");
+          setLoading(false);
+        }
       }
     }
 
     load();
+    return () => {
+      active = false;
+    };
   }, []);
-
-  // If API failed → render nothing (prevents hydration crash)
-  if (error) return null;
-
-  // If still loading → render nothing
-  if (!question) return null;
 
   const submit = async () => {
     if (!answer.trim()) return;
 
     const normalized = answer.trim().toLowerCase();
-    const correct = (question.correct_answer ?? "").trim().toLowerCase();
+    const correct = question.correct_answer.trim().toLowerCase();
     const isCorrect = normalized === correct;
 
     setResult(isCorrect ? "correct" : "wrong");
@@ -54,6 +66,34 @@ export default function DailyChallenge({ displayName }: { displayName: string })
     });
   };
 
+  // 🔒 Hydration-safe: render nothing until loading completes
+  if (loading) {
+    return (
+      <div className="text-slate-400 p-6">
+        Loading daily challenge…
+      </div>
+    );
+  }
+
+  // 🔒 Hydration-safe: render nothing if API failed
+  if (error) {
+    return (
+      <div className="p-6 text-slate-400">
+        Daily challenge unavailable — {error}.
+      </div>
+    );
+  }
+
+  // 🔒 Hydration-safe: render nothing if question missing
+  if (!question) {
+    return (
+      <div className="p-6 text-slate-400">
+        Daily challenge unavailable.
+      </div>
+    );
+  }
+
+  // 🟢 Valid daily question — safe to render full UI
   return (
     <div
       style={{
@@ -88,6 +128,7 @@ export default function DailyChallenge({ displayName }: { displayName: string })
               marginBottom: 8,
             }}
           />
+
           <button
             onClick={submit}
             style={{

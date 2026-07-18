@@ -1,121 +1,162 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useState } from "react";
 
-type LeaderboardEntry = {
-  id: number;
-  display_name: string;
-  score: number;
-  created_at: string;
-};
+export default function Leaderboard() {
+  const [filter, setFilter] = useState<"all" | "daily" | "weekly">("all");
+  const [rounds, setRounds] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-interface Props {
-  entries: LeaderboardEntry[];
-  loading: boolean;
-}
+  useEffect(() => {
+    let active = true;
 
-export default function Leaderboard({ entries, loading }: Props) {
+    async function load() {
+      try {
+        setLoading(true);
+
+        const res = await fetch(`/api/trivia/leaderboard?type=${filter}`, {
+          cache: "no-store",
+        });
+
+        const data = await res.json();
+        if (!active) return;
+
+        if (data.error) {
+          setError(data.error);
+          setRounds([]);
+          setLoading(false);
+          return;
+        }
+
+        setRounds(data.rounds ?? []);
+        setError(null);
+        setLoading(false);
+      } catch (err) {
+        if (active) {
+          setError("Failed to load leaderboard");
+          setRounds([]);
+          setLoading(false);
+        }
+      }
+    }
+
+    load();
+    return () => {
+      active = false;
+    };
+  }, [filter]);
+
   if (loading) {
     return (
-      <div style={{ padding: 16, textAlign: "center", color: "#9ca3af" }}>
-        Updating…
+      <div className="text-slate-400 p-6">
+        Loading leaderboard…
       </div>
     );
   }
 
-  if (!entries || entries.length === 0) {
+  if (error) {
     return (
-      <div style={{ padding: 16, textAlign: "center", color: "#9ca3af" }}>
-        No runs yet. Be the first.
+      <div className="p-6 text-slate-400">
+        Leaderboard unavailable — {error}.
       </div>
     );
   }
 
   return (
-    <div style={{ marginTop: 8 }}>
-      <AnimatePresence>
-        {entries.map((entry, index) => {
-          const rank = index + 1;
+    <div
+      style={{
+        marginTop: 24,
+        padding: 16,
+        borderRadius: 16,
+        background: "rgba(15,23,42,0.95)",
+        border: "1px solid #1f2937",
+      }}
+    >
+      <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 16 }}>
+        Leaderboard
+      </h2>
 
-          const medal =
-            rank === 1
-              ? "🥇"
-              : rank === 2
-              ? "🥈"
-              : rank === 3
-              ? "🥉"
-              : null;
+      {/* FILTER BUTTONS */}
+      <div className="flex gap-3 mb-4">
+        <button
+          onClick={() => setFilter("all")}
+          className={`px-3 py-1 rounded text-xs ${
+            filter === "all" ? "bg-blue-600" : "bg-slate-700"
+          }`}
+        >
+          All Time
+        </button>
 
-          const scoreColor =
-            entry.score > 0
-              ? "#22c55e"
-              : entry.score < 0
-              ? "#f87171"
-              : "#e5e7eb";
+        <button
+          onClick={() => setFilter("daily")}
+          className={`px-3 py-1 rounded text-xs ${
+            filter === "daily" ? "bg-blue-600" : "bg-slate-700"
+          }`}
+        >
+          Daily
+        </button>
 
-          const rowGlow =
-            rank === 1
-              ? "0 0 12px rgba(234,179,8,0.5)"
-              : rank === 2
-              ? "0 0 10px rgba(156,163,175,0.4)"
-              : rank === 3
-              ? "0 0 10px rgba(205,127,50,0.4)"
-              : "none";
+        <button
+          onClick={() => setFilter("weekly")}
+          className={`px-3 py-1 rounded text-xs ${
+            filter === "weekly" ? "bg-blue-600" : "bg-slate-700"
+          }`}
+        >
+          Weekly
+        </button>
+      </div>
 
-          return (
-            <motion.div
-              key={entry.id}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              transition={{ duration: 0.25 }}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: "10px 14px",
-                marginBottom: 8,
-                borderRadius: 12,
-                background: "rgba(30,41,59,0.6)",
-                border: "1px solid rgba(55,65,81,0.6)",
-                boxShadow: rowGlow,
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <div
-                  style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: "50%",
-                    background: "rgba(15,23,42,0.8)",
-                    border: "1px solid rgba(55,65,81,0.8)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: 14,
-                  }}
-                >
-                  {medal || rank}
-                </div>
+      {/* LEADERBOARD LIST */}
+      <ul className="space-y-4">
+        {rounds.map((r) => (
+          <li
+            key={r.id}
+            className="p-4 rounded-lg bg-slate-800/40 border border-slate-700"
+          >
+            <div className="flex justify-between items-center">
+              {/* LEFT SIDE: RANK + ARROWS + BADGE + NAME */}
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-lg">#{r.rank}</span>
 
-                <div style={{ fontWeight: 600, fontSize: 14 }}>
-                  {entry.display_name}
-                </div>
+                {r.delta > 0 && (
+                  <span className="text-green-400 text-sm">▲ {r.delta}</span>
+                )}
+                {r.delta < 0 && (
+                  <span className="text-red-400 text-sm">
+                    ▼ {Math.abs(r.delta)}
+                  </span>
+                )}
+                {r.delta === 0 && (
+                  <span className="text-slate-500 text-sm">➖</span>
+                )}
+
+                <span className="ml-2 px-2 py-1 rounded bg-slate-700 text-xs">
+                  {r.badge}
+                </span>
+
+                <span className="font-bold text-lg ml-2">
+                  {r.display_name}
+                </span>
               </div>
 
-              <div
-                style={{
-                  fontWeight: 700,
-                  fontSize: 14,
-                  color: scoreColor,
-                }}
-              >
-                {entry.score} pts
-              </div>
-            </motion.div>
-          );
-        })}
-      </AnimatePresence>
+              {/* RIGHT SIDE: SCORE */}
+              <span className="text-blue-400 font-bold">{r.score} pts</span>
+            </div>
+
+            {/* DETAILS */}
+            <div className="text-slate-400 text-sm mt-2">
+              <p>Correct: {r.correct_count}</p>
+              <p>Wrong: {r.wrong_count}</p>
+              <p>Passed: {r.passed_count}</p>
+              <p>Duration: {r.duration_sec}s</p>
+              <p className="mt-1">
+                Played: {new Date(r.created_at).toLocaleDateString()}
+              </p>
+            </div>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

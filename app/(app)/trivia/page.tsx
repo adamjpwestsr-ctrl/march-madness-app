@@ -1,7 +1,7 @@
 "use client";
 
-import DailyChallenge from "../components/DailyChallenge";
-import WeeklyChallenge from "../components/WeeklyChallenge";
+import DailyChallenge from "../../trivia/components/DailyChallenge";
+import WeeklyChallenge from "../../trivia/components/WeeklyChallenge";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 

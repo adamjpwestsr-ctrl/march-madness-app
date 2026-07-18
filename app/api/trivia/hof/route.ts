@@ -28,7 +28,7 @@ export async function GET() {
       .limit(1)
       .maybeSingle();
 
-    // Longest Streak (correct_count - wrong_count)
+    // Longest Streak
     const { data: longestStreak } = await supabase
       .from("trivia_rounds")
       .select("display_name, (correct_count - wrong_count) as streak")
@@ -36,13 +36,9 @@ export async function GET() {
       .limit(1)
       .maybeSingle();
 
-    // Most Runs Played
+    // Most Runs Played — via RPC
     const { data: mostRuns } = await supabase
-      .from("trivia_rounds")
-      .select("display_name, count(*)")
-      .group("display_name")
-      .order("count", { ascending: false })
-      .limit(1)
+      .rpc("hof_most_runs")
       .maybeSingle();
 
     return NextResponse.json({

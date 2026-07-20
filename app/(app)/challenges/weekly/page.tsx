@@ -90,9 +90,9 @@ export default function WeeklyChallengeDetail() {
   }
 
   // 🟢 Valid weekly challenge — safe to render full UI
-  return (
-    <div className="space-y-10 p-6">
-      <WeeklyThemeBanner weekStart={weekStart!} />
+//  return (
+  //  <div className="space-y-10 p-6">
+    //  <WeeklyThemeBanner weekStart={weekStart!} />
 
       <section>
         <h1 className="text-3xl font-semibold mb-2">Weekly Trivia Challenge</h1>

@@ -94,12 +94,12 @@ export default function WeeklyChallengeDetail() {
   //  <div className="space-y-10 p-6">
     //  <WeeklyThemeBanner weekStart={weekStart!} />
 
-      <section>
-        <h1 className="text-3xl font-semibold mb-2">Weekly Trivia Challenge</h1>
-        <p className="text-slate-400">
-          This week's challenge started on {weekStart}.
-        </p>
-      </section>
+//      <section>
+  //      <h1 className="text-3xl font-semibold mb-2">Weekly Trivia Challenge</h1>
+    //    <p className="text-slate-400">
+      //    This week's challenge started on {weekStart}.
+        //</p>
+      // </section>
 
       <section>
         <Link

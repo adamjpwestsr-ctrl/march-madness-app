@@ -2,27 +2,38 @@ import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
-const cookieStore = cookies() as any;
+export async function GET() {
+  const cookieStore = cookies();
 
-const supabase = createServerClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  {
-    cookies: {
-      get(name: string) {
-        return cookieStore.get(name)?.value;
-      },
-      set(name: string, value: string, options: any) {
-        cookieStore.set(name, value, options);
-      },
-      remove(name: string, options: any) {
-        cookieStore.set(name, "", { ...options, maxAge: 0 });
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+        set(name: string, value: string, options: any) {
+          cookieStore.set(name, value, options);
+        },
+        remove(name: string, options: any) {
+          cookieStore.set(name, "", { ...options, maxAge: 0 });
+        }
       }
     }
-  }
-);
+  );) {
+  // MUST be inside the request handler
+  
 
-export async function GET() {
+  
+        },
+        remove(name: string, options: any) {
+          cookieStore.set(name, "", { ...options, maxAge: 0 });
+        }
+      }
+    }
+  );
+
   const today = new Date().toISOString().split("T")[0];
 
   const { data, error } = await supabase
@@ -32,8 +43,12 @@ export async function GET() {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: "Daily trivia not found" }, { status: 404 });
+    return NextResponse.json(
+      { error: "Daily trivia not found" },
+      { status: 404 }
+    );
   }
 
   return NextResponse.json({ daily: data });
 }
+

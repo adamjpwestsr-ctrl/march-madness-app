@@ -1,10 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
-import {
-  cookies: {
-    get(name: string) {
-      return cookieStore.get(name)?.value;
-    },
+import { cookies } from 'next/headers',
     set(name: string, value: string, options: any) {
       cookieStore.set(name, value, options);
     },
@@ -23,6 +19,17 @@ export async function GET() {
   {
     cookies: {
       get(name: string) {
+        return cookieStore.get(name)?.value;
+      },
+      set(name: string, value: string, options: any) {
+        cookieStore.set(name, value, options);
+      },
+      remove(name: string, options: any) {
+        cookieStore.set(name, '', { ...options, maxAge: 0 });
+      }
+    }
+  }
+) {
         return cookieStore.get(name)?.value;
       },
       set(name: string, value: string, options: any) {
@@ -108,6 +115,7 @@ export async function GET() {
     );
   }
 }
+
 
 
 

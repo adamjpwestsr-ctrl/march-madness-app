@@ -450,7 +450,18 @@ export default function TriviaAdminPage() {
 
 /* -------------------- Neon Dropdown Component -------------------- */
 
-function NeonDropdown({ value, onChange, options }) {
+interface DropdownOption {
+  value: string;
+  label: string;
+}
+
+interface NeonDropdownProps {
+  value: string;
+  onChange: (value: string) => void;
+  options: DropdownOption[];
+}
+
+function NeonDropdown({ value, onChange, options }: NeonDropdownProps) {
   return (
     <select
       value={value}
@@ -470,6 +481,7 @@ function NeonDropdown({ value, onChange, options }) {
     </select>
   );
 }
+
 
 /* -------------------- Form Section Component -------------------- */
 

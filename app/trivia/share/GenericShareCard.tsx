@@ -3,7 +3,15 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 
-export default function GenericShareCard({ player, score }) {
+interface GenericShareCardProps {
+  player: string;
+  score: number;
+}
+
+export default function GenericShareCard({
+  player,
+  score,
+}: GenericShareCardProps) {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.9 }}

@@ -3,7 +3,12 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 
-export default function DailyShareCard({ player, score }) {
+interface DailyShareCardProps {
+  player: string;
+  score: number;
+}
+
+export default function DailyShareCard({ player, score }: DailyShareCardProps) {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.9 }}

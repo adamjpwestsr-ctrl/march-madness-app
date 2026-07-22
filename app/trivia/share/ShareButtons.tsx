@@ -1,6 +1,11 @@
 "use client";
 
-export default function ShareButtons({ url, text }) {
+interface ShareButtonsProps {
+  url: string;
+  text: string;
+}
+
+export default function ShareButtons({ url, text }: ShareButtonsProps) {
   return (
     <div className="flex flex-wrap gap-4 justify-center mt-8">
 
@@ -30,7 +35,9 @@ export default function ShareButtons({ url, text }) {
 
       {/* Email */}
       <a
-        href={`mailto:?subject=Trivia Score&body=${encodeURIComponent(text + " " + url)}`}
+        href={`mailto:?subject=Trivia Score&body=${encodeURIComponent(
+          text + " " + url
+        )}`}
         className="
           px-6 py-3 rounded-xl bg-slate-800 text-white
           border border-slate-700 hover:border-purple-500
@@ -42,7 +49,9 @@ export default function ShareButtons({ url, text }) {
 
       {/* Social */}
       <a
-        href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(text + " " + url)}`}
+        href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(
+          text + " " + url
+        )}`}
         target="_blank"
         className="
           px-6 py-3 rounded-xl bg-slate-800 text-white

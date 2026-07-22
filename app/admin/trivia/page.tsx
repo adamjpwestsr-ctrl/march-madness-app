@@ -4,12 +4,21 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Papa from "papaparse";
 
+/* -------------------- Types -------------------- */
+interface TriviaQuestion {
+  id: number;
+  question: string;
+  answer: string;
+  difficulty: string;
+  points: number;
+}
+
 export default function TriviaAdminPage() {
   const [sport, setSport] = useState("");
-  const [sports, setSports] = useState([]);
-  const [questions, setQuestions] = useState([]);
+  const [sports, setSports] = useState<string[]>([]);
+  const [questions, setQuestions] = useState<TriviaQuestion[]>([]);
   const [loading, setLoading] = useState(false);
-  const [feedback, setFeedback] = useState([]);
+  const [feedback, setFeedback] = useState<any[]>([]);
   const [tab, setTab] = useState("questions"); // questions | feedback | leaderboard | import
 
   // Form fields

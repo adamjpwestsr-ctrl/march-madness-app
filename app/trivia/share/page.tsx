@@ -8,19 +8,24 @@ import WeeklyShareCard from "./WeeklyShareCard";
 import GenericShareCard from "./GenericShareCard";
 import ShareButtons from "./ShareButtons";
 
+/* ---------- Types ---------- */
+
+type ShareMode = "daily" | "weekly" | string;
+
 export default function TriviaShareRouterPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const mode = searchParams.get("mode");
-  const score = searchParams.get("score");
-  const streak = searchParams.get("streak");
+  const mode = (searchParams.get("mode") as ShareMode) || "";
+  const scoreParam = searchParams.get("score");
+  const streakParam = searchParams.get("streak");
 
-  // In production, replace with actual user name from session
   const player = "PLAYER A";
 
-  // Validate required params
-  const missingScore = !score || isNaN(Number(score));
+  const numericScore = scoreParam ? Number(scoreParam) : NaN;
+  const numericStreak = streakParam ? Number(streakParam) : null;
+
+  const missingScore = !scoreParam || isNaN(numericScore);
   const missingMode = !mode;
 
   if (missingScore || missingMode) {
@@ -51,11 +56,11 @@ export default function TriviaShareRouterPage() {
     );
   }
 
-  const numericScore = Number(score);
-  const numericStreak = streak ? Number(streak) : null;
+  const shareUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}/trivia`
+      : "/trivia";
 
-  // Build share URL
-  const shareUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/trivia`;
   const shareText =
     mode === "weekly"
       ? `${player} completed a ${numericStreak}-day streak with ${numericScore} points!`

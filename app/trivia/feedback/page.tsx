@@ -3,16 +3,40 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 
-export default function TriviaFeedbackPage() {
-  const [email, setEmail] = useState("");
-  const [type, setType] = useState("issue"); // issue | feedback
-  const [body, setBody] = useState("");
-  const [enhancement, setEnhancement] = useState("no"); // yes | no
-  const [enhancementText, setEnhancementText] = useState("");
-  const [shoutout, setShoutout] = useState("no"); // yes | no
+/* ---------- Types ---------- */
 
-  const [loading, setLoading] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+type FeedbackType = "issue" | "feedback";
+type YesNo = "yes" | "no";
+
+interface RadioOption {
+  value: string;
+  label: string;
+}
+
+interface RadioGroupProps {
+  name: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: RadioOption[];
+}
+
+interface FormSectionProps {
+  label: string;
+  children: React.ReactNode;
+}
+
+/* ---------- Page Component ---------- */
+
+export default function TriviaFeedbackPage() {
+  const [email, setEmail] = useState<string>("");
+  const [type, setType] = useState<FeedbackType>("issue");
+  const [body, setBody] = useState<string>("");
+  const [enhancement, setEnhancement] = useState<YesNo>("no");
+  const [enhancementText, setEnhancementText] = useState<string>("");
+  const [shoutout, setShoutout] = useState<YesNo>("no");
+
+  const [loading, setLoading] = useState<boolean>(false);
+  const [submitted, setSubmitted] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -102,7 +126,9 @@ export default function TriviaFeedbackPage() {
               type="email"
               required
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setEmail(e.target.value)
+              }
               className="w-full bg-slate-800 text-white p-3 rounded-lg border border-slate-700 focus:border-emerald-500 outline-none"
             />
           </FormSection>
@@ -112,7 +138,7 @@ export default function TriviaFeedbackPage() {
             <RadioGroup
               name="type"
               value={type}
-              onChange={setType}
+              onChange={(val) => setType(val as FeedbackType)}
               options={[
                 { value: "issue", label: "Issue" },
                 { value: "feedback", label: "Feedback" },
@@ -125,7 +151,9 @@ export default function TriviaFeedbackPage() {
             <textarea
               required
               value={body}
-              onChange={(e) => setBody(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                setBody(e.target.value)
+              }
               className="w-full bg-slate-800 text-white p-3 rounded-lg border border-slate-700 focus:border-emerald-500 outline-none h-32"
             />
           </FormSection>
@@ -135,7 +163,7 @@ export default function TriviaFeedbackPage() {
             <RadioGroup
               name="enhancement"
               value={enhancement}
-              onChange={setEnhancement}
+              onChange={(val) => setEnhancement(val as YesNo)}
               options={[
                 { value: "yes", label: "Yes" },
                 { value: "no", label: "No" },
@@ -148,7 +176,9 @@ export default function TriviaFeedbackPage() {
             <FormSection label="Describe your enhancement idea">
               <textarea
                 value={enhancementText}
-                onChange={(e) => setEnhancementText(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                  setEnhancementText(e.target.value)
+                }
                 className="w-full bg-slate-800 text-white p-3 rounded-lg border border-slate-700 focus:border-cyan-500 outline-none h-28"
               />
             </FormSection>
@@ -160,7 +190,7 @@ export default function TriviaFeedbackPage() {
               <RadioGroup
                 name="shoutout"
                 value={shoutout}
-                onChange={setShoutout}
+                onChange={(val) => setShoutout(val as YesNo)}
                 options={[
                   { value: "yes", label: "Yes" },
                   { value: "no", label: "No" },
@@ -194,7 +224,7 @@ export default function TriviaFeedbackPage() {
 
 /* --- Form Section Component --- */
 
-function FormSection({ label, children }) {
+function FormSection({ label, children }: FormSectionProps) {
   return (
     <div className="mb-8">
       <label className="block text-white text-xl font-bold mb-3 drop-shadow-[0_0_15px_rgba(16,185,129,0.7)]">
@@ -207,7 +237,7 @@ function FormSection({ label, children }) {
 
 /* --- Radio Group Component --- */
 
-function RadioGroup({ name, value, onChange, options }) {
+function RadioGroup({ name, value, onChange, options }: RadioGroupProps) {
   return (
     <div className="flex gap-10">
       {options.map((opt) => (

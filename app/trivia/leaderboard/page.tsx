@@ -3,11 +3,27 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 
+/* ---------- Types ---------- */
+
+type LeaderboardMode = "daily" | "weekly" | "alltime";
+
+interface ScoreEntry {
+  id: number | string;
+  player: string;
+  score: number;
+}
+
+interface LeaderboardResponse {
+  scores: ScoreEntry[];
+}
+
+/* ---------- Page Component ---------- */
+
 export default function TriviaLeaderboardPage() {
-  const [mode, setMode] = useState("daily"); // daily | weekly | alltime
-  const [loading, setLoading] = useState(true);
-  const [scores, setScores] = useState([]);
-  const [error, setError] = useState(null);
+  const [mode, setMode] = useState<LeaderboardMode>("daily");
+  const [loading, setLoading] = useState<boolean>(true);
+  const [scores, setScores] = useState<ScoreEntry[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadLeaderboard() {
@@ -23,7 +39,7 @@ export default function TriviaLeaderboardPage() {
           throw new Error(`Leaderboard API returned ${res.status}`);
         }
 
-        const json = await res.json();
+        const json = (await res.json()) as LeaderboardResponse;
 
         if (!json || !Array.isArray(json.scores)) {
           throw new Error("Invalid leaderboard format");
@@ -56,7 +72,7 @@ export default function TriviaLeaderboardPage() {
 
       {/* Mode Selector */}
       <div className="flex gap-6 mb-12">
-        {["daily", "weekly", "alltime"].map((m) => (
+        {(["daily", "weekly", "alltime"] as LeaderboardMode[]).map((m) => (
           <button
             key={m}
             onClick={() => setMode(m)}
@@ -131,8 +147,12 @@ export default function TriviaLeaderboardPage() {
 
 /* --- Rank Badge Component --- */
 
-function RankBadge({ rank }) {
-  const glowMap = {
+interface RankBadgeProps {
+  rank: number;
+}
+
+function RankBadge({ rank }: RankBadgeProps) {
+  const glowMap: Record<number, string> = {
     1: "text-yellow-300 drop-shadow-[0_0_25px_rgba(234,179,8,1)]",
     2: "text-slate-300 drop-shadow-[0_0_25px_rgba(148,163,184,1)]",
     3: "text-orange-400 drop-shadow-[0_0_25px_rgba(251,146,60,1)]",

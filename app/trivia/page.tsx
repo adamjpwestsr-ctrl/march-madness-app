@@ -3,6 +3,17 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 
+/* ---------- Types ---------- */
+
+interface TriviaCardProps {
+  title: string;
+  description: string;
+  href: string;
+  glow: "emerald" | "cyan" | "purple";
+}
+
+/* ---------- Page Component ---------- */
+
 export default function TriviaLandingPage() {
   return (
     <div className="min-h-screen w-full bg-slate-950 flex flex-col items-center justify-start py-20 px-6">
@@ -20,7 +31,6 @@ export default function TriviaLandingPage() {
       {/* Feature Cards Container */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-10 w-full max-w-6xl">
 
-        {/* Daily Challenge */}
         <TriviaCard
           title="Daily Challenge"
           description="10 questions. New every day. Earn points and climb the leaderboard."
@@ -28,7 +38,6 @@ export default function TriviaLandingPage() {
           glow="emerald"
         />
 
-        {/* Weekly Challenge */}
         <TriviaCard
           title="Weekly Challenge"
           description="7‑day streak challenge. Score big and earn weekly badges."
@@ -36,7 +45,6 @@ export default function TriviaLandingPage() {
           glow="cyan"
         />
 
-        {/* Leaderboard */}
         <TriviaCard
           title="Leaderboard"
           description="See how you stack up against other players."
@@ -49,13 +57,16 @@ export default function TriviaLandingPage() {
   );
 }
 
-/* --- Trivia Card Component --- */
+/* ---------- Trivia Card Component ---------- */
 
-function TriviaCard({ title, description, href, glow }) {
-  const glowMap = {
-    emerald: "shadow-[0_0_25px_rgba(16,185,129,1)] hover:shadow-[0_0_45px_rgba(16,185,129,1)]",
-    cyan: "shadow-[0_0_25px_rgba(34,211,238,1)] hover:shadow-[0_0_45px_rgba(34,211,238,1)]",
-    purple: "shadow-[0_0_25px_rgba(168,85,247,1)] hover:shadow-[0_0_45px_rgba(168,85,247,1)]",
+function TriviaCard({ title, description, href, glow }: TriviaCardProps) {
+  const glowMap: Record<TriviaCardProps["glow"], string> = {
+    emerald:
+      "shadow-[0_0_25px_rgba(16,185,129,1)] hover:shadow-[0_0_45px_rgba(16,185,129,1)]",
+    cyan:
+      "shadow-[0_0_25px_rgba(34,211,238,1)] hover:shadow-[0_0_45px_rgba(34,211,238,1)]",
+    purple:
+      "shadow-[0_0_25px_rgba(168,85,247,1)] hover:shadow-[0_0_45px_rgba(168,85,247,1)]",
   };
 
   return (

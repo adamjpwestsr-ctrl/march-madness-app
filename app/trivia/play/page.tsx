@@ -4,29 +4,40 @@ import { useEffect, useMemo, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 
-type TriviaQuestion = {
+/* ---------- Types ---------- */
+
+type TriviaMode = "daily" | "weekly";
+
+interface TriviaQuestion {
   id: string;
   question: string;
   choices: string[];
   correctIndex: number;
   points: number;
-};
+}
+
+interface TriviaResponse {
+  questions: TriviaQuestion[];
+  streak?: number;
+}
+
+/* ---------- Component ---------- */
 
 export default function TriviaPlayPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const mode = searchParams.get("mode") || "daily"; // daily | weekly
 
-  const [loading, setLoading] = useState(true);
+  const mode = (searchParams.get("mode") as TriviaMode) || "daily";
+
+  const [loading, setLoading] = useState<boolean>(true);
   const [questions, setQuestions] = useState<TriviaQuestion[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState<number>(0);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-  const [score, setScore] = useState(0);
-  const [finished, setFinished] = useState(false);
+  const [score, setScore] = useState<number>(0);
+  const [finished, setFinished] = useState<boolean>(false);
 
-  // Weekly streak (only used in weekly mode)
   const [streak, setStreak] = useState<number | null>(null);
 
   useEffect(() => {
@@ -44,7 +55,7 @@ export default function TriviaPlayPage() {
           throw new Error(`Trivia API returned ${res.status}`);
         }
 
-        const json = await res.json();
+        const json = (await res.json()) as TriviaResponse;
 
         if (!json || !Array.isArray(json.questions)) {
           throw new Error("Invalid trivia format");
@@ -52,7 +63,7 @@ export default function TriviaPlayPage() {
 
         setQuestions(json.questions);
 
-        if (mode === "weekly" && json.streak) {
+        if (mode === "weekly" && typeof json.streak === "number") {
           setStreak(json.streak);
         }
       } catch (err) {
@@ -66,13 +77,14 @@ export default function TriviaPlayPage() {
     loadQuestions();
   }, [mode]);
 
-  const currentQuestion = useMemo(
+  const currentQuestion = useMemo<TriviaQuestion | null>(
     () => questions[currentIndex] || null,
     [questions, currentIndex]
   );
 
   function handleAnswer(index: number) {
     if (!currentQuestion || selectedIndex !== null) return;
+
     setSelectedIndex(index);
 
     const isCorrect = index === currentQuestion.correctIndex;
@@ -97,7 +109,6 @@ export default function TriviaPlayPage() {
     setFinished(true);
 
     try {
-      // Write round results to DB
       await fetch("/api/trivia/rounds", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -111,7 +122,6 @@ export default function TriviaPlayPage() {
       console.error("Error writing round:", err);
     }
 
-    // Redirect to share router
     router.push(
       `/trivia/share?mode=${mode}&score=${score}${
         mode === "weekly" ? `&streak=${streak}` : ""

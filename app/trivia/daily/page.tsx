@@ -4,9 +4,24 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 
+/* ---------- Types ---------- */
+
+interface DailyQuestion {
+  id?: number;
+  question: string;
+  answer?: string;
+  [key: string]: any;
+}
+
+interface DailyResponse {
+  questions: DailyQuestion[];
+}
+
+/* ---------- Component ---------- */
+
 export default function DailyChallengePage() {
-  const [loading, setLoading] = useState(true);
-  const [questions, setQuestions] = useState([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [questions, setQuestions] = useState<DailyQuestion[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -18,7 +33,7 @@ export default function DailyChallengePage() {
           throw new Error(`Daily API returned ${res.status}`);
         }
 
-        const json = await res.json();
+        const json = (await res.json()) as DailyResponse;
 
         if (!json || !Array.isArray(json.questions)) {
           throw new Error("Invalid daily trivia format");
@@ -49,7 +64,7 @@ export default function DailyChallengePage() {
         Daily Trivia Challenge
       </motion.h1>
 
-      {/* Loading State */}
+      {/* Loading */}
       {loading && (
         <motion.div
           initial={{ opacity: 0 }}
@@ -60,7 +75,7 @@ export default function DailyChallengePage() {
         </motion.div>
       )}
 
-      {/* Error State */}
+      {/* Error */}
       {error && (
         <div className="bg-red-900/30 border border-red-700 text-red-300 p-6 rounded-xl shadow-lg text-center max-w-xl">
           {error}

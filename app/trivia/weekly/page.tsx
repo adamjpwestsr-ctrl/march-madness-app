@@ -1,15 +1,34 @@
-//app/trivia/weekly/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 
+/* ---------- Types ---------- */
+
+interface WeeklyQuestion {
+  id?: number;
+  question: string;
+  answer?: string;
+  [key: string]: any;
+}
+
+interface WeekInfo {
+  weekStart: string;
+}
+
+interface WeeklyResponse {
+  questions: WeeklyQuestion[];
+  weekInfo: WeekInfo | null;
+}
+
+/* ---------- Component ---------- */
+
 export default function WeeklyChallengePage() {
-  const [loading, setLoading] = useState(true);
-  const [questions, setQuestions] = useState([]);
-  const [weekInfo, setWeekInfo] = useState(null);
-  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [questions, setQuestions] = useState<WeeklyQuestion[]>([]);
+  const [weekInfo, setWeekInfo] = useState<WeekInfo | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadWeekly() {
@@ -20,7 +39,7 @@ export default function WeeklyChallengePage() {
           throw new Error(`Weekly API returned ${res.status}`);
         }
 
-        const json = await res.json();
+        const json = (await res.json()) as WeeklyResponse;
 
         if (!json || !Array.isArray(json.questions)) {
           throw new Error("Invalid weekly trivia format");
@@ -63,7 +82,7 @@ export default function WeeklyChallengePage() {
         </motion.div>
       )}
 
-      {/* Loading State */}
+      {/* Loading */}
       {loading && (
         <motion.div
           initial={{ opacity: 0 }}
@@ -74,7 +93,7 @@ export default function WeeklyChallengePage() {
         </motion.div>
       )}
 
-      {/* Error State */}
+      {/* Error */}
       {error && (
         <div className="bg-red-900/30 border border-red-700 text-red-300 p-6 rounded-xl shadow-lg text-center max-w-xl">
           {error}

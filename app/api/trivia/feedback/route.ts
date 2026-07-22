@@ -1,14 +1,50 @@
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+import {
+  cookies: {
+    get(name: string) {
+      return cookieStore.get(name)?.value;
+    },
+    set(name: string, value: string, options: any) {
+      cookieStore.set(name, value, options);
+    },
+    remove(name: string, options: any) {
+      cookieStore.set(name, '', { ...options, maxAge: 0 });
+    },
+  }
+} from 'next/headers';
+const cookieStore = cookies();
 
 /* -------------------- GET: Fetch all feedback -------------------- */
 export async function GET() {
   try {
     const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { cookies }
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  {
+    cookies: {
+      get(name: string) {
+        return cookieStore.get(name)?.value;
+      },
+      set(name: string, value: string, options: any) {
+        cookieStore.set(name, value, options);
+      },
+      remove(name: string, options: any) {
+        cookieStore.set(name, '', { ...options, maxAge: 0 });
+      },
+    }
+  }
+) {
+      return cookieStore.get(name)?.value;
+    },
+    set(name: string, value: string, options: any) {
+      cookieStore.set(name, value, options);
+    },
+    remove(name: string, options: any) {
+      cookieStore.set(name, '', { ...options, maxAge: 0 });
+    },
+  }
+}
 );
 
     const { data, error } = await supabase
@@ -43,9 +79,32 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { cookies }
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  {
+    cookies: {
+      get(name: string) {
+        return cookieStore.get(name)?.value;
+      },
+      set(name: string, value: string, options: any) {
+        cookieStore.set(name, value, options);
+      },
+      remove(name: string, options: any) {
+        cookieStore.set(name, '', { ...options, maxAge: 0 });
+      },
+    }
+  }
+) {
+      return cookieStore.get(name)?.value;
+    },
+    set(name: string, value: string, options: any) {
+      cookieStore.set(name, value, options);
+    },
+    remove(name: string, options: any) {
+      cookieStore.set(name, '', { ...options, maxAge: 0 });
+    },
+  }
+}
 );
 
     const body = await req.json();
@@ -95,5 +154,6 @@ export async function POST(req: Request) {
     );
   }
 }
+
 
 

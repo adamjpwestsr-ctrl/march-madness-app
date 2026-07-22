@@ -2,8 +2,6 @@ import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
-import { cookies } from "next/headers";
-
 export async function POST(req: Request) {
   try {
     const supabase = createServerClient(
@@ -71,4 +69,5 @@ export async function POST(req: Request) {
     );
   }
 }
+
 

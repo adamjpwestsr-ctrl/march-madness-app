@@ -2,8 +2,6 @@ import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
-import { cookies } from "next/headers";
-
 /* -------------------- GET: Fetch questions by sport -------------------- */
 export async function GET(req: Request) {
   try {
@@ -100,4 +98,5 @@ export async function POST(req: Request) {
     );
   }
 }
+
 

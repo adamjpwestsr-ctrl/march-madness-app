@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 
-export default function WeeklyThemeBanner({ theme }) {
+export default function WeeklyThemeBanner({ weekStart }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: -10 }}
@@ -13,7 +13,7 @@ export default function WeeklyThemeBanner({ theme }) {
         shadow-[0_0_35px_rgba(16,185,129,1)]
       "
     >
-      Weekly Theme: {theme || "Mystery Challenge"}
+      Week of {weekStart || "Unknown Week"}
     </motion.div>
   );
 }

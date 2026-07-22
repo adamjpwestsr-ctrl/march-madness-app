@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 export default function DailyChallengePage() {
   const [loading, setLoading] = useState(true);
   const [questions, setQuestions] = useState([]);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadDaily() {

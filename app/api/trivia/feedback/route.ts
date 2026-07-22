@@ -1,11 +1,17 @@
-import { NextResponse } from "next/server";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
+import { NextResponse } from 'next/server';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
+
 import { cookies } from "next/headers";
 
 /* -------------------- GET: Fetch all feedback -------------------- */
 export async function GET() {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookies }
+);
 
     const { data, error } = await supabase
       .from("trivia_feedback")
@@ -38,7 +44,11 @@ export async function GET() {
 /* -------------------- POST: Submit new feedback -------------------- */
 export async function POST(req: Request) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookies }
+);
 
     const body = await req.json();
     const {
@@ -87,3 +97,4 @@ export async function POST(req: Request) {
     );
   }
 }
+

@@ -1,10 +1,16 @@
-import { NextResponse } from "next/server";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
+import { NextResponse } from 'next/server';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
+
 import { cookies } from "next/headers";
 
 export async function POST(req: Request) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookies }
+);
 
     const body = await req.json();
     const { mode, score, streak } = body;
@@ -65,3 +71,4 @@ export async function POST(req: Request) {
     );
   }
 }
+

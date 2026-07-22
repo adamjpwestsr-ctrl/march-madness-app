@@ -1,11 +1,17 @@
-import { NextResponse } from "next/server";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
+import { NextResponse } from 'next/server';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
+
 import { cookies } from "next/headers";
 
 /* -------------------- POST: Bulk CSV Import -------------------- */
 export async function POST(req: Request) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { cookies }
+);
 
     // Expect multipart/form-data
     const formData = await req.formData();
@@ -91,3 +97,4 @@ export async function POST(req: Request) {
     );
   }
 }
+

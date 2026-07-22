@@ -1,11 +1,17 @@
-import { NextResponse } from "next/server";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
+import { NextResponse } from 'next/server';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
+
 import { cookies } from "next/headers";
 
 /* -------------------- GET: Fetch questions by sport -------------------- */
 export async function GET(req: Request) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { cookies }
+);
 
     const { searchParams } = new URL(req.url);
     const sport = searchParams.get("sport");
@@ -47,7 +53,11 @@ export async function GET(req: Request) {
 /* -------------------- POST: Add new question -------------------- */
 export async function POST(req: Request) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { cookies }
+);
 
     const body = await req.json();
     const { sport, question, answer, difficulty, points } = body;
@@ -90,3 +100,4 @@ export async function POST(req: Request) {
     );
   }
 }
+

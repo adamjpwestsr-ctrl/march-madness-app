@@ -2,7 +2,15 @@
 
 import { motion } from "framer-motion";
 
-export default function WeeklyThemeBanner({ weekStart }) {
+/* ---------- Types ---------- */
+
+interface WeeklyThemeBannerProps {
+  weekStart: string;
+}
+
+/* ---------- Component ---------- */
+
+export default function WeeklyThemeBanner({ weekStart }: WeeklyThemeBannerProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: -10 }}

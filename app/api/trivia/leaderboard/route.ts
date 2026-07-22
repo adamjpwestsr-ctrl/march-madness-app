@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
-const cookieStore = cookies();
+const cookieStore = cookies() as any;
 
 const supabase = createServerClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,

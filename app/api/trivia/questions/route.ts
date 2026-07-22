@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
-const cookieStore = cookies();
+const cookieStore = cookies() as any;
 
 const supabase = createServerClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -26,7 +26,7 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const sport = searchParams.get("sport");
 
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from("trivia_questions")
     .select("*")
     .eq("sport", sport);

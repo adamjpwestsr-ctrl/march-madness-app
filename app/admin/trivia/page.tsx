@@ -485,7 +485,12 @@ function NeonDropdown({ value, onChange, options }: NeonDropdownProps) {
 
 /* -------------------- Form Section Component -------------------- */
 
-function FormSection({ label, children }) {
+interface FormSectionProps {
+  label: string;
+  children: React.ReactNode;
+}
+
+function FormSection({ label, children }: FormSectionProps) {
   return (
     <div className="mb-8">
       <label className="block text-white text-xl font-bold mb-3 drop-shadow-[0_0_15px_rgba(16,185,129,0.7)]">

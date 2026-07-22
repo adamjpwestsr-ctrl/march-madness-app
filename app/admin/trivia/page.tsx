@@ -18,7 +18,7 @@ export default function TriviaAdminPage() {
   const [newDifficulty, setNewDifficulty] = useState("medium");
   const [newPoints, setNewPoints] = useState(10);
 
-  const [message, setMessage] = useState(null);
+  const [message, setMessage] = useState<string | null>(null);
 
   // CSV Import
   const [file, setFile] = useState<File | null>(null);

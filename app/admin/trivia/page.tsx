@@ -65,7 +65,7 @@ export default function TriviaAdminPage() {
   }, [tab]);
 
   /* -------------------- Add Question -------------------- */
-  async function handleAddQuestion(e) {
+  async function handleAddQuestion(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setMessage(null);
 

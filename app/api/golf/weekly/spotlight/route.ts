@@ -76,7 +76,12 @@ export async function GET() {
     const { data: randomPlayer } = await supabase
       .from("golf_players")
       .select("name")
-      .order("random()")
+const { data } = await supabase
+  .from("golf_weekly_spotlight")
+  .select("*");
+
+const randomRow = data[Math.floor(Math.random() * data.length)];
+
       .limit(1)
       .maybeSingle();
 

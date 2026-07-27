@@ -73,24 +73,21 @@ export async function GET() {
       performance.find((p) => p.player_id === leastPickedPlayerId)?.name ??
       "Random selection";
   } else {
-    const { data: randomPlayer } = await supabase
+    // -----------------------------
+    // FIXED: Remove .order("random()")
+    // -----------------------------
+    const { data: allPlayers } = await supabase
       .from("golf_players")
-      .select("name")
-const { data } = await supabase
-  .from("golf_weekly_spotlight")
-  .select("*");
+      .select("name");
 
-const randomRow = data[Math.floor(Math.random() * data.length)];
-
-      .limit(1)
-      .maybeSingle();
+    const randomPlayer =
+      allPlayers?.[Math.floor(Math.random() * allPlayers.length)];
 
     sleeper = randomPlayer?.name ?? "Random selection";
   }
 
   // -----------------------------
   // 6. PLAYER TO WATCH
-  //    Most Top‑10s, tie‑break by recent form
   // -----------------------------
   if (performance.length > 0) {
     const top10Leader = [...performance]
@@ -105,7 +102,6 @@ const randomRow = data[Math.floor(Math.random() * data.length)];
 
   // -----------------------------
   // 7. TRENDING
-  //    Best recent_avg_finish (no 3‑tournament requirement)
   // -----------------------------
   const trendingCandidates = performance
     .filter((p) => p.recent_avg_finish <= 15)

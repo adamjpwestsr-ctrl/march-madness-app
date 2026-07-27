@@ -50,6 +50,9 @@ export async function GET() {
     );
   }
 
+  // ⭐ LOG THE QUESTION SHAPE
+  console.log("TRIVIA DAILY QUESTION:", question);
+
   // 4) Return the random question
   return NextResponse.json(question);
 }

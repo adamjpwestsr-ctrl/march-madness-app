@@ -32,7 +32,7 @@ export async function GET() {
     // 2. If no challenge exists, create one
     // ------------------------------------------------------------
     if (!challenge) {
-      type TriviaIdRow = { id: number };
+      type TriviaIdRow = { question_id: number };
 
       const { data: randomQs, error: randomError } = await supabase.rpc(
         "get_random_trivia_ids",
@@ -51,11 +51,15 @@ export async function GET() {
         );
       }
 
+      // Shuffle in JS (safe replacement for SQL random())
+      const shuffled = randomQs.sort(() => Math.random() - 0.5);
+      const selected = shuffled.slice(0, 10);
+
       const { data: newChallenge, error: insertError } = await supabase
         .from("weekly_challenges")
         .insert({
           week_start: weekStart,
-          question_ids: randomQs.map((q) => q.id),
+          question_ids: selected.map((q) => q.question_id), // FIXED
         })
         .select()
         .single();

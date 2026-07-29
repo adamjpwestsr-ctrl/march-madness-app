@@ -1,3 +1,4 @@
+//app/(app0/sports/f1/page.tsx
 export const dynamic = "force-dynamic";
 
 export default function F1LandingPage() {

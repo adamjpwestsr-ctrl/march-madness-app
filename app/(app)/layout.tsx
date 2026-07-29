@@ -1,4 +1,5 @@
 // app/(app)/layout.tsx
+// main app layout page
 /* Layout version Update v6.2.3 */
 
 export const runtime = "nodejs";

@@ -21,7 +21,9 @@ import {
 export default function SidebarNav() {
   const pathname = usePathname();
   const router = useRouter();
+
   const [openChallenges, setOpenChallenges] = useState(false);
+  const [openSport, setOpenSport] = useState<string | null>(null);
 
   const handleLogout = async () => {
     await fetch("/logout", { method: "POST" });
@@ -40,14 +42,54 @@ export default function SidebarNav() {
     </Link>
   );
 
+  // SPORT GROUP COMPONENT
+  const sportSection = (
+    sportId: string,
+    sportLabel: string,
+    Icon: any,
+    challenges: { title: string; href: string }[]
+  ) => (
+    <div>
+      <button
+        onClick={() => setOpenSport(openSport === sportId ? null : sportId)}
+        className="flex items-center gap-3 px-3 py-1 text-sm text-slate-400 hover:bg-slate-800 rounded-md w-full"
+      >
+        <Icon size={16} />
+        {sportLabel}
+        {openSport === sportId ? (
+          <ChevronDown size={14} className="ml-auto" />
+        ) : (
+          <ChevronRight size={14} className="ml-auto" />
+        )}
+      </button>
+
+      <div
+        className={`ml-6 flex flex-col gap-1 transition-all duration-300 ${
+          openSport === sportId ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+        }`}
+      >
+        {challenges.map((c) => (
+          <Link
+            key={c.href}
+            href={c.href}
+            className={`flex items-center gap-2 px-3 py-1 rounded-md text-sm hover:bg-slate-800 ${
+              pathname === c.href ? "bg-slate-800 text-white" : "text-slate-400"
+            }`}
+          >
+            <Circle size={14} />
+            {c.title}
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+
   return (
     <nav className="flex flex-col gap-2 p-4">
       {link("/home", "Home", Home)}
-
-      {/* March Madness */}
       {link("/sports/march-madness", "March Madness", Trophy)}
 
-      {/* Challenges (Expandable) */}
+      {/* CHALLENGES ROOT */}
       <button
         onClick={() => setOpenChallenges(!openChallenges)}
         className="flex items-center gap-3 px-4 py-2 rounded-md text-slate-300 hover:bg-slate-800"
@@ -61,14 +103,13 @@ export default function SidebarNav() {
         )}
       </button>
 
+      {/* CHALLENGES DROPDOWN */}
       <div
-        className={`
-          ml-8 flex flex-col gap-1
-          overflow-hidden transition-all duration-300 ease-out
-          ${openChallenges ? "max-h-96 opacity-100" : "max-h-0 opacity-0"}
-        `}
+        className={`ml-8 flex flex-col gap-2 transition-all duration-300 ${
+          openChallenges ? "max-h-[600px] opacity-100" : "max-h-0 opacity-0"
+        }`}
       >
-        {/* Hub */}
+        {/* HUB */}
         <Link
           href="/challenges"
           className={`flex items-center gap-2 px-3 py-1 rounded-md text-sm hover:bg-slate-800 ${
@@ -79,63 +120,36 @@ export default function SidebarNav() {
           Challenges Hub
         </Link>
 
-        {/* Weekly Challenges */}
-        <Link
-          href="/sports/golf/weekly"
-          className="flex items-center gap-2 px-3 py-1 text-sm text-slate-400 hover:bg-slate-800 rounded-md"
-        >
-          <Flag size={16} />
-          Golf Weekly
-        </Link>
+        {/* GOLF */}
+        {sportSection("golf", "Golf", Flag, [
+          { title: "Golf Weekly", href: "/sports/golf/weekly" },
+        ])}
 
-        <Link
-          href="/sports/mlb"
-          className="flex items-center gap-2 px-3 py-1 text-sm text-slate-400 hover:bg-slate-800 rounded-md"
-        >
-          <Circle size={16} />
-          MLB Weekly
-        </Link>
+        {/* MLB */}
+        {sportSection("mlb", "MLB", Circle, [
+          { title: "MLB Weekly", href: "/sports/mlb/weekly" },
+          { title: "MLB Derby", href: "/sports/mlb/derby" },
+        ])}
 
-        <Link
-          href="/sports/mlb/derby"
-          className="flex items-center gap-2 px-3 py-1 text-sm text-slate-400 hover:bg-slate-800 rounded-md"
-        >
-          <Trophy size={16} />
-          MLB Derby
-        </Link>
+        {/* NFL */}
+        {sportSection("nfl", "NFL", Goal, [
+          { title: "NFL Weekly", href: "/sports/nfl/weekly" },
+        ])}
 
-        <Link
-          href="/sports/nfl/weekly"
-          className="flex items-center gap-2 px-3 py-1 text-sm text-slate-400 hover:bg-slate-800 rounded-md"
-        >
-          <Goal size={16} />
-          NFL Weekly
-        </Link>
+        {/* NBA */}
+        {sportSection("nba", "NBA", CircleDot, [
+          { title: "NBA Weekly", href: "/sports/nba/weekly" },
+        ])}
 
-        <Link
-          href="/sports/nba/weekly"
-          className="flex items-center gap-2 px-3 py-1 text-sm text-slate-400 hover:bg-slate-800 rounded-md"
-        >
-          <CircleDot size={16} />
-          NBA Weekly
-        </Link>
+        {/* NHL */}
+        {sportSection("nhl", "NHL", Goal, [
+          { title: "NHL Weekly", href: "/sports/nhl/weekly" },
+        ])}
 
-        <Link
-          href="/sports/nhl/weekly"
-          className="flex items-center gap-2 px-3 py-1 text-sm text-slate-400 hover:bg-slate-800 rounded-md"
-        >
-          <Goal size={16} />
-          NHL Weekly
-        </Link>
-
-        {/* ⭐ NASCAR Weekly */}
-        <Link
-          href="/sports/nascar"
-          className="flex items-center gap-2 px-3 py-1 text-sm text-slate-400 hover:bg-slate-800 rounded-md"
-        >
-          <Flag size={16} />
-          NASCAR Weekly
-        </Link>
+        {/* NASCAR */}
+        {sportSection("nascar", "NASCAR", Flag, [
+          { title: "NASCAR Weekly", href: "/sports/nascar/weekly" },
+        ])}
       </div>
 
       {link("/trivia", "Trivia", Brain)}

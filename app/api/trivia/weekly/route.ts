@@ -16,13 +16,13 @@ export async function GET() {
 
   try {
     // ------------------------------------------------------------
-    // 1. Fetch existing weekly challenge
+    // 1. Fetch existing weekly challenge (safe single)
     // ------------------------------------------------------------
     let { data: challenge, error: challengeError } = await supabase
       .from("weekly_challenges")
       .select("*")
       .eq("week_start", weekStart)
-      .single();
+      .maybeSingle();
 
     if (challengeError) {
       console.error("Weekly challenge fetch error:", challengeError.message);
@@ -59,10 +59,10 @@ export async function GET() {
         .from("weekly_challenges")
         .insert({
           week_start: weekStart,
-          question_ids: selected.map((q) => q.question_id), // FIXED
+          question_ids: selected.map((q) => q.question_id),
         })
         .select()
-        .single();
+        .maybeSingle();
 
       if (insertError) {
         console.error("Insert weekly challenge error:", insertError.message);

@@ -55,14 +55,14 @@ export async function GET() {
       const shuffled = randomQs.sort(() => Math.random() - 0.5);
       const selected = shuffled.slice(0, 10);
 
-      const { data: newChallenge, error: insertError } = await supabase
-        .from("weekly_challenges")
-        .insert({
-          week_start: weekStart,
-          question_ids: selected.map((q) => q.question_id),
-        })
-        .select()
-        .maybeSingle();
+const { data: newChallenge, error: insertError } = await supabase
+  .from("weekly_challenges")
+  .insert({
+    week_start: weekStart,
+    question_ids: `{${selected.map((q) => q.question_id).join(",")}}`, // ✅ cast to Postgres array literal
+  })
+  .select()
+  .maybeSingle();
 
       if (insertError) {
         console.error("Insert weekly challenge error:", insertError.message);

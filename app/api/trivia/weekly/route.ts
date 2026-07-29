@@ -15,11 +15,8 @@ export async function GET() {
   const weekStart = getWeekStart();
 
   try {
-    // ------------------------------------------------------------
-    // 1. Fetch existing weekly challenge (safe single)
-    // ------------------------------------------------------------
     let { data: challenge, error: challengeError } = await supabase
-      .from("weekly_challenges")
+      .from("trivia_weekly_sets")
       .select("*")
       .eq("week_start", weekStart)
       .maybeSingle();
@@ -28,9 +25,6 @@ export async function GET() {
       console.error("Weekly challenge fetch error:", challengeError.message);
     }
 
-    // ------------------------------------------------------------
-    // 2. If no challenge exists, create one
-    // ------------------------------------------------------------
     if (!challenge) {
       type TriviaIdRow = { question_id: number };
 
@@ -51,18 +45,17 @@ export async function GET() {
         );
       }
 
-      // Shuffle in JS (safe replacement for SQL random())
       const shuffled = randomQs.sort(() => Math.random() - 0.5);
       const selected = shuffled.slice(0, 10);
 
-const { data: newChallenge, error: insertError } = await supabase
-  .from("weekly_challenges")
-  .insert({
-    week_start: weekStart,
-    question_ids: `{${selected.map((q) => q.question_id).join(",")}}`, // ✅ cast to Postgres array literal
-  })
-  .select()
-  .maybeSingle();
+      const { data: newChallenge, error: insertError } = await supabase
+        .from("trivia_weekly_sets")
+        .insert({
+          week_start: weekStart,
+          question_ids: selected.map((q) => q.question_id), // ⭐ FIXED
+        })
+        .select()
+        .maybeSingle();
 
       if (insertError) {
         console.error("Insert weekly challenge error:", insertError.message);
@@ -71,9 +64,6 @@ const { data: newChallenge, error: insertError } = await supabase
       challenge = newChallenge;
     }
 
-    // ------------------------------------------------------------
-    // 3. Fetch questions for the challenge
-    // ------------------------------------------------------------
     const ids = Array.isArray(challenge?.question_ids)
       ? challenge.question_ids
       : [];

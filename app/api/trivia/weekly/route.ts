@@ -15,17 +15,23 @@ export async function GET() {
   const weekStart = getWeekStart();
 
   try {
-    let { data: challenge, error: challengeError } = await supabase
+    // ------------------------------------------------------------
+    // 1. Fetch existing weekly set
+    // ------------------------------------------------------------
+    let { data: weeklySet, error: fetchError } = await supabase
       .from("trivia_weekly_sets")
       .select("*")
       .eq("week_start", weekStart)
       .maybeSingle();
 
-    if (challengeError) {
-      console.error("Weekly challenge fetch error:", challengeError.message);
+    if (fetchError) {
+      console.error("Weekly set fetch error:", fetchError.message);
     }
 
-    if (!challenge) {
+    // ------------------------------------------------------------
+    // 2. Create weekly set if missing
+    // ------------------------------------------------------------
+    if (!weeklySet) {
       type TriviaIdRow = { question_id: number };
 
       const { data: randomQs, error: randomError } = await supabase.rpc(
@@ -47,29 +53,48 @@ export async function GET() {
 
       const shuffled = randomQs.sort(() => Math.random() - 0.5);
       const selected = shuffled.slice(0, 10);
+      const ids = selected.map((q) => q.question_id);
 
-      const { data: newChallenge, error: insertError } = await supabase
+      // ------------------------------------------------------------
+      // 2a. Cast JS array → bigint[] using RPC
+      // ------------------------------------------------------------
+      const { data: castedIds, error: castError } = await supabase.rpc(
+        "to_bigint_array",
+        { items: ids }
+      );
+
+      if (castError) {
+        console.error("Array cast error:", castError.message);
+      }
+
+      // ------------------------------------------------------------
+      // 2b. Insert weekly set
+      // ------------------------------------------------------------
+      const { data: newSet, error: insertError } = await supabase
         .from("trivia_weekly_sets")
         .insert({
           week_start: weekStart,
-          question_ids: selected.map((q) => q.question_id), // ⭐ FIXED
+          question_ids: castedIds,
         })
         .select()
         .maybeSingle();
 
       if (insertError) {
-        console.error("Insert weekly challenge error:", insertError.message);
+        console.error("Insert weekly set error:", insertError.message);
       }
 
-      challenge = newChallenge;
+      weeklySet = newSet;
     }
 
-    const ids = Array.isArray(challenge?.question_ids)
-      ? challenge.question_ids
+    // ------------------------------------------------------------
+    // 3. Fetch questions for the weekly set
+    // ------------------------------------------------------------
+    const ids = Array.isArray(weeklySet?.question_ids)
+      ? weeklySet.question_ids
       : [];
 
     if (ids.length === 0) {
-      console.warn("Weekly challenge has no question_ids.");
+      console.warn("Weekly set has no question_ids.");
       return NextResponse.json(
         { weekStart, questions: [] },
         { status: 200 }
@@ -91,7 +116,7 @@ export async function GET() {
     });
 
   } catch (err) {
-    console.error("Weekly challenge route crashed:", err);
+    console.error("Weekly set route crashed:", err);
     return NextResponse.json(
       { weekStart: null, questions: [], error: "Server error" },
       { status: 200 }

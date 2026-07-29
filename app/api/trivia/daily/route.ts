@@ -29,9 +29,10 @@ export async function GET() {
 
   // 3) Fetch exactly that one row
   const { data, error } = await supabase
-    .from("trivia_questions")
-    .select("*")
-    .range(randomIndex, randomIndex); // single row at randomIndex
+  .from("trivia_questions")
+  .select("*")
+  .order("id", { ascending: true })   // ⭐ forces safe ordering
+  .range(randomIndex, randomIndex);
 
   if (error) {
     console.error("Trivia daily - select error:", error);

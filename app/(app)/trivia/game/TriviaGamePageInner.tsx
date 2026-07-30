@@ -2,9 +2,9 @@
 
 import { useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
-import QuestionCard from "@/app/trivia/components/QuestionCard";
-import Timer from "@/app/trivia/components/Timer";
-import ScoreSummary from "@/app/trivia/components/ScoreSummary";
+import QuestionCard from "@/app/(app)/trivia/components/QuestionCard";
+import Timer from "@/app/(app)/trivia/components/Timer";
+import ScoreSummary from "@/app/(app)/trivia/components/ScoreSummary";
 
 export default function TriviaGamePageInner() {
   const params = useSearchParams();

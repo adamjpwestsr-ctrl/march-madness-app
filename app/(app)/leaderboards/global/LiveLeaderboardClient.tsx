@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
-import { getLeaderboardScores } from "../admin/tournament-setup/actions";
+import { getLeaderboardScores } from "../../../admin/tournament-setup/actions";
 
 type LeaderboardRow = {
   bracket_id: string;

@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import DailyChallenge from "@/app/trivia/components/DailyChallenge";
-import WeeklyChallenge from "@/app/trivia/components/WeeklyChallenge";
+import DailyChallenge from "@/app/(app)/trivia/components/DailyChallenge";
+import WeeklyChallenge from "@/app/(app)/trivia/components/WeeklyChallenge";
+import HallOfFame from "@/app/(app)/trivia/components/HallOfFame";
 import TriviaModeCard from "@/app/components/TriviaModeCard";
-import HallOfFame from "@/app/trivia/components/HallOfFame";
 
 export default function TriviaHub() {
   const [weekly, setWeekly] = useState<any>(null);

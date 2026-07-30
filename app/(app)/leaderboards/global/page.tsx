@@ -1,6 +1,6 @@
 // app/(app)/leaderboards/global/page.tsx
 
-import { getLeaderboardScores } from "../../admin/tournament-setup/actions";
+import { getLeaderboardScores } from "../../../admin/tournament-setup/actions";
 import LiveLeaderboardClient from "./LiveLeaderboardClient";
 
 export default async function GlobalLeaderboardPage() {

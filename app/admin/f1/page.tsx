@@ -1,10 +1,10 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
-import NascarImportPanel from "./NascarImportPanel";
-import NascarSchedulePanel from "./NascarSchedulePanel";
+import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
+import F1ImportPanel from "./F1ImportPanel";
+import F1SchedulePanel from "./F1SchedulePanel";
 
-export default async function NascarAdminPage() {
-  const supabase = createClient();
+export default async function F1AdminPage() {
+  const supabase = await createSupabaseServerClient();
   const session = await supabase.auth.getUser();
   const userId = session.data.user?.id;
 
@@ -19,17 +19,18 @@ export default async function NascarAdminPage() {
     redirect("/");
   }
 
+  // Fetch all F1 races
   const { data: races } = await supabase
-    .from("nascar_races")
+    .from("f1_races")
     .select("*")
     .order("date", { ascending: true });
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-10 space-y-10">
-      <h1 className="text-2xl font-semibold text-white">🏁 NASCAR Admin</h1>
+      <h1 className="text-2xl font-semibold text-white">🏎️ F1 Admin</h1>
 
-      <NascarImportPanel races={races || []} />
-      <NascarSchedulePanel />
+      <F1ImportPanel races={races || []} />
+      <F1SchedulePanel />
     </div>
   );
 }

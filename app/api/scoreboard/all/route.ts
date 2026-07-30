@@ -7,7 +7,6 @@ const LEAGUES = {
   NHL: "hockey/nhl",
   NCAAM: "basketball/mens-college-basketball",
 
-  // Golf handled separately below
   TENNIS_ATP: "tennis/atp",
 
   EPL: "soccer/eng.1",
@@ -45,7 +44,6 @@ async function fetchGolf() {
 
     const data = await res.json();
 
-    // Normalize golf tournaments so ticker can render them
     return (
       data?.events?.map((e: any) => ({
         id: e.id,
@@ -61,10 +59,65 @@ async function fetchGolf() {
   }
 }
 
+// 🏎️ F1 FIX — normalize Formula 1 races
+async function fetchF1() {
+  const url = "https://site.api.espn.com/apis/site/v2/sports/racing/f1/scoreboard";
+
+  try {
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) return [];
+
+    const data = await res.json();
+    const events = data?.events ?? [];
+
+    return (
+      events.map((e: any) => ({
+        id: e.id,
+        label: e.name || e.shortName || "F1 Grand Prix",
+        date: e.date || null,
+        circuit: e.venue?.fullName || "",
+        league: { slug: "f1", name: "Formula 1" },
+      })) || []
+    );
+  } catch (err) {
+    console.error("F1 fetch error:", err);
+    return [];
+  }
+}
+
+// 🏁 NASCAR FIX — normalize NASCAR Cup Series races
+async function fetchNASCAR() {
+  const url = "https://site.api.espn.com/apis/site/v2/sports/racing/nascar.cup/scoreboard";
+
+  try {
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) return [];
+
+    const data = await res.json();
+    const events = data?.events ?? [];
+
+    return (
+      events.map((e: any) => ({
+        id: e.id,
+        label: e.name || e.shortName || "NASCAR Cup Race",
+        date: e.date || null,
+        track: e.venue?.fullName || "",
+        league: { slug: "nascar", name: "NASCAR Cup Series" },
+      })) || []
+    );
+  } catch (err) {
+    console.error("NASCAR fetch error:", err);
+    return [];
+  }
+}
+
 export async function GET(request: NextRequest) {
   const results = await Promise.all([
-    // Fetch all non-golf leagues
+    // Fetch all non‑golf leagues
     ...Object.entries(LEAGUES).map(async ([key, path]) => {
+      if (key === "F1") return fetchF1();       // 🏎️ F1 normalization
+      if (key === "NASCAR") return fetchNASCAR(); // 🏁 NASCAR normalization
+
       const events = await fetchLeague(path);
       console.log(`${key}: ${events.length}`);
       return events;

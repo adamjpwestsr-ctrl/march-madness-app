@@ -17,12 +17,9 @@ export async function GET() {
     return NextResponse.json([]);
   }
 
-  const raceIds = races.map((r) => r.race_id);
-
-  // Get driver performance + points
   const { data: perf } = await supabase
     .from("f1_driver_performance")
-    .select("race_id, driver_name, finishing_position");
+    .select("race_id, driver_id, driver_name, finishing_position"); // ⭐ FIXED
 
   const { data: points } = await supabase
     .from("f1_points")

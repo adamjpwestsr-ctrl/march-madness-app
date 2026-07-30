@@ -1,3 +1,5 @@
+// app/(app)/leaderboards/page.tsx
+
 import Link from "next/link";
 import { createServerClient } from "@supabase/auth-helpers-nextjs";
 
@@ -31,7 +33,6 @@ type PlayerWithBadges = LeaderboardRow & {
 };
 
 export default async function LeaderboardHub() {
-  // --- NO-OP COOKIE ADAPTER (Next.js 16 compatible) ---
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -45,22 +46,18 @@ export default async function LeaderboardHub() {
       }
     }
   );
-  // ----------------------------------------------------
 
-  // Fetch contests
   const { data: sports } = await supabase
     .from("contests")
     .select("*")
     .order("name", { ascending: true });
 
-  // Fetch cross-sport leaderboard
   const { data: players } = await supabase
     .from("leaderboard_all_challenges")
     .select("*")
     .order("total_points", { ascending: false })
     .limit(10);
 
-  // Fetch badge rules
   const { data: badgeRules } = await supabase
     .from("badges")
     .select("*");
@@ -85,7 +82,7 @@ export default async function LeaderboardHub() {
 
   return (
     <div className="px-6 pb-20 space-y-16">
-      {/* HERO SECTION */}
+      {/* HERO */}
       <section className="w-full py-12 text-center bg-gradient-to-b from-slate-900 to-slate-950 rounded-xl">
         <h1 className="text-4xl font-bold tracking-tight">Bracket Boss</h1>
         <p className="text-slate-400 mt-2 text-lg">
@@ -93,12 +90,17 @@ export default async function LeaderboardHub() {
         </p>
       </section>
 
-      {/* SEASONAL SPOTLIGHT */}
+      {/* GLOBAL LEADERBOARD LINK */}
       <section className="mx-auto max-w-4xl rounded-xl p-6 bg-slate-800/40 backdrop-blur border border-slate-700/40">
-        <h2 className="text-xl font-semibold">🔥 Golf Weekly — Major Week</h2>
-        <p className="text-slate-400">
-          Double points this week. Make your picks now.
-        </p>
+        <h2 className="text-xl font-semibold">🔥 Global Leaderboard</h2>
+        <p className="text-slate-400">See the top players across all contests.</p>
+
+        <Link
+          href="/leaderboards/global"
+          className="mt-4 inline-block bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition"
+        >
+          View Global Leaderboard →
+        </Link>
       </section>
 
       {/* SPORT GRID */}
@@ -112,11 +114,9 @@ export default async function LeaderboardHub() {
         </div>
       </section>
 
-      {/* CROSS-SPORT LEADERBOARD WITH BADGES */}
+      {/* CROSS-SPORT LEADERBOARD */}
       <section>
-        <h2 className="text-2xl font-bold mb-4">
-          Top Players Across All Sports
-        </h2>
+        <h2 className="text-2xl font-bold mb-4">Top Players Across All Sports</h2>
 
         <div className="rounded-xl bg-slate-800/40 backdrop-blur border border-slate-700/40 p-6">
           {playersWithBadges.map((p, i) => (
@@ -163,7 +163,6 @@ export default async function LeaderboardHub() {
   );
 }
 
-/* SPORT CARD COMPONENT */
 function SportCard({ sport }: { sport: Contest }) {
   return (
     <div className="rounded-xl p-6 bg-slate-800/40 backdrop-blur border border-slate-700/40 hover:bg-slate-800/60 transition">
@@ -175,9 +174,7 @@ function SportCard({ sport }: { sport: Contest }) {
       <p className="text-slate-400 mt-2 capitalize">{sport.sport}</p>
 
       <div className="mt-4 flex justify-between text-sm text-slate-500">
-        <span>
-          Entry: ${(sport.entry_fee_cents / 100).toFixed(2)}
-        </span>
+        <span>Entry: ${(sport.entry_fee_cents / 100).toFixed(2)}</span>
         <span>{sport.is_active ? "Active" : "Inactive"}</span>
       </div>
 

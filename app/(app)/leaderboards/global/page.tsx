@@ -1,8 +1,9 @@
-// app/leaderboard/page.tsx
-import { getLeaderboardScores } from "../admin/tournament-setup/actions";
+// app/(app)/leaderboards/global/page.tsx
+
+import { getLeaderboardScores } from "../../admin/tournament-setup/actions";
 import LiveLeaderboardClient from "./LiveLeaderboardClient";
 
-export default async function LeaderboardPage() {
+export default async function GlobalLeaderboardPage() {
   const initialScores = await getLeaderboardScores();
 
   return (

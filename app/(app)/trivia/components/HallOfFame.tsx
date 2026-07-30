@@ -31,6 +31,12 @@ export default function HallOfFame() {
     );
   }
 
+  // Extract with null guards
+  const highest = hof.highestScore ?? null;
+  const mostCorrect = hof.mostCorrect ?? null;
+  const longest = hof.longestStreak ?? null;
+  const mostRuns = hof.mostRuns ?? null;
+
   return (
     <div
       style={{
@@ -49,23 +55,24 @@ export default function HallOfFame() {
         <div>
           🏆 <strong>Highest Score Ever:</strong>{" "}
           <span style={{ color: "#22c55e" }}>
-            {hof.highestScore.display_name} — {hof.highestScore.score} pts
+            {highest?.display_name ?? "—"} — {highest?.score ?? 0} pts
           </span>
         </div>
 
         <div>
           🎯 <strong>Most Correct Answers:</strong>{" "}
-          {hof.mostCorrect.display_name} — {hof.mostCorrect.correct_count} correct
+          {mostCorrect?.display_name ?? "—"} —{" "}
+          {mostCorrect?.correct_count ?? 0} correct
         </div>
 
         <div>
           🔥 <strong>Longest Streak:</strong>{" "}
-          {hof.longestStreak.display_name} — {hof.longestStreak.streak} in a row
+          {longest?.display_name ?? "—"} — {longest?.streak ?? 0} in a row
         </div>
 
         <div>
           📊 <strong>Most Runs Played:</strong>{" "}
-          {hof.mostRuns.display_name} — {hof.mostRuns.count} runs
+          {mostRuns?.display_name ?? "—"} — {mostRuns?.count ?? 0} runs
         </div>
       </div>
     </div>

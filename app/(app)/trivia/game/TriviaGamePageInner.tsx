@@ -22,16 +22,21 @@ export default function TriviaGamePageInner() {
 
   useEffect(() => {
     async function load() {
-      const res = await fetch(`/api/trivia/${mode}`);
-      const data = await res.json();
-      setQuestions(data.questions);
+      try {
+        const res = await fetch(`/api/trivia/${mode}`);
+        const data = await res.json();
+        setQuestions(Array.isArray(data.questions) ? data.questions : []);
+      } catch (err) {
+        console.error("Failed to load trivia questions:", err);
+        setQuestions([]);
+      }
     }
     load();
   }, [mode]);
 
   function handleSelectChoice(choice: string) {
     const q = questions[index];
-    const isCorrect = choice === q.correct_answer;
+    const isCorrect = choice === q?.correct_answer;
 
     if (isCorrect) {
       setScore((s) => s + 1);
@@ -73,7 +78,7 @@ export default function TriviaGamePageInner() {
     <div className="space-y-6">
       <Timer duration={60} onExpire={() => setFinished(true)} />
 
-      {questions.length > 0 && (
+      {Array.isArray(questions) && questions.length > 0 && (
         <QuestionCard
           question={questions[index]}
           onSelectChoice={handleSelectChoice}

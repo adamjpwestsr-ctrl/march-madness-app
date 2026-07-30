@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { syncF1ScheduleFromESPN } from "@/app/api/f1/sync/schedule";
-import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
+import { createF1Race } from "./actions/createRace";
 
 export default function F1SchedulePanel() {
   const [name, setName] = useState("");
@@ -11,31 +11,20 @@ export default function F1SchedulePanel() {
   const [status, setStatus] = useState("");
 
   async function handleCreateRace() {
-    try {
-      setStatus("Creating race...");
+    setStatus("Creating race...");
 
-      const supabase = await createSupabaseServerClient();
+    const res = await createF1Race(name, date, circuit);
 
-      const { error } = await supabase.from("f1_races").insert({
-        name,
-        date,
-        circuit,
-      });
-
-      if (error) {
-        console.error(error);
-        setStatus("Error creating race");
-        return;
-      }
-
-      setStatus("Race created!");
-      setName("");
-      setDate("");
-      setCircuit("");
-    } catch (err) {
-      console.error(err);
-      setStatus("Unexpected error");
+    if (!res.success) {
+      console.error(res.error);
+      setStatus("Error creating race");
+      return;
     }
+
+    setStatus("Race created!");
+    setName("");
+    setDate("");
+    setCircuit("");
   }
 
   async function handleSyncSchedule() {

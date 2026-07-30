@@ -1,8 +1,8 @@
 //app/trivia/weekly/WeeklyThemeBanner.tsx
 "use client";
 
-import { useWeeklyTheme } from "@/app/trivia/weekly/useWeeklyTheme";
-import { WeeklyThemeId } from "@/app/trivia/weekly/weeklyThemes";
+import { useWeeklyTheme } from "@/app/(app)/trivia/weekly/useWeeklyTheme";
+import { WeeklyThemeId } from "@/app/(app)/trivia/weekly/weeklyThemes";
 
 type Props = {
   weekStart: string;

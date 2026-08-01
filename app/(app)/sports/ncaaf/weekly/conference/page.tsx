@@ -39,7 +39,14 @@ export default function NcaafConferenceMatchups() {
   async function handlePick(gameId: string, teamId: string) {
     setStatus("Saving pick...");
     const userId = localStorage.getItem("user_id")!;
-    await submitPick(gameId, teamId, userId);
+    await submitPick({
+  userId,
+  gameId,
+  pickTeamId: teamId,
+  season: currentSeason,   // whatever your season variable is
+  week: currentWeek,       // whatever your week variable is
+});
+
     setStatus("Pick saved!");
   }
 

@@ -39,7 +39,7 @@ export default function NcaafLeaderboardTable({ rows }: { rows: any[] }) {
                       key={week}
                       className="px-2 py-1 rounded bg-slate-800 border border-slate-700 text-slate-200 text-xs"
                     >
-                      W{week}: {pts}
+                      W{week}: {String(pts)}
                     </span>
                   ))}
                 </div>

@@ -8,6 +8,7 @@ import {
   Circle,
   CircleDot,
   Medal,
+  Car, // For F1
 } from "lucide-react";
 
 export default function ChallengesHub() {
@@ -29,6 +30,7 @@ export default function ChallengesHub() {
         </h2>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {/* Golf */}
           <ChallengeItem
             href="/sports/golf/weekly"
             icon={<Flag size={22} />}
@@ -37,6 +39,7 @@ export default function ChallengesHub() {
             color="emerald"
           />
 
+          {/* MLB */}
           <ChallengeItem
             href="/sports/mlb"
             icon={<Circle size={22} />}
@@ -45,6 +48,7 @@ export default function ChallengesHub() {
             color="amber"
           />
 
+          {/* NFL */}
           <ChallengeItem
             href="/sports/nfl/weekly"
             icon={<Goal size={22} />}
@@ -53,6 +57,7 @@ export default function ChallengesHub() {
             color="red"
           />
 
+          {/* NBA */}
           <ChallengeItem
             href="/sports/nba/weekly"
             icon={<CircleDot size={22} />}
@@ -61,6 +66,7 @@ export default function ChallengesHub() {
             color="sky"
           />
 
+          {/* NHL */}
           <ChallengeItem
             href="/sports/nhl/weekly"
             icon={<Goal size={22} />}
@@ -69,15 +75,33 @@ export default function ChallengesHub() {
             color="blue"
           />
 
-          {/* ⭐ NEW NASCAR WEEKLY CHALLENGE */}
+          {/* NASCAR */}
           <ChallengeItem
-            href="/sports/nascar"
+            href="/sports/nascar/weekly"
             icon={<Flag size={22} />}
             title="NASCAR Weekly"
             desc="Pick a driver each race and track your season performance."
             color="rose"
           />
-        </div>
+
+          {/* ⭐ NEW — F1 Weekly */}
+          <ChallengeItem
+            href="/sports/f1/weekly"
+            icon={<Car size={22} />}
+            title="F1 Weekly"
+            desc="Choose a driver each race and compete all season long."
+            color="fuchsia"
+          />
+
+          {/* ⭐ NEW — College Football Weekly (placeholder) */}
+<ChallengeItem
+  href="/sports/ncaaf/weekly"
+  icon={<Goal size={22} />}
+  title="College Football Weekly"
+  desc="Pick winners across NCAA Football matchups."
+  color="yellow"
+/>
+       </div>
       </section>
 
       {/* Special Challenges */}
@@ -151,8 +175,6 @@ function ChallengeItem({
     blue: "group-hover:border-blue-400/40 group-hover:bg-blue-500/10",
     fuchsia: "group-hover:border-fuchsia-400/40 group-hover:bg-fuchsia-500/10",
     yellow: "group-hover:border-yellow-400/40 group-hover:bg-yellow-500/10",
-
-    // ⭐ NEW NASCAR COLOR
     rose: "group-hover:border-rose-400/40 group-hover:bg-rose-500/10",
   };
 

@@ -42,7 +42,6 @@ export default function SidebarNav() {
     </Link>
   );
 
-  // SPORT GROUP COMPONENT
   const sportSection = (
     sportId: string,
     sportLabel: string,
@@ -117,7 +116,7 @@ export default function SidebarNav() {
           }`}
         >
           <ListChecks size={16} />
-          Challenges Hub
+          Challenge Overload
         </Link>
 
         {/* GOLF */}
@@ -128,7 +127,7 @@ export default function SidebarNav() {
         {/* MLB */}
         {sportSection("mlb", "MLB", Circle, [
           { title: "MLB Weekly", href: "/sports/mlb/weekly" },
-          { title: "MLB Derby", href: "/sports/mlb/derby" },
+          { title: "MLB Homerun Derby", href: "/sports/mlb/derby" },
         ])}
 
         {/* NFL */}
@@ -146,9 +145,15 @@ export default function SidebarNav() {
           { title: "NHL Weekly", href: "/sports/nhl/weekly" },
         ])}
 
-        {/* NASCAR */}
-        {sportSection("nascar", "NASCAR", Flag, [
-          { title: "NASCAR Weekly", href: "/sports/nascar/weekly" },
+        {/* NCAAF */}
+        {sportSection("ncaaf", "NCAA Football", Goal, [
+          { title: "NCAAF Weekly", href: "/sports/ncaaf" },
+        ])}
+
+        {/* RACING */}
+        {sportSection("racing", "Racing", Flag, [
+          { title: "NASCAR Race Day", href: "/sports/nascar/" },
+          { title: "F1 Race Day", href: "/sports/f1/" },
         ])}
       </div>
 

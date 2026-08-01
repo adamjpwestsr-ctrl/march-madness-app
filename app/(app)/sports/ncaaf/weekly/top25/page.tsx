@@ -27,11 +27,13 @@ export default function NcaafTop25Matchups() {
 
   async function handlePick(gameId: string, teamId: string) {
     setStatus("Saving pick...");
+
     const userId = Number(localStorage.getItem("user_id"));
+    const numericGameId = Number(gameId);
 
     await submitPick({
       userId,
-      gameId,
+      gameId: numericGameId,
       pickTeamId: teamId,
       season: currentSeason,
       week: currentWeek,

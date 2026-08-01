@@ -17,6 +17,9 @@ const CONFERENCES = [
   "Independents",
 ];
 
+const currentSeason = 2024;
+const currentWeek = 1;
+
 export default function NcaafConferenceMatchups() {
   const [games, setGames] = useState<any[]>([]);
   const [conference, setConference] = useState("");
@@ -38,14 +41,15 @@ export default function NcaafConferenceMatchups() {
 
   async function handlePick(gameId: string, teamId: string) {
     setStatus("Saving pick...");
-    const userId = localStorage.getItem("user_id")!;
+    const userId = Number(localStorage.getItem("user_id"));
+
     await submitPick({
-  userId,
-  gameId,
-  pickTeamId: teamId,
-  season: currentSeason,   // whatever your season variable is
-  week: currentWeek,       // whatever your week variable is
-});
+      userId,
+      gameId,
+      pickTeamId: teamId,
+      season: currentSeason,
+      week: currentWeek,
+    });
 
     setStatus("Pick saved!");
   }

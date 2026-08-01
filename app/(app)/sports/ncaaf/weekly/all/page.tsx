@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 import NcaafGameCard from "@/app/components/ncaaf/NcaafGameCard";
 import { submitPick } from "@/app/components/ncaaf/submitPick";
 
+const currentSeason = 2024;
+const currentWeek = 1;
+
 export default function NcaafAllMatchups() {
   const [games, setGames] = useState<any[]>([]);
   const [status, setStatus] = useState("");
@@ -19,14 +22,16 @@ export default function NcaafAllMatchups() {
 
   async function handlePick(gameId: string, teamId: string) {
     setStatus("Saving pick...");
-    const userId = localStorage.getItem("user_id")!;
-await submitPick({
-  userId,
-  gameId,
-  pickTeamId: teamId,
-  season: currentSeason,   // whatever your season variable is
-  week: currentWeek,       // whatever your week variable is
-});
+    const userId = Number(localStorage.getItem("user_id"));
+
+    await submitPick({
+      userId,
+      gameId,
+      pickTeamId: teamId,
+      season: currentSeason,
+      week: currentWeek,
+    });
+
     setStatus("Pick saved!");
   }
 

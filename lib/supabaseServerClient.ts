@@ -1,13 +1,10 @@
 // lib/supabaseServerClient.ts
+import { cookies as nextCookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 import type { CookieOptions } from "@supabase/ssr";
 
-/**
- * Isolated cookie adapter — avoids Next.js async cookies() type pollution.
- * Works with Next.js 16 and passes type‑check.
- */
 export function createSupabaseServerClient() {
-  const cookieStore: Record<string, string> = {};
+  const store = nextCookies(); // synchronous in Next.js 16
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -15,13 +12,17 @@ export function createSupabaseServerClient() {
     {
       cookies: {
         get(name: string) {
-          return cookieStore[name];
+          return store.get(name)?.value;
         },
         set(name: string, value: string, options: CookieOptions) {
-          cookieStore[name] = value;
+          try {
+            store.set(name, value, options);
+          } catch {}
         },
         remove(name: string, options: CookieOptions) {
-          delete cookieStore[name];
+          try {
+            store.set(name, "", { ...options, maxAge: 0 });
+          } catch {}
         },
       },
     }

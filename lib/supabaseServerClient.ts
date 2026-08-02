@@ -1,20 +1,26 @@
+// lib/supabaseServerClient.ts
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 
 /**
- * Server‑side Supabase client for SSR and API routes.
+ * Server-side Supabase client for SSR and API routes.
  * Uses anon key for cookie compatibility with browser client.
+ * Compatible with Next.js 16 (cookies() is synchronous).
  */
 export function createSupabaseServerClient() {
-  const cookieStore = cookies();
+  const cookieStore = cookies(); // ❗ DO NOT await this
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, // ✅ use anon key, not service role
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, // anon key required for session sync
     {
       cookies: {
         get(name: string) {
-          return cookieStore.get(name)?.value;
+          try {
+            return cookieStore.get(name)?.value;
+          } catch {
+            return undefined;
+          }
         },
         set(name: string, value: string, options: any) {
           try {

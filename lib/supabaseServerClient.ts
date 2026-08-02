@@ -1,14 +1,10 @@
 // lib/supabaseServerClient.ts
+import { cookies as nextCookies } from "next/headers";   // ⭐ force alias
 import { createServerClient } from "@supabase/ssr";
-import type { CookieOptions } from "@supabase/ssr";
 
-/**
- * Fully isolated cookie adapter that does NOT rely on next/headers cookies().
- * This avoids type pollution from async cookies() in route handlers.
- */
 export function createSupabaseServerClient() {
-  // Local in-memory cookie store (per request)
-  const cookieStore: Record<string, string> = {};
+  // ⭐ cookies() MUST be synchronous — alias prevents auto-import conflicts
+  const cookieStore = nextCookies();
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -16,13 +12,21 @@ export function createSupabaseServerClient() {
     {
       cookies: {
         get(name: string) {
-          return cookieStore[name];
+          return cookieStore.get(name)?.value;
         },
-        set(name: string, value: string, options: CookieOptions) {
-          cookieStore[name] = value;
+        set(name: string, value: string, options: any) {
+          try {
+            cookieStore.set(name, value, options);
+          } catch {
+            // ignore SSR write errors
+          }
         },
-        remove(name: string, options: CookieOptions) {
-          delete cookieStore[name];
+        remove(name: string, options: any) {
+          try {
+            cookieStore.set(name, "", { ...options, maxAge: 0 });
+          } catch {
+            // ignore SSR write errors
+          }
         },
       },
     }

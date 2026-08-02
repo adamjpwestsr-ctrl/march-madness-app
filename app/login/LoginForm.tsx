@@ -1,7 +1,5 @@
 "use client";
 
-<div style={{ color: "red", fontWeight: "bold" }}>I AM HERE</div>
-
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { loginWithEmail, verifyAdminCode } from "./actions";

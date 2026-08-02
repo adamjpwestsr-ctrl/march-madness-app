@@ -8,19 +8,18 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export default function LoginPage() {
-  const supabase = createSupabaseBrowserClient();
-
-  // ⭐ CRITICAL: Clear stale session on page load
-  useEffect(() => {
-    supabase.auth.signOut();
-  }, []);
-
   const [showAbout, setShowAbout] = useState(false);
   const [currentStep, setCurrentStep] = useState<"email" | "admin">("email");
   const [highlightIndex, setHighlightIndex] = useState(0);
   const [fatalError, setFatalError] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [minimal, setMinimal] = useState(true);
+
+  // ⭐ FIX: Delay Supabase initialization so sidebar does NOT render on login
+  useEffect(() => {
+    const supabase = createSupabaseBrowserClient();
+    supabase.auth.signOut();
+  }, []);
 
   const highlights = [
     "🏀 Build Elite March Madness Brackets",
@@ -35,7 +34,7 @@ export default function LoginPage() {
   useEffect(() => {
     const interval = setInterval(() => {
       setHighlightIndex((i) => (i + 1) % highlights.length);
-    }, 2000);
+    }, 500);
     return () => clearInterval(interval);
   }, []);
 
@@ -76,7 +75,7 @@ export default function LoginPage() {
   return (
     <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-black">
 
-      {/* BACKGROUND LAYERS (ALWAYS ACTIVE) */}
+      {/* BACKGROUND LAYERS */}
       <>
         <div
           className="absolute inset-0 bg-cover bg-center opacity-10 grayscale animate-slow-pan"
@@ -93,18 +92,10 @@ export default function LoginPage() {
         </div>
       </>
 
-      {/* LEADERBOARD LINK */}
-      <a
-        href="/leaderboard"
-        className="absolute top-6 right-6 text-emerald-400 hover:text-emerald-300 font-semibold z-20"
-      >
-        Leaderboard
-      </a>
-
-      {/* LOGIN CARD */}
+      {/* LOGIN CARD — ⭐ Tilt removed */}
       <div
         className={`
-          relative z-10 w-full max-w-md rounded-2xl p-10 animate-fade-in tilt-card
+          relative z-10 w-full max-w-md rounded-2xl p-10 animate-fade-in
           ${minimal
             ? "bg-slate-900/70 border border-slate-700 shadow-[0_0_20px_rgba(16,185,129,0.15)]"
             : "team-gradient backdrop-blur-xl border border-slate-700/60 shadow-[0_0_40px_rgba(0,0,0,0.6)] neon-border"}
@@ -182,7 +173,7 @@ export default function LoginPage() {
             onStepChange={(step) => {
               try {
                 setCurrentStep(step);
-              } catch (err) {
+              } catch {
                 setFatalError("Something went wrong rendering the login form.");
               }
             }}
@@ -190,7 +181,7 @@ export default function LoginPage() {
           />
         </div>
 
-        {/* INFO LINKS (PUBLIC) */}
+        {/* INFO LINKS */}
         <div className="text-center mt-10 space-y-2 text-sm text-slate-400">
           <a href="/challenge-overview" className="underline hover:text-slate-300">
             Challenge Overview
@@ -220,7 +211,8 @@ export default function LoginPage() {
       {/* ABOUT MODAL */}
       {showAbout && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 animate-fade-in">
-	<div className="bg-slate-800 p-6 rounded-xl w-[90%] max-w-2xl max-h-[80vh] overflow-y-auto modal-scroll text-white shadow-xl border border-slate-700 animate-scale-in slide-up">
+          <div className="bg-slate-800 p-6 rounded-xl w-[90%] max-w-2xl max-h-[80vh] overflow-y-auto modal-scroll text-white shadow-xl border border-slate-700 animate-scale-in slide-up">
+
             <h2 className="text-2xl font-bold mb-4 text-center">About BracketBoss</h2>
 
             <p className="text-slate-300 text-sm mb-5 leading-relaxed text-center">
@@ -233,62 +225,50 @@ export default function LoginPage() {
                 <strong>🏀 March Madness Brackets:</strong>
                 Build up to 4 brackets, track every upset, and compete across all rounds for your chance at a large payout!
               </li>
-
               <li>
                 <strong>♻️ Mulligans:</strong>
-                Is your March Madness Bracket in trouble? Undo early picks with a Mulligan (only available on BracketBoss) — limited per season.
+                Is your March Madness Bracket in trouble? Undo early picks with a Mulligan — limited per season.
               </li>
-
               <li>
                 <strong>🏈 NFL Weekly Picks:</strong>
                 One pick per week. No repeating teams. Build streaks and climb the standings.
               </li>
-
               <li>
                 <strong>⚾ MLB Weekly Challenge:</strong>
                 Pick the winner of each weekly series. Earn points for correct predictions.
               </li>
-
               <li>
                 <strong>💥 MLB Home Run Derby:</strong>
-                Choose your Derby champion. Track HR totals, momentum, and Derby rankings. (Only available during All Star Week).
+                Choose your Derby champion. Track HR totals, momentum, and Derby rankings.
               </li>
-
               <li>
                 <strong>🏒 NHL Weekly Challenge:</strong>
-                Predict winners of each weekly series. Like the MLB Weekly challenge, earn points for correct predictions.
+                Predict winners of each weekly series. Earn points for correct predictions.
               </li>
-
               <li>
                 <strong>🏀 NBA Weekly Challenge:</strong>
-                Pick winners of each weekly series. Like the MLB and NHL Weekly challenges, earn points for correct predictions.
+                Pick winners of each weekly series. Earn points for correct predictions.
               </li>
-
               <li>
                 <strong>⛳ Golf Weekly:</strong>
-                Pick your Golfer each week, and follow live scoring and leaderboard movement, while you earn points and try to claim the top spot on the leaderboard.
+                Pick your Golfer each week and follow live scoring.
               </li>
-
               <li>
                 <strong>🏁 NASCAR Challenge:</strong>
-                Pick your favorite racer each week. Score based on laps led, stage wins, finishing position, and bonus events. Try to own the leaderboard!
+                Pick your racer each week. Score based on laps led, stage wins, and finishes.
               </li>
-
               <li>
                 <strong>🧠 Trivia Blitz:</strong>
-                Sports knowledge living in your brain rent-free? We have what you need! Timed sports trivia with streak bonuses and rapid‑fire scoring.
+                Timed sports trivia with streak bonuses and rapid‑fire scoring.
               </li>
-
               <li>
                 <strong>📊 Leaderboard Tracking:</strong>
-                Watch your rank climb across all sports, challenges, and seasons.
+                Watch your rank climb across all sports and seasons.
               </li>
-
               <li>
                 <strong>🔐 Password‑Free Login:</strong>
                 Your email is your secure key — fast, simple, and safe.
               </li>
-
               <li>
                 <strong>🏆 Rewards & Badges:</strong>
                 Earn achievements, bragging rights, and occasional prizes.
@@ -303,6 +283,7 @@ export default function LoginPage() {
                 Close
               </button>
             </div>
+
           </div>
         </div>
       )}

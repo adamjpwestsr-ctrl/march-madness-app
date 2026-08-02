@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { loginWithEmail, verifyAdminCode } from "./actions";
-import { createSupabaseBrowserClient } from "@/lib/supabaseBrowserClient";   // ⭐ NEW
+import { createSupabaseBrowserClient } from "@/lib/supabaseBrowserClient";
 
 type LoginFormProps = {
   onStepChange?: (step: "email" | "admin") => void;
@@ -11,7 +11,7 @@ type LoginFormProps = {
 };
 
 export default function LoginForm({ onStepChange, onEmailChange }: LoginFormProps) {
-  const supabase = createSupabaseBrowserClient();   // ⭐ NEW
+  const supabase = createSupabaseBrowserClient();
 
   const [email, setEmail] = useState("");
   const [adminCode, setAdminCode] = useState("");
@@ -25,9 +25,6 @@ export default function LoginForm({ onStepChange, onEmailChange }: LoginFormProp
     setError("");
 
     startTransition(async () => {
-      // ⭐ CRITICAL: Clear stale Supabase session BEFORE login
-      await supabase.auth.signOut();
-
       const formData = new FormData();
       formData.append("email", email);
 
@@ -63,9 +60,6 @@ export default function LoginForm({ onStepChange, onEmailChange }: LoginFormProp
     setError("");
 
     startTransition(async () => {
-      // ⭐ CRITICAL: Clear stale Supabase session BEFORE admin login
-      await supabase.auth.signOut();
-
       const formData = new FormData();
       formData.append("email", email);
       formData.append("adminCode", adminCode);
@@ -97,8 +91,6 @@ export default function LoginForm({ onStepChange, onEmailChange }: LoginFormProp
   };
 
   return (
-    /* ⭐ Your UI stays exactly the same */
-    /* ⭐ No changes below this line */
     <div className="space-y-4">
       {step === "email" && (
         <form onSubmit={handleEmailSubmit} className="space-y-4">

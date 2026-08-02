@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import {
@@ -16,17 +16,43 @@ import {
   Goal,
   Circle,
   CircleDot,
+  User,
 } from "lucide-react";
+import { createSupabaseBrowserClient } from "@/lib/supabaseBrowserClient";
 
 export default function SidebarNav() {
   const pathname = usePathname();
   const router = useRouter();
+  const supabase = createSupabaseBrowserClient();
 
   const [openChallenges, setOpenChallenges] = useState(false);
   const [openSport, setOpenSport] = useState<string | null>(null);
+  const [user, setUser] = useState<any>(null);
+
+  // ⭐ Hydrate user session
+  useEffect(() => {
+    let mounted = true;
+
+    (async () => {
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!mounted) return;
+
+      setUser(sessionData?.session?.user ?? null);
+
+      const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+        if (!mounted) return;
+        setUser(session?.user ?? null);
+      });
+
+      return () => {
+        mounted = false;
+        listener.subscription.unsubscribe();
+      };
+    })();
+  }, [supabase]);
 
   const handleLogout = async () => {
-    await fetch("/logout", { method: "POST" });
+    await supabase.auth.signOut();
     router.push("/login");
   };
 
@@ -84,7 +110,25 @@ export default function SidebarNav() {
   );
 
   return (
-    <nav className="flex flex-col gap-2 p-4">
+    <nav className="flex flex-col gap-4 p-4">
+
+      {/* ⭐ USER PANEL */}
+      {user && (
+        <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-slate-800/60 border border-slate-700 shadow-sm">
+          <div className="w-10 h-10 rounded-full bg-emerald-600 flex items-center justify-center text-black font-bold">
+            {user.email?.[0]?.toUpperCase()}
+          </div>
+
+          <div className="flex flex-col">
+            <span className="text-white font-semibold">
+              {user.email?.split("@")[0]}
+            </span>
+            <span className="text-slate-400 text-xs">{user.email}</span>
+          </div>
+        </div>
+      )}
+
+      {/* NAVIGATION */}
       {link("/home", "Home", Home)}
       {link("/sports/march-madness", "March Madness", Trophy)}
 
@@ -108,7 +152,6 @@ export default function SidebarNav() {
           openChallenges ? "max-h-[600px] opacity-100" : "max-h-0 opacity-0"
         }`}
       >
-        {/* HUB */}
         <Link
           href="/challenges"
           className={`flex items-center gap-2 px-3 py-1 rounded-md text-sm hover:bg-slate-800 ${
@@ -119,38 +162,31 @@ export default function SidebarNav() {
           Challenge Overload
         </Link>
 
-        {/* GOLF */}
         {sportSection("golf", "Golf", Flag, [
           { title: "Golf Weekly", href: "/sports/golf/weekly" },
         ])}
 
-        {/* MLB */}
         {sportSection("mlb", "MLB", Circle, [
           { title: "MLB Weekly", href: "/sports/mlb/weekly" },
           { title: "MLB Homerun Derby", href: "/sports/mlb/derby" },
         ])}
 
-        {/* NFL */}
         {sportSection("nfl", "NFL", Goal, [
           { title: "NFL Weekly", href: "/sports/nfl/weekly" },
         ])}
 
-        {/* NBA */}
         {sportSection("nba", "NBA", CircleDot, [
           { title: "NBA Weekly", href: "/sports/nba/weekly" },
         ])}
 
-        {/* NHL */}
         {sportSection("nhl", "NHL", Goal, [
           { title: "NHL Weekly", href: "/sports/nhl/weekly" },
         ])}
 
-        {/* NCAAF */}
         {sportSection("ncaaf", "NCAA Football", Goal, [
           { title: "NCAAF Weekly", href: "/sports/ncaaf" },
         ])}
 
-        {/* RACING */}
         {sportSection("racing", "Racing", Flag, [
           { title: "NASCAR Race Day", href: "/sports/nascar/" },
           { title: "F1 Race Day", href: "/sports/f1/" },
@@ -161,6 +197,7 @@ export default function SidebarNav() {
       {link("/leaderboard", "Leaderboard", Trophy)}
       {link("/settings", "Settings", Settings)}
 
+      {/* LOGOUT */}
       <button
         onClick={handleLogout}
         className="flex items-center gap-3 px-4 py-2 rounded-md text-red-400 hover:bg-slate-800 hover:text-red-300"

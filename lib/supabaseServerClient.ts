@@ -1,10 +1,9 @@
-// lib/supabaseServerClient.ts
-import { cookies as nextCookies } from "next/headers";
+import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 import type { CookieOptions } from "@supabase/ssr";
 
-export function createSupabaseServerClient() {
-  const store = nextCookies(); // synchronous in Next.js 16
+export function createSupabaseServer() {
+  const store = cookies(); // MUST be sync in server utilities
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

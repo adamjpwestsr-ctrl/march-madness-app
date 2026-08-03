@@ -2,8 +2,8 @@ import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 import type { CookieOptions } from "@supabase/ssr";
 
-export function createSupabaseServer() {
-  const store = cookies(); // MUST be sync in server utilities
+export function createSupabaseServerClient() {
+  const store = cookies(); // sync for server components
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

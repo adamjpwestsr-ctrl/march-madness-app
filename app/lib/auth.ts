@@ -9,9 +9,8 @@ export interface Session {
   };
 }
 
-export async function getSession(): Promise<Session | null> {
-  // Next.js 16: cookies() is async
-  const cookieStore = await cookies();
+export function getSession(): Session | null {
+  const cookieStore = cookies(); // sync
 
   const raw = cookieStore.get("mm_session")?.value;
   if (!raw) return null;

@@ -6,10 +6,10 @@ type SessionResult = {
   isAdmin: boolean;
 } | null;
 
-export async function getSession(): Promise<SessionResult> {
-  const cookieStore = await cookies();
-  const raw = cookieStore.get("mm_session")?.value;
+export function getSession(): SessionResult {
+  const cookieStore = cookies(); // sync
 
+  const raw = cookieStore.get("mm_session")?.value;
   if (!raw) return null;
 
   try {

@@ -1,27 +1,23 @@
+// lib/supabaseServerClient.ts
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
-import type { CookieOptions } from "@supabase/ssr";
 
-export function createSupabaseServerClient() {
-  const store = cookies(); // sync for server components
+export async function createSupabaseServerClient() {
+  const cookieStore = await cookies();
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!, // ✅ use service role key
     {
       cookies: {
         get(name: string) {
-          return store.get(name)?.value;
+          return cookieStore.get(name)?.value;
         },
-        set(name: string, value: string, options: CookieOptions) {
-          try {
-            store.set(name, value, options);
-          } catch {}
+        set(name: string, value: string, options: any) {
+          cookieStore.set(name, value, options);
         },
-        remove(name: string, options: CookieOptions) {
-          try {
-            store.set(name, "", { ...options, maxAge: 0 });
-          } catch {}
+        remove(name: string, options: any) {
+          cookieStore.set(name, "", { ...options, maxAge: 0 });
         },
       },
     }

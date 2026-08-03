@@ -1,13 +1,11 @@
-// app/admin/tools/page.tsx
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import ToolsClient from "./ToolsClient";
 
-export default async function ToolsAdminPage() {
-  const cookieStore = await cookies();
+export default function ToolsAdminPage() {
+  const cookieStore = cookies();
   const sessionCookie = cookieStore.get("mm_session");
 
-  // No custom session → redirect to login
   if (!sessionCookie) {
     redirect("/login");
   }
@@ -19,7 +17,6 @@ export default async function ToolsAdminPage() {
     redirect("/login");
   }
 
-  // Must be admin (commissioner counts as admin)
   if (!session.isAdmin) {
     redirect("/bracket");
   }

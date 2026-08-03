@@ -11,7 +11,7 @@ const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 export default async function UsersAdminPage() {
   // AUTH CHECK
-  const cookieStore = await cookies();
+  const cookieStore = cookies();
   const sessionCookie = cookieStore.get("mm_session");
   if (!sessionCookie) redirect("/login");
 
@@ -24,14 +24,11 @@ export default async function UsersAdminPage() {
 
   if (!session.isAdmin) redirect("/");
 
-  // SUPABASE
   const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
     auth: { persistSession: false },
   });
 
-  // LOAD USERS
-  if (!supabase) return;
-    const { data: users, error } = await supabase
+  const { data: users, error } = await supabase
     .from("users")
     .select("user_id, email, is_active, has_paid")
     .order("email");

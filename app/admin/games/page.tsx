@@ -1,13 +1,11 @@
-// app/admin/games/page.tsx
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import GamesClient from "./GamesClient";
 
-export default async function GamesAdminPage() {
-  const cookieStore = await cookies();
+export default function GamesAdminPage() {
+  const cookieStore = cookies();
   const sessionCookie = cookieStore.get("mm_session");
 
-  // No custom session → redirect to login
   if (!sessionCookie) {
     redirect("/login");
   }
@@ -19,7 +17,6 @@ export default async function GamesAdminPage() {
     redirect("/login");
   }
 
-  // Must be admin (commissioner counts as admin)
   if (!session.isAdmin) {
     redirect("/bracket");
   }

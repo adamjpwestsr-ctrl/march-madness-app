@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import BracketsClient from "./BracketsClient";
 
-export default async function BracketsAdminPage() {
+export default function BracketsAdminPage() {
   const cookieStore = cookies();
   const sessionCookie = cookieStore.get("mm_session");
 
@@ -27,4 +27,3 @@ export default async function BracketsAdminPage() {
     </div>
   );
 }
-

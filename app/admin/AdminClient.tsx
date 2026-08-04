@@ -36,7 +36,6 @@ export default function AdminClient({ adminEmail }: { adminEmail: string }) {
     openChallenges: null as number | null,
     totalPicks: null as number | null,
     activeSports: null as number | null,
-    openReports: null as number | null,
   });
 
   const [loadingStats, setLoadingStats] = useState(true);

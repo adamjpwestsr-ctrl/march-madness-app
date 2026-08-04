@@ -2,8 +2,8 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import ToolsClient from "./ToolsClient";
 
-export default function ToolsAdminPage() {
-  const cookieStore = cookies();
+export default async function ToolsAdminPage() {
+  const cookieStore = await cookies();
   const sessionCookie = cookieStore.get("mm_session");
 
   if (!sessionCookie) {

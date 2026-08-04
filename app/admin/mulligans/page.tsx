@@ -2,8 +2,8 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import MulligansClient from "./MulligansClient";
 
-export default function MulligansAdminPage() {
-  const cookieStore = cookies();
+export default async function MulligansAdminPage() {
+  const cookieStore = await cookies();
   const sessionCookie = cookieStore.get("mm_session");
 
   if (!sessionCookie) {

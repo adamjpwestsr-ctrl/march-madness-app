@@ -202,7 +202,7 @@ export default async function LeaderboardHub() {
 }
 
 /* SPORT CARD COMPONENT */
-function SportCard({ sport }: { sport: Contest }) {
+async function SportCard({ sport }: { sport: Contest }) {
   return (
     <div className="rounded-xl p-6 bg-slate-800/40 backdrop-blur border border-slate-700/40 hover:bg-slate-800/60 transition">
       <div className="flex items-center gap-3">

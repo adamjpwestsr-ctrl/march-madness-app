@@ -2,7 +2,7 @@ import NcaafSchedulePanel from "./NcaafSchedulePanel";
 import NcaafImportPanel from "./NcaafImportPanel";
 import NcaafRankingsPanel from "./NcaafRankingsPanel";
 
-export default async function NcaafAdminPage() {
+export default function NcaafAdminPage() {
   return (
     <div className="space-y-8">
       <section>

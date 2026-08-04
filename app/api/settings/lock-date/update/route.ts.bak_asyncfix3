@@ -9,13 +9,13 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 // Convert ET → UTC
-async function convertETToUTC(etString: string) {
+function convertETToUTC(etString: string) {
   // Example input: "2027-03-20T12:00"
   const etDate = new Date(`${etString}:00-04:00`); 
   return etDate.toISOString();
 }
 
-export async function POST(req: Request) {
+export function POST(req: Request) {
   const { lockDateET } = await req.json();
 
   if (!lockDateET) {

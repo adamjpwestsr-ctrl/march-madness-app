@@ -5,7 +5,7 @@ type SportPageProps = {
   params: { sport: string };
 };
 
-export default function SportLandingPage({ params }: SportPageProps) {
+export default async function SportLandingPage({ params }: SportPageProps) {
   const sportParam = params.sport.toLowerCase();
 
   // Find all challenges for this sport

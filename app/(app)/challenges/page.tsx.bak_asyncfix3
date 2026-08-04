@@ -11,7 +11,7 @@ import {
   Car, // For F1
 } from "lucide-react";
 
-export default async function ChallengesHub() {
+export default function ChallengesHub() {
   return (
     <div className="space-y-12 animate-fadeIn">
       {/* Header */}
@@ -154,7 +154,7 @@ export default async function ChallengesHub() {
 /* ------------------------------
    Reusable Challenge Item
 ------------------------------ */
-async function ChallengeItem({
+function ChallengeItem({
   href,
   icon,
   title,

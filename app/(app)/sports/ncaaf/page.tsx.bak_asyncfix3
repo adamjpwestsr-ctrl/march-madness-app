@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Flag, Goal, Lock, ChevronRight } from "lucide-react";
 import NcaafTicker from "@/app/components/NcaafTicker";
 
-export default async function NcaafLandingPage() {
+export default function NcaafLandingPage() {
   return (
     <div className="space-y-10 pb-20 max-w-6xl mx-auto px-4 animate-fadeIn">
       {/* Header */}
@@ -110,7 +110,7 @@ export default async function NcaafLandingPage() {
 /* ------------------------------
    Pick Card Component
 ------------------------------ */
-async function PickCard({
+function PickCard({
   href,
   title,
   desc,
@@ -160,7 +160,7 @@ async function PickCard({
 /* ------------------------------
    Locked Card Component
 ------------------------------ */
-async function LockedCard({
+function LockedCard({
   title,
   desc,
 }: {

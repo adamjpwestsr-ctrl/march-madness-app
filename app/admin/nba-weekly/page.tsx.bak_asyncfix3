@@ -1,5 +1,5 @@
 import WeeklyAdminLayout from "@/app/components/WeeklyAdminLayout";
 
-export default async function NbaWeeklyAdminPage() {
+export default function NbaWeeklyAdminPage() {
   return <WeeklyAdminLayout sport="NBA" />;
 }

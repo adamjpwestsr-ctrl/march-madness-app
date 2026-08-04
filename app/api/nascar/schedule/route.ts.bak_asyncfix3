@@ -17,13 +17,13 @@ const MONTH_MAP: Record<string, string> = {
   DEC: "12",
 };
 
-async function normalizeDate(monthStr: string, dayStr: string) {
+function normalizeDate(monthStr: string, dayStr: string) {
   const month = MONTH_MAP[monthStr.toUpperCase()];
   const day = dayStr.replace(/[^0-9]/g, "");
   return `2026-${month}-${day.padStart(2, "0")}`;
 }
 
-async function normalizeTime(timeStr: string) {
+function normalizeTime(timeStr: string) {
   if (!timeStr) return null;
 
   const [raw, meridian] = timeStr.trim().split(" ");

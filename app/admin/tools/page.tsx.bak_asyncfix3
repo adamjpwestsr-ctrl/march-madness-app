@@ -1,8 +1,8 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import MulligansClient from "./MulligansClient";
+import ToolsClient from "./ToolsClient";
 
-export default async function MulligansAdminPage() {
+export default function ToolsAdminPage() {
   const cookieStore = cookies();
   const sessionCookie = cookieStore.get("mm_session");
 
@@ -23,7 +23,7 @@ export default async function MulligansAdminPage() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
-      <MulligansClient />
+      <ToolsClient />
     </div>
   );
 }

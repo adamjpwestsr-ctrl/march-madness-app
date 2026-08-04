@@ -3,7 +3,7 @@ import SportsHero from "@/app/(app)/sports/SportsHero";
 import SportsCard from "@/app/(app)/sports/SportsCard";
 import { CHALLENGES } from "@/app/config/challenges";
 
-export default async function SportsHub() {
+export default function SportsHub() {
   const sportsChallenges = CHALLENGES.filter((c) => c.sport !== "Trivia");
 
   return (

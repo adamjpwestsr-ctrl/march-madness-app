@@ -84,7 +84,7 @@ export async function GET() {
     // -----------------------------
     // ⭐ NORMALIZE JOINED DATA BACK INTO TournamentGame SHAPE
     // -----------------------------
-    async function normalizeGame(g: any): TournamentGame {
+    function normalizeGame(g: any): TournamentGame {
       const team1 = Array.isArray(g.team1) ? g.team1[0] : g.team1 ?? null;
       const team2 = Array.isArray(g.team2) ? g.team2[0] : g.team2 ?? null;
 
@@ -181,7 +181,7 @@ export async function GET() {
     // -----------------------------
     // 7️⃣ WIRE winner_to_game_id FOR ALL ROUNDS
     // -----------------------------
-    async function wireWinnerMappings() {
+    function wireWinnerMappings() {
       console.log('🔹 Wiring winner mappings...');
 
       // Opening Round → Round of 64

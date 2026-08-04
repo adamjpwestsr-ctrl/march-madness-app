@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
-export async function GET() {
+export function GET() {
   // -----------------------------
   // 0. Supabase SSR Client (Next.js 14+ best practice)
   // -----------------------------

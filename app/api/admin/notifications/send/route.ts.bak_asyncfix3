@@ -18,7 +18,7 @@ if (!admin.apps.length) {
 // -----------------------------
 // E.164 VALIDATION
 // -----------------------------
-async function isValidE164(number: string): boolean {
+function isValidE164(number: string): boolean {
   const e164Regex = /^\+[1-9]\d{1,14}$/;
   return e164Regex.test(number);
 }

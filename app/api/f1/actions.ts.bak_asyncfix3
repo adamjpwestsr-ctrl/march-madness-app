@@ -13,7 +13,7 @@ import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
  * 6th–10th: 1
  * >10th: 0
  */
-async function getF1Points(position: number): number {
+function getF1Points(position: number): number {
   if (position === 1) return 25;
   if (position === 2) return 20;
   if (position === 3) return 15;

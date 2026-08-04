@@ -3,11 +3,11 @@ import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 
 export function createSupabaseServerClient() {
-  const cookieStore = cookies(); // ❗ synchronous — do NOT await
+  const cookieStore = cookies(); // ❗ synchronous — DO NOT await
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, // anon key is correct
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
         get(name: string) {

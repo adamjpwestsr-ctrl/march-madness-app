@@ -15,7 +15,7 @@ export default function AddUserToContest({ users, contests }: AddUserToContestPr
   const [isPending, startTransition] = useTransition();
   const { addToast } = useToast();
 
-  const onSubmit = () => {
+  const onSubmit = async () => {
     if (!userId || contestIds.length === 0) return;
 
     startTransition(async () => {

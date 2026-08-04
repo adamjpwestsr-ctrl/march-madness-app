@@ -14,7 +14,7 @@ export default function LeaderboardPage() {
 
   // Fetch current user email
   useEffect(() => {
-    async function loadUser() {
+    async async function loadUser() {
       const res = await fetch('/api/auth/me', { cache: 'no-store' });
       const json = await res.json();
       setUserEmail(json?.email ?? null);
@@ -24,7 +24,7 @@ export default function LeaderboardPage() {
 
   // Fetch leaderboard
   useEffect(() => {
-    async function load() {
+    async async function load() {
       const res = await fetch('/api/march-madness/leaderboard', {
         cache: 'no-store',
       });

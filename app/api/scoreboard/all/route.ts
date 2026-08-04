@@ -35,7 +35,7 @@ async function fetchLeague(path: string) {
 }
 
 // 🟢 PGA FIX — normalize golf tournaments
-async function fetchGolf() {
+async async function fetchGolf() {
   const url = "https://site.api.espn.com/apis/site/v2/sports/golf/pga/scoreboard";
 
   try {
@@ -60,7 +60,7 @@ async function fetchGolf() {
 }
 
 // 🏎️ F1 FIX — normalize Formula 1 races
-async function fetchF1() {
+async async function fetchF1() {
   const url = "https://site.api.espn.com/apis/site/v2/sports/racing/f1/scoreboard";
 
   try {
@@ -86,7 +86,7 @@ async function fetchF1() {
 }
 
 // 🏁 NASCAR FIX — normalize NASCAR Cup Series races
-async function fetchNASCAR() {
+async async function fetchNASCAR() {
   const url = "https://site.api.espn.com/apis/site/v2/sports/racing/nascar.cup/scoreboard";
 
   try {
@@ -111,7 +111,7 @@ async function fetchNASCAR() {
   }
 }
 
-export async function GET(request: NextRequest) {
+export async async function GET(request: NextRequest) {
   const results = await Promise.all([
     // Fetch all non‑golf leagues
     ...Object.entries(LEAGUES).map(async ([key, path]) => {

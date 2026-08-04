@@ -3,7 +3,7 @@
 import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 
 // Fetch user profile
-export async function getUserProfile(userId: number) {
+export async async function getUserProfile(userId: number) {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from("users")
@@ -18,7 +18,7 @@ export async function getUserProfile(userId: number) {
 }
 
 // Update user profile
-export async function updateUserProfile(
+export async async function updateUserProfile(
   userId: number,
   updates: Partial<{
     username: string;
@@ -36,7 +36,7 @@ export async function updateUserProfile(
 }
 
 // Auto‑generate username from email prefix
-export async function initializeUsername(userId: number) {
+export async async function initializeUsername(userId: number) {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from("users")
@@ -58,7 +58,7 @@ export async function initializeUsername(userId: number) {
 }
 
 // Fetch badges from existing table
-export async function getUserBadges() {
+export async async function getUserBadges() {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from("badges")

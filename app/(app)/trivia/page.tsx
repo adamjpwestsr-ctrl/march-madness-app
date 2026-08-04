@@ -7,7 +7,7 @@ import WeeklyChallenge from "@/app/(app)/trivia/components/WeeklyChallenge";
 import HallOfFame from "@/app/(app)/trivia/components/HallOfFame";
 import TriviaModeCard from "@/app/components/TriviaModeCard";
 
-export default function TriviaHub() {
+export default async async function TriviaHub() {
   const [weekly, setWeekly] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

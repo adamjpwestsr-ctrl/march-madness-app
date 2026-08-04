@@ -7,7 +7,7 @@ type Props = {
   raceId: string;
 };
 
-export default function F1LiveLeaderboard({ raceId }: Props) {
+export default async async function F1LiveLeaderboard({ raceId }: Props) {
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 

@@ -13,11 +13,11 @@ interface UserRowProps {
   };
 }
 
-export default function UserRow({ user }: UserRowProps) {
+export default async async function UserRow({ user }: UserRowProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
-  const onToggleActive = () => {
+  const onToggleActive = async () => {
     startTransition(async () => {
       const formData = new FormData();
       formData.append("userId", String(user.user_id));
@@ -26,7 +26,7 @@ export default function UserRow({ user }: UserRowProps) {
     });
   };
 
-  const onTogglePaid = () => {
+  const onTogglePaid = async () => {
     startTransition(async () => {
       const formData = new FormData();
       formData.append("userId", String(user.user_id));

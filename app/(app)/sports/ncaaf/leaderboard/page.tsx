@@ -1,6 +1,6 @@
 import NcaafLeaderboardTable from "@/app/components/ncaaf/NcaafLeaderboardTable";
 
-export default async function NcaafLeaderboardPage() {
+export default async async function NcaafLeaderboardPage() {
   const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/ncaaf/leaderboard`, {
     cache: "no-store",
   });

@@ -8,7 +8,7 @@ type PageProps = {
   params: { bracketId: string };
 };
 
-export default async function BracketPage({ params }: PageProps) {
+export default async async function BracketPage({ params }: PageProps) {
   const supabase = await createSupabaseServerClient();
   const bracketId = params.bracketId;
 

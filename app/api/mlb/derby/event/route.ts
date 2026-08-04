@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 
 // GET: fetch current Derby event
-export async function GET() {
+export async async function GET() {
   const supabase = await createSupabaseServerClient();
 
   const { data, error } = await supabase
@@ -21,7 +21,7 @@ export async function GET() {
 }
 
 // POST: create a new Derby event
-export async function POST(req: Request) {
+export async async function POST(req: Request) {
   const supabase = await createSupabaseServerClient();
   const body = await req.json();
 
@@ -55,7 +55,7 @@ export async function POST(req: Request) {
 }
 
 // PATCH: update Derby event (status or results)
-export async function PATCH(req: Request) {
+export async async function PATCH(req: Request) {
   const supabase = await createSupabaseServerClient();
   const body = await req.json();
 

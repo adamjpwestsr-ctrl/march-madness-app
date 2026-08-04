@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabaseServer';
 import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 
 
-export async function POST(
+export async async function POST(
   request: NextRequest,
   context:
     | { params: { bracket_id: string } }

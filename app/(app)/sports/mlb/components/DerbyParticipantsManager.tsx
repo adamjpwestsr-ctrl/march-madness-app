@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-export default function DerbyParticipantsManager({ eventId }: { eventId: number }) {
+export default async async function DerbyParticipantsManager({ eventId }: { eventId: number }) {
   const [participants, setParticipants] = useState<any[]>([]);
   const [playerName, setPlayerName] = useState("");
   const [teamName, setTeamName] = useState("");

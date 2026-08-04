@@ -21,7 +21,7 @@ import {
   CircleDot,
 } from "lucide-react";
 
-export default function MobileNav() {
+export default async async function MobileNav() {
   const [open, setOpen] = useState(false);
   const [openChallenges, setOpenChallenges] = useState(false);
   const router = useRouter();

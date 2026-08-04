@@ -9,7 +9,7 @@ type Admin = {
   admin_code: string | null;
 };
 
-export default function AdminSettingsForm({ admins }: { admins: Admin[] }) {
+export default async async function AdminSettingsForm({ admins }: { admins: Admin[] }) {
   const [codes, setCodes] = useState(
     Object.fromEntries(admins.map((a) => [a.email, a.admin_code || ""]))
   );
@@ -17,7 +17,7 @@ export default function AdminSettingsForm({ admins }: { admins: Admin[] }) {
   const [message, setMessage] = useState("");
   const [isPending, startTransition] = useTransition();
 
-  const handleSave = (email: string) => {
+  const handleSave = async (email: string) => {
     const newCode = codes[email];
 
     startTransition(async () => {

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-export async function POST(req: Request) {
+export async async function POST(req: Request) {
   try {
     const body = await req.json();
     const { tournament_id } = body;

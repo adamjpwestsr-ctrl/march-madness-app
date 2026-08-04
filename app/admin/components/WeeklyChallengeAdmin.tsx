@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-export default function WeeklyChallengeAdmin() {
+export default async async function WeeklyChallengeAdmin() {
   const [questions, setQuestions] = useState<any[]>([]);
   const [selected, setSelected] = useState<number[]>([]);
   const [weekStart, setWeekStart] = useState("");

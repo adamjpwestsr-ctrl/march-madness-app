@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(request: NextRequest) {
+export async async function GET(request: NextRequest) {
   const url =
     "https://site.api.espn.com/apis/site/v2/sports/golf/pga/scoreboard";
 

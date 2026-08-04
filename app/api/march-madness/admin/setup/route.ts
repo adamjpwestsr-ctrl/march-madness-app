@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabaseServer';
 
-export async function POST() {
+export async async function POST() {
   const supabase = await createClient();
 
   // 1️⃣ Load tournament teams

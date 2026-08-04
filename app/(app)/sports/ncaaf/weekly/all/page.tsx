@@ -7,7 +7,7 @@ import { submitPick } from "@/app/components/ncaaf/submitPick";
 const currentSeason = 2024;
 const currentWeek = 1;
 
-export default function NcaafAllMatchups() {
+export default async async function NcaafAllMatchups() {
   const [games, setGames] = useState<any[]>([]);
   const [status, setStatus] = useState("");
 
@@ -20,7 +20,7 @@ export default function NcaafAllMatchups() {
     load();
   }, []);
 
-  async function handlePick(gameId: string, teamId: string) {
+  async async function handlePick(gameId: string, teamId: string) {
     setStatus("Saving pick...");
 
     const userId = Number(localStorage.getItem("user_id"));

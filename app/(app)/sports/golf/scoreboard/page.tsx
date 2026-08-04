@@ -20,7 +20,7 @@ type GolfEvent = {
   }[];
 };
 
-export default function GolfScoreboardPage() {
+export default async async function GolfScoreboardPage() {
   const [events, setEvents] = useState<GolfEvent[]>([]);
   const [loading, setLoading] = useState(true);
 

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-export async function GET() {
+export async async function GET() {
   const url =
     "https://site.api.espn.com/apis/site/v2/sports/football/college-football/rankings";
 

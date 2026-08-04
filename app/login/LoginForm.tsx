@@ -10,7 +10,7 @@ type LoginFormProps = {
   onEmailChange?: (email: string) => void;
 };
 
-export default function LoginForm({ onStepChange, onEmailChange }: LoginFormProps) {
+export default async async function LoginForm({ onStepChange, onEmailChange }: LoginFormProps) {
   const supabase = createSupabaseBrowserClient();
 
   const [email, setEmail] = useState("");
@@ -20,7 +20,7 @@ export default function LoginForm({ onStepChange, onEmailChange }: LoginFormProp
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
-  const handleEmailSubmit = (e: React.FormEvent) => {
+  const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
@@ -55,7 +55,7 @@ export default function LoginForm({ onStepChange, onEmailChange }: LoginFormProp
     });
   };
 
-  const handleAdminCodeSubmit = (e: React.FormEvent) => {
+  const handleAdminCodeSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 

@@ -1,6 +1,6 @@
 'use client';
 
-export default function AdminPage() {
+export default async async function AdminPage() {
   async function setup() {
     await fetch('/api/march-madness/admin/setup', { method: 'POST' });
     alert('Tournament setup complete!');

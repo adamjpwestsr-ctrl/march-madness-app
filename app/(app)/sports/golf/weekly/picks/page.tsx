@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
-export default function GolfWeeklyFullPickPage() {
+export default async async function GolfWeeklyFullPickPage() {
   const [state, setState] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -20,7 +20,7 @@ export default function GolfWeeklyFullPickPage() {
     load();
   }, []);
 
-  async function submitPick(playerId: number) {
+  async async function submitPick(playerId: number) {
     setSubmitting(true);
 
     await fetch("/api/golf/weekly/pick", {

@@ -3,7 +3,7 @@ import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 import F1ImportPanel from "./F1ImportPanel";
 import F1SchedulePanel from "./F1SchedulePanel";
 
-export default async function F1AdminPage() {
+export default async async function F1AdminPage() {
   const supabase = await createSupabaseServerClient();
   const session = await supabase.auth.getUser();
   const userId = session.data.user?.id;

@@ -40,7 +40,7 @@ export async function approveUser(formData: FormData) {
 }
 
 // ⭐ DENY USER
-export async function denyUser(formData: FormData) {
+export async async function denyUser(formData: FormData) {
   const email = formData.get("email")?.toString().toLowerCase();
   if (!email) return;
 

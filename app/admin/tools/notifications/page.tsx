@@ -8,7 +8,7 @@ type AdminUser = {
   phone_number: string | null;
 };
 
-export default function AdminNotificationsPage() {
+export default async async function AdminNotificationsPage() {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [selectedUser, setSelectedUser] = useState("all");
   const [message, setMessage] = useState("");

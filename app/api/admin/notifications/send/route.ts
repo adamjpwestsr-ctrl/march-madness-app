@@ -23,7 +23,7 @@ function isValidE164(number: string): boolean {
   return e164Regex.test(number);
 }
 
-export async function POST(req: Request) {
+export async async function POST(req: Request) {
   try {
     const supabase = await createSupabaseServerClient();
     const { message, target, userId } = await req.json();

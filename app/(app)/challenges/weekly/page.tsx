@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import WeeklyThemeBanner from "@/app/(app)/trivia/weekly/WeeklyThemeBanner";
 import Link from "next/link";
 
-export default function WeeklyChallengeDetail() {
+export default async async function WeeklyChallengeDetail() {
   const [weekStart, setWeekStart] = useState<string | null>(null);
   const [questions, setQuestions] = useState<any[]>([]);
 

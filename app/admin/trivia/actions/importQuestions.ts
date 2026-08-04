@@ -2,7 +2,7 @@
 
 import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 
-export async function importQuestions(file: File) {
+export async async function importQuestions(file: File) {
   const supabase = await createSupabaseServerClient();
 
   const text = await file.text();

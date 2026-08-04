@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Flag } from "lucide-react";
 
-export default function NcaafTicker() {
+export default async async function NcaafTicker() {
   const [games, setGames] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 

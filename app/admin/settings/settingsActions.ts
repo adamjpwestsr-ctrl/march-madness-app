@@ -2,7 +2,7 @@
 
 import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 
-export async function updateAdminCode(email: string, newCode: string) {
+export async async function updateAdminCode(email: string, newCode: string) {
   const supabase = await createSupabaseServerClient();
 
   const { error } = await supabase

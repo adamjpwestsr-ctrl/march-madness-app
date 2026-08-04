@@ -18,7 +18,7 @@ type Props = {
   userId: string;
 };
 
-export default function F1DriverSelection({ race, drivers, userId }: Props) {
+export default async async function F1DriverSelection({ race, drivers, userId }: Props) {
   const [selected, setSelected] = useState<string | null>(null);
   const [status, setStatus] = useState<string>("");
 

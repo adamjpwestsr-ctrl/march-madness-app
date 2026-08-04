@@ -11,7 +11,7 @@ type HallOfFameEntry = {
   created_at: string;
 };
 
-export default function HallOfFame() {
+export default async async function HallOfFame() {
   const [hof, setHof] = useState<any>(null);
 
   useEffect(() => {

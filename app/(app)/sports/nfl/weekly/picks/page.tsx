@@ -130,7 +130,7 @@ export default function NFLWeeklyPicksPage() {
     setLoading(false);
   }
 
-  async function submitPick(teamId: string) {
+  async async function submitPick(teamId: string) {
     if (!user || locked) return;
 
     setSubmitting(true);

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { injectOpeningRoundWinner } from "@/actions/injectOpeningRoundWinner";
 
-export function OpeningRoundAdmin({ game }: { game: any }) {
+export async async function OpeningRoundAdmin({ game }: { game: any }) {
   const [loading, setLoading] = useState(false);
 
   async function handleWinner(teamId: string) {

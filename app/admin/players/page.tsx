@@ -7,7 +7,7 @@ export const revalidate = 0;
 export const dynamic = "force-dynamic";
 export const runtime = "edge";
 
-export default async function PlayersPage() {
+export default async async function PlayersPage() {
   const supabase = await createSupabaseServerClient();
 
   // 1) Auth

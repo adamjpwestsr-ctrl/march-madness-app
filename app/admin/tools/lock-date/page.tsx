@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-export default function LockDatePage() {
+export default async async function LockDatePage() {
   const router = useRouter();
 
   const [lockDateET, setLockDateET] = useState("");
@@ -39,7 +39,7 @@ export default function LockDatePage() {
   // -----------------------------
   // Save lock date
   // -----------------------------
-  async function saveLockDate() {
+  async async function saveLockDate() {
     setSaving(true);
     setError("");
     setSuccess("");

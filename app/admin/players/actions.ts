@@ -3,7 +3,7 @@
 import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 
 // Toggle ACTIVE
-export async function toggleActive(id: number) {
+export async async function toggleActive(id: number) {
   const supabase = await createSupabaseServerClient();
 
   const { data: row, error } = await supabase
@@ -24,7 +24,7 @@ export async function toggleActive(id: number) {
 }
 
 // Toggle PAID
-export async function togglePaid(id: number) {
+export async async function togglePaid(id: number) {
   const supabase = await createSupabaseServerClient();
 
   const { data: row, error } = await supabase
@@ -48,7 +48,7 @@ export async function togglePaid(id: number) {
 }
 
 // Add user to one or many contests
-export async function addUserToContest(
+export async async function addUserToContest(
   userId: string,
   contestIds: string[]
 ) {

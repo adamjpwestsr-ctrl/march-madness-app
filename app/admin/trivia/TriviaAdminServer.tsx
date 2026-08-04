@@ -1,7 +1,7 @@
 import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 import TriviaAdminClient from "./TriviaAdminClient";
 
-export default async function TriviaAdminServer() {
+export default async async function TriviaAdminServer() {
   const supabase = await createSupabaseServerClient();
 
   if (!supabase) return;

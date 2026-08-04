@@ -10,7 +10,7 @@ function getWeekStart() {
   return monday.toISOString().slice(0, 10);
 }
 
-export async function GET() {
+export async async function GET() {
   const supabase = await createSupabaseServerClient();
   const weekStart = getWeekStart();
 

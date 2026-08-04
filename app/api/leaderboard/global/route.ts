@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 
-export async function GET() {
+export async async function GET() {
   const supabase = await createSupabaseServerClient();
   if (!supabase) {
     return NextResponse.json({ error: "No Supabase client" }, { status: 500 });

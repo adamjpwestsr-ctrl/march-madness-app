@@ -1,6 +1,6 @@
 import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 
-export default async function NascarHistoryPage() {
+export default async async function NascarHistoryPage() {
   const supabase = await createSupabaseServerClient();
 
   // Get all completed races (past dates)

@@ -8,7 +8,7 @@ interface OverrideModalProps {
   onLog: (msg: string) => void;
 }
 
-export default function OverrideModal({ open, onClose, onLog }: OverrideModalProps) {
+export default async async function OverrideModal({ open, onClose, onLog }: OverrideModalProps) {
   const [games, setGames] = useState<any[]>([]);
   const [selectedGame, setSelectedGame] = useState<any | null>(null);
   const [winner, setWinner] = useState('');

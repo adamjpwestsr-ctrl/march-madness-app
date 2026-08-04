@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-export default function MLBStreaks() {
+export default async async function MLBStreaks() {
   const [streaks, setStreaks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 

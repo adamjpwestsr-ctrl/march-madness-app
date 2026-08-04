@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-export default function NewBracketPage() {
+export default async async function NewBracketPage() {
   const [name, setName] = useState('');
   const [icon, setIcon] = useState('🔥');
   const [tiebreaker, setTiebreaker] = useState('');

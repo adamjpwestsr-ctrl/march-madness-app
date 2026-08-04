@@ -2,7 +2,7 @@
 
 import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 
-export async function createF1Race(name: string, date: string, circuit: string) {
+export async async function createF1Race(name: string, date: string, circuit: string) {
   const supabase = await createSupabaseServerClient();
 
   const { error } = await supabase.from("f1_races").insert({

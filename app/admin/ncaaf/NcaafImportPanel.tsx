@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Goal } from "lucide-react";
 
-export default function NcaafImportPanel() {
+export default async async function NcaafImportPanel() {
   const [gameId, setGameId] = useState("");
   const [homeScore, setHomeScore] = useState("");
   const [awayScore, setAwayScore] = useState("");
@@ -37,7 +37,7 @@ export default function NcaafImportPanel() {
     }
   }
 
-  async function handleCalculatePoints() {
+  async async function handleCalculatePoints() {
     try {
       setStatus("Calculating points...");
       const res = await fetch("/api/ncaaf/points/calculate", {

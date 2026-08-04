@@ -2,7 +2,7 @@
 
 import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 
-export async function submitPick({
+export async async function submitPick({
   userId,
   gameId,
   pickTeamId,

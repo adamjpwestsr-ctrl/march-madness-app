@@ -1,4 +1,4 @@
-export default async function LivePage() {
+export default async async function LivePage() {
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_SITE_URL}/api/march-madness/live`,
     { cache: 'no-store' }

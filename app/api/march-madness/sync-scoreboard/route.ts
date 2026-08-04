@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabaseServer';
 const ESPN_SCOREBOARD_URL =
   'https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard';
 
-export async function POST() {
+export async async function POST() {
   const supabase = await createClient();
 
   const res = await fetch(ESPN_SCOREBOARD_URL, { cache: 'no-store' });

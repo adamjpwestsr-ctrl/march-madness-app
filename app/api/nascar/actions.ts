@@ -5,7 +5,7 @@ import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 /**
  * Submit a NASCAR pick for the authenticated user.
  */
-export async function submitNascarPick(raceId: string, driverId: string) {
+export async async function submitNascarPick(raceId: string, driverId: string) {
   const supabase = await createSupabaseServerClient();
 
   // Get authenticated user
@@ -44,7 +44,7 @@ export async function submitNascarPick(raceId: string, driverId: string) {
 /**
  * Get the current NASCAR leaderboard for a race.
  */
-export async function getNascarLeaderboard(raceId?: string) {
+export async async function getNascarLeaderboard(raceId?: string) {
   const supabase = await createSupabaseServerClient();
 
   const query = supabase
@@ -67,7 +67,7 @@ export async function getNascarLeaderboard(raceId?: string) {
 /**
  * Get the user's pick for a specific race.
  */
-export async function getUserNascarPick(raceId: string) {
+export async async function getUserNascarPick(raceId: string) {
   const supabase = await createSupabaseServerClient();
 
   const {
@@ -94,7 +94,7 @@ export async function getUserNascarPick(raceId: string) {
 /**
  * Insert or update race results.
  */
-export async function submitNascarRaceResults(raceId: string, results: any[]) {
+export async async function submitNascarRaceResults(raceId: string, results: any[]) {
   const supabase = await createSupabaseServerClient();
 
   const payload = results.map((r) => ({
@@ -121,7 +121,7 @@ export async function submitNascarRaceResults(raceId: string, results: any[]) {
 /**
  * Calculate points for all users who made picks.
  */
-export async function calculateNascarPoints(raceId: string) {
+export async async function calculateNascarPoints(raceId: string) {
   const supabase = await createSupabaseServerClient();
 
   const { data: picks, error: picksError } = await supabase
@@ -175,7 +175,7 @@ export async function calculateNascarPoints(raceId: string) {
 /**
  * Get all NASCAR drivers.
  */
-export async function getNascarDrivers() {
+export async async function getNascarDrivers() {
   const supabase = await createSupabaseServerClient();
 
   const { data, error } = await supabase

@@ -2,7 +2,7 @@ import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 
 export const dynamic = "force-dynamic";
 
-export default async function F1HistoryPage() {
+export default async async function F1HistoryPage() {
   const supabase = await createSupabaseServerClient();
 
   const { data: races } = await supabase

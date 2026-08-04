@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-export default function AdminGenerateBracketButton() {
+export default async async function AdminGenerateBracketButton() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 

@@ -10,7 +10,7 @@ import { generateBracketStructure } from "@/lib/bracketUtils";
  *  - pure generator (bracketUtils)
  *  - inserts into Supabase `games` table
  */
-export async function POST() {
+export async async function POST() {
 const supabase = await createSupabaseServerClient();
 
   // ---------------------------------------------------------

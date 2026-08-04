@@ -2,7 +2,7 @@
 import SettingsClient from "./SettingsClient";
 import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 
-export default async function SettingsPage() {
+export default async async function SettingsPage() {
   // Use unified Supabase Auth session
   const supabase = await createSupabaseServerClient();
 

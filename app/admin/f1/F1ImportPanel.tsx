@@ -14,7 +14,7 @@ type Props = {
   races: Race[];
 };
 
-export default function F1ImportPanel({ races }: Props) {
+export default async async function F1ImportPanel({ races }: Props) {
   const [raceId, setRaceId] = useState<string>("");
   const [json, setJson] = useState<string>("");
   const [status, setStatus] = useState<string>("");
@@ -44,7 +44,7 @@ export default function F1ImportPanel({ races }: Props) {
     }
   }
 
-  async function handleSyncDrivers() {
+  async async function handleSyncDrivers() {
     setStatus("Syncing drivers from ESPN...");
     const res = await syncF1DriversFromESPN();
     setStatus(res.success ? "Drivers synced!" : "Error syncing drivers");

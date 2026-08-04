@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-function NameForm() {
+async function NameForm() {
   const router = useRouter();
   const params = useSearchParams();
   const email = params.get("email");

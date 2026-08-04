@@ -22,14 +22,14 @@ export default function PlayerRow({ row }: PlayerRowProps) {
   const [isPending, startTransition] = useTransition();
   const { addToast } = useToast();
 
-  const onToggleActive = () => {
+  const onToggleActive = async () => {
     startTransition(async () => {
       await toggleActive(row.id);
       addToast(`Active status updated for ${row.email}`);
     });
   };
 
-  const onTogglePaid = () => {
+  const onTogglePaid = async () => {
     startTransition(async () => {
       await togglePaid(row.id);
       addToast(`Payment status updated for ${row.email}`);

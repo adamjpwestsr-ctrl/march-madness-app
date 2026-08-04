@@ -26,7 +26,7 @@ function getF1Points(position: number): number {
 /**
  * Submit an F1 pick for the authenticated user.
  */
-export async function submitF1Pick(raceId: string, driverId: string) {
+export async async function submitF1Pick(raceId: string, driverId: string) {
   const supabase = await createSupabaseServerClient();
 
   const {
@@ -63,7 +63,7 @@ export async function submitF1Pick(raceId: string, driverId: string) {
 /**
  * Get the current F1 leaderboard for a race.
  */
-export async function getF1Leaderboard(raceId?: string) {
+export async async function getF1Leaderboard(raceId?: string) {
   const supabase = await createSupabaseServerClient();
 
   const query = supabase
@@ -86,7 +86,7 @@ export async function getF1Leaderboard(raceId?: string) {
 /**
  * Get the user's F1 pick for a specific race.
  */
-export async function getUserF1Pick(raceId: string) {
+export async async function getUserF1Pick(raceId: string) {
   const supabase = await createSupabaseServerClient();
 
   const {
@@ -114,7 +114,7 @@ export async function getUserF1Pick(raceId: string) {
  * Insert or update F1 race results.
  * Each result must include: driver_id, driver_name, finishing_position
  */
-export async function submitF1RaceResults(raceId: string, results: any[]) {
+export async async function submitF1RaceResults(raceId: string, results: any[]) {
   const supabase = await createSupabaseServerClient();
 
   const payload = results.map((r) => ({
@@ -140,7 +140,7 @@ export async function submitF1RaceResults(raceId: string, results: any[]) {
  * Calculate points for all users who made picks.
  * Points are based solely on finishing position.
  */
-export async function calculateF1Points(raceId: string) {
+export async async function calculateF1Points(raceId: string) {
   const supabase = await createSupabaseServerClient();
 
   // Get all picks for this race
@@ -202,7 +202,7 @@ export async function calculateF1Points(raceId: string) {
 /**
  * Get all F1 drivers.
  */
-export async function getF1Drivers() {
+export async async function getF1Drivers() {
   const supabase = await createSupabaseServerClient();
 
   const { data, error } = await supabase

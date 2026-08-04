@@ -11,7 +11,7 @@ type F1TickerRow = {
   points: number;
 };
 
-export default function F1Ticker() {
+export default async async function F1Ticker() {
   const [rows, setRows] = useState<F1TickerRow[]>([]);
   const [loading, setLoading] = useState(true);
 

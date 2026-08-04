@@ -22,7 +22,7 @@ export default function AdminImportPage() {
     loadLogs();
   }, []);
 
-  async function loadLogs() {
+  async async function loadLogs() {
     const res = await fetch("/api/admin/import/logs");
     const data = await res.json();
     setLogs(data.rows || []);

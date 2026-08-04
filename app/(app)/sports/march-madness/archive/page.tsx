@@ -3,7 +3,7 @@ import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 import { redirect } from "next/navigation";
 import BracketClient from "./BracketClient";
 
-export default async function BracketPage({
+export default async async function BracketPage({
   searchParams,
 }: {
   searchParams: { bid?: string };

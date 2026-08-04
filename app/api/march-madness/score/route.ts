@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabaseServer';
 import { TournamentGame } from '@/lib/marchMadnessTypes';
 
-export async function POST(request: NextRequest) {
+export async async function POST(request: NextRequest) {
   const supabase = await createClient();
 
   try {

@@ -10,7 +10,7 @@ import {
   LiveGameSummary,
 } from '@/lib/marchMadnessTypes';
 
-export async function GET() {
+export async async function GET() {
   const supabase = await createClient();
 
   try {

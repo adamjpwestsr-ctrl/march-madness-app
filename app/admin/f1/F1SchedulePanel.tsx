@@ -4,7 +4,7 @@ import { useState } from "react";
 import { syncF1ScheduleFromESPN } from "@/app/api/f1/sync/schedule";
 import { createF1Race } from "./actions/createRace";
 
-export default function F1SchedulePanel() {
+export default async async function F1SchedulePanel() {
   const [name, setName] = useState("");
   const [date, setDate] = useState("");
   const [circuit, setCircuit] = useState("");
@@ -27,7 +27,7 @@ export default function F1SchedulePanel() {
     setCircuit("");
   }
 
-  async function handleSyncSchedule() {
+  async async function handleSyncSchedule() {
     setStatus("Syncing schedule from ESPN...");
     const res = await syncF1ScheduleFromESPN();
     setStatus(res.success ? "Schedule synced!" : "Error syncing schedule");

@@ -18,8 +18,7 @@ export default async function TriviaAdminPage() {
   const email = user.email?.toLowerCase();
   if (!email) redirect("/login");
 
-  if (!supabase) return;
-    const { data: dbUser } = await supabase
+  const { data: dbUser } = await supabase
     .from("users")
     .select("is_admin")
     .eq("email", email)

@@ -21,8 +21,7 @@ export default async function PlayersPage() {
   if (!email) redirect("/login");
 
   // 2) Admin check
-  if (!supabase) return;
-    const { data: dbUser } = await supabase
+  const { data: dbUser } = await supabase
     .from("users")
     .select("is_admin")
     .eq("email", email)
@@ -30,6 +29,5 @@ export default async function PlayersPage() {
 
   if (!dbUser?.is_admin) redirect("/bracket");
 
-  // ⭐ NEW: Server wrapper handles all data fetching
   return <PlayersPageServer />;
 }

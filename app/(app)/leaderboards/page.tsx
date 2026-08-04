@@ -152,13 +152,13 @@ export default async function LeaderboardHub() {
         </div>
       </section>
 
-      {/* BRAGGING WALL */}
-      <section>
-        <h2 className="text-2xl font-bold mb-4">Bragging Wall</h2>
-        <div className="rounded-xl bg-slate-800/40 backdrop-blur border border-slate-700/40 p-6 text-slate-400">
-          <p>ForumPanel coming soon — integrated with your admin tools.</p>
-        </div>
-      </section>
+{/* BRAGGING WALL */}
+<section>
+  <h2 className="text-2xl font-bold mb-4">Bragging Wall</h2>
+  <div className="rounded-xl bg-slate-800/40 backdrop-blur border border-slate-700/40 p-6 text-slate-400">
+    <p>Social Hub coming soon — player highlights, achievements, and community features.</p>
+  </div>
+</section>
     </div>
   );
 }

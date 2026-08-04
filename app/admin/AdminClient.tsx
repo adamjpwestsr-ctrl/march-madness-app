@@ -82,11 +82,6 @@ export default function AdminClient({ adminEmail }: { adminEmail: string }) {
           ? new Set(sportsData.map((d) => d.sport)).size
           : 0;
 
-        const { count: openReports } = await supabase
-          .from("forum_reports")
-          .select("*", { count: "exact", head: true })
-          .eq("status", "open");
-
         setStats({
           activeUsers: activeUsers ?? 0,
           pendingUsers: pendingUsers ?? 0,
@@ -150,15 +145,14 @@ export default function AdminClient({ adminEmail }: { adminEmail: string }) {
     },
 
     {
-      title: "User & Forum Management",
-      icon: <FaUsers className="text-indigo-400 mr-2" />,
-      tools: [
-        { href: "/admin/users", label: "User Management", icon: <FaUserCog /> },
-        { href: "/admin/pending-users", label: "Pending Users", icon: <FaUsers /> },
-        { href: "/admin/players", label: "Player Management", icon: <FaUserCog /> },
-        { href: "/admin/forum", label: "Forum Moderation", icon: <FaQuestionCircle /> },
-      ],
-    },
+  title: "User Management",
+  icon: <FaUsers className="text-indigo-400 mr-2" />,
+  tools: [
+    { href: "/admin/users", label: "User Management", icon: <FaUserCog /> },
+    { href: "/admin/pending-users", label: "Pending Users", icon: <FaUsers /> },
+    { href: "/admin/players", label: "Player Management", icon: <FaUserCog /> },
+  ],
+},
 
     {
       title: "Miscellaneous",

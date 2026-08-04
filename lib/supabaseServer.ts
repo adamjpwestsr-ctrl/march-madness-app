@@ -1,8 +1,8 @@
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 
-export async function createClient() {
-  const cookieStore = await cookies(); // Next.js 16: cookies() is async
+export function createClient() {
+  const cookieStore = cookies(); // ✅ synchronous — DO NOT await
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -13,10 +13,14 @@ export async function createClient() {
           return cookieStore.get(name)?.value;
         },
         set(name: string, value: string, options: any) {
-          cookieStore.set(name, value, options);
+          try {
+            cookieStore.set(name, value, options);
+          } catch {}
         },
         remove(name: string, options: any) {
-          cookieStore.set(name, '', { ...options, maxAge: 0 });
+          try {
+            cookieStore.set(name, '', { ...options, maxAge: 0 });
+          } catch {}
         },
       },
     }

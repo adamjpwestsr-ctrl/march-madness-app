@@ -1,5 +1,5 @@
 // app/(app)/layout.tsx
-/* Layout version Update v6.2.4 */
+/* Layout version Update v6.2.5 */
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -31,8 +31,11 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
         {/* ⭐ Layout fix: full‑screen flex with scrollable main */}
         <div className="flex flex-1 overflow-hidden">
+          {/* SidebarNav should only render when user is hydrated */}
           <aside className="hidden lg:block w-64 border-r border-slate-800 bg-slate-950/80 backdrop-blur">
-            <SidebarNav />
+            {/* ✅ Guarded render */}
+            {typeof window !== "undefined" &&
+              window.localStorage.getItem("sb-access-token") && <SidebarNav />}
           </aside>
 
           <main className="flex-1 px-4 py-6 md:px-8 md:py-8 overflow-y-auto">

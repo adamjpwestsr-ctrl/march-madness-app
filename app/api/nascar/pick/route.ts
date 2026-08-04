@@ -1,8 +1,8 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
-export async function POST(req: Request) {
-  const cookieStore = await cookies();
+export function POST(req: Request) {
+  const cookieStore = cookies();
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -60,3 +60,4 @@ export async function POST(req: Request) {
 
   return Response.json({ success: true });
 }
+

@@ -2,8 +2,8 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import LeaderboardClient from "./LeaderboardClient";
 
-export default async function LeaderboardAdminPage() {
-  const cookieStore = await cookies();
+export default function LeaderboardAdminPage() {
+  const cookieStore = cookies();
   const sessionCookie = cookieStore.get("mm_session");
 
   if (!sessionCookie) {
@@ -27,3 +27,4 @@ export default async function LeaderboardAdminPage() {
     </div>
   );
 }
+

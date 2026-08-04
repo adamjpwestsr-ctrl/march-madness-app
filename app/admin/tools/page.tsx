@@ -2,8 +2,8 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import ToolsClient from "./ToolsClient";
 
-export default async function ToolsAdminPage() {
-  const cookieStore = await cookies();
+export default function ToolsAdminPage() {
+  const cookieStore = cookies();
   const sessionCookie = cookieStore.get("mm_session");
 
   if (!sessionCookie) {
@@ -27,3 +27,4 @@ export default async function ToolsAdminPage() {
     </div>
   );
 }
+

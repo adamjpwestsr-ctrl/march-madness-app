@@ -6,8 +6,8 @@ type SessionResult = {
   isAdmin: boolean;
 } | null;
 
-export async function getSession() {
-  const cookieStore = await cookies();
+export function getSession() {
+  const cookieStore = cookies();
 
   const raw = cookieStore.get("mm_session")?.value;
   if (!raw) return null;
@@ -23,3 +23,4 @@ export async function getSession() {
     return null;
   }
 }
+

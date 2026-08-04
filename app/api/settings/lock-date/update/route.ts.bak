@@ -15,7 +15,7 @@ function convertETToUTC(etString: string) {
   return etDate.toISOString();
 }
 
-export function POST(req: Request) {
+export async function POST(req: Request) {
   const { lockDateET } = await req.json();
 
   if (!lockDateET) {
@@ -28,7 +28,7 @@ export function POST(req: Request) {
   // -----------------------------
   // AUTH CHECK (cookie → user → is_admin)
   // -----------------------------
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const session = cookieStore.get("mm_session");
 
   if (!session) {
@@ -71,4 +71,3 @@ export function POST(req: Request) {
 
   return NextResponse.json({ success: true, lock_date: utcTimestamp });
 }
-

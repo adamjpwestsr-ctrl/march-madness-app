@@ -18,7 +18,7 @@ interface Player {
   photo_url?: string | null;
 }
 
-export default async async function GolfWeeklyPage() {
+export default async function GolfWeeklyPage() {
   try {
     const supabase = await createSupabaseServerClient();
     if (!supabase) {

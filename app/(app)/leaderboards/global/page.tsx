@@ -3,7 +3,7 @@
 import { getLeaderboardScores } from "../../../admin/tournament-setup/actions";
 import LiveLeaderboardClient from "./LiveLeaderboardClient";
 
-export default async async function GlobalLeaderboardPage() {
+export default async function GlobalLeaderboardPage() {
   const initialScores = await getLeaderboardScores();
 
   return (

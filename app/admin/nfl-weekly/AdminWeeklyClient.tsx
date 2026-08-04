@@ -9,7 +9,7 @@ interface AdminWeeklyProps {
   settings: any[]; // now an array
 }
 
-export default async async function AdminWeeklyClient({ teams, settings }: AdminWeeklyProps) {
+export default async function AdminWeeklyClient({ teams, settings }: AdminWeeklyProps) {
   const [currentWeek, setCurrentWeek] = useState(1);
   const [winningTeams, setWinningTeams] = useState<string[]>([]);
   const [leaderboard, setLeaderboard] = useState([]);

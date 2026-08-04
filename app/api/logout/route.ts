@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 
-export async async function POST() {
+export async function POST() {
   const supabase = await createSupabaseServerClient();
 
   // Clear Supabase session

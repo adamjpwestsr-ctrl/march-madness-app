@@ -2,7 +2,7 @@
 
 import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 
-export async async function syncF1DriversFromESPN() {
+export async function syncF1DriversFromESPN() {
   const supabase = await createSupabaseServerClient();
 
   const url =

@@ -4,7 +4,7 @@ import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 
 export const runtime = "edge";
 
-export async async function GET() {
+export async function GET() {
   const supabase = await createSupabaseServerClient();
 
   // Get the authenticated user from Supabase Auth

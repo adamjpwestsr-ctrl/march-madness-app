@@ -15,7 +15,7 @@ export default function EditBracketPage({ params }: { params: { bracket_id?: str
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    async async function resolveParams() {
+    async function resolveParams() {
       try {
         const resolved = await Promise.resolve(params);
         const id = resolved?.bracket_id;
@@ -31,7 +31,7 @@ export default function EditBracketPage({ params }: { params: { bracket_id?: str
   useEffect(() => {
     if (!bracketId) return;
 
-    async async function load() {
+    async function load() {
       try {
         setLoading(true);
         const res = await fetch(`/api/march-madness/brackets/${bracketId}`, { cache: 'no-store' });
@@ -62,7 +62,7 @@ export default function EditBracketPage({ params }: { params: { bracket_id?: str
     load();
   }, [bracketId]);
 
-  async async function handleSubmit(picks: Record<number, string>, tiebreaker: number) {
+  async function handleSubmit(picks: Record<number, string>, tiebreaker: number) {
     await fetch(`/api/march-madness/brackets/${bracketId}/picks`, {
       method: 'POST',
       body: JSON.stringify({

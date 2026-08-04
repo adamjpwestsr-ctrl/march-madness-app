@@ -11,7 +11,7 @@ type Result = {
   golf_players?: { name: string };
 };
 
-export default async async function GolfScoreEntryPage() {
+export default async function GolfScoreEntryPage() {
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [players, setPlayers] = useState<Player[]>([]);
   const [tournamentId, setTournamentId] = useState<number | null>(null);

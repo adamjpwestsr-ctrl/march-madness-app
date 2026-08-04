@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabaseServer';
 import { LeaderboardRow } from '@/lib/marchMadnessTypes';
 
-export async async function GET() {
+export async function GET() {
   const supabase = await createClient();
 
   // 1️⃣ Fetch scoring results (from scoring engine)

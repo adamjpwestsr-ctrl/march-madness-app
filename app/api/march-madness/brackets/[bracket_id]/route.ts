@@ -11,7 +11,7 @@ import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 
 console.log("🔥 API HIT: /api/march-madness/brackets/[bracket_id]");
 
-export async async function GET(
+export async function GET(
   request: NextRequest,
   context:
     | { params: { bracket_id: string } }

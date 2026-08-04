@@ -12,7 +12,7 @@ import SpotlightBanner from "@/app/components/SpotlightBanner";
 
 import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 
-export default async async function HomePage() {
+export default async function HomePage() {
   const supabase = await createSupabaseServerClient();
 
   // ⭐ Get Supabase Auth session

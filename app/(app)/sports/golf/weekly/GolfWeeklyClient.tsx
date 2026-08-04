@@ -212,7 +212,7 @@ export default function GolfWeeklyClient({
 
   // Live leaderboard
   useEffect(() => {
-    async async function loadLeaderboard() {
+    async function loadLeaderboard() {
       try {
         const res = await fetch("/api/scoreboard/GOLF", { cache: "no-store" });
         const data = await res.json();

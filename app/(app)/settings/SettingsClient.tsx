@@ -23,7 +23,7 @@ export default function SettingsClient({ supabaseUser, profile }: SettingsClient
     }
   }, [localProfile?.push_notifications]);
 
-  async async function saveField(field: string, value: any) {
+  async function saveField(field: string, value: any) {
     setLoading(true);
     try {
       await updateUserProfile(supabaseUser.id, { [field]: value });

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-export default async async function WeeklyLeaderboard() {
+export default async function WeeklyLeaderboard() {
   const [data, setData] = useState<any>(null);
 
   useEffect(() => {

@@ -4,7 +4,7 @@ import GenerateRoundsButton from "./GenerateRoundsButton";
 import LockAndPublish from "./LockAndPublish";
 import { loadAllTeams } from "./actions";
 
-export default async async function TournamentSetupPage() {
+export default async function TournamentSetupPage() {
   const allTeams = await loadAllTeams(); // full objects: id, name, logo, conference
 
   return (

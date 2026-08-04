@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { LiveGameSummary } from '@/lib/marchMadnessTypes';
 
-export async async function LiveTicker() {
+export async function LiveTicker() {
   const [games, setGames] = useState<LiveGameSummary[]>([]);
 
   useEffect(() => {

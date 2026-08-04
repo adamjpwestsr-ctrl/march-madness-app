@@ -29,7 +29,7 @@ export async function GET(req: Request) {
 }
 
 // POST — used for results + points
-export async async function POST(req: Request) {
+export async function POST(req: Request) {
   try {
     const body = await req.json();
     const { type, raceId, results } = body;

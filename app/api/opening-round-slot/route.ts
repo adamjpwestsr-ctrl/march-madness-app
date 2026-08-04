@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/auth-helpers-nextjs";
 
-export async async function POST(req: Request) {
+export async function POST(req: Request) {
   const body = await req.json();
 
   const supabase = createServerClient(

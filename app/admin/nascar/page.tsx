@@ -3,7 +3,7 @@ import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 import NascarImportPanel from "./NascarImportPanel";
 import NascarSchedulePanel from "./NascarSchedulePanel";
 
-export default async async function NascarAdminPage() {
+export default async function NascarAdminPage() {
   const supabase = await createSupabaseServerClient();
   const session = await supabase.auth.getUser();
   const userId = session.data.user?.id;

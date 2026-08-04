@@ -37,7 +37,7 @@ function suggestMapping(
  * Opening Round Slot Editor — allows admin to assign region, seed, and Round of 64 slot.
  * Includes Auto‑Suggest button for NCAA‑style recommendations.
  */
-export async async function OpeningRoundSlotEditor({
+export async function OpeningRoundSlotEditor({
   game,
   r64Games,
   allTeams,

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-export default async async function DailyChallenge({ displayName }: { displayName: string }) {
+export default async function DailyChallenge({ displayName }: { displayName: string }) {
   const [question, setQuestion] = useState<any>(null);
   const [answer, setAnswer] = useState("");
   const [result, setResult] = useState<"correct" | "wrong" | null>(null);

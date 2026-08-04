@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabaseServer';
 import { LiveGameSummary } from '@/lib/marchMadnessTypes';
 
-export async async function GET() {
+export async function GET() {
   const supabase = await createClient();
 
   // Fetch ESPN scoreboard

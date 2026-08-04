@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
-export default async async function GolfWeeklyHistoryPage() {
+export default async function GolfWeeklyHistoryPage() {
   const [state, setState] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 

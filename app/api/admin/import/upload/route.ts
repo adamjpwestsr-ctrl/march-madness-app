@@ -13,7 +13,7 @@ type ScheduleRow = {
   [key: string]: any;
 };
 
-export async async function POST(req: Request) {
+export async function POST(req: Request) {
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!

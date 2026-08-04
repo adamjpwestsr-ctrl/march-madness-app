@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { FaPhone } from "react-icons/fa";
 
-export default async async function NotificationsAdminPage() {
+export default async function NotificationsAdminPage() {
   const [message, setMessage] = useState("");
   const [target, setTarget] = useState("all");
   const [userId, setUserId] = useState("");

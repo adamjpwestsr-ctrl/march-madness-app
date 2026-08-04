@@ -9,7 +9,7 @@ type Admin = {
   admin_code: string | null;
 };
 
-export default async async function AdminSettingsForm({ admins }: { admins: Admin[] }) {
+export default async function AdminSettingsForm({ admins }: { admins: Admin[] }) {
   const [codes, setCodes] = useState(
     Object.fromEntries(admins.map((a) => [a.email, a.admin_code || ""]))
   );

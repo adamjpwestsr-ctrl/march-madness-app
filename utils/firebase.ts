@@ -14,7 +14,7 @@ const firebaseConfig = {
 
 const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 
-export async async function getFcmTokenForUser() {
+export async function getFcmTokenForUser() {
   const supported = await isSupported();
   if (!supported) return null;
 

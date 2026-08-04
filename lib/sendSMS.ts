@@ -1,4 +1,4 @@
-export async async function sendSMS(to: string, message: string) {
+export async function sendSMS(to: string, message: string) {
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/send-sms`,
     {

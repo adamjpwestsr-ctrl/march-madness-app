@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 import { parse } from "csv-parse/sync";
 
-export async async function POST(req: Request) {
+export async function POST(req: Request) {
   try {
     const supabase = await createSupabaseServerClient();
     const formData = await req.formData();

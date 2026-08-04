@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 
 // GET: fetch participants for a given event
-export async async function GET(req: Request) {
+export async function GET(req: Request) {
   const supabase = await createSupabaseServerClient();
   const { searchParams } = new URL(req.url);
   const eventId = searchParams.get("event_id");
@@ -25,7 +25,7 @@ export async async function GET(req: Request) {
 }
 
 // POST: add a new participant
-export async async function POST(req: Request) {
+export async function POST(req: Request) {
   const supabase = await createSupabaseServerClient();
   const body = await req.json();
 
@@ -74,7 +74,7 @@ export async async function POST(req: Request) {
 }
 
 // DELETE: remove a participant
-export async async function DELETE(req: Request) {
+export async function DELETE(req: Request) {
   const supabase = await createSupabaseServerClient();
   const { searchParams } = new URL(req.url);
   const id = searchParams.get("id");

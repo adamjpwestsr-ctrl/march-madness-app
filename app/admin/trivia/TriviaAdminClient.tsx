@@ -9,7 +9,7 @@ interface Props {
   roundsCount: number;
 }
 
-export default async async function TriviaAdminClient({ questionCount, roundsCount }: Props) {
+export default async function TriviaAdminClient({ questionCount, roundsCount }: Props) {
   const [file, setFile] = useState<File | null>(null);
   const [isPending, startTransition] = useTransition();
   const [confirmClear, setConfirmClear] = useState(false);

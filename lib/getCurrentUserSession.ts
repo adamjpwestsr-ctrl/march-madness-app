@@ -1,7 +1,7 @@
 // lib/getCurrentUserSession.ts
 import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 
-export async async function getCurrentUserSession() {
+export async function getCurrentUserSession() {
   const supabase = await createSupabaseServerClient();
 
   // ⭐ Get Supabase Auth session

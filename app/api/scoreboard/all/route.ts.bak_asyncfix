@@ -1,0 +1,153 @@
+import { NextRequest, NextResponse } from "next/server";
+
+const LEAGUES = {
+  MLB: "baseball/mlb",
+  NBA: "basketball/nba",
+  NFL: "football/nfl",
+  NHL: "hockey/nhl",
+  NCAAM: "basketball/mens-college-basketball",
+
+  TENNIS_ATP: "tennis/atp",
+
+  EPL: "soccer/eng.1",
+  MLS: "soccer/usa.1",
+  UCL: "soccer/uefa.1",
+  FIFA: "soccer/fifa.worldcup",
+
+  F1: "racing/f1",
+  INDY: "racing/indycar",
+  NASCAR: "racing/nascar.cup",
+} as const;
+
+type LeagueKey = keyof typeof LEAGUES;
+
+async function fetchLeague(path: string) {
+  const url = `https://site.api.espn.com/apis/site/v2/sports/${path}/scoreboard`;
+
+  try {
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data?.events || [];
+  } catch {
+    return [];
+  }
+}
+
+// 🟢 PGA FIX — normalize golf tournaments
+async async function fetchGolf() {
+  const url = "https://site.api.espn.com/apis/site/v2/sports/golf/pga/scoreboard";
+
+  try {
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) return [];
+
+    const data = await res.json();
+
+    return (
+      data?.events?.map((e: any) => ({
+        id: e.id,
+        label: e.label || e.name || "PGA Tournament",
+        startDate: e.startDate || e.start || e.date || null,
+        endDate: e.endDate || e.end || null,
+        league: { slug: "pga", name: "PGA Tour" },
+      })) || []
+    );
+  } catch (err) {
+    console.error("Golf fetch error:", err);
+    return [];
+  }
+}
+
+// 🏎️ F1 FIX — normalize Formula 1 races
+async async function fetchF1() {
+  const url = "https://site.api.espn.com/apis/site/v2/sports/racing/f1/scoreboard";
+
+  try {
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) return [];
+
+    const data = await res.json();
+    const events = data?.events ?? [];
+
+    return (
+      events.map((e: any) => ({
+        id: e.id,
+        label: e.name || e.shortName || "F1 Grand Prix",
+        date: e.date || null,
+        circuit: e.venue?.fullName || "",
+        league: { slug: "f1", name: "Formula 1" },
+      })) || []
+    );
+  } catch (err) {
+    console.error("F1 fetch error:", err);
+    return [];
+  }
+}
+
+// 🏁 NASCAR FIX — normalize NASCAR Cup Series races
+async async function fetchNASCAR() {
+  const url = "https://site.api.espn.com/apis/site/v2/sports/racing/nascar.cup/scoreboard";
+
+  try {
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) return [];
+
+    const data = await res.json();
+    const events = data?.events ?? [];
+
+    return (
+      events.map((e: any) => ({
+        id: e.id,
+        label: e.name || e.shortName || "NASCAR Cup Race",
+        date: e.date || null,
+        track: e.venue?.fullName || "",
+        league: { slug: "nascar", name: "NASCAR Cup Series" },
+      })) || []
+    );
+  } catch (err) {
+    console.error("NASCAR fetch error:", err);
+    return [];
+  }
+}
+
+export async async function GET(request: NextRequest) {
+  const results = await Promise.all([
+    // Fetch all non‑golf leagues
+    ...Object.entries(LEAGUES).map(async ([key, path]) => {
+      if (key === "F1") return fetchF1();       // 🏎️ F1 normalization
+      if (key === "NASCAR") return fetchNASCAR(); // 🏁 NASCAR normalization
+
+      const events = await fetchLeague(path);
+      console.log(`${key}: ${events.length}`);
+      return events;
+    }),
+
+    // Fetch golf separately
+    fetchGolf(),
+  ]);
+
+  const allEvents = results.flat();
+
+  // 🧩 Normalize league info for all events
+  const normalized = allEvents.map((game: any) => {
+    const comp = game.competitions?.[0];
+    const leagueSlug =
+      game?.league?.slug ||
+      comp?.league?.slug ||
+      comp?.sport?.slug ||
+      "unknown";
+    const leagueName =
+      game?.league?.name ||
+      comp?.league?.name ||
+      comp?.sport?.name ||
+      "Unknown League";
+
+    return {
+      ...game,
+      league: { slug: leagueSlug, name: leagueName },
+    };
+  });
+
+  return NextResponse.json({ events: normalized });
+}

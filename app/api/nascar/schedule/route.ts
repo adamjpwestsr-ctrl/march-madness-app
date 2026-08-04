@@ -38,7 +38,7 @@ function normalizeTime(timeStr: string) {
   return `${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}`;
 }
 
-export async async function POST(req: Request) {
+export async function POST(req: Request) {
   try {
     const supabase = await createSupabaseServerClient();
     const formData = await req.formData();

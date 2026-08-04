@@ -2,7 +2,7 @@
 import { createSupabaseServerClient as createClient } from "@/lib/supabaseServerClient";
 import AdminWeeklyClient from "./AdminWeeklyClient";
 
-export default async async function AdminNFLWeeklyPage() {
+export default async function AdminNFLWeeklyPage() {
   const supabase = await createClient();
 
   if (!supabase) {

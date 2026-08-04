@@ -2,7 +2,7 @@
 
 import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 
-export async async function clearLeaderboard() {
+export async function clearLeaderboard() {
   const supabase = await createSupabaseServerClient();
 
   const { error } = await supabase.from("trivia_rounds").delete().neq("id", 0);

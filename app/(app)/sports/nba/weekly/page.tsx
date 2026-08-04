@@ -6,7 +6,7 @@ type Props = {
   searchParams?: { week?: string };
 };
 
-export default async async function NbaWeeklyPage({ searchParams }: Props) {
+export default async function NbaWeeklyPage({ searchParams }: Props) {
   const week = Number(searchParams?.week ?? 1);
 
   const weeklyData = await getWeeklyData('NBA', week);

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-export default async async function MLBAdminPage() {
+export default async function MLBAdminPage() {
   const [week, setWeek] = useState<number | null>(null);
   const [series, setSeries] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);

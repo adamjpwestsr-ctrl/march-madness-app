@@ -34,7 +34,7 @@ export default function WeeklyClient({
 
   // ⭐ Load existing picks for this sport + week
   useEffect(() => {
-    async async function loadExistingPicks() {
+    async function loadExistingPicks() {
       const user = (await supabase.auth.getUser()).data.user;
       if (!user) return;
 

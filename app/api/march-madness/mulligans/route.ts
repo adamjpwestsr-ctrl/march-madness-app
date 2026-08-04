@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabaseServer';
 import { MulliganSummary } from '@/lib/marchMadnessTypes';
 
-export async async function GET(req: Request) {
+export async function GET(req: Request) {
   const supabase = await createClient();
   const url = new URL(req.url);
   const bracketId = url.searchParams.get('bracket_id');
@@ -25,7 +25,7 @@ export async async function GET(req: Request) {
   return NextResponse.json(mulligans);
 }
 
-export async async function POST(req: Request) {
+export async function POST(req: Request) {
   const supabase = await createClient();
   const body = await req.json();
 

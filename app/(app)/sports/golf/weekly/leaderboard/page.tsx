@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
-export default async async function GolfWeeklyFullLeaderboardPage() {
+export default async function GolfWeeklyFullLeaderboardPage() {
   const [state, setState] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");

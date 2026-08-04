@@ -12,7 +12,7 @@ const SPORTS = {
   NCAAM: "basketball/mens-college-basketball",
 };
 
-export default async async function MultiSportScoreboard() {
+export default async function MultiSportScoreboard() {
   const [sport, setSport] = useState<keyof typeof SPORTS>("NBA");
   const [games, setGames] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-export default async async function MLBLeaderboard() {
+export default async function MLBLeaderboard() {
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 

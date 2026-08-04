@@ -20,7 +20,7 @@ const CONFERENCES = [
 const currentSeason = 2024;
 const currentWeek = 1;
 
-export default async async function NcaafConferenceMatchups() {
+export default async function NcaafConferenceMatchups() {
   const [games, setGames] = useState<any[]>([]);
   const [conference, setConference] = useState("");
   const [status, setStatus] = useState("");
@@ -39,7 +39,7 @@ export default async async function NcaafConferenceMatchups() {
       ? []
       : games.filter((g) => g.conference === conference);
 
-  async async function handlePick(gameId: string, teamId: string) {
+  async function handlePick(gameId: string, teamId: string) {
     setStatus("Saving pick...");
 
     const userId = Number(localStorage.getItem("user_id"));

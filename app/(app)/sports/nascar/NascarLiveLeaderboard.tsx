@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-export default async async function NascarLiveLeaderboard({ raceId }: { raceId: string }) {
+export default async function NascarLiveLeaderboard({ raceId }: { raceId: string }) {
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 

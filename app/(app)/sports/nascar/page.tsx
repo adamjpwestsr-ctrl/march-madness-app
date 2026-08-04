@@ -5,7 +5,7 @@ import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 
 export const dynamic = "force-dynamic";
 
-export default async async function NascarDashboard() {
+export default async function NascarDashboard() {
   const supabase = await createSupabaseServerClient();
 
   // 1. Get next race

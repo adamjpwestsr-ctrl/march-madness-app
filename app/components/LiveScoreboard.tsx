@@ -1,6 +1,6 @@
 import { Trophy } from "lucide-react";
 
-export default async async function LiveScoreboard() {
+export default async function LiveScoreboard() {
   // ESPN NBA scoreboard (you can swap this for NFL/MLB/NHL)
   const res = await fetch(
     "https://site.api.espn.com/apis/v2/sports/basketball/nba/scoreboard",

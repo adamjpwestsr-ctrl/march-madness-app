@@ -2,7 +2,7 @@
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 
-export async async function createSupabaseServerClient() {
+export async function createSupabaseServerClient() {
   const cookieStore = cookies(); // ❗ synchronous — DO NOT await
 
   return createServerClient(

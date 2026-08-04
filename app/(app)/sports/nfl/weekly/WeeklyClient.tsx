@@ -35,7 +35,7 @@ export default function WeeklyClient({
   }, [lockTime]);
 
   useEffect(() => {
-    async async function loadUsedTeams() {
+    async function loadUsedTeams() {
       const user = (await supabase.auth.getUser()).data.user;
       if (!user) return;
 
@@ -52,7 +52,7 @@ export default function WeeklyClient({
   }, []);
 
   useEffect(() => {
-    async async function loadExistingPick() {
+    async function loadExistingPick() {
       const user = (await supabase.auth.getUser()).data.user;
       if (!user) return;
 

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Star } from "lucide-react";
 
-export default async async function NcaafRankingsPanel() {
+export default async function NcaafRankingsPanel() {
   const [rankings, setRankings] = useState<any[]>([]);
   const [status, setStatus] = useState("");
 

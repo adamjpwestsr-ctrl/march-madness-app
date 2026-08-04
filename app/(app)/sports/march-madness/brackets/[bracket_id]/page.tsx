@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { ReadOnlyBracket } from '@/components/march-madness/ReadOnlyBracket';
 
-export default async async function BracketViewPage({ params }: { params: { bracket_id?: string } }) {
+export default async function BracketViewPage({ params }: { params: { bracket_id?: string } }) {
   const [bracketId, setBracketId] = useState<string | null>(null);
   const [data, setData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
@@ -25,7 +25,7 @@ export default async async function BracketViewPage({ params }: { params: { brac
   useEffect(() => {
     if (!bracketId) return;
 
-    async async function load() {
+    async function load() {
       try {
         const res = await fetch(`/api/march-madness/brackets/${bracketId}`, { cache: 'no-store' });
         if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);

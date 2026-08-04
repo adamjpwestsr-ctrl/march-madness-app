@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Flag } from "lucide-react";
 
-export default async async function NcaafSchedulePanel() {
+export default async function NcaafSchedulePanel() {
   const [status, setStatus] = useState("");
 
   async function handleSyncSchedule() {

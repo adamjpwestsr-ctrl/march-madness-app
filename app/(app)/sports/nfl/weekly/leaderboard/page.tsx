@@ -9,7 +9,7 @@ type Row = {
   name: string | null;
 };
 
-export default async async function NFLWeeklyLeaderboard() {
+export default async function NFLWeeklyLeaderboard() {
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
 

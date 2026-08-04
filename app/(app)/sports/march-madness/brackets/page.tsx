@@ -1,4 +1,4 @@
-export default async async function BracketsPage() {
+export default async function BracketsPage() {
   const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/march-madness/bracket-list`, {
     cache: 'no-store',
   });

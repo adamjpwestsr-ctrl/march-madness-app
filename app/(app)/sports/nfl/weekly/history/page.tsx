@@ -11,7 +11,7 @@ type Row = {
   points: number;
 };
 
-export default async async function NFLWeeklyHistoryPage() {
+export default async function NFLWeeklyHistoryPage() {
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
 

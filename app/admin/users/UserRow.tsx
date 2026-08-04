@@ -13,7 +13,7 @@ interface UserRowProps {
   };
 }
 
-export default async async function UserRow({ user }: UserRowProps) {
+export default async function UserRow({ user }: UserRowProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 

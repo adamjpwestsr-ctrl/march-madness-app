@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
 
-export default async async function Header() {
+export default async function Header() {
   const router = useRouter();
 
   const handleLogout = async () => {

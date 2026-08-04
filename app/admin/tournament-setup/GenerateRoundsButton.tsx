@@ -2,7 +2,7 @@
 
 import { generateRemainingRounds } from "./actions";
 
-export default async async function GenerateRoundsButton() {
+export default async function GenerateRoundsButton() {
   const handleGenerate = async () => {
     const res = await generateRemainingRounds();
     alert(res.message);

@@ -3,7 +3,7 @@ import { getF1Leaderboard } from "@/app/api/f1/actions";
 
 export const dynamic = "force-dynamic";
 
-export default async async function F1LeaderboardPage() {
+export default async function F1LeaderboardPage() {
   const supabase = await createSupabaseServerClient();
 
   const { data: races } = await supabase

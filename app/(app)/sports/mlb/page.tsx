@@ -10,7 +10,7 @@ import DerbyModal from "./components/DerbyModal";
 import MyDerbyPicks from "./components/MyDerbyPicks";
 import PlayoffsCard from "./components/PlayoffsCard";
 
-export default async async function MLBPage() {
+export default async function MLBPage() {
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [streaks, setStreaks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

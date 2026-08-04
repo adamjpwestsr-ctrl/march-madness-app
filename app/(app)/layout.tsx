@@ -1,4 +1,3 @@
-// app/(app)/layout.tsx
 /* Layout version Update v6.2.5 */
 
 import Header from "@/app/components/Header";

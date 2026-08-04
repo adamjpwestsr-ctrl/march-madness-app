@@ -2,8 +2,8 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import GamesClient from "./GamesClient";
 
-export default function GamesAdminPage() {
-  const cookieStore = cookies();
+export default async function GamesAdminPage() {
+  const cookieStore = await cookies();
   const sessionCookie = cookieStore.get("mm_session");
 
   if (!sessionCookie) {

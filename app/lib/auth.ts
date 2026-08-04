@@ -9,8 +9,8 @@ export interface Session {
   };
 }
 
-export function getSession(): Session | null {
-  const cookieStore = cookies(); // sync
+export async function getSession(): Promise<Session | null> {
+  const cookieStore = await cookies();
 
   const raw = cookieStore.get("mm_session")?.value;
   if (!raw) return null;

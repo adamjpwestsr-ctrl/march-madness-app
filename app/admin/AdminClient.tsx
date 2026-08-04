@@ -88,7 +88,6 @@ export default function AdminClient({ adminEmail }: { adminEmail: string }) {
           openChallenges: openChallenges ?? 0,
           totalPicks: totalPicks ?? 0,
           activeSports: activeSports ?? 0,
-          openReports: openReports ?? 0,
         });
 
         setLoadingStats(false);

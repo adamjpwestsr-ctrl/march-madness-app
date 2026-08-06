@@ -26,9 +26,7 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
 
-  if (!code) {
-    return NextResponse.redirect("/login");
-  }
+  if (!code) return NextResponse.redirect("/login");
 
   const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
@@ -37,6 +35,8 @@ export async function GET(request: Request) {
     return NextResponse.redirect("/login");
   }
 
-  // Session cookie is now written
-  return NextResponse.redirect("/home");
+  // ✅ Explicitly write the session cookie to the response
+  const response = NextResponse.redirect("/home");
+  supabase.auth.setSession(data.session);
+  return response;
 }

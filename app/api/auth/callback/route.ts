@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
 export async function GET(request: Request) {
+  const url = new URL(request.url);
+  const code = url.searchParams.get("code");
+  if (!code) return NextResponse.redirect("/login");
+
   const cookieStore = await cookies();
 
   const supabase = createServerClient(
@@ -23,11 +27,6 @@ export async function GET(request: Request) {
     }
   );
 
-  const url = new URL(request.url);
-  const code = url.searchParams.get("code");
-
-  if (!code) return NextResponse.redirect("/login");
-
   const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
   if (error) {
@@ -35,8 +34,23 @@ export async function GET(request: Request) {
     return NextResponse.redirect("/login");
   }
 
-  // ✅ Explicitly write the session cookie to the response
+  // ✅ Explicitly attach cookies to the response
   const response = NextResponse.redirect("/home");
-  supabase.auth.setSession(data.session);
+  const { access_token, refresh_token } = data.session;
+
+  response.cookies.set("sb-access-token", access_token, {
+    path: "/",
+    httpOnly: true,
+    secure: true,
+    sameSite: "lax",
+  });
+
+  response.cookies.set("sb-refresh-token", refresh_token, {
+    path: "/",
+    httpOnly: true,
+    secure: true,
+    sameSite: "lax",
+  });
+
   return response;
 }

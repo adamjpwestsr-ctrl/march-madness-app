@@ -11,7 +11,7 @@ const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 export default async function UsersAdminPage() {
   // AUTH CHECK
-  const cookieStore = cookies();
+  const cookieStore = await cookies();   // ← async form
   const sessionCookie = cookieStore.get("mm_session");
   if (!sessionCookie) redirect("/login");
 
@@ -61,4 +61,3 @@ export default async function UsersAdminPage() {
     </div>
   );
 }
-

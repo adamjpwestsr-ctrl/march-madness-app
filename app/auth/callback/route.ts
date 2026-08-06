@@ -1,97 +1,55 @@
-// 🔥 Correct Supabase callback route
-// 🔥 Ensures auth_id is stored properly
-// 🔥 Ensures users table matches Supabase Auth
-// 🔥 Ensures Derby, Settings, MyDerbyPicks all see correct user
+export const runtime = "edge";
 
 import { NextResponse } from "next/server";
-import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
 export async function GET(request: Request) {
-  console.log("🔥 CALLBACK ROUTE HIT");
+  const url = new URL(request.url);
+  const code = url.searchParams.get("code");
+  if (!code) return NextResponse.redirect("/login");
 
-  const requestUrl = new URL(request.url);
-  const code = requestUrl.searchParams.get("code");
+  const cookieStore = await cookies();
 
-  if (!code) {
-    return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/login`);
-  }
-
-  const supabase = await createSupabaseServerClient();
-
-  // ⭐ Exchange magic link for session
-  const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-
-  if (error || !data?.session) {
-    console.error("❌ exchangeCodeForSession error:", error);
-    return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/login`);
-  }
-
-  const authUser = data.session.user;
-  const email = authUser.email?.toLowerCase();
-
-  if (!email) {
-    return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/login`);
-  }
-
-  // ⭐ Look up user in DB by email
-  const { data: dbUser, error: dbError } = await supabase
-    .from("users")
-    .select("*")
-    .eq("email", email)
-    .maybeSingle();
-
-  let userRecord = dbUser;
-
-  // ⭐ Create user if not found
-  if (!dbUser) {
-    const username = email.split("@")[0];
-
-    const { data: newUser, error: insertError } = await supabase
-      .from("users")
-      .insert({
-        auth_id: authUser.id,   // ⭐ CRITICAL FIX
-        email,
-        username,
-        name: null,
-        is_active: true,
-      })
-      .select()
-      .single();
-
-    if (insertError) {
-      console.error("❌ User insert error:", insertError);
-      return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/login`);
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+        set(name: string, value: string, options: any) {
+          cookieStore.set({ name, value, ...options });
+        },
+        remove(name: string, options: any) {
+          cookieStore.set({ name, value: "", ...options });
+        },
+      },
     }
-
-    userRecord = newUser;
-  }
-
-  // ⭐ Ensure auth_id is always correct
-  if (userRecord.auth_id !== authUser.id) {
-    await supabase
-      .from("users")
-      .update({ auth_id: authUser.id })
-      .eq("user_id", userRecord.user_id);
-  }
-
-  // ⭐ Ensure username exists
-  if (!userRecord.username) {
-    const username = email.split("@")[0];
-
-    await supabase
-      .from("users")
-      .update({ username })
-      .eq("user_id", userRecord.user_id);
-
-    userRecord.username = username;
-  }
-
-  // ⭐ Sync Supabase auth cookies
-  const response = NextResponse.redirect(
-    `${process.env.NEXT_PUBLIC_SITE_URL}/home`
   );
 
-  await supabase.auth.setSession(data.session);
+  const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+
+  if (error) {
+    console.error("Auth callback error:", error);
+    return NextResponse.redirect("/login");
+  }
+
+  // ⭐ MUST explicitly attach cookies to the response in Edge runtime
+  const response = NextResponse.redirect("/home");
+
+  const { access_token, refresh_token } = data.session;
+
+  response.headers.append(
+    "Set-Cookie",
+    `sb-access-token=${access_token}; Path=/; HttpOnly; Secure; SameSite=Lax`
+  );
+
+  response.headers.append(
+    "Set-Cookie",
+    `sb-refresh-token=${refresh_token}; Path=/; HttpOnly; Secure; SameSite=Lax`
+  );
 
   return response;
 }

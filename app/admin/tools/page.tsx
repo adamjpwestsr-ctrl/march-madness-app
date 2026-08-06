@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import ToolsClient from "./ToolsClient";
 
 export default async function ToolsAdminPage() {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();   // ← async form
   const sessionCookie = cookieStore.get("mm_session");
 
   if (!sessionCookie) {
@@ -27,4 +27,3 @@ export default async function ToolsAdminPage() {
     </div>
   );
 }
-

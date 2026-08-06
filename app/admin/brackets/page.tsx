@@ -1,9 +1,11 @@
+export const runtime = "nodejs";
+
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import BracketsClient from "./BracketsClient";
 
-export default function BracketsAdminPage() {
-  const cookieStore = cookies();
+export default async function BracketsAdminPage() {
+  const cookieStore = await cookies();
   const sessionCookie = cookieStore.get("mm_session");
 
   if (!sessionCookie) redirect("/login");

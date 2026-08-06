@@ -20,7 +20,7 @@ export async function POST(req: Request) {
   // -----------------------------
   // AUTH: Read mm_session cookie
   // -----------------------------
-  const cookieStore = cookies();
+  const cookieStore = await cookies();   // ← async form
   const sessionCookie = cookieStore.get("mm_session");
 
   if (!sessionCookie) {
@@ -92,7 +92,7 @@ export async function POST(req: Request) {
         bracket_name: finalName,
         bracket_number: nextNumber,
       },
-    ]); // <-- NO returning, NO single(), NO select()
+    ]);
 
   if (insertErr) {
     console.error("Error creating bracket:", insertErr);
@@ -111,4 +111,3 @@ export async function POST(req: Request) {
     bracketName: finalName,
   });
 }
-

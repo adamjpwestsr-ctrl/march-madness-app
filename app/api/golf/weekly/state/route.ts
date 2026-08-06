@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
 export async function GET() {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();   // ← async form
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -60,7 +60,7 @@ export async function GET() {
     .select("*")
     .order("name", { ascending: true });
 
-  // Load ALL user picks (FIX)
+  // Load ALL user picks
   const { data: allPicks } = await supabase
     .from("golf_weekly_picks")
     .select("tournament_id, player_id")
@@ -105,10 +105,9 @@ export async function GET() {
     tournament: tournament ?? null,
     golfers: golfers ?? [],
     pick: pick ?? null,
-    picks: allPicks ?? [],   // ⭐ FIXED — UI now receives all picks
+    picks: allPicks ?? [],
     history: history ?? [],
     leaderboard: leaderboard ?? [],
     season,
   });
 }
-

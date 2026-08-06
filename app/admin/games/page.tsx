@@ -3,7 +3,6 @@ export const runtime = "nodejs";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import GamesServer from "./GamesServer";
-import GamesClient from "./GamesClient";
 
 export default function GamesAdminPage() {
   const cookieStore = cookies();
@@ -20,11 +19,5 @@ export default function GamesAdminPage() {
 
   if (!session.isAdmin) redirect("/bracket");
 
-  return (
-    <GamesServer>
-      <div className="min-h-screen bg-slate-950 text-slate-100">
-        <GamesClient />
-      </div>
-    </GamesServer>
-  );
+  return <GamesServer />;
 }

@@ -2,15 +2,14 @@ export const runtime = "nodejs";
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import GamesServer from "./GamesServer";
 import GamesClient from "./GamesClient";
 
 export default function GamesAdminPage() {
   const cookieStore = cookies();
   const sessionCookie = cookieStore.get("mm_session");
 
-  if (!sessionCookie) {
-    redirect("/login");
-  }
+  if (!sessionCookie) redirect("/login");
 
   let session;
   try {
@@ -19,13 +18,13 @@ export default function GamesAdminPage() {
     redirect("/login");
   }
 
-  if (!session.isAdmin) {
-    redirect("/bracket");
-  }
+  if (!session.isAdmin) redirect("/bracket");
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
-      <GamesClient />
-    </div>
+    <GamesServer>
+      <div className="min-h-screen bg-slate-950 text-slate-100">
+        <GamesClient />
+      </div>
+    </GamesServer>
   );
 }

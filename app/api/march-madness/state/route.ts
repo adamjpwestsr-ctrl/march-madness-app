@@ -84,11 +84,10 @@ export async function GET() {
     // -----------------------------
     // ⭐ NORMALIZE JOINED DATA BACK INTO TournamentGame SHAPE
     // -----------------------------
-    async function normalizeGame(g: any): TournamentGame {
+    function normalizeGame(g: any): TournamentGame {   // ← async removed
       const team1 = Array.isArray(g.team1) ? g.team1[0] : g.team1 ?? null;
       const team2 = Array.isArray(g.team2) ? g.team2[0] : g.team2 ?? null;
 
-      // ⭐ NEW: Opening Round seeds (17–20) must be treated as placeholders
       const openingRoundSeed = (team: any) =>
         team?.seed >= 17 && team?.seed <= 20;
 
@@ -137,6 +136,7 @@ export async function GET() {
         .map(normalizeGame);
 
     console.log('✅ Opening Round games:', openingRoundGames.length);
+
     // -----------------------------
     // 4️⃣ GROUP REGIONAL GAMES BY REGION (rounds 2–5)
     // -----------------------------
@@ -223,6 +223,7 @@ export async function GET() {
     } catch (err) {
       console.error('❌ Winner mapping error:', err);
     }
+
     // -----------------------------
     // 8️⃣ FETCH TEAMS
     // -----------------------------

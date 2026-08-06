@@ -1,8 +1,10 @@
+export const runtime = "nodejs";
+
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import GamesClient from "./GamesClient";
 
-export default async function GamesAdminPage() {
+export default function GamesAdminPage() {
   const cookieStore = cookies();
   const sessionCookie = cookieStore.get("mm_session");
 
@@ -27,4 +29,3 @@ export default async function GamesAdminPage() {
     </div>
   );
 }
-

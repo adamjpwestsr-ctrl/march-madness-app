@@ -13,7 +13,10 @@ export async function POST(req: Request) {
     auth: { persistSession: false },
   });
 
-  const cookieStore = cookies();
+  // -----------------------------
+  // AUTH: Read mm_session cookie
+  // -----------------------------
+  const cookieStore = await cookies();   // ← async form
   const sessionCookie = cookieStore.get("mm_session");
 
   if (!sessionCookie) {
@@ -51,4 +54,3 @@ export async function POST(req: Request) {
 
   return NextResponse.json({ success: true });
 }
-

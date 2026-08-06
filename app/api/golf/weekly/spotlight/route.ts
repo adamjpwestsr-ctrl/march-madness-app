@@ -5,13 +5,23 @@ export async function GET() {
   // -----------------------------
   // 0. Supabase SSR Client (Next.js 14+ best practice)
   // -----------------------------
-  const cookieStore = cookies();
+  const cookieStore = await cookies();   // ← async form
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
-      cookies: cookieStore
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+        set(name: string, value: string, options: any) {
+          cookieStore.set({ name, value, ...options });
+        },
+        remove(name: string, options: any) {
+          cookieStore.set({ name, value: "", ...options });
+        },
+      },
     }
   );
 
@@ -73,9 +83,6 @@ export async function GET() {
       performance.find((p) => p.player_id === leastPickedPlayerId)?.name ??
       "Random selection";
   } else {
-    // -----------------------------
-    // FIXED: Remove .order("random()")
-    // -----------------------------
     const { data: allPlayers } = await supabase
       .from("golf_players")
       .select("name");
@@ -120,8 +127,7 @@ export async function GET() {
       mostPicked,
       sleeper,
       trending,
-      watch
-    }
+      watch,
+    },
   });
 }
-

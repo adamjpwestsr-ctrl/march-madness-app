@@ -1,5 +1,3 @@
-//app/api/bracket/submit/route.ts
-
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createClient } from "@supabase/supabase-js";
@@ -18,7 +16,7 @@ export async function POST(req: Request) {
   // -----------------------------
   // AUTH: Read mm_session cookie
   // -----------------------------
-  const cookieStore = cookies();
+  const cookieStore = await cookies();   // ← async form
   const sessionCookie = cookieStore.get("mm_session");
 
   if (!sessionCookie) {
@@ -54,7 +52,7 @@ export async function POST(req: Request) {
     .from("settings")
     .select("lock_date")
     .eq("id", 1)
-    .maybeSingle(); // FIXED
+    .maybeSingle();
 
   const lockDateUTC = settings?.lock_date
     ? new Date(settings.lock_date)
@@ -79,7 +77,7 @@ export async function POST(req: Request) {
     .from("games")
     .select("game_id")
     .eq("round", 6)
-    .maybeSingle(); // FIXED
+    .maybeSingle();
 
   if (champErr || !champGame) {
     return NextResponse.json(
@@ -166,7 +164,7 @@ export async function POST(req: Request) {
       .from("games")
       .select("*")
       .eq("game_id", p.game_id)
-      .maybeSingle(); // FIXED
+      .maybeSingle();
 
     if (!game?.next_game_id) continue;
 
@@ -191,4 +189,3 @@ export async function POST(req: Request) {
   // -----------------------------
   return NextResponse.json({ success: true });
 }
-

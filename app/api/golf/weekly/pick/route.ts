@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
 export async function POST(req: Request) {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();   // ← async form
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -62,7 +62,7 @@ export async function POST(req: Request) {
         player_id: player_id,
       },
       {
-        onConflict: "user_id,tournament_id", // ⭐ Correct conflict target
+        onConflict: "user_id,tournament_id",
       }
     );
 

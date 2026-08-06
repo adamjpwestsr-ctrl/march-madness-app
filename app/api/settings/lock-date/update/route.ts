@@ -11,7 +11,7 @@ const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 // Convert ET → UTC
 async function convertETToUTC(etString: string) {
   // Example input: "2027-03-20T12:00"
-  const etDate = new Date(`${etString}:00-04:00`); 
+  const etDate = new Date(`${etString}:00-04:00`);
   return etDate.toISOString();
 }
 
@@ -28,7 +28,7 @@ export async function POST(req: Request) {
   // -----------------------------
   // AUTH CHECK (cookie → user → is_admin)
   // -----------------------------
-  const cookieStore = cookies();
+  const cookieStore = await cookies();   // ← REQUIRED FIX
   const session = cookieStore.get("mm_session");
 
   if (!session) {
@@ -54,7 +54,7 @@ export async function POST(req: Request) {
   // -----------------------------
   // Convert ET → UTC
   // -----------------------------
-  const utcTimestamp = convertETToUTC(lockDateET);
+  const utcTimestamp = await convertETToUTC(lockDateET);
 
   // -----------------------------
   // Update DB
@@ -71,4 +71,3 @@ export async function POST(req: Request) {
 
   return NextResponse.json({ success: true, lock_date: utcTimestamp });
 }
-

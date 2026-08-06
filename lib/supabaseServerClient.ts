@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 
 export async function createSupabaseServerClient() {
-  const cookieStore = cookies(); // ❗ synchronous — DO NOT await
+  const cookieStore = await cookies();   // ← REQUIRED FIX
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -15,12 +15,12 @@ export async function createSupabaseServerClient() {
         },
         set(name: string, value: string, options: any) {
           try {
-            cookieStore.set(name, value, options);
+            cookieStore.set({ name, value, ...options });
           } catch {}
         },
         remove(name: string, options: any) {
           try {
-            cookieStore.set(name, "", { ...options, maxAge: 0 });
+            cookieStore.set({ name, value: "", ...options });
           } catch {}
         },
       },

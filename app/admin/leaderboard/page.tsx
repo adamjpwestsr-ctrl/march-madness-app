@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import LeaderboardClient from "./LeaderboardClient";
 
 export default async function LeaderboardAdminPage() {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();   // ← async form
   const sessionCookie = cookieStore.get("mm_session");
 
   if (!sessionCookie) {
@@ -27,4 +27,3 @@ export default async function LeaderboardAdminPage() {
     </div>
   );
 }
-

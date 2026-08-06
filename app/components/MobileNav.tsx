@@ -21,7 +21,7 @@ import {
   CircleDot,
 } from "lucide-react";
 
-export default async function MobileNav() {
+export default function MobileNav() {   // ✅ removed async
   const [open, setOpen] = useState(false);
   const [openChallenges, setOpenChallenges] = useState(false);
   const router = useRouter();
@@ -89,11 +89,9 @@ export default async function MobileNav() {
           </button>
 
           <div
-            className={`
-              flex flex-col bg-slate-900/80
-              overflow-hidden transition-all duration-300 ease-out
-              ${openChallenges ? "max-h-96 opacity-100" : "max-h-0 opacity-0"}
-            `}
+            className={`flex flex-col bg-slate-900/80 overflow-hidden transition-all duration-300 ease-out ${
+              openChallenges ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+            }`}
           >
             {/* Hub */}
             <Link

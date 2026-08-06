@@ -10,7 +10,7 @@ type LoginFormProps = {
   onEmailChange?: (email: string) => void;
 };
 
-export default async function LoginForm({ onStepChange, onEmailChange }: LoginFormProps) {
+export default function LoginForm({ onStepChange, onEmailChange }: LoginFormProps) {
   const supabase = createSupabaseBrowserClient();
 
   const [email, setEmail] = useState("");

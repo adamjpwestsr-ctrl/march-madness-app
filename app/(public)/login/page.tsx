@@ -10,10 +10,10 @@ export const runtime = "nodejs";
 export default function LoginPage() {
   const supabase = createSupabaseBrowserClient();
 
-  // ⭐ CRITICAL: Clear stale session on page load
-  useEffect(() => {
-    supabase.auth.signOut();
-  }, []);
+  // ⭐ FIXED: Removed auto sign-out (this was wiping your session)
+  // useEffect(() => {
+  //   supabase.auth.signOut();
+  // }, []);
 
   const [showAbout, setShowAbout] = useState(false);
   const [currentStep, setCurrentStep] = useState<"email" | "admin">("email");
@@ -76,7 +76,7 @@ export default function LoginPage() {
   return (
     <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-black">
 
-      {/* BACKGROUND LAYERS (ALWAYS ACTIVE) */}
+      {/* BACKGROUND LAYERS */}
       <>
         <div
           className="absolute inset-0 bg-cover bg-center opacity-10 grayscale animate-slow-pan"
@@ -190,7 +190,7 @@ export default function LoginPage() {
           />
         </div>
 
-        {/* INFO LINKS (PUBLIC) */}
+        {/* INFO LINKS */}
         <div className="text-center mt-10 space-y-2 text-sm text-slate-400">
           <a href="/challenge-overview" className="underline hover:text-slate-300">
             Challenge Overview

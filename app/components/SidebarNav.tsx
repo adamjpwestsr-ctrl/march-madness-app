@@ -194,7 +194,7 @@ export default function SidebarNav() {
       </div>
 
       {link("/trivia", "Trivia", Brain)}
-      {link("/leaderboard", "Leaderboard", Trophy)}
+      {user && link("/leaderboards", "Leaderboard", Trophy)}
       {link("/settings", "Settings", Settings)}
 
       {/* LOGOUT */}

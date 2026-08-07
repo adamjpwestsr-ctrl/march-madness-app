@@ -24,7 +24,11 @@ export default function Header() {
         <Link href="/home">Home</Link>
         <Link href="/challenges">Challenges</Link>
         <Link href="/trivia">Trivia</Link>
-        <Link href="/leaderboard">Leaderboard</Link>
+
+        {/* FIXED */}
+	{authUser && <Link href="/leaderboards">Leaderboard</Link>}
+
+
         <Link href="/sports">Sports</Link>
 
         <button

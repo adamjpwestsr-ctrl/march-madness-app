@@ -194,7 +194,7 @@ export default function MobileNav() {   // ✅ removed async
           </div>
 
           {link("/trivia", "Trivia", Brain)}
-          {link("/leaderboard", "Leaderboard", Trophy)}
+	  {link("/leaderboards", "Leaderboard", Trophy)}
           {link("/settings", "Settings", Settings)}
 
           <button

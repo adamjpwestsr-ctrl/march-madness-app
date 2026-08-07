@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { cookies } from "next/headers";
-import { createServerClient } from "@supabase/ssr";
+import { createServerClient } from "@supabase/auth-helpers-nextjs";
 
 type Contest = {
   id: string;
@@ -32,24 +31,28 @@ type PlayerWithBadges = LeaderboardRow & {
 };
 
 export default async function LeaderboardHub() {
-  const cookieStore = await cookies();
-
+  // --- NO-OP COOKIE ADAPTER (Next.js 16 compatible) ---
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            cookieStore.set(name, value, options);
-          });
-        },
-      },
+    get(name) {
+        return cookieStore.get(name)?.value;
+    },
+    set(name, value, options) {
+        cookieStore.set(name, value, options);
+    },
+    remove(name, options) {
+        cookieStore.set(name, "", { ...options, maxAge: 0 });
+    },
+},
+        set() {},
+        remove() {}
+      }
     }
   );
+  // ----------------------------------------------------
 
   // Fetch contests
   const { data: sports } = await supabase
@@ -194,3 +197,4 @@ function SportCard({ sport }: { sport: Contest }) {
     </div>
   );
 }
+

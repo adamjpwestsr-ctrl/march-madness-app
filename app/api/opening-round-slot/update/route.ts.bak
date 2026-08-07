@@ -1,25 +1,27 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import { createServerClient } from "@supabase/ssr";
+import { createServerClient } from "@supabase/auth-helpers-nextjs";
 
 export async function POST(req: Request) {
   const form = await req.formData();
-  const cookieStore = await cookies();
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            cookieStore.set(name, value, options);
-          });
-        },
-      },
+    get(name) {
+        return cookieStore.get(name)?.value;
+    },
+    set(name, value, options) {
+        cookieStore.set(name, value, options);
+    },
+    remove(name, options) {
+        cookieStore.set(name, "", { ...options, maxAge: 0 });
+    },
+},
+        set() {},
+        remove() {}
+      }
     }
   );
 
@@ -39,3 +41,4 @@ export async function POST(req: Request) {
 
   return NextResponse.redirect("/admin/opening-round");
 }
+

@@ -9,13 +9,21 @@ export async function GET() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll() {
-          return cookieStore.getAll();
+    get(name) {
+        return cookieStore.get(name)?.value;
+    },
+    set(name, value, options) {
+        cookieStore.set(name, value, options);
+    },
+    remove(name, options) {
+        cookieStore.set(name, "", { ...options, maxAge: 0 });
+    },
+},
+        set(name: string, value: string, options: any) {
+          cookieStore.set({ name, value, ...options });
         },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            cookieStore.set(name, value, options);
-          });
+        remove(name: string, options: any) {
+          cookieStore.set({ name, value: "", ...options });
         },
       },
     }
@@ -59,7 +67,7 @@ export async function GET() {
     .select("*")
     .order("name", { ascending: true });
 
-  // Load ALL user picks
+  // Load ALL user picks (FIX)
   const { data: allPicks } = await supabase
     .from("golf_weekly_picks")
     .select("tournament_id, player_id")
@@ -104,9 +112,10 @@ export async function GET() {
     tournament: tournament ?? null,
     golfers: golfers ?? [],
     pick: pick ?? null,
-    picks: allPicks ?? [],
+    picks: allPicks ?? [],   // ⭐ FIXED — UI now receives all picks
     history: history ?? [],
     leaderboard: leaderboard ?? [],
     season,
   });
 }
+

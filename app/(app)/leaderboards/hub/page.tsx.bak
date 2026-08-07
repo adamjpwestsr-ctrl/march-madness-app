@@ -1,15 +1,45 @@
 import Link from "next/link";
-import { cookies } from "next/headers";
-import { createServerClient } from "@supabase/ssr";
+import { createServerClient } from "@supabase/auth-helpers-nextjs";
+import BadgeLegend from "./BadgeLegend";
+
+/**
+ * Expected Supabase schema:
+ *
+ * TABLE: contests
+ *  - id
+ *  - name
+ *  - slug
+ *  - sport_type
+ *  - tagline
+ *  - status
+ *  - players
+ *  - icon
+ *
+ * VIEW: leaderboard_all_challenges
+ *  - user_id
+ *  - username
+ *  - total_points
+ *  - contests_played
+ *
+ * TABLE: badges
+ *  - id
+ *  - badge_name
+ *  - badge_icon
+ *  - rule_type ('contests_played' | 'total_points')
+ *  - threshold
+ *  - tier
+ *  - color_class
+ */
 
 type Contest = {
   id: string;
   name: string;
-  sport: string;
-  entry_fee_cents: number;
-  mulligan_fee_cents: number;
-  rake_percent: number;
-  is_active: boolean;
+  slug: string;
+  sport_type: string;
+  tagline: string | null;
+  status: string | null;
+  players: number | null;
+  icon: string | null;
 };
 
 type LeaderboardRow = {
@@ -25,6 +55,8 @@ type BadgeRule = {
   badge_icon: string | null;
   rule_type: "contests_played" | "total_points";
   threshold: number;
+  tier: string | null;
+  color_class: string | null;
 };
 
 type PlayerWithBadges = LeaderboardRow & {
@@ -32,26 +64,30 @@ type PlayerWithBadges = LeaderboardRow & {
 };
 
 export default async function LeaderboardHub() {
-  const cookieStore = await cookies();
-
+  // --- NO-OP COOKIE ADAPTER (Next.js 16 compatible) ---
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            cookieStore.set(name, value, options);
-          });
-        },
-      },
+    get(name) {
+        return cookieStore.get(name)?.value;
+    },
+    set(name, value, options) {
+        cookieStore.set(name, value, options);
+    },
+    remove(name, options) {
+        cookieStore.set(name, "", { ...options, maxAge: 0 });
+    },
+},
+        set() {},
+        remove() {}
+      }
     }
   );
+  // ----------------------------------------------------
 
-  // Fetch contests
+  // Fetch all contests (sports)
   const { data: sports } = await supabase
     .from("contests")
     .select("*")
@@ -69,6 +105,7 @@ export default async function LeaderboardHub() {
     .from("badges")
     .select("*");
 
+  // Attach badges to each player
   const playersWithBadges: PlayerWithBadges[] = (players ?? []).map((p) => {
     const userBadges =
       (badgeRules ?? []).filter((rule) => {
@@ -89,6 +126,7 @@ export default async function LeaderboardHub() {
 
   return (
     <div className="px-6 pb-20 space-y-16">
+
       {/* HERO SECTION */}
       <section className="w-full py-12 text-center bg-gradient-to-b from-slate-900 to-slate-950 rounded-xl">
         <h1 className="text-4xl font-bold tracking-tight">Bracket Boss</h1>
@@ -116,17 +154,19 @@ export default async function LeaderboardHub() {
         </div>
       </section>
 
-      {/* CROSS-SPORT LEADERBOARD WITH BADGES */}
+      {/* CROSS-SPORT LEADERBOARD WITH BADGES + LEGEND */}
       <section>
-        <h2 className="text-2xl font-bold mb-4">
-          Top Players Across All Sports
-        </h2>
+
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-2xl font-bold">Top Players Across All Sports</h2>
+          <BadgeLegend badges={badgeRules ?? []} />
+        </div>
 
         <div className="rounded-xl bg-slate-800/40 backdrop-blur border border-slate-700/40 p-6">
           {playersWithBadges.map((p, i) => (
             <div
               key={p.user_id}
-              className="flex items-center justify-between py-3 border-b border-slate-700/40 last:border-none"
+              className="flex justify-between items-center py-3 border-b border-slate-700/40 last:border-none"
             >
               <div className="flex items-center gap-3">
                 <span className="font-medium">
@@ -139,11 +179,12 @@ export default async function LeaderboardHub() {
 
               <div className="flex items-center gap-3">
                 <span className="text-slate-400">{p.total_points} pts</span>
+
                 <div className="flex gap-1">
                   {p.badges.map((b) => (
                     <span
                       key={b.id}
-                      className="text-yellow-400 text-lg"
+                      className={`${b.color_class ?? "text-yellow-400"} text-lg badge-pop`}
                       title={b.badge_name}
                     >
                       {b.badge_icon ?? "🏅"}
@@ -172,21 +213,19 @@ function SportCard({ sport }: { sport: Contest }) {
   return (
     <div className="rounded-xl p-6 bg-slate-800/40 backdrop-blur border border-slate-700/40 hover:bg-slate-800/60 transition">
       <div className="flex items-center gap-3">
-        <div className="text-3xl">🏆</div>
+        <div className="text-3xl">{sport.icon ?? "🏆"}</div>
         <h3 className="text-xl font-semibold">{sport.name}</h3>
       </div>
 
-      <p className="text-slate-400 mt-2 capitalize">{sport.sport}</p>
+      <p className="text-slate-400 mt-2">{sport.tagline}</p>
 
       <div className="mt-4 flex justify-between text-sm text-slate-500">
-        <span>
-          Entry: ${(sport.entry_fee_cents / 100).toFixed(2)}
-        </span>
-        <span>{sport.is_active ? "Active" : "Inactive"}</span>
+        <span>{sport.players ?? 0} players</span>
+        <span>{sport.status}</span>
       </div>
 
       <Link
-        href={`/leaderboards/${sport.sport}`}
+        href={`/leaderboards/${sport.slug}`}
         className="mt-5 block text-center bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition"
       >
         View Leaderboard
@@ -194,3 +233,4 @@ function SportCard({ sport }: { sport: Contest }) {
     </div>
   );
 }
+

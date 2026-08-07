@@ -1,5 +1,5 @@
-import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
 export async function POST(req: Request) {
   const cookieStore = await cookies();
@@ -9,13 +9,21 @@ export async function POST(req: Request) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll() {
-          return cookieStore.getAll();
+    get(name) {
+        return cookieStore.get(name)?.value;
+    },
+    set(name, value, options) {
+        cookieStore.set(name, value, options);
+    },
+    remove(name, options) {
+        cookieStore.set(name, "", { ...options, maxAge: 0 });
+    },
+},
+        set(name: string, value: string, options: any) {
+          cookieStore.set({ name, value, ...options });
         },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            cookieStore.set(name, value, options);
-          });
+        remove(name: string, options: any) {
+          cookieStore.set({ name, value: "", ...options });
         },
       },
     }
@@ -51,17 +59,17 @@ export async function POST(req: Request) {
 
   const tournamentId = tournament.id;
 
-  // UPSERT pick
+  // UPSERT pick (correct conflict target)
   const { error } = await supabase
     .from("golf_weekly_picks")
     .upsert(
       {
         user_id: userId,
         tournament_id: tournamentId,
-        player_id,
+        player_id: player_id,
       },
       {
-        onConflict: "user_id,tournament_id",
+        onConflict: "user_id,tournament_id", // ⭐ Correct conflict target
       }
     );
 
@@ -71,3 +79,4 @@ export async function POST(req: Request) {
 
   return Response.json({ success: true });
 }
+

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import SettingsSection from "@/app/components/SettingsSection";
 import { updateUserProfile } from "./actions";
 import { getFcmTokenForUser } from "@/utils/firebase";
+import Link from "next/link";
 
 type SettingsClientProps = {
   supabaseUser: any;
@@ -12,11 +13,8 @@ type SettingsClientProps = {
 
 export default function SettingsClient({ supabaseUser, profile }: SettingsClientProps) {
   const [loading, setLoading] = useState(false);
-
-  // Local editable profile state
   const [localProfile, setLocalProfile] = useState(profile);
 
-  // Auto-refresh FCM token when push notifications enabled
   useEffect(() => {
     if (localProfile?.push_notifications) {
       getFcmTokenForUser();
@@ -27,11 +25,7 @@ export default function SettingsClient({ supabaseUser, profile }: SettingsClient
     setLoading(true);
     try {
       await updateUserProfile(supabaseUser.id, { [field]: value });
-
-      setLocalProfile((prev: any) => ({
-        ...prev,
-        [field]: value,
-      }));
+      setLocalProfile((prev: any) => ({ ...prev, [field]: value }));
     } finally {
       setLoading(false);
     }
@@ -39,15 +33,121 @@ export default function SettingsClient({ supabaseUser, profile }: SettingsClient
 
   return (
     <div className="space-y-10">
+
+      {/* SOCIAL HUB HEADER */}
       <section>
-        <h1 className="text-3xl font-semibold mb-2">Settings</h1>
+        <h1 className="text-3xl font-semibold mb-2">Social Hub</h1>
         <p className="text-slate-400">
-          Manage your profile, notifications, and preferences.
+          Your home for community, conversation, and your BracketBoss identity.
         </p>
+
+        <div className="flex flex-wrap gap-4 mt-4">
+          <Link
+            href="/social"
+            className="px-4 py-2 bg-blue-600 rounded-lg text-sm hover:bg-blue-700"
+          >
+            Open Social Hub
+          </Link>
+
+          <Link
+            href="/forum"
+            className="px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm hover:bg-slate-700"
+          >
+            Forum
+          </Link>
+
+          <Link
+            href="/leaderboards"
+            className="px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm hover:bg-slate-700"
+          >
+            Leaderboard Hub
+          </Link>
+
+          <Link
+            href="/challenges"
+            className="px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm hover:bg-slate-700"
+          >
+            Challenge Hub
+          </Link>
+        </div>
       </section>
 
+      {/* SOCIAL PREFERENCES */}
+      <SettingsSection title="Social Preferences">
+        <div className="space-y-6">
+
+          {/* Preferred Forum Sport */}
+          <div>
+            <p className="font-medium mb-2">Preferred Forum Sport</p>
+            <select
+              value={localProfile.preferred_forum_sport ?? ""}
+              onChange={(e) => saveField("preferred_forum_sport", e.target.value)}
+              className="bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm"
+            >
+              <option value="">Global Feed</option>
+              <option value="NFL">NFL</option>
+              <option value="NBA">NBA</option>
+              <option value="MLB">MLB</option>
+              <option value="NHL">NHL</option>
+              <option value="Golf">Golf</option>
+              <option value="NASCAR">NASCAR</option>
+              <option value="F1">F1</option>
+            </select>
+          </div>
+
+          {/* Show Activity Publicly */}
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium">Show My Activity Publicly</p>
+              <p className="text-sm text-slate-400">
+                Allow others to see your picks, wins, and forum posts.
+              </p>
+            </div>
+
+            <button
+              onClick={() => saveField("show_activity", !localProfile.show_activity)}
+              className={`w-12 h-6 rounded-full transition ${
+                localProfile.show_activity ? "bg-emerald-600" : "bg-slate-700"
+              } relative`}
+            >
+              <span
+                className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition ${
+                  localProfile.show_activity ? "translate-x-6" : ""
+                }`}
+              />
+            </button>
+          </div>
+
+          {/* Show Badges Publicly */}
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium">Show My Badges Publicly</p>
+              <p className="text-sm text-slate-400">
+                Display badges on your profile and forum posts.
+              </p>
+            </div>
+
+            <button
+              onClick={() => saveField("show_badges", !localProfile.show_badges)}
+              className={`w-12 h-6 rounded-full transition ${
+                localProfile.show_badges ? "bg-emerald-600" : "bg-slate-700"
+              } relative`}
+            >
+              <span
+                className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition ${
+                  localProfile.show_badges ? "translate-x-6" : ""
+                }`}
+              />
+            </button>
+          </div>
+        </div>
+      </SettingsSection>
+
+      {/* PROFILE */}
       <SettingsSection title="Profile">
         <div className="space-y-4">
+
+          {/* Display Name */}
           <div>
             <p className="text-sm text-slate-400">Display Name</p>
             <input
@@ -57,11 +157,13 @@ export default function SettingsClient({ supabaseUser, profile }: SettingsClient
             />
           </div>
 
+          {/* Email */}
           <div>
             <p className="text-sm text-slate-400">Email</p>
             <p className="text-lg font-medium">{supabaseUser.email}</p>
           </div>
 
+          {/* Badges */}
           <div>
             <p className="text-sm text-slate-400 mb-2">Badges Earned</p>
             {localProfile.badges?.length === 0 ? (
@@ -88,8 +190,11 @@ export default function SettingsClient({ supabaseUser, profile }: SettingsClient
         </div>
       </SettingsSection>
 
+      {/* NOTIFICATIONS */}
       <SettingsSection title="Notifications">
         <div className="space-y-6">
+
+          {/* Email Notifications */}
           <div className="flex items-center justify-between">
             <div>
               <p className="font-medium">Email Notifications</p>
@@ -114,6 +219,7 @@ export default function SettingsClient({ supabaseUser, profile }: SettingsClient
             </button>
           </div>
 
+          {/* Push Notifications */}
           <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between">
               <div>
@@ -155,8 +261,11 @@ export default function SettingsClient({ supabaseUser, profile }: SettingsClient
         </div>
       </SettingsSection>
 
+      {/* PREFERENCES */}
       <SettingsSection title="Preferences">
         <div className="space-y-6">
+
+          {/* Favorite Sport */}
           <div>
             <p className="font-medium mb-2">Favorite Sport</p>
             <select
@@ -171,6 +280,7 @@ export default function SettingsClient({ supabaseUser, profile }: SettingsClient
             </select>
           </div>
 
+          {/* Theme */}
           <div>
             <p className="font-medium mb-2">Theme</p>
             <div className="flex gap-3">

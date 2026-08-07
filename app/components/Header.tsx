@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
 
-export default function Header() {
+export default function Header({ authUser }: { authUser: any }) {
   const router = useRouter();
 
   const handleLogout = async () => {
@@ -14,20 +14,17 @@ export default function Header() {
 
   return (
     <div className="flex items-center justify-between w-full">
-      {/* Logo → Home */}
       <Link href="/home" className="text-xl font-bold tracking-tight">
         BracketBoss
       </Link>
 
-      {/* Desktop Nav */}
       <nav className="hidden lg:flex gap-6 text-sm font-medium">
         <Link href="/home">Home</Link>
         <Link href="/challenges">Challenges</Link>
         <Link href="/trivia">Trivia</Link>
 
-        {/* FIXED */}
-	{User && <Link href="/leaderboards">Leaderboard</Link>}
-
+        {/* Only show leaderboard when logged in */}
+        {authUser && <Link href="/leaderboards">Leaderboard</Link>}
 
         <Link href="/sports">Sports</Link>
 

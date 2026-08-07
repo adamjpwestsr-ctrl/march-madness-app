@@ -11,8 +11,8 @@ export async function loginWithEmail(formData: FormData) {
 
   const supabase = await createSupabaseServerClient();
 
-  // ⭐ Clear stale session BEFORE login
-  await supabase.auth.signOut();
+  // ❌ Removed — this was wiping your session before Supabase could set a new one
+  // await supabase.auth.signOut();
 
   // Check if user exists
   const { data: dbUser, error: dbError } = await supabase
@@ -26,12 +26,12 @@ export async function loginWithEmail(formData: FormData) {
     return { status: "error" };
   }
 
-  // ⭐ Admins must enter admin code
+  // Admins must enter admin code
   if (dbUser?.is_admin) {
     return { status: "needsAdminCode", email };
   }
 
-  // ⭐ Send magic link (Supabase will create auth user)
+  // Send magic link (Supabase will create auth user)
   const { error: otpError } = await supabase.auth.signInWithOtp({
     email,
     options: {
@@ -44,7 +44,7 @@ export async function loginWithEmail(formData: FormData) {
     return { status: "error" };
   }
 
-  // ⭐ If new user → callback will create DB row
+  // New user → callback will create DB row
   if (!dbUser) {
     return { status: "needsName", email };
   }
@@ -63,8 +63,8 @@ export async function verifyAdminCode(formData: FormData) {
 
   const supabase = await createSupabaseServerClient();
 
-  // ⭐ Clear stale session BEFORE admin login
-  await supabase.auth.signOut();
+  // ❌ Removed — this was wiping your session before Supabase could set a new one
+  // await supabase.auth.signOut();
 
   // Lookup admin
   const { data: dbUser, error: dbError } = await supabase
@@ -81,7 +81,7 @@ export async function verifyAdminCode(formData: FormData) {
     return { status: "invalidAdminCode" };
   }
 
-  // ⭐ Send magic link for admin login
+  // Send magic link for admin login
   const { error: otpError } = await supabase.auth.signInWithOtp({
     email,
     options: {

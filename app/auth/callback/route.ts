@@ -1,10 +1,6 @@
-// 🔥 Correct Supabase callback route
-// 🔥 Ensures auth_id is stored properly
-// 🔥 Ensures users table matches Supabase Auth
-// 🔥 Ensures Derby, Settings, MyDerbyPicks all see correct user
-
 import { NextResponse } from "next/server";
-import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
+import { cookies } from "next/headers";
+import { createServerClient } from "@supabase/ssr";
 
 export async function GET(request: Request) {
   console.log("🔥 CALLBACK ROUTE HIT");
@@ -16,7 +12,24 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/login`);
   }
 
-  const supabase = await createSupabaseServerClient();
+  // ⭐ Correct SSR cookie adapter
+  const cookieStore = cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            cookieStore.set(name, value, options);
+          });
+        },
+      },
+    }
+  );
 
   // ⭐ Exchange magic link for session
   const { data, error } = await supabase.auth.exchangeCodeForSession(code);
@@ -33,8 +46,8 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/login`);
   }
 
-  // ⭐ Look up user in DB by email
-  const { data: dbUser, error: dbError } = await supabase
+  // ⭐ Look up user in DB
+  const { data: dbUser } = await supabase
     .from("users")
     .select("*")
     .eq("email", email)
@@ -42,14 +55,14 @@ export async function GET(request: Request) {
 
   let userRecord = dbUser;
 
-  // ⭐ Create user if not found
+  // ⭐ Create user if missing
   if (!dbUser) {
     const username = email.split("@")[0];
 
     const { data: newUser, error: insertError } = await supabase
       .from("users")
       .insert({
-        auth_id: authUser.id,   // ⭐ CRITICAL FIX
+        auth_id: authUser.id,
         email,
         username,
         name: null,
@@ -66,7 +79,7 @@ export async function GET(request: Request) {
     userRecord = newUser;
   }
 
-  // ⭐ Ensure auth_id is always correct
+  // ⭐ Ensure auth_id is correct
   if (userRecord.auth_id !== authUser.id) {
     await supabase
       .from("users")
@@ -77,21 +90,15 @@ export async function GET(request: Request) {
   // ⭐ Ensure username exists
   if (!userRecord.username) {
     const username = email.split("@")[0];
-
     await supabase
       .from("users")
       .update({ username })
       .eq("user_id", userRecord.user_id);
-
-    userRecord.username = username;
   }
 
-  // ⭐ Sync Supabase auth cookies
-  const response = NextResponse.redirect(
-    `${process.env.NEXT_PUBLIC_SITE_URL}/home`
-  );
-
+  // ⭐ Sync Supabase auth cookies BEFORE returning response
   await supabase.auth.setSession(data.session);
 
-  return response;
+  // ⭐ Now return the redirect
+  return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/home`);
 }

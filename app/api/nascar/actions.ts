@@ -97,7 +97,8 @@ export async function getUserNascarPick(raceId: string) {
 export async function submitNascarRaceResults(raceId: string, results: any[]) {
   const supabase = await createSupabaseServerClient();
 
-  const payload = results.map((r) => ({
+  // ⭐ FIX — type "r"
+  const payload = results.map((r: any) => ({
     race_id: raceId,
     driver_id: r.driver_id,
     driver_name: r.driver_name,
@@ -149,11 +150,14 @@ export async function calculateNascarPoints(raceId: string) {
   }
 
   const perfMap = new Map();
-  perf?.forEach((p) => {
+
+  // ⭐ FIX — type "p"
+  perf?.forEach((p: any) => {
     perfMap.set(p.driver_id, p.total_points);
   });
 
-  const pointsPayload = picks.map((pick) => ({
+  // ⭐ FIX — type "pick"
+  const pointsPayload = picks.map((pick: any) => ({
     user_id: pick.user_id,
     race_id: raceId,
     driver_id: pick.driver_id,

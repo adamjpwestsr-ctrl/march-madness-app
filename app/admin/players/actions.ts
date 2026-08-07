@@ -68,7 +68,8 @@ export async function addUserToContest(
     console.error("addUserToContest: fetch existing error", error);
   }
 
-  const existingIds = new Set((existing || []).map((r) => r.contest_id));
+  // ⭐ FIX — type "r"
+  const existingIds = new Set((existing || []).map((r: any) => r.contest_id));
 
   const toInsert = contestIds
     .filter((id) => !existingIds.has(id))

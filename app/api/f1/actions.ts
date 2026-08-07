@@ -117,7 +117,8 @@ export async function getUserF1Pick(raceId: string) {
 export async function submitF1RaceResults(raceId: string, results: any[]) {
   const supabase = await createSupabaseServerClient();
 
-  const payload = results.map((r) => ({
+  // ⭐ FIX — type "r"
+  const payload = results.map((r: any) => ({
     race_id: raceId,
     driver_id: r.driver_id,
     driver_name: r.driver_name,
@@ -170,12 +171,12 @@ export async function calculateF1Points(raceId: string) {
   }
 
   const perfMap = new Map();
-  perf?.forEach((p) => {
+  perf?.forEach((p: any) => {
     perfMap.set(p.driver_id, p.finishing_position);
   });
 
   // Build points payload
-  const pointsPayload = picks.map((pick) => {
+  const pointsPayload = picks.map((pick: any) => {
     const position = perfMap.get(pick.driver_id) ?? 99; // default = last place
     const points = getF1Points(position);
 

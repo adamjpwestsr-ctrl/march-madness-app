@@ -1,4 +1,3 @@
-// lib/sports/weekly.ts
 import { createSupabaseServerClient } from '@/lib/supabaseServerClient';
 
 export type WeeklyGame = {
@@ -28,8 +27,7 @@ export async function getWeeklyData(
   sport: 'NBA' | 'NHL',
   week: number,
 ): Promise<WeeklyData> {
-const supabase = await createSupabaseServerClient();
-
+  const supabase = await createSupabaseServerClient();
 
   const { data: games, error: gamesError } = await supabase
     .from('sport_schedule')
@@ -40,9 +38,10 @@ const supabase = await createSupabaseServerClient();
 
   if (gamesError) throw gamesError;
 
+  // ⭐ FIX — type "g"
   const teamIds = Array.from(
     new Set(
-      (games ?? []).flatMap(g => [g.home_team_id, g.away_team_id]),
+      (games ?? []).flatMap((g: any) => [g.home_team_id, g.away_team_id]),
     ),
   );
 
@@ -54,7 +53,8 @@ const supabase = await createSupabaseServerClient();
   if (teamsError) throw teamsError;
 
   const teamsById: Record<string, Team> = {};
-  (teams ?? []).forEach(t => {
+  // ⭐ FIX — type "t"
+  (teams ?? []).forEach((t: any) => {
     teamsById[t.id] = {
       id: t.id,
       sport: t.sport,
@@ -65,7 +65,7 @@ const supabase = await createSupabaseServerClient();
 
   const lockTime =
     games && games.length
-      ? games.reduce<string | null>((min, g) => {
+      ? games.reduce<string | null>((min: any, g: any) => {
           const d = g.game_date;
           if (!min) return d;
           return new Date(d) < new Date(min) ? d : min;

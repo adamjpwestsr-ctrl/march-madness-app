@@ -12,7 +12,8 @@ export async function POST(req: Request) {
     .eq("season", season)
     .eq("week", week);
 
-  const gameIds = games?.map((g) => g.id) ?? [];
+  // ⭐ FIX — type "g"
+  const gameIds = games?.map((g: any) => g.id) ?? [];
 
   // Get results
   const { data: results } = await supabase
@@ -29,8 +30,10 @@ export async function POST(req: Request) {
   // Calculate points
   const scores: Record<string, number> = {};
 
-  picks?.forEach((p) => {
-    const result = results?.find((r) => r.game_id === p.game_id);
+  // ⭐ FIX — type "p"
+  picks?.forEach((p: any) => {
+    // ⭐ FIX — type "r"
+    const result = results?.find((r: any) => r.game_id === p.game_id);
     if (result && result.winner_team_id === p.selected_team_id) {
       scores[p.user_id] = (scores[p.user_id] ?? 0) + 1;
     }

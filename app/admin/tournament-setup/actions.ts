@@ -18,7 +18,8 @@ export async function loadAllTeams() {
 
   if (error || !data) return [];
 
-  return data.map((t) => ({
+  // ⭐ FIX — type "t"
+  return data.map((t: any) => ({
     id: t.id,
     name: t.team_name,
     logo: t.logo_url,

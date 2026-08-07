@@ -20,7 +20,8 @@ export default async function NascarHistoryPage() {
     .select("race_id, driver_id, points")
     .eq("user_id", userId);
 
-  const pickMap = new Map(picks?.map((p) => [p.race_id, p]) || []);
+  // FIX #1 — type "p"
+  const pickMap = new Map(picks?.map((p: any) => [p.race_id, p]) || []);
 
   return (
     <div className="max-w-6xl mx-auto px-4 pb-20 space-y-10">
@@ -32,8 +33,11 @@ export default async function NascarHistoryPage() {
 
         {races?.length ? (
           <div className="space-y-4">
-            {races.map((race) => {
-              const pick = pickMap.get(race.id);
+            {/* FIX #2 — type "race" */}
+            {races.map((race: any) => {
+              // FIX #3 — type "pick"
+              const pick: any = pickMap.get(race.id);
+
               return (
                 <div
                   key={race.id}

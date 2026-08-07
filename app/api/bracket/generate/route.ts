@@ -11,7 +11,7 @@ import { generateBracketStructure } from "@/lib/bracketUtils";
  *  - inserts into Supabase `games` table
  */
 export async function POST() {
-const supabase = await createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
 
   // ---------------------------------------------------------
   // 1. Load true‑seed list (admin input)
@@ -39,7 +39,8 @@ const supabase = await createSupabaseServerClient();
     );
   }
 
-  const orderedTeams = seedRows.map((r) => r.team_name);
+  // ⭐ FIX — type "r"
+  const orderedTeams = seedRows.map((r: any) => r.team_name);
 
   // ---------------------------------------------------------
   // 2. Load v_tournament_teams metadata
@@ -73,7 +74,10 @@ const supabase = await createSupabaseServerClient();
   // ---------------------------------------------------------
   // 4. Clear existing games table
   // ---------------------------------------------------------
-  const { error: clearError } = await supabase.from("games").delete().neq("game_id", -1);
+  const { error: clearError } = await supabase
+    .from("games")
+    .delete()
+    .neq("game_id", -1);
 
   if (clearError) {
     console.error("❌ Error clearing games table:", clearError);
@@ -86,7 +90,9 @@ const supabase = await createSupabaseServerClient();
   // ---------------------------------------------------------
   // 5. Insert new bracket rows
   // ---------------------------------------------------------
-  const { error: insertError } = await supabase.from("games").insert(bracket);
+  const { error: insertError } = await supabase
+    .from("games")
+    .insert(bracket);
 
   if (insertError) {
     console.error("❌ Error inserting bracket:", insertError);

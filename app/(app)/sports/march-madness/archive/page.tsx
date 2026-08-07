@@ -79,7 +79,7 @@ export default async function BracketPage({
 
   // Determine active bracket
   const activeBracket =
-    brackets.find((b) => b.bracket_id === searchParams.bid) ?? brackets[0];
+    brackets.find((b: any) => b.bracket_id === searchParams.bid) ?? brackets[0];
 
   return (
     <div className="flex min-h-screen bg-slate-950 text-slate-100">
@@ -88,7 +88,7 @@ export default async function BracketPage({
         <h2 className="text-xl font-semibold mb-2">Your Brackets</h2>
 
         <div className="flex flex-col gap-2">
-          {brackets.map((b) => (
+          {brackets.map((b: any) => (
             <a
               key={b.bracket_id}
               href={`/sports/march-madness?bid=${b.bracket_id}`}

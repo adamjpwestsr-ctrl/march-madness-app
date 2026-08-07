@@ -7,7 +7,7 @@ export default async function PlayersPageServer() {
 
   // 1) Fetch active contests
   if (!supabase) return;
-    const { data: contests } = await supabase
+  const { data: contests } = await supabase
     .from("contests")
     .select("id, name, sport")
     .eq("is_active", true)
@@ -15,14 +15,14 @@ export default async function PlayersPageServer() {
 
   // 2) Fetch all users
   if (!supabase) return;
-    const { data: users } = await supabase
+  const { data: users } = await supabase
     .from("users")
     .select("user_id, email")
     .order("email", { ascending: true });
 
   // 3) Fetch participation rows
   if (!supabase) return;
-    const { data: statuses } = await supabase
+  const { data: statuses } = await supabase
     .from("user_challenge_status")
     .select(`
       id,
@@ -37,7 +37,7 @@ export default async function PlayersPageServer() {
     .order("id", { ascending: true });
 
   // 4) Normalize for client
-  const normalized = (statuses || []).map((row) => ({
+  const normalized = (statuses || []).map((row: any) => ({
     id: row.id,
     user_id: row.user_id,
     contest_id: row.contest_id,

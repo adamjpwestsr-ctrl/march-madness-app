@@ -8,7 +8,6 @@ import {
 } from '@/lib/marchMadnessTypes';
 import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 
-
 console.log("🔥 API HIT: /api/march-madness/brackets/[bracket_id]");
 
 export async function GET(
@@ -59,18 +58,21 @@ export async function GET(
 
   // Opening Round = round 1 (76‑team format)
   const openingRoundGames = (allGames ?? []).filter(
-    (g) => g.round === 1
+    (g: any) => g.round === 1
   );
 
   // Regional games = rounds 2+
   const regionalGames = (allGames ?? [])
-    .filter((g) => g.round && g.round >= 2)
-    .reduce<Record<string, TournamentGame[]>>((acc, game) => {
-      const region = game.region ?? 'Unknown';
-      if (!acc[region]) acc[region] = [];
-      acc[region].push(game);
-      return acc;
-    }, {});
+    .filter((g: any) => g.round && g.round >= 2)
+    .reduce<Record<string, TournamentGame[]>>(
+      (acc: any, game: any) => {
+        const region = game.region ?? 'Unknown';
+        if (!acc[region]) acc[region] = [];
+        acc[region].push(game);
+        return acc;
+      },
+      {}
+    );
 
   // -----------------------------
   // FETCH PICKS

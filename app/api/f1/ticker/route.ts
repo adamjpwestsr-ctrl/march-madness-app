@@ -19,7 +19,7 @@ export async function GET() {
 
   const { data: perf } = await supabase
     .from("f1_driver_performance")
-    .select("race_id, driver_id, driver_name, finishing_position"); // ⭐ FIXED
+    .select("race_id, driver_id, driver_name, finishing_position");
 
   const { data: points } = await supabase
     .from("f1_points")
@@ -27,12 +27,18 @@ export async function GET() {
 
   const rows: any[] = [];
 
-  races.forEach((race) => {
-    const racePerf = perf?.filter((p) => p.race_id === race.race_id) || [];
-    const racePoints = points?.filter((p) => p.race_id === race.race_id) || [];
+  // ⭐ FIX — type "race"
+  races.forEach((race: any) => {
+    // ⭐ FIX — type "p"
+    const racePerf = perf?.filter((p: any) => p.race_id === race.race_id) || [];
 
-    racePerf.forEach((p) => {
-      const userPoints = racePoints.find((pt) => pt.driver_id === p.driver_id);
+    // ⭐ FIX — type "p"
+    const racePoints = points?.filter((p: any) => p.race_id === race.race_id) || [];
+
+    // ⭐ FIX — type "p"
+    racePerf.forEach((p: any) => {
+      // ⭐ FIX — type "pt"
+      const userPoints = racePoints.find((pt: any) => pt.driver_id === p.driver_id);
 
       rows.push({
         race_id: race.race_id,

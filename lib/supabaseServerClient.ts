@@ -1,5 +1,10 @@
-export async function createSupabaseServerClient() {
-  const cookieStore = await cookies(); // ✔ correct for your runtime
+// lib/supabaseServerClient.ts
+import { cookies } from "next/headers";
+import { createServerClient } from "@supabase/ssr";
+
+export function createSupabaseServerClient() {
+  // ❗ FIX: cookies() is synchronous — remove `await`
+  const cookieStore = cookies();
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -10,10 +15,14 @@ export async function createSupabaseServerClient() {
           return cookieStore.get(name)?.value;
         },
         set(name: string, value: string, options: any) {
-          cookieStore.set({ name, value, ...options });
+          try {
+            cookieStore.set({ name, value, ...options });
+          } catch {}
         },
         remove(name: string, options: any) {
-          cookieStore.set({ name, value: "", ...options });
+          try {
+            cookieStore.set({ name, value: "", ...options });
+          } catch {}
         },
       },
     }

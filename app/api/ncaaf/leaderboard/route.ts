@@ -17,7 +17,9 @@ export async function GET() {
     .select("user_id, username");
 
   const nameMap: Record<string, string> = {};
-  users?.forEach((u) => (nameMap[u.user_id] = u.username));
+
+  // ⭐ FIX — type "u"
+  users?.forEach((u: any) => (nameMap[u.user_id] = u.username));
 
   // Aggregate totals
   const totals: Record<
@@ -25,7 +27,8 @@ export async function GET() {
     { username: string; total: number; weekly: Record<number, number> }
   > = {};
 
-  points.forEach((p) => {
+  // ⭐ FIX — type "p"
+  points.forEach((p: any) => {
     if (!totals[p.user_id]) {
       totals[p.user_id] = {
         username: nameMap[p.user_id] ?? "Unknown",

@@ -26,7 +26,7 @@ export default function Header() {
         <Link href="/trivia">Trivia</Link>
 
         {/* FIXED */}
-	{authUser && <Link href="/leaderboards">Leaderboard</Link>}
+	{User && <Link href="/leaderboards">Leaderboard</Link>}
 
 
         <Link href="/sports">Sports</Link>

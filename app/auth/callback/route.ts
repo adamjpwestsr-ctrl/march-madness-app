@@ -12,8 +12,9 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/login`);
   }
 
-  // ⭐ Correct SSR cookie adapter
-  const cookieStore = cookies();
+  // ⭐ MUST await cookies() in Next.js 16
+  const cookieStore = await cookies();
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -99,6 +100,5 @@ export async function GET(request: Request) {
   // ⭐ Sync Supabase auth cookies BEFORE returning response
   await supabase.auth.setSession(data.session);
 
-  // ⭐ Now return the redirect
   return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/home`);
 }

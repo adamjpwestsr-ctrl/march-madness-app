@@ -34,8 +34,10 @@ export async function loginWithEmail(formData: FormData) {
       return { status: "needsAdminCode", email };
     }
 
-    // Create server-side session cookie (NO PASSWORD)
-    cookies().set(
+    // ⭐ FIXED: Next.js 16 requires awaiting cookies()
+    const cookieStore = await cookies();
+
+    cookieStore.set(
       "mm_session",
       JSON.stringify({
         userId: user.user_id,
@@ -96,8 +98,10 @@ export async function verifyAdminCode(formData: FormData) {
     return { status: "invalidCode" };
   }
 
-  // Create admin session cookie (NO PASSWORD)
-  cookies().set(
+  // ⭐ FIXED: Next.js 16 requires awaiting cookies()
+  const cookieStore = await cookies();
+
+  cookieStore.set(
     "mm_session",
     JSON.stringify({
       userId: user.user_id,

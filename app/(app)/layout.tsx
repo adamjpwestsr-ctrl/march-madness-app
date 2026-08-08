@@ -17,17 +17,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <div className="flex min-h-screen bg-slate-950 text-white">
+<div className="flex min-h-screen bg-slate-950 text-white overflow-hidden">
+  <aside
+    className="w-64 border-r border-slate-800 bg-slate-900 transition-all duration-300 ease-in-out hover:w-64 lg:w-16 group"
+  >
+    <SidebarNav />
+  </aside>
 
-      {/* Sidebar visible ONLY in (app) pages */}
-      <aside className="hidden lg:block w-64 border-r border-slate-800 bg-slate-900">
-        <SidebarNav />
-      </aside>
-
-      {/* Main content */}
-      <main className="flex-1 overflow-y-auto">
-        {children}
-      </main>
-    </div>
+  <main className="flex-1 overflow-y-auto">{children}</main>
+</div>
   );
 }

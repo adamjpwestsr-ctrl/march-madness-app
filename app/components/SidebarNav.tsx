@@ -41,7 +41,7 @@ export default function SidebarNav() {
   );
 
   return (
-    <nav className="flex flex-col gap-2 p-4">
+      <nav className="flex flex-col gap-2 p-4 w-64 lg:w-16 group-hover:w-64 transition-all duration-300 ease-in-out">
       {link("/home", "Home", Home)}
 
       {/* March Madness */}

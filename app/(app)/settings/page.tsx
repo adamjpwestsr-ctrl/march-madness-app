@@ -1,16 +1,13 @@
-// app/(app)/settings/page.tsx
-import SettingsClient from "./SettingsClient";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
+import SettingsClient from "./SettingsClient";
 
 export default async function SettingsPage() {
-  // Use unified Supabase Auth session
-  const supabase = await createSupabaseServerClient();
+  const cookieStore = await cookies();
+  const sessionCookie = cookieStore.get("mm_session");
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
+  if (!sessionCookie) {
     return (
       <p className="text-slate-400">
         You need to be logged in to manage your settings.
@@ -18,11 +15,23 @@ export default async function SettingsPage() {
     );
   }
 
-  // Load full profile from your users table
+  let session: any;
+  try {
+    session = JSON.parse(sessionCookie.value);
+  } catch {
+    return (
+      <p className="text-slate-400">
+        Invalid session. Please log in again.
+      </p>
+    );
+  }
+
+  const supabase = await createSupabaseServerClient();
+
   const { data: profile, error } = await supabase
     .from("users")
     .select("*")
-    .eq("user_id", user.id)
+    .eq("user_id", session.userId)
     .maybeSingle();
 
   if (error || !profile) {
@@ -33,11 +42,5 @@ export default async function SettingsPage() {
     );
   }
 
-  // Pass unified-auth data to client
-  return (
-    <SettingsClient
-      supabaseUser={user}
-      profile={profile}
-    />
-  );
+  return <SettingsClient supabaseUser={session} profile={profile} />;
 }

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 
 import WeeklyBanner from "@/app/components/WeeklyBanner";
 import TodayTrivia from "@/app/components/TodayTrivia";
@@ -13,14 +14,11 @@ import SpotlightBanner from "@/app/components/SpotlightBanner";
 import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 
 export default async function HomePage() {
-  const supabase = await createSupabaseServerClient();
+  const cookieStore = await cookies();
+  const sessionCookie = cookieStore.get("mm_session");
 
-  // Get Supabase Auth session
-  const {
-    data: { user: authUser },
-  } = await supabase.auth.getUser();
-
-  if (!authUser) {
+  // ⭐ If no session cookie → user is not logged in
+  if (!sessionCookie) {
     return (
       <div className="text-white p-10 text-center">
         <p>You are not logged in.</p>
@@ -31,14 +29,29 @@ export default async function HomePage() {
     );
   }
 
-  // Look up user row using auth_id (UUID)
+  let session: any;
+  try {
+    session = JSON.parse(sessionCookie.value);
+  } catch {
+    return (
+      <div className="text-white p-10 text-center">
+        <p>Invalid session.</p>
+        <a href="/login" className="text-emerald-400 underline">
+          Go to Login
+        </a>
+      </div>
+    );
+  }
+
+  const supabase = await createSupabaseServerClient();
+
+  // ⭐ Load user from DB using internal numeric user_id
   const { data: dbUser } = await supabase
     .from("users")
     .select("*")
-    .eq("auth_id", authUser.id)
+    .eq("user_id", session.userId)
     .maybeSingle();
 
-  // If user is missing, they were never approved
   if (!dbUser) {
     return (
       <div className="text-white p-10 text-center">

@@ -37,14 +37,13 @@ export async function POST(req: Request) {
       );
     }
 
-    // Generate private credential (password)
-    const authId = crypto.randomUUID();
+    // Create Supabase Auth user (password required internally but never used)
+    const tempPassword = crypto.randomUUID();
 
-    // Create Supabase Auth user
     const { data: authUser, error: authError } =
       await supabase.auth.admin.createUser({
         email,
-        password: authId,
+        password: tempPassword, // internal-only, never used by your app
       });
 
     if (authError) {
@@ -58,8 +57,7 @@ export async function POST(req: Request) {
     // Insert into your users table
     const { error: insertError } = await supabase.from("users").insert({
       email,
-      auth_id: authUser.user.id, // ⭐ FIX: use actual Supabase Auth user ID
-      private_password: authId,  // ⭐ FIX: store the generated password
+      auth_id: authUser.user.id, // Supabase Auth user ID
       is_active: true,
       is_admin: false,
     });
@@ -75,7 +73,7 @@ export async function POST(req: Request) {
     // Remove from pending approvals
     await supabase.from("pending_users").delete().eq("email", email);
 
-    // Optional: Log the approval event
+    // Log approval event
     await supabase.from("logs").insert({
       event: "user_approved",
       detail: `Commissioner approved ${email}`,

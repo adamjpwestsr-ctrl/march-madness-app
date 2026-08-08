@@ -1,94 +1,115 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 
 /**
- * Regular user login — direct email login (no magic link)
+ * LOGIN FLOW (NO PASSWORDS)
+ *
+ * 1. User enters email
+ * 2. If user exists → login
+ * 3. If user is admin → require admin code
+ * 4. If user is pending → redirect to /pending
+ * 5. If user does not exist → add to pending_users
  */
+
 export async function loginWithEmail(formData: FormData) {
   const email = formData.get("email")?.toString().trim().toLowerCase();
-  if (!email) return { status: "missingEmail" };
+  if (!email) {
+    return { status: "error", message: "Email is required." };
+  }
 
   const supabase = await createSupabaseServerClient();
 
-  // Check if user exists in your users table
-  const { data: dbUser, error: dbError } = await supabase
+  // 1. Check if user exists
+  const { data: user } = await supabase
     .from("users")
     .select("*")
     .eq("email", email)
     .maybeSingle();
 
-  if (dbError) {
-    console.error("DB lookup error:", dbError);
-    return { status: "error" };
+  // 2. If user exists → login or admin flow
+  if (user) {
+    if (user.is_admin) {
+      return { status: "needsAdminCode", email };
+    }
+
+    // Create server-side session cookie (NO PASSWORD)
+    cookies().set(
+      "mm_session",
+      JSON.stringify({
+        userId: user.user_id,
+        email: user.email,
+        isAdmin: user.is_admin,
+      }),
+      {
+        httpOnly: true,
+        secure: true,
+        sameSite: "lax",
+      }
+    );
+
+    return { status: "success" };
   }
 
-  // If user does NOT exist → commissioner approval flow
-  if (!dbUser) {
-    // Insert into pending approvals table
-    await supabase.from("pending_users").insert({ email });
+  // 3. If user is pending approval
+  const { data: pending } = await supabase
+    .from("pending_users")
+    .select("*")
+    .eq("email", email)
+    .maybeSingle();
 
-    // TODO: send commissioner email notification
-    // sendCommissionerApprovalRequest(email);
-
-    return { status: "pendingApproval", email };
+  if (pending) {
+    return { status: "pendingApproval" };
   }
 
-  // If user IS admin → require admin code
-  if (dbUser.is_admin) {
-    return { status: "needsAdminCode", email };
-  }
+  // 4. If user does not exist → add to pending_users
+  await supabase.from("pending_users").insert({ email });
 
-  // User exists → log them in using auth_id as password
-  const { data: session, error: loginError } = await supabase.auth.signInWithPassword({
-    email,
-    password: dbUser.auth_id, // your private credential
-  });
-
-  if (loginError) {
-    console.error("Direct login error:", loginError);
-    return { status: "error" };
-  }
-
-  return { status: "success" };
+  return { status: "pendingApproval" };
 }
 
 /**
- * Admin login — verifies admin code (no magic link)
+ * ADMIN CODE VERIFICATION
  */
 export async function verifyAdminCode(formData: FormData) {
   const email = formData.get("email")?.toString().trim().toLowerCase();
-  const adminCode = formData.get("adminCode")?.toString().trim();
+  const code = formData.get("adminCode")?.toString().trim();
 
-  if (!email || !adminCode) return { status: "missingFields" };
+  if (!email || !code) {
+    return { status: "error", message: "Missing email or admin code." };
+  }
 
   const supabase = await createSupabaseServerClient();
 
-  // Lookup admin
-  const { data: dbUser, error: dbError } = await supabase
+  const { data: user } = await supabase
     .from("users")
     .select("*")
     .eq("email", email)
     .maybeSingle();
 
-  if (dbError || !dbUser?.is_admin) {
-    return { status: "notAdmin" };
+  if (!user || !user.is_admin) {
+    return { status: "error", message: "Not an admin." };
   }
 
-  if (dbUser.admin_code !== adminCode) {
-    return { status: "invalidAdminCode" };
+  if (user.admin_code !== code) {
+    return { status: "invalidCode" };
   }
 
-  // Admin code correct → log in using auth_id
-  const { data: session, error: loginError } = await supabase.auth.signInWithPassword({
-    email,
-    password: dbUser.auth_id,
-  });
-
-  if (loginError) {
-    console.error("Admin login error:", loginError);
-    return { status: "error" };
-  }
+  // Create admin session cookie (NO PASSWORD)
+  cookies().set(
+    "mm_session",
+    JSON.stringify({
+      userId: user.user_id,
+      email: user.email,
+      isAdmin: true,
+    }),
+    {
+      httpOnly: true,
+      secure: true,
+      sameSite: "lax",
+    }
+  );
 
   return { status: "success" };
 }

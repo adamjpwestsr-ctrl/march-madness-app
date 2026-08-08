@@ -1,72 +1,43 @@
-"use client";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
+import ApproveButton from "./ApproveButton";
+import DenyButton from "./DenyButton";
 
-import { useEffect, useState, useTransition } from "react";
-import { createSupabaseBrowserClient } from "@/lib/supabaseBrowserClient";
+export const dynamic = "force-dynamic";
 
-export default function CommissionerPage() {
-  const supabase = createSupabaseBrowserClient();
+export default async function CommissionerPage() {
+  const cookieStore = await cookies();
+  const sessionCookie = cookieStore.get("mm_session");
 
-  const [pending, setPending] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isPending, startTransition] = useTransition();
-  const [message, setMessage] = useState("");
+  if (!sessionCookie) redirect("/login");
 
-  // Fetch pending users
-  useEffect(() => {
-    async function loadPending() {
-      const { data, error } = await supabase
-        .from("pending_users")
-        .select("*")
-        .order("created_at", { ascending: true });
-
-      if (!error && data) {
-        setPending(data);
-      }
-
-      setLoading(false);
-    }
-
-    loadPending();
-  }, []);
-
-  async function approve(email: string) {
-    setMessage("");
-
-    startTransition(async () => {
-      const res = await fetch("/api/approve", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-
-      const json = await res.json();
-
-      if (json.status === "success") {
-        setPending((prev) => prev.filter((u) => u.email !== email));
-        setMessage(`Approved: ${email}`);
-      } else {
-        setMessage(`Error approving ${email}: ${json.message}`);
-      }
-    });
+  let session: any;
+  try {
+    session = JSON.parse(sessionCookie.value);
+  } catch {
+    redirect("/login");
   }
 
-  async function deny(email: string) {
-    setMessage("");
+  // Only admins/commissioners can access this page
+  if (!session.isAdmin) redirect("/");
 
-    startTransition(async () => {
-      const { error } = await supabase
-        .from("pending_users")
-        .delete()
-        .eq("email", email);
+  const supabase = await createSupabaseServerClient();
 
-      if (!error) {
-        setPending((prev) => prev.filter((u) => u.email !== email));
-        setMessage(`Denied: ${email}`);
-      } else {
-        setMessage(`Error denying ${email}`);
-      }
-    });
-  }
+  // Validate admin user exists
+  const { data: adminUser } = await supabase
+    .from("users")
+    .select("*")
+    .eq("user_id", session.userId)
+    .maybeSingle();
+
+  if (!adminUser || !adminUser.is_admin) redirect("/login");
+
+  // Load pending users
+  const { data: pending } = await supabase
+    .from("pending_users")
+    .select("*")
+    .order("created_at", { ascending: true });
 
   return (
     <div className="min-h-screen bg-black text-white p-10">
@@ -78,15 +49,7 @@ export default function CommissionerPage() {
         Approve or deny new user access requests.
       </p>
 
-      {message && (
-        <div className="text-center mb-6 text-emerald-400 font-semibold">
-          {message}
-        </div>
-      )}
-
-      {loading ? (
-        <p className="text-center text-slate-400">Loading pending users...</p>
-      ) : pending.length === 0 ? (
+      {!pending || pending.length === 0 ? (
         <p className="text-center text-slate-400">
           No pending approval requests.
         </p>
@@ -105,21 +68,8 @@ export default function CommissionerPage() {
               </div>
 
               <div className="flex gap-3">
-                <button
-                  onClick={() => approve(user.email)}
-                  disabled={isPending}
-                  className="bg-emerald-600 hover:bg-emerald-500 px-3 py-1 rounded-lg text-sm"
-                >
-                  Approve
-                </button>
-
-                <button
-                  onClick={() => deny(user.email)}
-                  disabled={isPending}
-                  className="bg-red-600 hover:bg-red-500 px-3 py-1 rounded-lg text-sm"
-                >
-                  Deny
-                </button>
+                <ApproveButton email={user.email} />
+                <DenyButton email={user.email} />
               </div>
             </div>
           ))}

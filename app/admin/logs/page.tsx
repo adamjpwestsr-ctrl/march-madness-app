@@ -1,40 +1,48 @@
-"use client";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 
-import { useEffect, useState } from "react";
-import { createSupabaseBrowserClient } from "@/lib/supabaseBrowserClient";
+export const dynamic = "force-dynamic";
 
-export default function AdminLogsPage() {
-  const supabase = createSupabaseBrowserClient();
+export default async function AdminLogsPage() {
+  const cookieStore = await cookies();
+  const sessionCookie = cookieStore.get("mm_session");
 
-  const [logs, setLogs] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  // No session → not logged in
+  if (!sessionCookie) redirect("/login");
 
-  useEffect(() => {
-    async function loadLogs() {
-      // Expected schema:
-      // logs: id, event, detail, created_at, user_email
-      const { data, error } = await supabase
-        .from("logs")
-        .select("*")
-        .order("created_at", { ascending: false });
+  let session: any;
+  try {
+    session = JSON.parse(sessionCookie.value);
+  } catch {
+    redirect("/login");
+  }
 
-      if (!error && data) {
-        setLogs(data);
-      }
+  // Not an admin → redirect home
+  if (!session.isAdmin) redirect("/");
 
-      setLoading(false);
-    }
+  const supabase = await createSupabaseServerClient();
 
-    loadLogs();
-  }, []);
+  // Load admin user from DB
+  const { data: adminUser } = await supabase
+    .from("users")
+    .select("*")
+    .eq("user_id", session.userId)
+    .maybeSingle();
+
+  if (!adminUser || !adminUser.is_admin) redirect("/login");
+
+  // ⭐ Admin authenticated — load logs
+  const { data: logs } = await supabase
+    .from("logs")
+    .select("*")
+    .order("created_at", { ascending: false });
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 p-10">
       <h1 className="text-3xl font-bold mb-8 text-center">Admin: System Logs</h1>
 
-      {loading ? (
-        <p className="text-center text-slate-400">Loading logs...</p>
-      ) : logs.length === 0 ? (
+      {!logs || logs.length === 0 ? (
         <p className="text-center text-slate-400">No logs found.</p>
       ) : (
         <div className="bg-slate-900 border border-slate-800 rounded-lg p-6 overflow-x-auto">

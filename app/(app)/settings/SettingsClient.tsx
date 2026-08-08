@@ -15,6 +15,9 @@ export default function SettingsClient({ supabaseUser, profile }: SettingsClient
   const [loading, setLoading] = useState(false);
   const [localProfile, setLocalProfile] = useState(profile);
 
+  // ⭐ FIX: mm_session stores userId, not id
+  const userId = supabaseUser.userId;
+
   useEffect(() => {
     if (localProfile?.push_notifications) {
       getFcmTokenForUser();
@@ -24,8 +27,12 @@ export default function SettingsClient({ supabaseUser, profile }: SettingsClient
   async function saveField(field: string, value: any) {
     setLoading(true);
     try {
-      await updateUserProfile(supabaseUser.id, { [field]: value });
-      setLocalProfile((prev: any) => ({ ...prev, [field]: value }));
+      await updateUserProfile(userId, { [field]: value });
+
+      setLocalProfile((prev: any) => ({
+        ...prev,
+        [field]: value,
+      }));
     } finally {
       setLoading(false);
     }

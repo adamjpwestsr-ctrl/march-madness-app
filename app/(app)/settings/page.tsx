@@ -7,40 +7,29 @@ export default async function SettingsPage() {
   const cookieStore = await cookies();
   const sessionCookie = cookieStore.get("mm_session");
 
-  if (!sessionCookie) {
-    return (
-      <p className="text-slate-400">
-        You need to be logged in to manage your settings.
-      </p>
-    );
-  }
+  if (!sessionCookie) redirect("/login");
 
   let session: any;
   try {
     session = JSON.parse(sessionCookie.value);
   } catch {
-    return (
-      <p className="text-slate-400">
-        Invalid session. Please log in again.
-      </p>
-    );
+    redirect("/login");
   }
 
   const supabase = await createSupabaseServerClient();
 
-  const { data: profile, error } = await supabase
+  const { data: profile } = await supabase
     .from("users")
     .select("*")
     .eq("user_id", session.userId)
     .maybeSingle();
 
-  if (error || !profile) {
-    return (
-      <p className="text-slate-400">
-        Unable to load your profile. Please try again.
-      </p>
-    );
-  }
+  if (!profile) redirect("/login");
 
-  return <SettingsClient supabaseUser={session} profile={profile} />;
+  return (
+    <div className="p-10 text-white">
+      <h1 className="text-3xl font-bold mb-6">Settings</h1>
+      <SettingsClient supabaseUser={session} profile={profile} />
+    </div>
+  );
 }

@@ -31,110 +31,105 @@ export default function SidebarNav() {
   const link = (href: string, label: string, Icon: any) => (
     <Link
       href={href}
-      className={`flex items-center gap-3 px-4 py-2 rounded-md hover:bg-slate-800 ${
+      className={`flex items-center gap-3 px-4 py-2 rounded-md hover:bg-slate-800 transition-all duration-300 ${
         pathname === href ? "bg-slate-800 text-white" : "text-slate-300"
       }`}
     >
       <Icon size={18} />
-      {label}
+      <span className="hidden group-hover:inline-block">{label}</span>
     </Link>
   );
 
   return (
-      <nav className="flex flex-col gap-2 p-4 w-64 lg:w-16 group-hover:w-64 transition-all duration-300 ease-in-out">
+    <nav className="flex flex-col gap-2 p-4 w-64 lg:w-16 group-hover:w-64 transition-all duration-300 ease-in-out overflow-hidden group">
       {link("/home", "Home", Home)}
 
-      {/* March Madness */}
       {link("/sports/march-madness", "March Madness", Trophy)}
 
-      {/* Challenges (Expandable) */}
+      {/* Challenges */}
       <button
         onClick={() => setOpenChallenges(!openChallenges)}
-        className="flex items-center gap-3 px-4 py-2 rounded-md text-slate-300 hover:bg-slate-800"
+        className="flex items-center gap-3 px-4 py-2 rounded-md text-slate-300 hover:bg-slate-800 transition-all duration-300"
       >
         <ListChecks size={18} />
-        Challenges
+        <span className="hidden group-hover:inline-block">Challenges</span>
         {openChallenges ? (
-          <ChevronDown size={16} className="ml-auto" />
+          <ChevronDown size={16} className="ml-auto hidden group-hover:inline-block" />
         ) : (
-          <ChevronRight size={16} className="ml-auto" />
+          <ChevronRight size={16} className="ml-auto hidden group-hover:inline-block" />
         )}
       </button>
 
       <div
         className={`
-          ml-8 flex flex-col gap-1
-          overflow-hidden transition-all duration-300 ease-out
+          ml-8 flex flex-col gap-1 overflow-hidden transition-all duration-300 ease-out
           ${openChallenges ? "max-h-96 opacity-100" : "max-h-0 opacity-0"}
         `}
       >
-        {/* Hub */}
         <Link
           href="/challenges"
-          className={`flex items-center gap-2 px-3 py-1 rounded-md text-sm hover:bg-slate-800 ${
+          className={`flex items-center gap-2 px-3 py-1 rounded-md text-sm hover:bg-slate-800 transition-all duration-300 ${
             pathname === "/challenges" ? "bg-slate-800 text-white" : "text-slate-400"
           }`}
         >
           <ListChecks size={16} />
-          Challenges Hub
+          <span className="hidden group-hover:inline-block">Challenges Hub</span>
         </Link>
 
-        {/* Weekly Challenges */}
         <Link
           href="/sports/golf/weekly"
-          className="flex items-center gap-2 px-3 py-1 text-sm text-slate-400 hover:bg-slate-800 rounded-md"
+          className="flex items-center gap-2 px-3 py-1 text-sm text-slate-400 hover:bg-slate-800 rounded-md transition-all duration-300"
         >
           <Flag size={16} />
-          Golf Weekly
+          <span className="hidden group-hover:inline-block">Golf Weekly</span>
         </Link>
 
         <Link
           href="/sports/mlb"
-          className="flex items-center gap-2 px-3 py-1 text-sm text-slate-400 hover:bg-slate-800 rounded-md"
+          className="flex items-center gap-2 px-3 py-1 text-sm text-slate-400 hover:bg-slate-800 rounded-md transition-all duration-300"
         >
           <Circle size={16} />
-          MLB Weekly
+          <span className="hidden group-hover:inline-block">MLB Weekly</span>
         </Link>
 
         <Link
           href="/sports/mlb/derby"
-          className="flex items-center gap-2 px-3 py-1 text-sm text-slate-400 hover:bg-slate-800 rounded-md"
+          className="flex items-center gap-2 px-3 py-1 text-sm text-slate-400 hover:bg-slate-800 rounded-md transition-all duration-300"
         >
           <Trophy size={16} />
-          MLB Derby
+          <span className="hidden group-hover:inline-block">MLB Derby</span>
         </Link>
 
         <Link
           href="/sports/nfl/weekly"
-          className="flex items-center gap-2 px-3 py-1 text-sm text-slate-400 hover:bg-slate-800 rounded-md"
+          className="flex items-center gap-2 px-3 py-1 text-sm text-slate-400 hover:bg-slate-800 rounded-md transition-all duration-300"
         >
           <Goal size={16} />
-          NFL Weekly
+          <span className="hidden group-hover:inline-block">NFL Weekly</span>
         </Link>
 
         <Link
           href="/sports/nba/weekly"
-          className="flex items-center gap-2 px-3 py-1 text-sm text-slate-400 hover:bg-slate-800 rounded-md"
+          className="flex items-center gap-2 px-3 py-1 text-sm text-slate-400 hover:bg-slate-800 rounded-md transition-all duration-300"
         >
           <CircleDot size={16} />
-          NBA Weekly
+          <span className="hidden group-hover:inline-block">NBA Weekly</span>
         </Link>
 
         <Link
           href="/sports/nhl/weekly"
-          className="flex items-center gap-2 px-3 py-1 text-sm text-slate-400 hover:bg-slate-800 rounded-md"
+          className="flex items-center gap-2 px-3 py-1 text-sm text-slate-400 hover:bg-slate-800 rounded-md transition-all duration-300"
         >
           <Goal size={16} />
-          NHL Weekly
+          <span className="hidden group-hover:inline-block">NHL Weekly</span>
         </Link>
 
-        {/* ⭐ NASCAR Weekly */}
         <Link
           href="/sports/nascar"
-          className="flex items-center gap-2 px-3 py-1 text-sm text-slate-400 hover:bg-slate-800 rounded-md"
+          className="flex items-center gap-2 px-3 py-1 text-sm text-slate-400 hover:bg-slate-800 rounded-md transition-all duration-300"
         >
           <Flag size={16} />
-          NASCAR Weekly
+          <span className="hidden group-hover:inline-block">NASCAR Weekly</span>
         </Link>
       </div>
 
@@ -144,10 +139,10 @@ export default function SidebarNav() {
 
       <button
         onClick={handleLogout}
-        className="flex items-center gap-3 px-4 py-2 rounded-md text-red-400 hover:bg-slate-800 hover:text-red-300"
+        className="flex items-center gap-3 px-4 py-2 rounded-md text-red-400 hover:bg-slate-800 hover:text-red-300 transition-all duration-300"
       >
         <LogOut size={18} />
-        Logout
+        <span className="hidden group-hover:inline-block">Logout</span>
       </button>
     </nav>
   );

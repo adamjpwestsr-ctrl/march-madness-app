@@ -25,13 +25,15 @@ export default function LoginForm({ onStepChange, onEmailChange }: LoginFormProp
     setError("");
 
     startTransition(async () => {
-      // ❌ REMOVE THIS — it was wiping your session
-      // await supabase.auth.signOut();
-
       const formData = new FormData();
       formData.append("email", email);
 
       const res = await loginWithEmail(formData);
+
+      if (res.status === "missingEmail") {
+        setError("Please enter your email.");
+        return;
+      }
 
       if (res.status === "needsAdminCode") {
         setStep("admin");
@@ -39,18 +41,15 @@ export default function LoginForm({ onStepChange, onEmailChange }: LoginFormProp
         return;
       }
 
-      if (res.status === "needsName") {
-        router.push(`/welcome-name?email=${encodeURIComponent(email)}`);
+      if (res.status === "pendingApproval") {
+        setError(
+          "Your email is not yet approved. A commissioner has been notified."
+        );
         return;
       }
 
       if (res.status === "success") {
         router.push("/home");
-        return;
-      }
-
-      if (res.status === "missingEmail") {
-        setError("Please enter your email.");
         return;
       }
 
@@ -63,17 +62,14 @@ export default function LoginForm({ onStepChange, onEmailChange }: LoginFormProp
     setError("");
 
     startTransition(async () => {
-      // ❌ REMOVE THIS — also wiping your session
-      // await supabase.auth.signOut();
-
       const formData = new FormData();
       formData.append("email", email);
       formData.append("adminCode", adminCode);
 
       const res = await verifyAdminCode(formData);
 
-      if (res.status === "success") {
-        router.push("/home");
+      if (res.status === "missingFields") {
+        setError("Please enter both email and admin code.");
         return;
       }
 
@@ -87,8 +83,8 @@ export default function LoginForm({ onStepChange, onEmailChange }: LoginFormProp
         return;
       }
 
-      if (res.status === "invalidCredentials") {
-        setError("Invalid admin credentials.");
+      if (res.status === "success") {
+        router.push("/home");
         return;
       }
 

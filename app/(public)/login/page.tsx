@@ -10,11 +10,6 @@ export const runtime = "nodejs";
 export default function LoginPage() {
   const supabase = createSupabaseBrowserClient();
 
-  // ⭐ FIXED: Removed auto sign-out (this was wiping your session)
-  // useEffect(() => {
-  //   supabase.auth.signOut();
-  // }, []);
-
   const [showAbout, setShowAbout] = useState(false);
   const [currentStep, setCurrentStep] = useState<"email" | "admin">("email");
   const [highlightIndex, setHighlightIndex] = useState(0);

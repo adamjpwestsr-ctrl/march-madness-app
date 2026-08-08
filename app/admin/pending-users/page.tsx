@@ -1,26 +1,73 @@
 // app/admin/pending-users/page.tsx
-import { createClient } from "@supabase/supabase-js";
-import { approveUser, denyUser } from "./actions";
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+"use client";
 
-export const runtime = "edge";
-export const dynamic = "force-dynamic";
+import { useEffect, useState, useTransition } from "react";
+import { createSupabaseBrowserClient } from "@/lib/supabaseBrowserClient";
 
-export default async function PendingUsersPage() {
-  const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
-    auth: { persistSession: false },
-  });
+export default function PendingUsersPage() {
+  const supabase = createSupabaseBrowserClient();
 
-  if (!supabase) return;
-    const { data: pending, error } = await supabase
-    .from("pending_users")
-    .select("*")
-    .order("requested_at", { ascending: true });
+  const [pending, setPending] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isPending, startTransition] = useTransition();
+  const [message, setMessage] = useState("");
 
-  if (error) {
-    console.error("Error loading pending users:", error);
+  // Load pending users
+  useEffect(() => {
+    async function loadPending() {
+      const { data, error } = await supabase
+        .from("pending_users")
+        .select("*")
+        .order("requested_at", { ascending: true });
+
+      if (!error && data) {
+        setPending(data);
+      }
+
+      setLoading(false);
+    }
+
+    loadPending();
+  }, []);
+
+  async function approve(email: string) {
+    setMessage("");
+
+    startTransition(async () => {
+      const res = await fetch("/api/approve", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      const json = await res.json();
+
+      if (json.status === "success") {
+        setPending((prev) => prev.filter((u) => u.email !== email));
+        setMessage(`Approved: ${email}`);
+      } else {
+        setMessage(`Error approving ${email}: ${json.message}`);
+      }
+    });
+  }
+
+  async function deny(email: string) {
+    setMessage("");
+
+    startTransition(async () => {
+      const { error } = await supabase
+        .from("pending_users")
+        .delete()
+        .eq("email", email);
+
+      if (!error) {
+        setPending((prev) => prev.filter((u) => u.email !== email));
+        setMessage(`Denied: ${email}`);
+      } else {
+        setMessage(`Error denying ${email}`);
+      }
+    });
   }
 
   return (
@@ -57,7 +104,31 @@ export default async function PendingUsersPage() {
         Approve or deny new player access requests.
       </p>
 
-      {pending?.length === 0 && (
+      {message && (
+        <p
+          style={{
+            textAlign: "center",
+            marginBottom: 20,
+            color: "#34d399",
+            fontWeight: 600,
+          }}
+        >
+          {message}
+        </p>
+      )}
+
+      {loading ? (
+        <p
+          style={{
+            textAlign: "center",
+            opacity: 0.7,
+            fontSize: 16,
+            marginTop: 40,
+          }}
+        >
+          Loading pending users...
+        </p>
+      ) : pending.length === 0 ? (
         <p
           style={{
             textAlign: "center",
@@ -68,45 +139,44 @@ export default async function PendingUsersPage() {
         >
           No pending users.
         </p>
-      )}
-
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
-          gap: 20,
-          maxWidth: 1000,
-          margin: "0 auto",
-        }}
-      >
-        {pending?.map((p) => (
-          <div
-            key={p.id}
-            style={{
-              padding: 20,
-              background: "rgba(30,41,59,0.9)",
-              borderRadius: 12,
-              border: "1px solid rgba(148,163,184,0.35)",
-              boxShadow: "0 8px 20px rgba(0,0,0,0.35)",
-            }}
-          >
-            <p style={{ fontSize: 18, fontWeight: 600 }}>{p.email}</p>
-
-            <p
+      ) : (
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+            gap: 20,
+            maxWidth: 1000,
+            margin: "0 auto",
+          }}
+        >
+          {pending.map((p) => (
+            <div
+              key={p.id}
               style={{
-                fontSize: 12,
-                opacity: 0.7,
-                marginTop: 6,
-                marginBottom: 20,
+                padding: 20,
+                background: "rgba(30,41,59,0.9)",
+                borderRadius: 12,
+                border: "1px solid rgba(148,163,184,0.35)",
+                boxShadow: "0 8px 20px rgba(0,0,0,0.35)",
               }}
             >
-              Requested: {new Date(p.requested_at).toLocaleString()}
-            </p>
+              <p style={{ fontSize: 18, fontWeight: 600 }}>{p.email}</p>
 
-            <div style={{ display: "flex", gap: 10 }}>
-              <form action={approveUser} style={{ flex: 1 }}>
-                <input type="hidden" name="email" value={p.email} />
+              <p
+                style={{
+                  fontSize: 12,
+                  opacity: 0.7,
+                  marginTop: 6,
+                  marginBottom: 20,
+                }}
+              >
+                Requested: {new Date(p.requested_at).toLocaleString()}
+              </p>
+
+              <div style={{ display: "flex", gap: 10 }}>
                 <button
+                  onClick={() => approve(p.email)}
+                  disabled={isPending}
                   style={{
                     width: "100%",
                     padding: "10px 0",
@@ -120,11 +190,10 @@ export default async function PendingUsersPage() {
                 >
                   Approve
                 </button>
-              </form>
 
-              <form action={denyUser} style={{ flex: 1 }}>
-                <input type="hidden" name="email" value={p.email} />
                 <button
+                  onClick={() => deny(p.email)}
+                  disabled={isPending}
                   style={{
                     width: "100%",
                     padding: "10px 0",
@@ -138,11 +207,11 @@ export default async function PendingUsersPage() {
                 >
                   Deny
                 </button>
-              </form>
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

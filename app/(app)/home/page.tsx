@@ -15,7 +15,7 @@ import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 export default async function HomePage() {
   const supabase = await createSupabaseServerClient();
 
-  // ⭐ Get Supabase Auth session
+  // Get Supabase Auth session
   const {
     data: { user: authUser },
   } = await supabase.auth.getUser();
@@ -31,19 +31,20 @@ export default async function HomePage() {
     );
   }
 
-  // ⭐ Look up user row using auth_id (UUID)
+  // Look up user row using auth_id (UUID)
   const { data: dbUser } = await supabase
     .from("users")
     .select("*")
     .eq("auth_id", authUser.id)
     .maybeSingle();
 
+  // If user is missing, they were never approved
   if (!dbUser) {
     return (
       <div className="text-white p-10 text-center">
-        <p>Your account is not fully set up.</p>
-        <a href="/welcome-name" className="text-emerald-400 underline">
-          Complete Setup
+        <p>Your account is pending commissioner approval.</p>
+        <a href="/pending" className="text-emerald-400 underline">
+          View Status
         </a>
       </div>
     );
@@ -75,34 +76,28 @@ export default async function HomePage() {
           </p>
         </div>
 
-        {/* ⭐ Use internal numeric user_id for stats */}
         <UserStats userId={String(dbUser.user_id)} />
       </section>
 
-      {/* 🏆 LIVE SCORE TICKER */}
+      {/* LIVE SCORE TICKER */}
       <section className="z-20 w-full bg-slate-950/90 backdrop-blur border-y border-slate-800 overflow-x-hidden overflow-y-visible relative rounded-xl">
         <div className="absolute left-0 top-0 w-12 h-full bg-gradient-to-r from-slate-950 to-transparent pointer-events-none" />
         <div className="absolute right-0 top-0 w-12 h-full bg-gradient-to-l from-slate-950 to-transparent pointer-events-none" />
         <ScoreTicker />
       </section>
 
-      {/* SPOTLIGHT BANNER */}
       <section>
         <SpotlightBanner />
       </section>
 
-      {/* QUICK ACTIONS */}
       <section>
         <QuickActions />
       </section>
 
-      {/* YOUR PICKS */}
       <section>
-        {/* ⭐ Use internal numeric user_id */}
         <YourPicksWidget userId={String(dbUser.user_id)} />
       </section>
 
-      {/* WEEKLY + TRIVIA */}
       <section className="grid gap-6 md:grid-cols-2">
         <Link href="/challenges" className="block">
           <WeeklyBanner />
@@ -113,20 +108,16 @@ export default async function HomePage() {
         </Link>
       </section>
 
-      {/* FEATURED SPORTS */}
       <section>
         <Link href="/sports" className="block">
           <FeaturedSports />
         </Link>
       </section>
 
-      {/* REAL ACTIVITY FEED */}
       <section>
-        {/* ⭐ Use internal numeric user_id */}
         <RealActivityFeed userId={String(dbUser.user_id)} />
       </section>
 
-      {/* HELP & INFO */}
       <section className="border border-slate-800 rounded-xl p-4 bg-slate-900/40">
         <details className="group">
           <summary className="cursor-pointer text-slate-300 font-semibold text-sm flex items-center justify-between">
@@ -154,7 +145,6 @@ export default async function HomePage() {
         </details>
       </section>
 
-      {/* FOOTER */}
       <section className="border-t border-slate-800 pt-6 mt-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>

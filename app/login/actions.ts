@@ -3,7 +3,7 @@
 import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 
 /**
- * Regular user login — sends magic link.
+ * Regular user login — direct email login (no magic link)
  */
 export async function loginWithEmail(formData: FormData) {
   const email = formData.get("email")?.toString().trim().toLowerCase();
@@ -11,10 +11,7 @@ export async function loginWithEmail(formData: FormData) {
 
   const supabase = await createSupabaseServerClient();
 
-  // ❌ Removed — this was wiping your session before Supabase could set a new one
-  // await supabase.auth.signOut();
-
-  // Check if user exists
+  // Check if user exists in your users table
   const { data: dbUser, error: dbError } = await supabase
     .from("users")
     .select("*")
@@ -26,34 +23,38 @@ export async function loginWithEmail(formData: FormData) {
     return { status: "error" };
   }
 
-  // Admins must enter admin code
-  if (dbUser?.is_admin) {
+  // If user does NOT exist → commissioner approval flow
+  if (!dbUser) {
+    // Insert into pending approvals table
+    await supabase.from("pending_users").insert({ email });
+
+    // TODO: send commissioner email notification
+    // sendCommissionerApprovalRequest(email);
+
+    return { status: "pendingApproval", email };
+  }
+
+  // If user IS admin → require admin code
+  if (dbUser.is_admin) {
     return { status: "needsAdminCode", email };
   }
 
-  // Send magic link (Supabase will create auth user)
-  const { error: otpError } = await supabase.auth.signInWithOtp({
+  // User exists → log them in using auth_id as password
+  const { data: session, error: loginError } = await supabase.auth.signInWithPassword({
     email,
-    options: {
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
-    },
+    password: dbUser.auth_id, // your private credential
   });
 
-  if (otpError) {
-    console.error("OTP login error:", otpError);
+  if (loginError) {
+    console.error("Direct login error:", loginError);
     return { status: "error" };
-  }
-
-  // New user → callback will create DB row
-  if (!dbUser) {
-    return { status: "needsName", email };
   }
 
   return { status: "success" };
 }
 
 /**
- * Admin login — verifies admin code then sends magic link.
+ * Admin login — verifies admin code (no magic link)
  */
 export async function verifyAdminCode(formData: FormData) {
   const email = formData.get("email")?.toString().trim().toLowerCase();
@@ -62,9 +63,6 @@ export async function verifyAdminCode(formData: FormData) {
   if (!email || !adminCode) return { status: "missingFields" };
 
   const supabase = await createSupabaseServerClient();
-
-  // ❌ Removed — this was wiping your session before Supabase could set a new one
-  // await supabase.auth.signOut();
 
   // Lookup admin
   const { data: dbUser, error: dbError } = await supabase
@@ -81,16 +79,14 @@ export async function verifyAdminCode(formData: FormData) {
     return { status: "invalidAdminCode" };
   }
 
-  // Send magic link for admin login
-  const { error: otpError } = await supabase.auth.signInWithOtp({
+  // Admin code correct → log in using auth_id
+  const { data: session, error: loginError } = await supabase.auth.signInWithPassword({
     email,
-    options: {
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
-    },
+    password: dbUser.auth_id,
   });
 
-  if (otpError) {
-    console.error("Admin OTP error:", otpError);
+  if (loginError) {
+    console.error("Admin login error:", loginError);
     return { status: "error" };
   }
 

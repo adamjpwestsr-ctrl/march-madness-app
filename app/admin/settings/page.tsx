@@ -6,8 +6,7 @@ export const dynamic = "force-dynamic";
 export default async function AdminSettingsPage() {
   const supabase = await createSupabaseServerClient();
 
-  if (!supabase) return;
-    const { data: admins, error } = await supabase
+  const { data: admins, error } = await supabase
     .from("users")
     .select("user_id, email, admin_code")
     .eq("is_admin", true)
@@ -19,8 +18,8 @@ export default async function AdminSettingsPage() {
   }
 
   return (
-    <div className="p-10 max-w-2xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6 text-white">Admin Settings</h1>
+    <div className="p-10 max-w-2xl mx-auto text-white">
+      <h1 className="text-3xl font-bold mb-6">Admin Settings</h1>
       <AdminSettingsForm admins={admins || []} />
     </div>
   );

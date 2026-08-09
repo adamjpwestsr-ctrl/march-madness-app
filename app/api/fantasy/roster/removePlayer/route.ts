@@ -16,7 +16,8 @@ export async function POST(req: Request) {
   const week = latest?.week || 1;
   const playerIds = latest?.player_ids || [];
 
-  const updated = playerIds.filter((id) => id !== playerId);
+  // FIX: Add explicit type to callback parameter
+  const updated = playerIds.filter((id: number) => id !== playerId);
 
   const { data } = await supabase
     .from("fantasy_lineups")

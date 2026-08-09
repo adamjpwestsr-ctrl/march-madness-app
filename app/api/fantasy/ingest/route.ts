@@ -45,18 +45,24 @@ export async function GET() {
     let playerId = existing?.id;
 
     if (!playerId) {
-      const { data: newPlayer } = await supabase
-        .from("nfl_players")
-        .insert({
-          espn_id: p.espn_id,
-          name: p.name,
-          team: p.team,
-          position: p.position,
-        })
-        .select("id")
-        .single();
+     const { data: newPlayer } = await supabase
+  .from("nfl_players")
+  .insert({
+    espn_id: p.espn_id,
+    name: p.name,
+    team: p.team,
+    position: p.position,
+  })
+  .select("id")
+  .single();
 
-      playerId = newPlayer.id;
+if (!newPlayer) {
+  console.error("Failed to insert new player:", p);
+  continue; // Skip this player safely
+}
+
+playerId = newPlayer.id;
+
     }
 
     await supabase.from("nfl_stats_weekly").insert({

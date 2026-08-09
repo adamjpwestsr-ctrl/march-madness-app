@@ -18,6 +18,17 @@ export default function SettingsClient({ supabaseUser, profile }: SettingsClient
   // ⭐ FIX: mm_session stores userId, not id
   const userId = supabaseUser.userId;
 
+  // ⭐ FIX: normalize badges so .map() never crashes
+  const normalizedBadges = Array.isArray(localProfile.badges)
+    ? localProfile.badges
+    : (() => {
+        try {
+          return JSON.parse(localProfile.badges || "[]");
+        } catch {
+          return [];
+        }
+      })();
+
   useEffect(() => {
     if (localProfile?.push_notifications) {
       getFcmTokenForUser();
@@ -173,11 +184,10 @@ export default function SettingsClient({ supabaseUser, profile }: SettingsClient
           {/* Badges */}
           <div>
             <p className="text-sm text-slate-400 mb-2">Badges Earned</p>
-            {localProfile.badges?.length === 0 ? (
-              <p className="text-slate-500 text-sm">No badges earned yet.</p>
-            ) : (
+
+            {normalizedBadges.length > 0 ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                {localProfile.badges.map((badge: any) => (
+                {normalizedBadges.map((badge: any) => (
                   <div
                     key={badge.badge_name}
                     className={`flex flex-col items-center bg-slate-900 border border-slate-800 rounded-lg p-3 ${badge.color_class}`}
@@ -192,6 +202,8 @@ export default function SettingsClient({ supabaseUser, profile }: SettingsClient
                   </div>
                 ))}
               </div>
+            ) : (
+              <p className="text-slate-500 text-sm">No badges earned yet.</p>
             )}
           </div>
         </div>

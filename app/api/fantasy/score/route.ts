@@ -19,7 +19,10 @@ export async function POST(req: Request) {
     .select("*")
     .eq("week", week);
 
-  for (const s of stats) {
+  // FIX: Ensure stats is always an array
+  const safeStats = stats ?? [];
+
+  for (const s of safeStats) {
     const points =
       s.passing_yards * SCORING.passing_yards +
       s.rushing_yards * SCORING.rushing_yards +
@@ -35,5 +38,5 @@ export async function POST(req: Request) {
     });
   }
 
-  return NextResponse.json({ status: "scored", count: stats.length });
+  return NextResponse.json({ status: "scored", count: safeStats.length });
 }

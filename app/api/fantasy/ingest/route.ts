@@ -5,9 +5,9 @@ export async function GET() {
   try {
     const supabase = await createSupabaseServerClient();
 
-    // Example ESPN endpoint for week 1 stats
+    // ✅ Stable ESPN Fantasy endpoint
     const res = await fetch(
-      "https://sports.core.api.espn.com/v2/sports/football/leagues/nfl/seasons/2024/types/2/weeks/1/games",
+      "https://fantasy.espn.com/apis/v3/games/ffl/seasons/2024/segments/0/leagues/1",
       {
         headers: {
           "User-Agent": "BracketBoss/1.0 (https://bracketboss-theta.vercel.app)",
@@ -17,41 +17,23 @@ export async function GET() {
 
     const data = await res.json();
 
-    // ✅ Defensive guard: ensure data.items exists and is iterable
-    if (!data || !Array.isArray(data.items)) {
-      console.error("Unexpected ESPN response:", data);
+    // ✅ Defensive guard: ensure data.players exists and is iterable
+    if (!data || !Array.isArray(data.players)) {
+      console.error("Unexpected ESPN fantasy response:", data);
       return NextResponse.json({
         status: "error",
-        message: "ESPN API returned unexpected structure",
+        message: "ESPN Fantasy API returned unexpected structure",
       });
     }
 
-    // Flatten players from all games
-    const players: any[] = [];
-
-    for (const game of data.items) {
-      const gameRes = await fetch(game.$ref);
-      const gameData = await gameRes.json();
-
-      if (!gameData?.competitors) continue;
-
-      for (const competitor of gameData.competitors) {
-        if (!competitor?.athletes) continue;
-
-        for (const athlete of competitor.athletes) {
-          const athleteRes = await fetch(athlete.$ref);
-          const athleteData = await athleteRes.json();
-
-          players.push({
-            espn_id: athleteData.id,
-            name: athleteData.fullName,
-            team: competitor.team.displayName,
-            position: athleteData.position?.abbreviation || "UNK",
-            stats: athleteData.stats || {},
-          });
-        }
-      }
-    }
+    // Flatten players
+    const players: any[] = data.players.map((p: any) => ({
+      espn_id: p.id,
+      name: p.player.fullName,
+      team: p.player.proTeamId,
+      position: p.player.defaultPositionId,
+      stats: p.player.stats || {},
+    }));
 
     // Insert players + stats
     for (const p of players) {

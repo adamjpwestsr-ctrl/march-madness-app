@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/utils/supabase/client";
+import { supabase } from "@/lib/supabaseClient";
 
 export async function GET(req: Request) {
-  const supabase = createClient();
   const { searchParams } = new URL(req.url);
   const leagueId = searchParams.get("leagueId");
 

@@ -260,7 +260,7 @@ export default function FantasyRoster({ userId }: { userId: number }) {
                   {/* TEAM LOGO */}
                   {logo && (
                     <img
-                      src={logo}
+                      src={logo as string}
                       alt={p.team}
                       className="w-12 h-12 object-contain mb-2"
                     />
@@ -398,7 +398,7 @@ export default function FantasyRoster({ userId }: { userId: number }) {
                 {/* TEAM LOGO */}
                 {logo && (
                   <img
-                    src={logo}
+                    src={logo as string}
                     alt={p.team}
                     className="w-12 h-12 object-contain mb-2"
                   />
@@ -439,11 +439,13 @@ export default function FantasyRoster({ userId }: { userId: number }) {
           >
             {/* HEADER */}
             <div className="flex items-center gap-4 mb-4">
-              <img
-                src={getTeamLogo(selectedPlayer.team)}
-                alt={selectedPlayer.team}
-                className="w-14 h-14 object-contain"
-              />
+              {getTeamLogo(selectedPlayer.team) && (
+                <img
+                  src={getTeamLogo(selectedPlayer.team) as string}
+                  alt={selectedPlayer.team}
+                  className="w-14 h-14 object-contain"
+                />
+              )}
               <div>
                 <h3 className="text-xl font-bold text-white">{selectedPlayer.name}</h3>
                 <p className="text-slate-400 text-sm">

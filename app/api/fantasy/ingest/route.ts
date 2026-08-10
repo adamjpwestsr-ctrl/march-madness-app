@@ -5,9 +5,9 @@ export async function GET() {
   try {
     const supabase = await createSupabaseServerClient();
 
-    // ✅ Stable ESPN Fantasy endpoint
+    // ✅ Public ESPN endpoint for NFL athletes
     const res = await fetch(
-      "https://fantasy.espn.com/apis/v3/games/ffl/seasons/2024/segments/0/leagues/1",
+      "https://sports.core.api.espn.com/v2/sports/football/leagues/nfl/athletes",
       {
         headers: {
           "User-Agent": "BracketBoss/1.0 (https://bracketboss-theta.vercel.app)",
@@ -17,23 +17,29 @@ export async function GET() {
 
     const data = await res.json();
 
-    // ✅ Defensive guard: ensure data.players exists and is iterable
-    if (!data || !Array.isArray(data.players)) {
-      console.error("Unexpected ESPN fantasy response:", data);
+    // ✅ Defensive guard
+    if (!data || !Array.isArray(data.items)) {
+      console.error("Unexpected ESPN response:", data);
       return NextResponse.json({
         status: "error",
-        message: "ESPN Fantasy API returned unexpected structure",
+        message: "ESPN API returned unexpected structure",
       });
     }
 
-    // Flatten players
-    const players: any[] = data.players.map((p: any) => ({
-      espn_id: p.id,
-      name: p.player.fullName,
-      team: p.player.proTeamId,
-      position: p.player.defaultPositionId,
-      stats: p.player.stats || {},
-    }));
+    const players: any[] = [];
+
+    for (const athlete of data.items) {
+      const athleteRes = await fetch(athlete.$ref);
+      const athleteData = await athleteRes.json();
+
+      players.push({
+        espn_id: athleteData.id,
+        name: athleteData.fullName,
+        team: athleteData.team?.displayName || "Free Agent",
+        position: athleteData.position?.abbreviation || "UNK",
+        stats: athleteData.stats || {},
+      });
+    }
 
     // Insert players + stats
     for (const p of players) {
@@ -59,7 +65,7 @@ export async function GET() {
 
         if (!newPlayer) {
           console.error("Failed to insert new player:", p);
-          continue; // Skip this player safely
+          continue;
         }
 
         playerId = newPlayer.id;

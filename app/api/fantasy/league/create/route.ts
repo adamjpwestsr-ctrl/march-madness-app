@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from "@/utils/supabase/client";
 
 export async function POST(req: Request) {
   const supabase = createClient();
@@ -14,7 +14,6 @@ export async function POST(req: Request) {
     draftOrder,
   } = body;
 
-  // Create league
   const { data: league, error } = await supabase
     .from("fantasy_leagues")
     .insert({
@@ -33,7 +32,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Failed to create league" }, { status: 500 });
   }
 
-  // Create teams
   const teamRows = draftOrder.map((teamId: number, idx: number) => ({
     league_id: league.id,
     team_name: `Team ${teamId}`,

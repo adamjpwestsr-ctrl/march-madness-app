@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from "@/utils/supabase/client";
 
 export async function POST(req: Request) {
   const supabase = createClient();
@@ -7,7 +7,6 @@ export async function POST(req: Request) {
 
   const { leagueId, userId, season } = body;
 
-  // 1. Create roster
   const { data: roster, error: rosterErr } = await supabase
     .from("fantasy_roster")
     .insert({
@@ -22,7 +21,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Failed to create roster" }, { status: 500 });
   }
 
-  // 2. Get all picks
   const { data: picks, error: picksErr } = await supabase
     .from("fantasy_picks")
     .select("player_id")
@@ -33,7 +31,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Failed to load picks" }, { status: 500 });
   }
 
-  // 3. Insert players into roster
   const rows = picks.map((p) => ({
     roster_id: roster.id,
     player_id: p.player_id,

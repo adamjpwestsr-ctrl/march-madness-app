@@ -3,8 +3,12 @@
 
 import { useEffect, useState } from "react";
 
-export default function PlayerList({ onSelect }) {
-  const [players, setPlayers] = useState([]);
+export default function PlayerList({
+  onSelect,
+}: {
+  onSelect: (player: any) => void;
+}) {
+  const [players, setPlayers] = useState<any[]>([]);
   const [search, setSearch] = useState("");
 
   useEffect(() => {

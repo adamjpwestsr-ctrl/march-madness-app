@@ -1,7 +1,13 @@
 // components/Fantasy/Roster.tsx
 "use client";
 
-export default function Roster({ roster, onRemove }) {
+export default function Roster({
+  roster,
+  onRemove,
+}: {
+  roster: any[];
+  onRemove: (playerId: number) => void;
+}) {
   return (
     <div className="p-4 bg-gray-900 rounded-lg shadow-lg">
       <h2 className="text-white text-xl mb-4">Your Roster</h2>

@@ -5,7 +5,6 @@ export async function GET() {
   try {
     const supabase = await createSupabaseServerClient();
 
-    // ✅ Public ESPN endpoint for NFL athletes
     const res = await fetch(
       "https://sports.core.api.espn.com/v2/sports/football/leagues/nfl/athletes",
       {
@@ -17,7 +16,6 @@ export async function GET() {
 
     const data = await res.json();
 
-    // ✅ Defensive guard
     if (!data || !Array.isArray(data.items)) {
       console.error("Unexpected ESPN response:", data);
       return NextResponse.json({
@@ -32,16 +30,21 @@ export async function GET() {
       const athleteRes = await fetch(athlete.$ref);
       const athleteData = await athleteRes.json();
 
+      const name = athleteData.fullName?.trim();
+      const team = athleteData.team?.displayName || "Free Agent";
+
+      // ✅ Skip invalid or placeholder entries
+      if (!name || name.startsWith("[") || team === "Free Agent") continue;
+
       players.push({
         espn_id: athleteData.id,
-        name: athleteData.fullName,
-        team: athleteData.team?.displayName || "Free Agent",
+        name,
+        team,
         position: athleteData.position?.abbreviation || "UNK",
         stats: athleteData.stats || {},
       });
     }
 
-    // Insert players + stats
     for (const p of players) {
       const { data: existing } = await supabase
         .from("nfl_players")

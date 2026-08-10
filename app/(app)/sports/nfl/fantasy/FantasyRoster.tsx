@@ -7,7 +7,7 @@ export default function FantasyRoster({ userId }: { userId: number }) {
   const [players, setPlayers] = useState<any[]>([]);
   const [roster, setRoster] = useState<any>(null);
   const [rosterPlayers, setRosterPlayers] = useState<any[]>([]);
-  const [season] = useState(2024); // You can make this dynamic later
+  const [season] = useState(new Date().getFullYear());
 
   // Load roster + players
   useEffect(() => {

@@ -1,4 +1,10 @@
-export default function Badge({ type, value }) {
+export default function Badge({
+  type,
+  value,
+}: {
+  type: string;
+  value: string;
+}) {
   if (!value) return null;
 
   const colors = {

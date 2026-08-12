@@ -14,14 +14,22 @@ import {
 } from "@dnd-kit/sortable";
 import SortableItem from "./SortableItem";
 
-export default function QueueSortableList({ queue, players, updateRank }) {
+export default function QueueSortableList({
+  queue,
+  players,
+  updateRank,
+}: {
+  queue: { player_id: number }[];
+  players: any[];
+  updateRank: (playerId: number, newRank: number) => void;
+}) {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 8 },
     })
   );
 
-  const handleDragEnd = (event) => {
+  const handleDragEnd = (event: any) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
@@ -37,7 +45,11 @@ export default function QueueSortableList({ queue, players, updateRank }) {
   };
 
   return (
-    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragEnd={handleDragEnd}
+    >
       <SortableContext
         items={queue.map((q) => q.player_id)}
         strategy={verticalListSortingStrategy}
@@ -49,7 +61,9 @@ export default function QueueSortableList({ queue, players, updateRank }) {
               <SortableItem key={q.player_id} id={q.player_id}>
                 <div className="flex justify-between items-center p-3 bg-slate-800 rounded">
                   <div>
-                    <div className="text-white font-semibold">{player?.name}</div>
+                    <div className="text-white font-semibold">
+                      {player?.name}
+                    </div>
                     <div className="text-slate-400 text-sm">
                       {player?.team} • {player?.position}
                     </div>

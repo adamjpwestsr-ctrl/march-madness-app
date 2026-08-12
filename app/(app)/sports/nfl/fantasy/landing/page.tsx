@@ -69,7 +69,7 @@ function ActionCard({
   icon: React.ReactNode;
   title: string;
   desc: string;
-  color: string;
+  color: "red" | "emerald" | "yellow";
 }) {
   const colorMap = {
     red: "group-hover:border-red-400/40 group-hover:bg-red-500/10",

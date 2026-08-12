@@ -29,7 +29,7 @@ export default function Badge({
     "Volume TE": "#66BB6A",
   };
 
-  const icons: Record<string, JSX.Element> = {
+  const icons: Record<string, React.ReactNode> = {
     Elite: crownIcon(),
     Starter: starIcon(),
     Flex: lightningIcon(),

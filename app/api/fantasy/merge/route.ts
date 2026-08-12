@@ -24,25 +24,19 @@ export async function POST() {
     if (sleeperErr) throw new Error(`Sleeper players load error: ${sleeperErr.message}`);
 
     // -----------------------------------------------------
-    // 2. Load all supporting datasets
+    // 2. Load all supporting datasets (FIXED)
     // -----------------------------------------------------
-    const tables = [
-      ["nfl_player_projections", "projections"],
-      ["nfl_player_weekly_stats", "weeklyStats"],
-      ["nfl_player_weekly_advanced", "advancedWeekly"],
-      ["nfl_player_season_totals", "seasonTotals"],
-      ["nfl_player_snap_counts", "snaps"],
-      ["nfl_player_target_share", "targets"],
-      ["nfl_player_redzone_usage", "redzone"],
-      ["nfl_defense_rankings", "defenseRanks"],
-      ["nfl_schedule", "schedule"],
-    ];
-
-    const results = await Promise.all(
-      tables.map(([table]) =>
-        supabase.from(table).select("*").eq(table.includes("season") ? "season" : "week", week)
-      )
-    );
+    const results = await Promise.all([
+      supabase.from("nfl_player_projections").select("*").eq("week", week),
+      supabase.from("nfl_player_weekly_stats").select("*").eq("week", week),
+      supabase.from("nfl_player_weekly_advanced").select("*").eq("week", week),
+      supabase.from("nfl_player_season_totals").select("*").eq("season", season),
+      supabase.from("nfl_player_snap_counts").select("*").eq("week", week),
+      supabase.from("nfl_player_target_share").select("*").eq("week", week),
+      supabase.from("nfl_player_redzone_usage").select("*").eq("week", week),
+      supabase.from("nfl_defense_rankings").select("*").eq("week", week),
+      supabase.from("nfl_schedule").select("*").eq("week", week),
+    ]);
 
     const [
       { data: projections },
@@ -54,7 +48,7 @@ export async function POST() {
       { data: redzone },
       { data: defenseRanks },
       { data: schedule },
-    ] = results.map((r) => r.data);
+    ] = results;
 
     // -----------------------------------------------------
     // 3. Helper functions
@@ -148,6 +142,7 @@ export async function POST() {
       const redzoneUsage = (rz?.redzone_targets || 0) + (rz?.redzone_carries || 0);
 
       return {
+        id: pid, // ⭐ REQUIRED for PlayersPageClient
         espn_id: pid,
         name: player.name,
         team: player.team,

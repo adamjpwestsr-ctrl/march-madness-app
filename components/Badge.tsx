@@ -7,7 +7,7 @@ export default function Badge({
 }) {
   if (!value) return null;
 
-  const colors = {
+  const colors: Record<string, string> = {
     Elite: "#00E5FF",
     Starter: "#4CAF50",
     Flex: "#FFC107",
@@ -29,7 +29,7 @@ export default function Badge({
     "Volume TE": "#66BB6A",
   };
 
-  const icons = {
+  const icons: Record<string, JSX.Element> = {
     Elite: crownIcon(),
     Starter: starIcon(),
     Flex: lightningIcon(),
@@ -55,11 +55,11 @@ export default function Badge({
     <div
       className="flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold"
       style={{
-        backgroundColor: colors[value],
+        backgroundColor: colors[value] ?? "#9E9E9E",
         color: "#000",
       }}
     >
-      {icons[value]}
+      {icons[value] ?? null}
       <span>{value}</span>
     </div>
   );

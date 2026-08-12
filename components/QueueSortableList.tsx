@@ -14,7 +14,8 @@ import {
 } from "@dnd-kit/sortable";
 import SortableItem from "./SortableItem";
 
-import type { Player } from "./PlayersPageClient";
+// ⭐ FIXED IMPORT — correct absolute path to PlayersPageClient
+import type { Player } from "@/app/(app)/sports/nfl/fantasy/players/PlayersPageClient";
 
 interface QueueSortableListProps {
   queue: { player_id: number; rank: number }[];
@@ -48,8 +49,15 @@ export default function QueueSortableList({
   };
 
   return (
-    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-      <SortableContext items={queue.map((q) => q.player_id)} strategy={verticalListSortingStrategy}>
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragEnd={handleDragEnd}
+    >
+      <SortableContext
+        items={queue.map((q) => q.player_id)}
+        strategy={verticalListSortingStrategy}
+      >
         <div className="space-y-2">
           {queue.map((q) => {
             const player = players.find((p) => p.id === q.player_id);
@@ -58,7 +66,9 @@ export default function QueueSortableList({
               <SortableItem key={q.player_id} id={q.player_id}>
                 <div className="flex justify-between items-center p-3 bg-slate-800 rounded">
                   <div>
-                    <div className="text-white font-semibold">{player?.name}</div>
+                    <div className="text-white font-semibold">
+                      {player?.name}
+                    </div>
                     <div className="text-slate-400 text-sm">
                       {player?.team} • {player?.position}
                     </div>

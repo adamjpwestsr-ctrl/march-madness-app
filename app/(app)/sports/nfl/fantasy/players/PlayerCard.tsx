@@ -30,15 +30,15 @@ export default function PlayerCard({ player, onAdd }: PlayerCardProps) {
       {/* ⭐ Badge Row with Tooltips */}
       <div className="flex gap-2 mt-2 mb-2">
         <div title={`Tier: ${player.badge_tier || "N/A"}`}>
-          <Badge type="tier" value={player.badge_tier} />
+          <Badge type="tier" value={player.badge_tier ?? ""} />
         </div>
 
         <div title={`Role: ${player.badge_role || "N/A"}`}>
-          <Badge type="role" value={player.badge_role} />
+          <Badge type="role" value={player.badge_role ?? ""} />
         </div>
 
         <div title={`Archetype: ${player.badge_archetype || "N/A"}`}>
-          <Badge type="archetype" value={player.badge_archetype} />
+          <Badge type="archetype" value={player.badge_archetype ?? ""} />
         </div>
       </div>
 

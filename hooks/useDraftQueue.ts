@@ -2,8 +2,13 @@
 
 import { useEffect, useState } from "react";
 
+export interface QueueItem {
+  player_id: number;
+  rank: number;
+}
+
 export function useDraftQueue() {
-  const [queue, setQueue] = useState([]);
+  const [queue, setQueue] = useState<QueueItem[]>([]);
 
   const loadQueue = async () => {
     const res = await fetch("/api/fantasy/queue/get");

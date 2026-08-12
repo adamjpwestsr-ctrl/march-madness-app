@@ -37,7 +37,6 @@ export function useDraftQueue() {
     loadQueue();
   };
 
-  // ⭐ Step 2: Update rank
   const updateRank = async (playerId: number, rank: number) => {
     await fetch("/api/fantasy/queue/update-rank", {
       method: "POST",

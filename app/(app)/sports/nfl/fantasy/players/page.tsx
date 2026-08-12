@@ -5,7 +5,7 @@ export const runtime = "edge";
 export const dynamic = "force-dynamic";
 
 export default async function PlayersPage() {
-  // trigger merge before fetching
+  // Trigger merge before fetching
   await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/fantasy/merge`, {
     method: "POST",
   });
@@ -15,6 +15,7 @@ export default async function PlayersPage() {
   const { data: players } = await supabase
     .from("nfl_player_merged")
     .select(`
+      id,
       espn_id,
       name,
       team,
@@ -25,7 +26,16 @@ export default async function PlayersPage() {
       season_points,
       snap_pct,
       target_share,
-      redzone_usage
+      redzone_usage,
+      defense_rank,
+      matchup_difficulty,
+      headshot_url,
+      opponent_team,
+      is_home,
+      kickoff_time,
+      badge_tier,
+      badge_role,
+      badge_archetype
     `)
     .order("projected_points", { ascending: false });
 

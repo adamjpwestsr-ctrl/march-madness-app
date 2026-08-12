@@ -4,22 +4,40 @@ import { useState } from "react";
 import PlayerCard from "./PlayerCard";
 import { useDraftQueue } from "@/hooks/useDraftQueue";
 
-interface Player {
+export interface Player {
   id: number;
+  espn_id: number;
   name: string;
-  position?: string;
-  team?: string;
-  bye_week?: number;
-  projected_points?: number;
+  team: string | null;
+  position: string | null;
+  bye_week?: number | null;
+
+  projected_points: number;
+  last_week_points: number;
+  season_points: number;
+
+  snap_pct: number;
+  target_share: number;
+  redzone_usage: number;
+
+  defense_rank: number;
+  matchup_difficulty: "easy" | "medium" | "hard";
+
+  headshot_url: string | null;
+  opponent_team: string | null;
+  is_home: boolean | null;
+  kickoff_time: string | null;
+
+  badge_tier: string | null;
+  badge_role: string | null;
+  badge_archetype: string | null;
 }
 
 interface PlayersPageClientProps {
   initialPlayers: Player[];
 }
 
-export default function PlayersPageClient({
-  initialPlayers,
-}: PlayersPageClientProps) {
+export default function PlayersPageClient({ initialPlayers }: PlayersPageClientProps) {
   const [search, setSearch] = useState("");
 
   const { queue, addToQueue, removeFromQueue } = useDraftQueue();

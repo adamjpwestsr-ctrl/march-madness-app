@@ -189,6 +189,27 @@ export default function AdminClient({ adminEmail }: { adminEmail: string }) {
   };
 
   // -----------------------------
+  // Refresh Fantasy Data (Sleeper + nflverse)
+  // -----------------------------
+  const handleRefreshFantasyData = async () => {
+    try {
+      const res = await fetch("/api/admin/refreshFantasyData", {
+        method: "POST",
+      });
+
+      if (!res.ok) {
+        alert("❌ Refresh failed — check server logs.");
+        return;
+      }
+
+      alert("✅ Fantasy data refreshed successfully!");
+    } catch (err) {
+      console.error("Refresh error:", err);
+      alert("❌ Refresh failed — check console.");
+    }
+  };
+
+  // -----------------------------
   // Render
   // -----------------------------
   return (
@@ -197,6 +218,19 @@ export default function AdminClient({ adminEmail }: { adminEmail: string }) {
       <p className="text-center mb-8 opacity-80 text-sm">
         Logged in as <strong>{adminEmail}</strong>
       </p>
+
+      {/* Refresh Fantasy Data */}
+      <div className="max-w-md mx-auto mb-10 text-center">
+        <button
+          onClick={handleRefreshFantasyData}
+          className="px-5 py-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-lg border border-blue-400 transition"
+        >
+          Refresh Fantasy Data
+        </button>
+        <p className="text-slate-400 text-sm mt-2">
+          Updates Sleeper + nflverse stats
+        </p>
+      </div>
 
       {/* Search */}
       <div className="max-w-md mx-auto mb-10">

@@ -2,6 +2,10 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useDraftQueue } from "@/hooks/useDraftQueue";
+import QueueSortableList from "@/components/QueueSortableList";
+import PlayerComparisonModal from "@/components/PlayerComparisonModal";
+import { createSupabaseBrowserClient } from "@/lib/supabaseBrowserClient";
 
 export default function FantasyDraftRoom() {
   const params = useSearchParams();
@@ -31,9 +35,22 @@ export default function FantasyDraftRoom() {
   // Total players drafted per team
   const rosterSize = 15;
 
+  // Draft queue (persistent)
+  const { queue, removeFromQueue, updateRank } = useDraftQueue();
+
+  // Real-time
+  const [channel, setChannel] = useState<any>(null);
+  const [isHost, setIsHost] = useState(false);
+
+  // ⭐ Player Comparison Modal State
+  const [compareOpen, setCompareOpen] = useState(false);
+  const [compareA, setCompareA] = useState<any>(null);
+  const [compareB, setCompareB] = useState<any>(null);
+
   // Load league + players
   useEffect(() => {
     const load = async () => {
+      if (!leagueId) return;
       setLoading(true);
 
       // Load league
@@ -65,32 +82,101 @@ export default function FantasyDraftRoom() {
     load();
   }, [leagueId]);
 
-  // Timer countdown
+  // Join Supabase channel (broadcast)
   useEffect(() => {
-    if (!onTheClock) return;
+    if (!leagueId) return;
 
-    if (timer === 0) {
-      autoPick();
-      return;
-    }
+    const supabase = createSupabaseBrowserClient();
+    const ch = supabase.channel(`draft-${leagueId}`);
 
-    const interval = setInterval(() => {
-      setTimer((t) => t - 1);
-    }, 1000);
+    ch.subscribe((status) => {
+      if (status === "SUBSCRIBED") {
+        const hostKey = `draft-host-${leagueId}`;
+        if (!localStorage.getItem(hostKey)) {
+          localStorage.setItem(hostKey, "true");
+          setIsHost(true);
+        } else {
+          setIsHost(false);
+        }
+      }
+    });
 
-    return () => clearInterval(interval);
-  }, [timer, onTheClock]);
+    setChannel(ch);
 
-  // Auto-pick (best available player)
-  const autoPick = useCallback(() => {
-    const available = players.filter(
-      (p) => !history.some((h) => h.playerId === p.id)
-    );
-    if (available.length === 0) return;
+    // Listen for player_drafted
+    ch.on("broadcast", { event: "player_drafted" }, ({ payload }: any) => {
+      if (!league || isHost) return;
 
-    const best = available[0]; // TODO: improve ranking later
-    makePick(best);
-  }, [players, history]);
+      const {
+        player_id,
+        team_id,
+        pick_number,
+        name,
+        position,
+        team,
+      } = payload;
+
+      // Remove from queue
+      removeFromQueue(player_id);
+
+      // Update history
+      setHistory((h) => [
+        ...h,
+        {
+          pick: pick_number,
+          teamId: team_id,
+          playerId: player_id,
+          name,
+          position,
+          team,
+        },
+      ]);
+
+      // Update big board
+      setTeams((prev) =>
+        prev.map((t) =>
+          t.id === team_id
+            ? {
+                ...t,
+                picks: [
+                  ...(t.picks || []),
+                  { id: player_id, name, position, team },
+                ],
+              }
+            : t
+        )
+      );
+
+      // Advance pick
+      const nextPick = pick_number + 1;
+      const totalPicks = league.numTeams * rosterSize;
+
+      if (nextPick > totalPicks) {
+        router.push("/sports/nfl/fantasy");
+        return;
+      }
+
+      setCurrentPick(nextPick);
+
+      const nextTeam =
+        league.draftType === "snake"
+          ? getSnakeTeam(nextPick, league.numTeams, league.draftOrder)
+          : league.draftOrder[(nextPick - 1) % league.numTeams];
+
+      setOnTheClock(nextTeam);
+      setTimer(league.pickTimer);
+    });
+
+    // Listen for timer_tick
+    ch.on("broadcast", { event: "timer_tick" }, ({ payload }: any) => {
+      if (isHost) return;
+      setTimer(payload.timer);
+    });
+
+    return () => {
+      ch.unsubscribe();
+    };
+  }, [leagueId, league, isHost, removeFromQueue, router]);
 
   // Snake draft logic
   const getSnakeTeam = (
@@ -146,6 +232,24 @@ export default function FantasyDraftRoom() {
       )
     );
 
+    // Remove from queue if present
+    removeFromQueue(player.id);
+
+    // Broadcast pick
+    if (channel) {
+      channel.send({
+        type: "broadcast",
+        event: "player_drafted",
+        payload: {
+          player_id: player.id,
+          team_id: teamId,
+          pick_number: currentPick,
+          name: player.name,
+          position: player.position,
+          team: player.team,
+        },
+      });
+    }
     // Advance pick
     const nextPick = currentPick + 1;
     const totalPicks = league.numTeams * rosterSize;
@@ -178,13 +282,61 @@ export default function FantasyDraftRoom() {
     setTimer(league.pickTimer);
   };
 
+  // Auto-pick (queue-aware, then best available)
+  const autoPick = useCallback(() => {
+    const available = players.filter(
+      (p) => !history.some((h) => h.playerId === p.id)
+    );
+    if (available.length === 0) return;
+
+    // Try queue first
+    if (queue.length > 0) {
+      const queuedPlayer = available.find(
+        (p) => p.id === queue[0].player_id
+      );
+      if (queuedPlayer) {
+        makePick(queuedPlayer);
+        return;
+      }
+    }
+
+    // Fallback: best available
+    const best = available[0];
+    makePick(best);
+  }, [players, history, queue]);
+
+  // Timer countdown (host only, broadcast to others)
+  useEffect(() => {
+    if (!onTheClock || !isHost) return;
+
+    if (timer === 0) {
+      autoPick();
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setTimer((t) => {
+        const next = t - 1;
+        if (channel) {
+          channel.send({
+            type: "broadcast",
+            event: "timer_tick",
+            payload: { timer: next },
+          });
+        }
+        return next;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [timer, onTheClock, autoPick, isHost, channel]);
+
   if (loading) {
     return <p className="text-slate-400 p-6">Loading draft room...</p>;
   }
 
   return (
     <div className="p-6 space-y-8">
-
       {/* HEADER */}
       <div>
         <h1 className="text-3xl font-bold text-white mb-2">
@@ -208,7 +360,6 @@ export default function FantasyDraftRoom() {
 
       {/* GRID LAYOUT */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-
         {/* PLAYER LIST */}
         <div className="md:col-span-2 bg-slate-900 border border-slate-700 p-6 rounded-xl">
           <h2 className="text-xl font-semibold text-white mb-4">
@@ -241,37 +392,76 @@ export default function FantasyDraftRoom() {
                     </div>
                   </div>
 
-                  <button
-                    className="px-3 py-1 bg-blue-600 text-white rounded"
-                    onClick={() => makePick(p)}
-                  >
-                    Draft
-                  </button>
+                  {/* ⭐ Updated: Draft + Compare Buttons */}
+                  <div className="flex gap-2">
+                    <button
+                      className="px-3 py-1 bg-blue-600 text-white rounded"
+                      onClick={() => makePick(p)}
+                    >
+                      Draft
+                    </button>
+
+                    <button
+                      className="px-3 py-1 bg-slate-600 text-white rounded"
+                      onClick={() => {
+                        if (!compareA) {
+                          setCompareA(p);
+                        } else {
+                          setCompareB(p);
+                          setCompareOpen(true);
+                        }
+                      }}
+                    >
+                      Compare
+                    </button>
+                  </div>
                 </div>
               ))}
           </div>
         </div>
 
-        {/* DRAFT HISTORY */}
-        <div className="bg-slate-900 border border-slate-700 p-6 rounded-xl">
-          <h2 className="text-xl font-semibold text-white mb-4">
-            Draft History
-          </h2>
+        {/* RIGHT COLUMN: Draft History + Queue */}
+        <div className="space-y-6">
+          {/* DRAFT HISTORY */}
+          <div className="bg-slate-900 border border-slate-700 p-6 rounded-xl">
+            <h2 className="text-xl font-semibold text-white mb-4">
+              Draft History
+            </h2>
 
-          <div className="space-y-2 max-h-[600px] overflow-y-auto">
-            {history.map((h) => (
-              <div
-                key={h.pick}
-                className="p-3 bg-slate-800 rounded text-white"
-              >
-                <div className="font-semibold">
-                  Pick {h.pick}: {h.name}
+            <div className="space-y-2 max-h-[280px] overflow-y-auto">
+              {history.map((h) => (
+                <div
+                  key={h.pick}
+                  className="p-3 bg-slate-800 rounded text-white"
+                >
+                  <div className="font-semibold">
+                    Pick {h.pick}: {h.name}
+                  </div>
+                  <div className="text-slate-400 text-sm">
+                    Team {h.teamId} • {h.team} • {h.position}
+                  </div>
                 </div>
-                <div className="text-slate-400 text-sm">
-                  Team {h.teamId} • {h.team} • {h.position}
-                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* QUEUE SIDEBAR WITH DRAG-AND-DROP */}
+          <div className="bg-slate-900 border border-slate-700 p-6 rounded-xl">
+            <h2 className="text-xl font-semibold text-white mb-4">
+              My Draft Queue
+            </h2>
+
+            {queue.length === 0 ? (
+              <p className="text-slate-400">No queued players yet.</p>
+            ) : (
+              <div className="space-y-2 max-h-[280px] overflow-y-auto">
+                <QueueSortableList
+                  queue={queue}
+                  players={players}
+                  updateRank={updateRank}
+                />
               </div>
-            ))}
+            )}
           </div>
         </div>
       </div>
@@ -307,6 +497,18 @@ export default function FantasyDraftRoom() {
           ))}
         </div>
       </div>
+
+      {/* ⭐ Player Comparison Modal */}
+      <PlayerComparisonModal
+        open={compareOpen}
+        onClose={() => {
+          setCompareOpen(false);
+          setCompareA(null);
+          setCompareB(null);
+        }}
+        playerA={compareA}
+        playerB={compareB}
+      />
     </div>
   );
 }

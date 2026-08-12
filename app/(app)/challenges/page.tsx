@@ -21,64 +21,73 @@ export default function ChallengesHub() {
         </p>
       </section>
 
-      {/* Weekly Challenges */}
-      <section className="space-y-4">
-        <h2 className="text-xl font-semibold text-slate-200 flex items-center gap-2">
-          <Star size={18} className="text-emerald-400" />
-          Weekly Challenges
-        </h2>
+{/* Weekly Challenges */}
+<section className="space-y-4">
+  <h2 className="text-xl font-semibold text-slate-200 flex items-center gap-2">
+    <Star size={18} className="text-emerald-400" />
+    Weekly Challenges
+  </h2>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <ChallengeItem
-            href="/sports/golf/weekly"
-            icon={<Flag size={22} />}
-            title="Golf Weekly"
-            desc="Pick a golfer each week and track your streak."
-            color="emerald"
-          />
+  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+    <ChallengeItem
+      href="/sports/golf/weekly"
+      icon={<Flag size={22} />}
+      title="Golf Weekly"
+      desc="Pick a golfer each week and track your streak."
+      color="emerald"
+    />
 
-          <ChallengeItem
-            href="/sports/mlb"
-            icon={<Circle size={22} />}
-            title="MLB Weekly"
-            desc="Choose your top hitter and follow weekly performance."
-            color="amber"
-          />
+    <ChallengeItem
+      href="/sports/mlb"
+      icon={<Circle size={22} />}
+      title="MLB Weekly"
+      desc="Choose your top hitter and follow weekly performance."
+      color="amber"
+    />
 
-          <ChallengeItem
-            href="/sports/nfl/weekly"
-            icon={<Goal size={22} />}
-            title="NFL Weekly"
-            desc="Pick a player each week and build your streak."
-            color="red"
-          />
+    <ChallengeItem
+      href="/sports/nfl/weekly"
+      icon={<Goal size={22} />}
+      title="NFL Weekly"
+      desc="Pick a player each week and build your streak."
+      color="red"
+    />
 
-          <ChallengeItem
-            href="/sports/nba/weekly"
-            icon={<CircleDot size={22} />}
-            title="NBA Weekly"
-            desc="Choose a standout performer each week."
-            color="sky"
-          />
+    {/* ⭐ NEW NFL FANTASY DRAFT */}
+    <ChallengeItem
+      href="/sports/nfl/fantasy/landing"
+      icon={<Goal size={22} />}
+      title="NFL Fantasy Draft"
+      desc="Draft players, compare stats, and build your fantasy roster."
+      color="red"
+    />
 
-          <ChallengeItem
-            href="/sports/nhl/weekly"
-            icon={<Goal size={22} />}
-            title="NHL Weekly"
-            desc="Track weekly picks across the NHL season."
-            color="blue"
-          />
+    <ChallengeItem
+      href="/sports/nba/weekly"
+      icon={<CircleDot size={22} />}
+      title="NBA Weekly"
+      desc="Choose a standout performer each week."
+      color="sky"
+    />
 
-          {/* ⭐ NEW NASCAR WEEKLY CHALLENGE */}
-          <ChallengeItem
-            href="/sports/nascar"
-            icon={<Flag size={22} />}
-            title="NASCAR Weekly"
-            desc="Pick a driver each race and track your season performance."
-            color="rose"
-          />
-        </div>
-      </section>
+    <ChallengeItem
+      href="/sports/nhl/weekly"
+      icon={<Goal size={22} />}
+      title="NHL Weekly"
+      desc="Track weekly picks across the NHL season."
+      color="blue"
+    />
+
+    {/* ⭐ NEW NASCAR WEEKLY CHALLENGE */}
+    <ChallengeItem
+      href="/sports/nascar"
+      icon={<Flag size={22} />}
+      title="NASCAR Weekly"
+      desc="Pick a driver each race and track your season performance."
+      color="rose"
+    />
+  </div>
+</section>
 
       {/* Special Challenges */}
       <section className="space-y-4">

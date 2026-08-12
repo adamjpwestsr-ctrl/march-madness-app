@@ -58,7 +58,19 @@ export default function FantasyLandingPage() {
   );
 }
 
-function ActionCard({ href, icon, title, desc, color }) {
+function ActionCard({
+  href,
+  icon,
+  title,
+  desc,
+  color,
+}: {
+  href: string;
+  icon: React.ReactNode;
+  title: string;
+  desc: string;
+  color: string;
+}) {
   const colorMap = {
     red: "group-hover:border-red-400/40 group-hover:bg-red-500/10",
     emerald: "group-hover:border-emerald-400/40 group-hover:bg-emerald-500/10",

@@ -15,16 +15,26 @@ export async function POST() {
     const week = 1; // TODO: make dynamic later
 
     // -----------------------------------------------------
-    // 1. Load Sleeper Players
+    // 0. Clear existing merged data
     // -----------------------------------------------------
-    const { data: sleeperPlayers, error: sleeperErr } = await supabase
-      .from("nfl_players")
-      .select("espn_id, name, team, position");
+    const { error: clearErr } = await supabase.from("nfl_player_merged").delete().neq("espn_id", "");
+    if (clearErr) throw new Error(`Failed to clear existing data: ${clearErr.message}`);
 
-    if (sleeperErr) throw new Error(`Sleeper players load error: ${sleeperErr.message}`);
+  // -----------------------------------------------------
+// 1. Load Sleeper Players (current season only)
+// -----------------------------------------------------
+const { data: sleeperPlayers, error: sleeperErr } = await supabase
+  .from("nfl_players")
+  .select("espn_id, name, team, position")
+  .in("espn_id", supabase
+    .from("nfl_player_projections")
+    .select("espn_id")
+    .eq("season", season)
+  );
+
 
     // -----------------------------------------------------
-    // 2. Load all supporting datasets (FIXED)
+    // 2. Load all supporting datasets
     // -----------------------------------------------------
     const results = await Promise.all([
       supabase.from("nfl_player_projections").select("*").eq("week", week),
@@ -142,7 +152,7 @@ export async function POST() {
       const redzoneUsage = (rz?.redzone_targets || 0) + (rz?.redzone_carries || 0);
 
       return {
-        id: pid, // ⭐ REQUIRED for PlayersPageClient
+        id: pid,
         espn_id: pid,
         name: player.name,
         team: player.team,

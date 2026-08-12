@@ -4,13 +4,26 @@ import { useState } from "react";
 import PlayerCard from "./PlayerCard";
 import { useDraftQueue } from "@/hooks/useDraftQueue";
 
-export default function PlayersPageClient({ initialPlayers }) {
+interface Player {
+  id: number;
+  name: string;
+  position?: string;
+  team?: string;
+  bye_week?: number;
+  projected_points?: number;
+}
+
+interface PlayersPageClientProps {
+  initialPlayers: Player[];
+}
+
+export default function PlayersPageClient({
+  initialPlayers,
+}: PlayersPageClientProps) {
   const [search, setSearch] = useState("");
 
-  // 🔥 Persistent queue from Supabase
   const { queue, addToQueue, removeFromQueue } = useDraftQueue();
 
-  // Local search filter
   const filtered = initialPlayers.filter((p) =>
     p.name.toLowerCase().includes(search.toLowerCase())
   );
@@ -26,7 +39,6 @@ export default function PlayersPageClient({ initialPlayers }) {
         onChange={(e) => setSearch(e.target.value)}
       />
 
-      {/* Player Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {filtered.map((player) => (
           <PlayerCard
@@ -37,7 +49,6 @@ export default function PlayersPageClient({ initialPlayers }) {
         ))}
       </div>
 
-      {/* Queue Sidebar */}
       <div className="bg-slate-900 border border-slate-700 p-6 rounded-xl">
         <h2 className="text-xl font-semibold text-white mb-4">My Draft Queue</h2>
 

@@ -8,6 +8,11 @@ export default function PlayerComparisonModal({
   onClose,
   playerA,
   playerB,
+}: {
+  open: boolean;
+  onClose: () => void;
+  playerA: any;
+  playerB: any;
 }) {
   if (!open || !playerA || !playerB) return null;
 
@@ -34,7 +39,13 @@ export default function PlayerComparisonModal({
   );
 }
 
-function ComparisonCard({ player, label }) {
+function ComparisonCard({
+  player,
+  label,
+}: {
+  player: any;
+  label: string;
+}) {
   return (
     <div className="bg-slate-800 p-4 rounded-lg border border-slate-700">
       <h3 className="text-xl font-semibold text-white mb-1">{label}</h3>
@@ -45,13 +56,16 @@ function ComparisonCard({ player, label }) {
 
       {/* ⭐ NEW: Badge Row */}
       <div className="flex gap-2 mb-4">
-        <Badge type="tier" value={player.badge_tier} />
-        <Badge type="role" value={player.badge_role} />
-        <Badge type="archetype" value={player.badge_archetype} />
+        <Badge type="tier" value={player.badge_tier ?? ""} />
+        <Badge type="role" value={player.badge_role ?? ""} />
+        <Badge type="archetype" value={player.badge_archetype ?? ""} />
       </div>
 
       {/* Matchup Difficulty */}
-      <MatchupDifficulty difficulty={player.matchup_difficulty} rank={player.defense_rank} />
+      <MatchupDifficulty
+        difficulty={player.matchup_difficulty}
+        rank={player.defense_rank}
+      />
 
       {/* Radar Chart */}
       <div className="mb-6">
@@ -78,21 +92,9 @@ function ComparisonCard({ player, label }) {
 
       {/* Usage Metrics */}
       <Section title="Usage Metrics">
-        <BarStat label="Snap %"
-          value={player.snap_pct}
-          max={100}
-          color="bg-emerald-500"
-        />
-        <BarStat label="Target Share"
-          value={player.target_share * 100}
-          max={100}
-          color="bg-blue-500"
-        />
-        <BarStat label="Red Zone Usage"
-          value={player.redzone_usage}
-          max={10}
-          color="bg-red-500"
-        />
+        <BarStat label="Snap %" value={player.snap_pct} max={100} color="bg-emerald-500" />
+        <BarStat label="Target Share" value={player.target_share * 100} max={100} color="bg-blue-500" />
+        <BarStat label="Red Zone Usage" value={player.redzone_usage} max={10} color="bg-red-500" />
       </Section>
 
       {/* Advanced Stats */}
@@ -110,14 +112,20 @@ function ComparisonCard({ player, label }) {
    Matchup Difficulty Indicator
 ------------------------------------------------------- */
 
-function MatchupDifficulty({ difficulty, rank }) {
-  const colors = {
+function MatchupDifficulty({
+  difficulty,
+  rank,
+}: {
+  difficulty: string;
+  rank: number;
+}) {
+  const colors: Record<string, string> = {
     easy: "bg-emerald-600 text-white",
     medium: "bg-yellow-500 text-black",
     hard: "bg-red-600 text-white",
   };
 
-  const label = {
+  const label: Record<string, string> = {
     easy: "Easy Matchup",
     medium: "Average Matchup",
     hard: "Hard Matchup",
@@ -142,7 +150,13 @@ function MatchupDifficulty({ difficulty, rank }) {
    Section + Stats
 ------------------------------------------------------- */
 
-function Section({ title, children }) {
+function Section({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
     <div className="mb-4">
       <h4 className="text-slate-300 font-semibold mb-2">{title}</h4>
@@ -151,7 +165,13 @@ function Section({ title, children }) {
   );
 }
 
-function Stat({ label, value }) {
+function Stat({
+  label,
+  value,
+}: {
+  label: string;
+  value: any;
+}) {
   return (
     <div className="flex justify-between text-slate-300 text-sm">
       <span>{label}</span>
@@ -160,23 +180,28 @@ function Stat({ label, value }) {
   );
 }
 
-function BarStat({ label, value, max, color }) {
+function BarStat({
+  label,
+  value,
+  max,
+  color,
+}: {
+  label: string;
+  value: number;
+  max: number;
+  color: string;
+}) {
   const pct = Math.min(100, (value / max) * 100);
 
   return (
     <div>
       <div className="flex justify-between text-slate-300 text-sm mb-1">
         <span>{label}</span>
-        <span className="font-semibold text-white">
-          {value.toFixed(1)}
-        </span>
+        <span className="font-semibold text-white">{value.toFixed(1)}</span>
       </div>
 
       <div className="w-full bg-slate-700 rounded h-2 overflow-hidden">
-        <div
-          className={`${color} h-2`}
-          style={{ width: `${pct}%` }}
-        />
+        <div className={`${color} h-2`} style={{ width: `${pct}%` }} />
       </div>
     </div>
   );
@@ -186,7 +211,11 @@ function BarStat({ label, value, max, color }) {
    Radar Chart (Pure SVG)
 ------------------------------------------------------- */
 
-function RadarChart({ player }) {
+function RadarChart({
+  player,
+}: {
+  player: any;
+}) {
   const metrics = [
     { label: "Snap %", value: player.snap_pct, max: 100 },
     { label: "Target Share", value: player.target_share * 100, max: 100 },
@@ -206,10 +235,7 @@ function RadarChart({ player }) {
     const pct = Math.min(1, m.value / m.max);
     const r = pct * radius;
 
-    return [
-      center + r * Math.cos(angle),
-      center + r * Math.sin(angle),
-    ];
+    return [center + r * Math.cos(angle), center + r * Math.sin(angle)];
   });
 
   const polygon = points.map((p) => p.join(",")).join(" ");
@@ -276,7 +302,13 @@ function RadarChart({ player }) {
    Sparkline Trend Chart (Pure SVG)
 ------------------------------------------------------- */
 
-function TrendRow({ label, data }) {
+function TrendRow({
+  label,
+  data,
+}: {
+  label: string;
+  data: number[];
+}) {
   return (
     <div className="mb-3">
       <div className="flex justify-between text-slate-300 text-sm mb-1">
@@ -290,24 +322,32 @@ function TrendRow({ label, data }) {
   );
 }
 
-function Sparkline({ data }) {
+function Sparkline({
+  data,
+}: {
+  data: number[];
+}) {
   const width = 200;
   const height = 40;
 
   const max = Math.max(...data);
   const min = Math.min(...data);
 
-  const points = data.map((v, i) => {
-    const x = (i / (data.length - 1)) * width;
-    const y = height - ((v - min) / (max - min || 1)) * height;
-    return `${x},${y}`;
-  }).join(" ");
+  const points = data
+    .map((v, i) => {
+      const x = (i / (data.length - 1)) * width;
+      const y = height - ((v - min) / (max - min || 1)) * height;
+      return `${x},${y}`;
+    })
+    .join(" ");
 
   const trend = data[data.length - 1] - data[0];
   const trendColor =
-    trend > 0 ? "rgba(0,255,120,0.9)" :
-    trend < 0 ? "rgba(255,80,80,0.9)" :
-    "rgba(80,160,255,0.9)";
+    trend > 0
+      ? "rgba(0,255,120,0.9)"
+      : trend < 0
+      ? "rgba(255,80,80,0.9)"
+      : "rgba(80,160,255,0.9)";
 
   return (
     <svg width={width} height={height}>

@@ -20,17 +20,24 @@ export async function POST() {
     const { error: clearErr } = await supabase.from("nfl_player_merged").delete().neq("espn_id", "");
     if (clearErr) throw new Error(`Failed to clear existing data: ${clearErr.message}`);
 
-  // -----------------------------------------------------
+// -----------------------------------------------------
 // 1. Load Sleeper Players (current season only)
 // -----------------------------------------------------
+const { data: activeIds, error: activeErr } = await supabase
+  .from("nfl_player_projections")
+  .select("espn_id")
+  .eq("season", season);
+
+if (activeErr) throw new Error(`Active player ID load error: ${activeErr.message}`);
+
+const activeSet = activeIds?.map((p) => p.espn_id) || [];
+
 const { data: sleeperPlayers, error: sleeperErr } = await supabase
   .from("nfl_players")
   .select("espn_id, name, team, position")
-  .in("espn_id", supabase
-    .from("nfl_player_projections")
-    .select("espn_id")
-    .eq("season", season)
-  );
+  .in("espn_id", activeSet);
+
+if (sleeperErr) throw new Error(`Sleeper players load error: ${sleeperErr.message}`);
 
 
     // -----------------------------------------------------

@@ -35,6 +35,9 @@ await fetch("/api/fantasy/merge", { method: "POST" });
       badge_archetype
     `)
     .order("projected_points", { ascending: false });
+  
+  // Error Log
+  console.log(players?.slice(0, 5));
 
   return <PlayersPageClient initialPlayers={players || []} />;
 }

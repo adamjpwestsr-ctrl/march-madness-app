@@ -23,24 +23,37 @@ export async function POST() {
       .neq("espn_id", "");
     if (clearErr) throw new Error(`Failed to clear existing data: ${clearErr.message}`);
 
-    // -----------------------------------------------------
-    // 1. Load Sleeper Players (current week only)
-    // -----------------------------------------------------
-    const { data: activeIds, error: activeErr } = await supabase
-      .from("nfl_stats_weekly")
-      .select("espn_id")
-      .eq("week", week);
+// -----------------------------------------------------
+// 1. Load Sleeper Players (current week only)
+// -----------------------------------------------------
 
-    if (activeErr) throw new Error(`Active player ID load error: ${activeErr.message}`);
+// Step 1: Get active internal player IDs from weekly stats
+const { data: activeInternalIds, error: activeErr } = await supabase
+  .from("nfl_stats_weekly")
+  .select("player_id")
+  .eq("week", week);
 
-    const activeSet = activeIds?.map((p) => p.espn_id) || [];
+if (activeErr) throw new Error(`Active player ID load error: ${activeErr.message}`);
 
-    const { data: sleeperPlayers, error: sleeperErr } = await supabase
-      .from("nfl_players")
-      .select("espn_id, name, team, position")
-      .in("espn_id", activeSet);
+const internalSet = activeInternalIds?.map((p) => p.player_id) || [];
 
-    if (sleeperErr) throw new Error(`Sleeper players load error: ${sleeperErr.message}`);
+// Step 2: Convert internal IDs -> espn_id
+const { data: idMap, error: idMapErr } = await supabase
+  .from("nfl_players")
+  .select("id, espn_id")
+  .in("id", internalSet);
+
+if (idMapErr) throw new Error(`ID map load error: ${idMapErr.message}`);
+
+const activeEspnIds = idMap.map((p) => p.espn_id);
+
+// Step 3: Load Sleeper players using ESPN IDs
+const { data: sleeperPlayers, error: sleeperErr } = await supabase
+  .from("nfl_players")
+  .select("espn_id, name, team, position")
+  .in("espn_id", activeEspnIds);
+
+if (sleeperErr) throw new Error(`Sleeper players load error: ${sleeperErr.message}`);
 
     // -----------------------------------------------------
     // 2. Load all supporting datasets

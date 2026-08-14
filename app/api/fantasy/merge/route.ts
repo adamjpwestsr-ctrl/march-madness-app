@@ -17,35 +17,36 @@ export async function POST() {
     // -----------------------------------------------------
     // 0. Clear existing merged data
     // -----------------------------------------------------
-    const { error: clearErr } = await supabase.from("nfl_player_merged").delete().neq("espn_id", "");
+    const { error: clearErr } = await supabase
+      .from("nfl_player_merged")
+      .delete()
+      .neq("espn_id", "");
     if (clearErr) throw new Error(`Failed to clear existing data: ${clearErr.message}`);
 
-// -----------------------------------------------------
-// 1. Load Sleeper Players (current season only)
-// -----------------------------------------------------
-const { data: activeIds, error: activeErr } = await supabase
-  .from("nfl_player_projections")
-  .select("espn_id")
-  .eq("season", season);
+    // -----------------------------------------------------
+    // 1. Load Sleeper Players (current week only)
+    // -----------------------------------------------------
+    const { data: activeIds, error: activeErr } = await supabase
+      .from("nfl_stats_weekly")
+      .select("espn_id")
+      .eq("week", week);
 
-if (activeErr) throw new Error(`Active player ID load error: ${activeErr.message}`);
+    if (activeErr) throw new Error(`Active player ID load error: ${activeErr.message}`);
 
-const activeSet = activeIds?.map((p) => p.espn_id) || [];
+    const activeSet = activeIds?.map((p) => p.espn_id) || [];
 
-const { data: sleeperPlayers, error: sleeperErr } = await supabase
-  .from("nfl_players")
-  .select("espn_id, name, team, position")
-  .in("espn_id", activeSet);
+    const { data: sleeperPlayers, error: sleeperErr } = await supabase
+      .from("nfl_players")
+      .select("espn_id, name, team, position")
+      .in("espn_id", activeSet);
 
-if (sleeperErr) throw new Error(`Sleeper players load error: ${sleeperErr.message}`);
-
+    if (sleeperErr) throw new Error(`Sleeper players load error: ${sleeperErr.message}`);
 
     // -----------------------------------------------------
     // 2. Load all supporting datasets
     // -----------------------------------------------------
     const results = await Promise.all([
-      supabase.from("nfl_player_projections").select("*").eq("week", week),
-      supabase.from("nfl_player_weekly_stats").select("*").eq("week", week),
+      supabase.from("nfl_stats_weekly").select("*").eq("week", week),
       supabase.from("nfl_player_weekly_advanced").select("*").eq("week", week),
       supabase.from("nfl_player_season_totals").select("*").eq("season", season),
       supabase.from("nfl_player_snap_counts").select("*").eq("week", week),
@@ -56,7 +57,6 @@ if (sleeperErr) throw new Error(`Sleeper players load error: ${sleeperErr.messag
     ]);
 
     const [
-      { data: projections },
       { data: weeklyStats },
       { data: advancedWeekly },
       { data: seasonTotals },
@@ -121,7 +121,6 @@ if (sleeperErr) throw new Error(`Sleeper players load error: ${sleeperErr.messag
     const merged = sleeperPlayers.map((player) => {
       const pid = player.espn_id;
 
-      const proj = projections?.find((p) => p.espn_id === pid);
       const wk = weeklyStats?.find((p) => p.espn_id === pid);
       const adv = advancedWeekly?.find((p) => p.espn_id === pid);
       const season = seasonTotals?.find((p) => p.espn_id === pid);
@@ -146,7 +145,7 @@ if (sleeperErr) throw new Error(`Sleeper players load error: ${sleeperErr.messag
 
       const headshot = `https://sleepercdn.com/content/nfl/players/${pid}.jpg`;
 
-      const projected = proj?.projected_points || 0;
+      const projected = wk?.fantasy_points || 0;
       const seasonPoints = season?.fantasy_points || 0;
 
       const rushYds = adv?.rush_yards || 0;

@@ -1,11 +1,9 @@
 import { cookies } from "next/headers";
-import { createServerClient } from "@supabase/auth-helpers-nextjs"; // ✅ switch to auth-helpers-nextjs
+import { createServerClient } from "@supabase/ssr";
 
 export async function createSupabaseServerClient() {
-  // Next.js 16: cookies() is async
   const cookieStore = await cookies();
 
-  // ✅ unified cookie handling
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,

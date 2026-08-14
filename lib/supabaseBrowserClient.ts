@@ -1,7 +1,6 @@
-// lib/supabaseBrowserClient.ts
 "use client";
 
-import { createBrowserClient } from "@supabase/ssr";
+import { createBrowserClient } from "@supabase/auth-helpers-nextjs"; // ✅ switch package
 
 export function createSupabaseBrowserClient() {
   return createBrowserClient(

@@ -1,8 +1,8 @@
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 
-export async function createSupabaseServerClient() {
-  const cookieStore = await cookies();
+export function createSupabaseServerClient() {
+  const cookieStore = cookies(); // ❗ no await
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -13,10 +13,17 @@ export async function createSupabaseServerClient() {
           return cookieStore.get(name)?.value;
         },
         set(name: string, value: string, options: any) {
-          cookieStore.set(name, value, options);
+          cookieStore.set(name, value, {
+            ...options,
+            secure: process.env.NODE_ENV === "production", // ❗ fix secure cookie issue
+          });
         },
         remove(name: string, options: any) {
-          cookieStore.set(name, "", { ...options, maxAge: 0 });
+          cookieStore.set(name, "", {
+            ...options,
+            maxAge: 0,
+            secure: process.env.NODE_ENV === "production",
+          });
         },
       },
     }

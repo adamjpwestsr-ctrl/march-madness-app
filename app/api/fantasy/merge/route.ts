@@ -18,13 +18,12 @@ export async function POST() {
     // 0. Clear existing merged data
     // -----------------------------------------------------
     const { error: clearErr } = await supabase
-      .from("nfl_player_merged")
-      .delete()
-      .neq("espn_id", "");
+  .from("nfl_player_merged")
+  .delete()
+  .neq("id", -1);
 
-    if (clearErr) {
-      throw new Error(`Failed to clear existing data: ${clearErr.message}`);
-    }
+	if (clearErr) throw new Error(`Failed to clear existing data: ${clearErr.message}`);
+
 
     // -----------------------------------------------------
     // 1. Load Active + FA Players (exclude retired)

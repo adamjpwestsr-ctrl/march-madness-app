@@ -40,20 +40,15 @@ const internalSet = activeInternalIds?.map((p) => p.player_id) || [];
 // Step 2: Convert internal IDs -> espn_id
 const { data: idMap, error: idMapErr } = await supabase
   .from("nfl_players")
-  .select("id, espn_id")
+  .select("id, espn_id, name, team, position")
   .in("id", internalSet);
 
 if (idMapErr) throw new Error(`ID map load error: ${idMapErr.message}`);
 
 const activeEspnIds = idMap.map((p) => p.espn_id);
 
-// Step 3: Load Sleeper players using ESPN IDs
-const { data: sleeperPlayers, error: sleeperErr } = await supabase
-  .from("nfl_players")
-  .select("espn_id, name, team, position")
-  .in("espn_id", activeEspnIds);
-
-if (sleeperErr) throw new Error(`Sleeper players load error: ${sleeperErr.message}`);
+// Step 3: Use the mapped ESPN IDs as your Sleeper player list
+const sleeperPlayers = idMap; // already contains name, team, position, espn_id
 
     // -----------------------------------------------------
     // 2. Load all supporting datasets

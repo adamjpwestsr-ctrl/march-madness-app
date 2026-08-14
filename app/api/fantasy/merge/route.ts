@@ -156,6 +156,7 @@ if (sleeperErr) throw new Error(`Sleeper players load error: ${sleeperErr.messag
         name: player.name,
         team: player.team,
         position: player.position,
+  	status: player.status,
         projected_points: projected,
         last_week_points: wk?.fantasy_points || 0,
         season_points: seasonPoints,

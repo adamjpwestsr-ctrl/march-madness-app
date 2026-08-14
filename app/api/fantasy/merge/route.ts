@@ -24,31 +24,14 @@ export async function POST() {
     if (clearErr) throw new Error(`Failed to clear existing data: ${clearErr.message}`);
 
 // -----------------------------------------------------
-// 1. Load Sleeper Players (current week only)
+// 1. Load ALL Sleeper Players (draft pool)
 // -----------------------------------------------------
-
-// Step 1: Get active internal player IDs from weekly stats
-const { data: activeInternalIds, error: activeErr } = await supabase
-  .from("nfl_stats_weekly")
-  .select("player_id")
-  .eq("week", week);
-
-if (activeErr) throw new Error(`Active player ID load error: ${activeErr.message}`);
-
-const internalSet = activeInternalIds?.map((p) => p.player_id) || [];
-
-// Step 2: Convert internal IDs -> espn_id
-const { data: idMap, error: idMapErr } = await supabase
+const { data: sleeperPlayers, error: sleeperErr } = await supabase
   .from("nfl_players")
-  .select("id, espn_id, name, team, position")
-  .in("id", internalSet);
+  .select("id, espn_id, name, team, position, status");
 
-if (idMapErr) throw new Error(`ID map load error: ${idMapErr.message}`);
+if (sleeperErr) throw new Error(`Sleeper players load error: ${sleeperErr.message}`);
 
-const activeEspnIds = idMap.map((p) => p.espn_id);
-
-// Step 3: Use the mapped ESPN IDs as your Sleeper player list
-const sleeperPlayers = idMap; // already contains name, team, position, espn_id
 
     // -----------------------------------------------------
     // 2. Load all supporting datasets

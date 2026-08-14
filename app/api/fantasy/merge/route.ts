@@ -21,19 +21,23 @@ export async function POST() {
       .from("nfl_player_merged")
       .delete()
       .neq("espn_id", "");
-    if (clearErr) throw new Error(`Failed to clear existing data: ${clearErr.message}`);
 
-// -----------------------------------------------------
-// 1. Load Active + FA Players (exclude retired)
-// -----------------------------------------------------
-const { data: sleeperPlayers, error: sleeperErr } = await supabase
-  .from("nfl_players")
-  .select("id, espn_id, name, team, position, status")
-  .or("team.not.eq.FA,status.not.eq.Retired")
-  .not("espn_id", "is", null);
+    if (clearErr) {
+      throw new Error(`Failed to clear existing data: ${clearErr.message}`);
+    }
 
-if (sleeperErr) throw new Error(`Sleeper players load error: ${sleeperErr.message}`);
+    // -----------------------------------------------------
+    // 1. Load Active + FA Players (exclude retired)
+    // -----------------------------------------------------
+    const { data: sleeperPlayers, error: sleeperErr } = await supabase
+      .from("nfl_players")
+      .select("id, espn_id, name, team, position, status")
+      .or("team.not.eq.FA,status.not.eq.Retired")
+      .not("espn_id", "is", null);
 
+    if (sleeperErr) {
+      throw new Error(`Sleeper players load error: ${sleeperErr.message}`);
+    }
 
     // -----------------------------------------------------
     // 2. Load all supporting datasets
@@ -93,7 +97,12 @@ if (sleeperErr) throw new Error(`Sleeper players load error: ${sleeperErr.messag
       return null;
     };
 
-    const computeArchetypeBadge = (pos: string, rushYds: number, recYds: number, passYds: number) => {
+    const computeArchetypeBadge = (
+      pos: string,
+      rushYds: number,
+      recYds: number,
+      passYds: number
+    ) => {
       switch (pos) {
         case "QB":
           return rushYds >= 40 ? "Scrambler" : "Pocket Passer";
@@ -148,15 +157,16 @@ if (sleeperErr) throw new Error(`Sleeper players load error: ${sleeperErr.messag
 
       const snapPct = snap?.snap_pct || 0;
       const targetShare = tgt?.target_share || 0;
-      const redzoneUsage = (rz?.redzone_targets || 0) + (rz?.redzone_carries || 0);
+      const redzoneUsage =
+        (rz?.redzone_targets || 0) + (rz?.redzone_carries || 0);
 
       return {
-	id: Number(pid),
-	espn_id: Number(pid),
+        id: Number(pid),
+        espn_id: Number(pid),
         name: player.name,
         team: player.team,
         position: player.position,
-  	status: player.status,
+        status: player.status,
         projected_points: projected,
         last_week_points: wk?.fantasy_points || 0,
         season_points: seasonPoints,
@@ -174,8 +184,20 @@ if (sleeperErr) throw new Error(`Sleeper players load error: ${sleeperErr.messag
         is_home: isHome,
         kickoff_time: game?.kickoff || null,
         badge_tier: computeTierBadge(projected, seasonPoints),
-        badge_role: computeRoleBadge(snapPct, targetShare, redzoneUsage, rushYds, recYds, tds),
-        badge_archetype: computeArchetypeBadge(player.position, rushYds, recYds, passYds),
+        badge_role: computeRoleBadge(
+          snapPct,
+          targetShare,
+          redzoneUsage,
+          rushYds,
+          recYds,
+          tds
+        ),
+        badge_archetype: computeArchetypeBadge(
+          player.position,
+          rushYds,
+          recYds,
+          passYds
+        ),
       };
     });
 
@@ -186,14 +208,19 @@ if (sleeperErr) throw new Error(`Sleeper players load error: ${sleeperErr.messag
       .from("nfl_player_merged")
       .upsert(merged, { onConflict: "espn_id" });
 
-    if (mergeErr) throw new Error(`Merge upsert error: ${mergeErr.message}`);
+    if (mergeErr) {
+      throw new Error(`Merge upsert error: ${mergeErr.message}`);
+    }
 
-    return NextResponse.json({ status: "ok", mergedCount: merged.length });
+    return NextResponse.json({
+      status: "ok",
+      mergedCount: merged.length,
+    });
   } catch (err: any) {
     console.error("Hybrid merge failed:", err);
     return NextResponse.json({
       status: "error",
-      message: err.message || "Unknown merge error",
+      message: err?.message || JSON.stringify(err) || "Unknown merge error",
     });
   }
 }

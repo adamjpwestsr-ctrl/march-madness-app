@@ -18,7 +18,6 @@ await fetch("/api/fantasy/merge", { method: "POST" });
       name,
       team,
       position,
-      bye_week,
       projected_points,
       last_week_points,
       season_points,

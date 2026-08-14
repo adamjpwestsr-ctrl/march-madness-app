@@ -151,8 +151,8 @@ if (sleeperErr) throw new Error(`Sleeper players load error: ${sleeperErr.messag
       const redzoneUsage = (rz?.redzone_targets || 0) + (rz?.redzone_carries || 0);
 
       return {
-        id: pid,
-        espn_id: pid,
+	id: Number(pid),
+	espn_id: Number(pid),
         name: player.name,
         team: player.team,
         position: player.position,

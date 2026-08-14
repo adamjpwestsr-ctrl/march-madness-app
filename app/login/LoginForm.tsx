@@ -47,14 +47,6 @@ export default function LoginForm({ onStepChange, onEmailChange }: LoginFormProp
       }
 
       if (res.status === "success") {
-        // ⭐ Apply Supabase session token
-        if (res.supabaseToken) {
-          await supabase.auth.setSession({
-            access_token: res.supabaseToken,
-            refresh_token: res.supabaseToken,
-          });
-        }
-
         router.push("/home");
         return;
       }
@@ -90,14 +82,6 @@ export default function LoginForm({ onStepChange, onEmailChange }: LoginFormProp
       }
 
       if (res.status === "success") {
-        // ⭐ Apply Supabase session token
-        if (res.supabaseToken) {
-          await supabase.auth.setSession({
-            access_token: res.supabaseToken,
-            refresh_token: res.supabaseToken,
-          });
-        }
-
         router.push("/home");
         return;
       }

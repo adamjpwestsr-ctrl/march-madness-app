@@ -16,7 +16,7 @@ import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 export async function loginWithEmail(formData: FormData) {
   const email = formData.get("email")?.toString().trim().toLowerCase();
   if (!email) {
-    return { status: "missingEmail" };
+    return { status: "error", message: "Email is required." };
   }
 
   const supabase = await createSupabaseServerClient();
@@ -34,23 +34,9 @@ export async function loginWithEmail(formData: FormData) {
       return { status: "needsAdminCode", email };
     }
 
-    // ⭐ Generate Supabase session token
-    const { data: tokenData, error: tokenErr } =
-      await supabase.auth.admin.generateLink({
-        type: "magiclink",
-        email,
-      });
-
-    if (tokenErr) {
-      console.error("Supabase token generation failed:", tokenErr);
-      return { status: "error", message: "Failed to generate Supabase session." };
-    }
-
-    const supabaseToken =
-      tokenData.properties?.action_link?.split("token=")[1];
-
-    // ⭐ Set your custom mm_session cookie
+    // ⭐ FIXED: Next.js 16 requires awaiting cookies()
     const cookieStore = await cookies();
+
     cookieStore.set(
       "mm_session",
       JSON.stringify({
@@ -65,8 +51,7 @@ export async function loginWithEmail(formData: FormData) {
       }
     );
 
-    // ⭐ Return Supabase token to client
-    return { status: "success", supabaseToken };
+    return { status: "success" };
   }
 
   // 3. If user is pending approval
@@ -94,7 +79,7 @@ export async function verifyAdminCode(formData: FormData) {
   const code = formData.get("adminCode")?.toString().trim();
 
   if (!email || !code) {
-    return { status: "missingFields" };
+    return { status: "error", message: "Missing email or admin code." };
   }
 
   const supabase = await createSupabaseServerClient();
@@ -106,30 +91,16 @@ export async function verifyAdminCode(formData: FormData) {
     .maybeSingle();
 
   if (!user || !user.is_admin) {
-    return { status: "notAdmin" };
+    return { status: "error", message: "Not an admin." };
   }
 
   if (user.admin_code !== code) {
-    return { status: "invalidAdminCode" };
+    return { status: "invalidCode" };
   }
 
-  // ⭐ Generate Supabase session token
-  const { data: tokenData, error: tokenErr } =
-    await supabase.auth.admin.generateLink({
-      type: "magiclink",
-      email,
-    });
-
-  if (tokenErr) {
-    console.error("Supabase token generation failed:", tokenErr);
-    return { status: "error", message: "Failed to generate Supabase session." };
-  }
-
-  const supabaseToken =
-    tokenData.properties?.action_link?.split("token=")[1];
-
-  // ⭐ Set your custom mm_session cookie
+  // ⭐ FIXED: Next.js 16 requires awaiting cookies()
   const cookieStore = await cookies();
+
   cookieStore.set(
     "mm_session",
     JSON.stringify({
@@ -144,5 +115,5 @@ export async function verifyAdminCode(formData: FormData) {
     }
   );
 
-  return { status: "success", supabaseToken };
+  return { status: "success" };
 }

@@ -42,7 +42,9 @@ export default function LoginForm({ onStepChange, onEmailChange }: LoginFormProp
       }
 
       if (res.status === "pendingApproval") {
-        setError("Your email is not yet approved. A commissioner has been notified.");
+        setError(
+          "Your email is not yet approved. A commissioner has been notified."
+        );
         return;
       }
 

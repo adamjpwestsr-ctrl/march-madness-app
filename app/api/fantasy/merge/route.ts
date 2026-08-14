@@ -24,11 +24,13 @@ export async function POST() {
     if (clearErr) throw new Error(`Failed to clear existing data: ${clearErr.message}`);
 
 // -----------------------------------------------------
-// 1. Load ALL Sleeper Players (draft pool)
+// 1. Load Active + FA Players (exclude retired)
 // -----------------------------------------------------
 const { data: sleeperPlayers, error: sleeperErr } = await supabase
   .from("nfl_players")
-  .select("id, espn_id, name, team, position, status");
+  .select("id, espn_id, name, team, position, status")
+  .or("team.not.eq.FA,status.not.eq.Retired")
+  .not("espn_id", "is", null);
 
 if (sleeperErr) throw new Error(`Sleeper players load error: ${sleeperErr.message}`);
 

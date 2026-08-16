@@ -1,10 +1,9 @@
 // app/api/fantasy/players/route.ts
 import { NextResponse } from "next/server";
-import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
+import { supabase } from "@/lib/supabaseClient"; // ⭐ use public client
 
 export async function GET(req: Request) {
   try {
-    const supabase = await createSupabaseServerClient();
     const { searchParams } = new URL(req.url);
 
     // Optional filters
@@ -17,16 +16,14 @@ export async function GET(req: Request) {
 
     let query = supabase
       .from("nfl_players")
-      .select(
-        `
+      .select(`
         id,
         name,
         position,
         team,
         bye_week,
         projected_points
-      `
-      );
+      `);
 
     // Apply filters
     if (position) {

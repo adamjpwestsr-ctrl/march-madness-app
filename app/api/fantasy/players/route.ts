@@ -1,6 +1,6 @@
 // app/api/fantasy/players/route.ts
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabaseClient"; // ⭐ use public client
+import { supabase } from "@/lib/supabaseClient";
 
 export async function GET(req: Request) {
   try {
@@ -11,28 +11,37 @@ export async function GET(req: Request) {
     const team = searchParams.get("team");
 
     // Optional sorting
-    const sort = searchParams.get("sort") || "name"; // name | projected_points | position
+    const sort = searchParams.get("sort") || "projected_points"; // default sort
     const direction = searchParams.get("direction") === "desc" ? false : true;
 
     let query = supabase
-      .from("nfl_players")
+      .from("nfl_player_merged") // ✅ use merged table
       .select(`
         id,
+        espn_id,
         name,
-        position,
         team,
-        bye_week,
-        projected_points
+        position,
+        projected_points,
+        last_week_points,
+        season_points,
+        snap_pct,
+        target_share,
+        redzone_usage,
+        defense_rank,
+        matchup_difficulty,
+        headshot_url,
+        opponent_team,
+        is_home,
+        kickoff_time,
+        badge_tier,
+        badge_role,
+        badge_archetype
       `);
 
     // Apply filters
-    if (position) {
-      query = query.eq("position", position.toUpperCase());
-    }
-
-    if (team) {
-      query = query.eq("team", team.toUpperCase());
-    }
+    if (position) query = query.eq("position", position.toUpperCase());
+    if (team) query = query.eq("team", team.toUpperCase());
 
     // Apply sorting
     query = query.order(sort, { ascending: direction });

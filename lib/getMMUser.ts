@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 
-export function getMMUser() {
-  const store = cookies();
+export async function getMMUser() {
+  const store = await cookies(); // resolves the Promise
   const raw = store.get("mm_session")?.value;
   if (!raw) return null;
 

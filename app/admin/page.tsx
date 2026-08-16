@@ -5,10 +5,10 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import AdminClient from "./AdminClient";
 
-export default function AdminPage() {
+export default async function AdminPage() {
   try {
-    // 1) Read mm_session cookie
-    const store = cookies();
+    // 1) Read mm_session cookie (async in your environment)
+    const store = await cookies();
     const raw = store.get("mm_session")?.value;
 
     if (!raw) {

@@ -42,12 +42,12 @@ export default function FantasyDraftRoom() {
   const [channel, setChannel] = useState<any>(null);
   const [isHost, setIsHost] = useState(false);
 
-  // ⭐ Player Comparison Modal State
+  // Player Comparison Modal State
   const [compareOpen, setCompareOpen] = useState(false);
   const [compareA, setCompareA] = useState<any>(null);
   const [compareB, setCompareB] = useState<any>(null);
 
-  // Load league + players
+  // Load league + teams + players
   useEffect(() => {
     const load = async () => {
       if (!leagueId) return;
@@ -82,9 +82,9 @@ export default function FantasyDraftRoom() {
     load();
   }, [leagueId]);
 
-  // Join Supabase channel (broadcast)
+  // Join Supabase channel (broadcast) — guarded so it only runs once league is loaded
   useEffect(() => {
-    if (!leagueId) return;
+    if (!leagueId || !league) return;
 
     const supabase = createSupabaseBrowserClient();
     const ch = supabase.channel(`draft-${leagueId}`);
@@ -250,6 +250,7 @@ export default function FantasyDraftRoom() {
         },
       });
     }
+
     // Advance pick
     const nextPick = currentPick + 1;
     const totalPicks = league.numTeams * rosterSize;
@@ -331,7 +332,7 @@ export default function FantasyDraftRoom() {
     return () => clearInterval(interval);
   }, [timer, onTheClock, autoPick, isHost, channel]);
 
-  if (loading) {
+  if (loading || !league) {
     return <p className="text-slate-400 p-6">Loading draft room...</p>;
   }
 
@@ -392,7 +393,6 @@ export default function FantasyDraftRoom() {
                     </div>
                   </div>
 
-                  {/* ⭐ Updated: Draft + Compare Buttons */}
                   <div className="flex gap-2">
                     <button
                       className="px-3 py-1 bg-blue-600 text-white rounded"
@@ -498,7 +498,7 @@ export default function FantasyDraftRoom() {
         </div>
       </div>
 
-      {/* ⭐ Player Comparison Modal */}
+      {/* Player Comparison Modal */}
       <PlayerComparisonModal
         open={compareOpen}
         onClose={() => {

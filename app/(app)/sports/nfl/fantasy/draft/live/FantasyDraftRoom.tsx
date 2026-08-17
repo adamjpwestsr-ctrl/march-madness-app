@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useDraftQueue } from "@/hooks/useDraftQueue";
 import QueueSortableList from "@/components/QueueSortableList";
@@ -39,7 +39,7 @@ export default function FantasyDraftRoom() {
   const { queue, removeFromQueue, updateRank } = useDraftQueue();
 
   // Real-time
-  const [channel, setChannel] = useState<any>(null);
+  const channelRef = useRef<any>(null);
   const [isHost, setIsHost] = useState(false);
 
   // Player Comparison Modal State
@@ -82,9 +82,10 @@ export default function FantasyDraftRoom() {
     load();
   }, [leagueId]);
 
-  // Join Supabase channel (broadcast) — guarded so it only runs once league is loaded
+  // Join Supabase channel (broadcast) — subscribe once per leagueId
   useEffect(() => {
-    if (!leagueId || !league) return;
+    if (!leagueId) return;
+    if (channelRef.current) return; // already subscribed
 
     const supabase = createSupabaseBrowserClient();
     const ch = supabase.channel(`draft-${leagueId}`);
@@ -101,70 +102,77 @@ export default function FantasyDraftRoom() {
       }
     });
 
-    setChannel(ch);
-
     // Listen for player_drafted
     ch.on("broadcast", { event: "player_drafted" }, ({ payload }: any) => {
-      if (!league || isHost) return;
+      // league is read from state; we don't re-subscribe when it changes
+      setLeague((currentLeague: any) => {
+        if (!currentLeague || isHost) return currentLeague;
 
-      const {
-        player_id,
-        team_id,
-        pick_number,
-        name,
-        position,
-        team,
-      } = payload;
-
-      // Remove from queue
-      removeFromQueue(player_id);
-
-      // Update history
-      setHistory((h) => [
-        ...h,
-        {
-          pick: pick_number,
-          teamId: team_id,
-          playerId: player_id,
+        const {
+          player_id,
+          team_id,
+          pick_number,
           name,
           position,
           team,
-        },
-      ]);
+        } = payload;
 
-      // Update big board
-      setTeams((prev) =>
-        prev.map((t) =>
-          t.id === team_id
-            ? {
-                ...t,
-                picks: [
-                  ...(t.picks || []),
-                  { id: player_id, name, position, team },
-                ],
-              }
-            : t
-        )
-      );
+        // Remove from queue
+        removeFromQueue(player_id);
 
-      // Advance pick
-      const nextPick = pick_number + 1;
-      const totalPicks = league.numTeams * rosterSize;
+        // Update history
+        setHistory((h) => [
+          ...h,
+          {
+            pick: pick_number,
+            teamId: team_id,
+            playerId: player_id,
+            name,
+            position,
+            team,
+          },
+        ]);
 
-      if (nextPick > totalPicks) {
-        router.push("/sports/nfl/fantasy");
-        return;
-      }
+        // Update big board
+        setTeams((prev) =>
+          prev.map((t) =>
+            t.id === team_id
+              ? {
+                  ...t,
+                  picks: [
+                    ...(t.picks || []),
+                    { id: player_id, name, position, team },
+                  ],
+                }
+              : t
+          )
+        );
 
-      setCurrentPick(nextPick);
+        // Advance pick
+        const nextPick = pick_number + 1;
+        const totalPicks = currentLeague.numTeams * rosterSize;
 
-      const nextTeam =
-        league.draftType === "snake"
-          ? getSnakeTeam(nextPick, league.numTeams, league.draftOrder)
-          : league.draftOrder[(nextPick - 1) % league.numTeams];
+        if (nextPick > totalPicks) {
+          router.push("/sports/nfl/fantasy");
+          return currentLeague;
+        }
 
-      setOnTheClock(nextTeam);
-      setTimer(league.pickTimer);
+        setCurrentPick(nextPick);
+
+        const nextTeam =
+          currentLeague.draftType === "snake"
+            ? getSnakeTeam(
+                nextPick,
+                currentLeague.numTeams,
+                currentLeague.draftOrder
+              )
+            : currentLeague.draftOrder[(nextPick - 1) % currentLeague.numTeams];
+
+        setOnTheClock(nextTeam);
+        setTimer(currentLeague.pickTimer);
+
+        return currentLeague;
+      });
     });
 
     // Listen for timer_tick
@@ -173,10 +181,13 @@ export default function FantasyDraftRoom() {
       setTimer(payload.timer);
     });
 
+    channelRef.current = ch;
+
     return () => {
       ch.unsubscribe();
+      channelRef.current = null;
     };
-  }, [leagueId, league, isHost, removeFromQueue, router]);
+  }, [leagueId, isHost, removeFromQueue, router]);
 
   // Snake draft logic
   const getSnakeTeam = (
@@ -236,8 +247,8 @@ export default function FantasyDraftRoom() {
     removeFromQueue(player.id);
 
     // Broadcast pick
-    if (channel) {
-      channel.send({
+    if (channelRef.current) {
+      channelRef.current.send({
         type: "broadcast",
         event: "player_drafted",
         payload: {
@@ -318,8 +329,8 @@ export default function FantasyDraftRoom() {
     const interval = setInterval(() => {
       setTimer((t) => {
         const next = t - 1;
-        if (channel) {
-          channel.send({
+        if (channelRef.current) {
+          channelRef.current.send({
             type: "broadcast",
             event: "timer_tick",
             payload: { timer: next },
@@ -330,7 +341,7 @@ export default function FantasyDraftRoom() {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [timer, onTheClock, autoPick, isHost, channel]);
+  }, [timer, onTheClock, autoPick, isHost]);
 
   if (loading || !league) {
     return <p className="text-slate-400 p-6">Loading draft room...</p>;

@@ -6,7 +6,9 @@ export const dynamic = "force-dynamic";
 
 export default async function PlayersPage() {
   // Trigger merge before fetching
-await fetch("/api/fantasy/merge", { method: "POST" });
+await fetch(`${process.env.VERCEL_URL ? "https://" + process.env.VERCEL_URL : "http://localhost:3000"}/api/fantasy/merge`, {
+  method: "POST",
+});
 
   const supabase = await createSupabaseServerClient();
 

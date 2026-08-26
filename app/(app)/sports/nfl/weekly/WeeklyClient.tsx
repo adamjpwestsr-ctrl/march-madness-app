@@ -10,6 +10,11 @@ type Props = {
   games: WeeklyGame[];
   teamsById: Record<string, Team>;
   lockTime: string | null;
+
+  // NEW props for week selector + navigation
+  allWeeks: number[];
+  prevWeek: number | null;
+  nextWeek: number | null;
 };
 
 export default function WeeklyClient({
@@ -18,6 +23,9 @@ export default function WeeklyClient({
   games,
   teamsById,
   lockTime,
+  allWeeks,
+  prevWeek,
+  nextWeek,
 }: Props) {
   const supabase = createSupabaseBrowserClient();
 
@@ -169,6 +177,49 @@ export default function WeeklyClient({
 
   return (
     <div className="flex flex-col gap-6">
+
+      {/* WEEK NAVIGATION */}
+      <div className="flex items-center justify-between mb-4">
+        {/* Prev */}
+        <a
+          href={`?week=${prevWeek}`}
+          className={`px-3 py-2 rounded border ${
+            prevWeek
+              ? "border-slate-700 hover:bg-slate-800"
+              : "opacity-40 cursor-not-allowed"
+          }`}
+        >
+          ← Prev
+        </a>
+
+        {/* Dropdown */}
+        <select
+          value={week}
+          onChange={(e) => {
+            window.location.href = `?week=${e.target.value}`;
+          }}
+          className="px-3 py-2 rounded bg-slate-800 border border-slate-700"
+        >
+          {allWeeks.map((w) => (
+            <option key={w} value={w}>
+              Week {w}
+            </option>
+          ))}
+        </select>
+
+        {/* Next */}
+        <a
+          href={`?week=${nextWeek}`}
+          className={`px-3 py-2 rounded border ${
+            nextWeek
+              ? "border-slate-700 hover:bg-slate-800"
+              : "opacity-40 cursor-not-allowed"
+          }`}
+        >
+          Next →
+        </a>
+      </div>
+
       {/* HEADER */}
       <header className="flex items-center justify-between">
         <div>

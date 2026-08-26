@@ -35,16 +35,16 @@ export async function POST(req: Request) {
       );
     }
 
-    // Survivor mode: one pick per week, game_id = null
+    // Survivor mode: one pick per week, game_id = -1
     const { error } = await supabase.from("user_picks").upsert(
       {
         user_id: user.userId,
         sport: "NFL",
         week_number: week,
-        game_id: null, // Survivor-specific
+        game_id: -1, // Survivor-specific
         winner_team_id: teamId,
       },
-      { onConflict: "user_id,sport,week_number" }
+      { onConflict: "user_id,game_id" } // matches your table's unique constraint
     );
 
     if (error) {

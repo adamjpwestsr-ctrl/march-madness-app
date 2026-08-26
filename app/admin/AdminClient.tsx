@@ -126,6 +126,10 @@ export default function AdminClient({ adminEmail }: { adminEmail: string }) {
         { href: "/admin/mlb/derby", label: "MLB Derby Admin", icon: <FaBaseballBall /> },
 
         { href: "/admin/nfl-weekly", label: "NFL Weekly Admin", icon: <FaFootballBall /> },
+
+        // 🟩 NEW — Survivor Admin
+        { href: "/admin/nfl-survivor", label: "NFL Survivor Admin", icon: <FaFootballBall /> },
+
         { href: "/admin/nba-weekly", label: "NBA Weekly Admin", icon: <FaBasketballBall /> },
         { href: "/admin/nhl-weekly", label: "NHL Weekly Admin", icon: <FaHockeyPuck /> },
 
@@ -189,7 +193,7 @@ export default function AdminClient({ adminEmail }: { adminEmail: string }) {
   };
 
   // -----------------------------
-  // Refresh Fantasy Data (Sleeper + nflverse)
+  // Refresh Fantasy Data
   // -----------------------------
   const handleRefreshFantasyData = async () => {
     try {

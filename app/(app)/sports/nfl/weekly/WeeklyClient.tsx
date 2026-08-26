@@ -1,5 +1,3 @@
-// app/(app)/sports/nfl/weekly/WeeklyClient.tsx
-
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
@@ -29,20 +27,38 @@ export default function WeeklyClient({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
+  // Read mm_session cookie
+  function getLocalSession() {
+    const raw = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("mm_session="))
+      ?.split("=")[1];
+
+    if (!raw) return null;
+
+    try {
+      return JSON.parse(decodeURIComponent(raw));
+    } catch {
+      return null;
+    }
+  }
+
+  const user = getLocalSession();
+
   const isLocked = useMemo(() => {
     if (!lockTime) return false;
     return new Date(lockTime) <= new Date();
   }, [lockTime]);
 
+  // Load used teams
   useEffect(() => {
     async function loadUsedTeams() {
-      const user = (await supabase.auth.getUser()).data.user;
       if (!user) return;
 
       const { data } = await supabase
         .from("user_picks")
         .select("winner_team_id")
-        .eq("user_id", user.id)
+        .eq("user_id", user.userId)
         .eq("sport", "NFL");
 
       setUsedTeams(data?.map((p) => p.winner_team_id) ?? []);
@@ -51,15 +67,15 @@ export default function WeeklyClient({
     loadUsedTeams();
   }, []);
 
+  // Load existing pick for this week
   useEffect(() => {
     async function loadExistingPick() {
-      const user = (await supabase.auth.getUser()).data.user;
       if (!user) return;
 
       const { data } = await supabase
         .from("user_picks")
         .select("winner_team_id")
-        .eq("user_id", user.id)
+        .eq("user_id", user.userId)
         .eq("sport", "NFL")
         .eq("week_number", week)
         .maybeSingle();
@@ -72,6 +88,7 @@ export default function WeeklyClient({
     loadExistingPick();
   }, [week]);
 
+  // Build team list for Pick’em
   const teams = useMemo(() => {
     const list: {
       id: string;
@@ -109,9 +126,15 @@ export default function WeeklyClient({
     return list;
   }, [games, teamsById]);
 
+  // Submit Pick’em pick
   const handleSubmit = async () => {
     if (!selectedTeam) {
       setError("Please select a team.");
+      return;
+    }
+
+    if (!user) {
+      setError("You must be logged in to submit picks.");
       return;
     }
 
@@ -120,14 +143,8 @@ export default function WeeklyClient({
     setSuccess(null);
 
     try {
-      const user = (await supabase.auth.getUser()).data.user;
-      if (!user) {
-        setError("You must be logged in to submit picks.");
-        return;
-      }
-
       const payload = {
-        user_id: user.id,
+        user_id: user.userId,
         game_id: games[0]?.id ?? 0,
         sport: "NFL",
         week_number: week,
@@ -152,10 +169,11 @@ export default function WeeklyClient({
 
   return (
     <div className="flex flex-col gap-6">
+      {/* HEADER */}
       <header className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-semibold">
-            NFL Weekly Challenge — Week {week}
+            NFL Weekly Pick’em — Week {week}
           </h1>
           {lockTime && (
             <p className="text-sm text-muted-foreground">
@@ -173,6 +191,7 @@ export default function WeeklyClient({
         </button>
       </header>
 
+      {/* ERRORS / SUCCESS */}
       {error && (
         <div className="rounded bg-red-100 text-red-800 px-3 py-2 text-sm">
           {error}
@@ -184,6 +203,7 @@ export default function WeeklyClient({
         </div>
       )}
 
+      {/* TEAM GRID */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {teams.map((team) => {
           const isUsed = usedTeams.includes(team.id);

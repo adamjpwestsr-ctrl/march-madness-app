@@ -1,48 +1,80 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-export async function POST(req: Request) {
+export async function GET() {
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
 
   try {
-    const { week, winningTeams } = await req.json();
+    // 1. Load all NFL game results
+    const { data: results, error: resultsError } = await supabase
+      .from("sport_results")
+      .select("game_id, winner_team_id, sport")
+      .eq("sport", "NFL");
 
-    if (!week || !Array.isArray(winningTeams)) {
-      return NextResponse.json({ error: "Missing or invalid data" }, { status: 400 });
+    if (resultsError) {
+      console.error("Results error:", resultsError);
+      return NextResponse.json({ rows: [] });
     }
 
-    // Update winners in schedule
-    for (const teamId of winningTeams) {
-      await supabase
-        .from("nfl_schedule")
-        .update({ winner_team_id: teamId })
-        .eq("week_number", week)
-        .or(`home_team_id.eq.${teamId},away_team_id.eq.${teamId}`);
+    if (!results || results.length === 0) {
+      return NextResponse.json({ rows: [] });
     }
 
-    // Load all picks for the week
-    const { data: picks } = await supabase
-      .from("nfl_challenge_selections")
-      .select("*")
-      .eq("week_number", week);
+    // 2. Load schedule to get week numbers + team IDs
+    const { data: schedule, error: scheduleError } = await supabase
+      .from("sport_schedule")
+      .select("id, week_number, home_team_id, away_team_id")
+      .eq("sport", "NFL");
 
-    if (picks && picks.length > 0) {
-      for (const pick of picks) {
-        const isCorrect = winningTeams.includes(pick.selected_team_id);
-
-        await supabase
-          .from("nfl_challenge_selections")
-          .update({ points_awarded: isCorrect ? 1 : 0 })
-          .eq("id", pick.id);
-      }
+    if (scheduleError) {
+      console.error("Schedule error:", scheduleError);
+      return NextResponse.json({ rows: [] });
     }
 
-    return NextResponse.json({ success: true });
+    const scheduleMap: Record<number, any> = {};
+    schedule?.forEach((g) => {
+      scheduleMap[g.id] = g;
+    });
+
+    // 3. Collect all team IDs involved in results
+    const teamIds = Array.from(
+      new Set(
+        results.map((r) => r.winner_team_id)
+      )
+    );
+
+    // 4. Load team info
+    const { data: teams } = await supabase
+      .from("teams_sports")
+      .select("id,name,abbreviation,logo_url")
+      .in("id", teamIds);
+
+    const teamMap: Record<string, any> = {};
+    teams?.forEach((t) => {
+      teamMap[t.id] = t;
+    });
+
+    // 5. Build result rows
+    const rows = results.map((r) => {
+      const sched = scheduleMap[r.game_id];
+      const team = teamMap[r.winner_team_id];
+
+      return {
+        game_id: r.game_id,
+        week: sched?.week_number ?? null,
+        winner_team_id: r.winner_team_id,
+        team: team?.name ?? "Unknown",
+        abbrev: team?.abbreviation ?? "",
+        logo: team?.logo_url ?? null,
+      };
+    });
+
+    return NextResponse.json({ rows });
   } catch (err: any) {
-    console.error("Results route fatal error:", err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    console.error("Results fatal error:", err);
+    return NextResponse.json({ rows: [] });
   }
 }

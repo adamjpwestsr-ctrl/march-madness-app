@@ -30,16 +30,17 @@ export async function GET(req: Request) {
       return NextResponse.json({ rows: [] });
     }
 
-    // 1. Load all picks for this user
+    // 1. Load Survivor picks (game_id = null)
     const { data: picks, error: picksError } = await supabase
       .from("user_picks")
-      .select("week_number, game_id, winner_team_id")
+      .select("week_number, winner_team_id")
       .eq("user_id", user.userId)
       .eq("sport", "NFL")
+      .is("game_id", null)
       .order("week_number", { ascending: true });
 
     if (picksError) {
-      console.error("History picks error:", picksError);
+      console.error("Survivor history picks error:", picksError);
       return NextResponse.json({ rows: [] });
     }
 
@@ -47,26 +48,21 @@ export async function GET(req: Request) {
       return NextResponse.json({ rows: [] });
     }
 
-    // 2. Load game results
+    // 2. Load NFL results
     const { data: results, error: resultsError } = await supabase
       .from("sport_results")
-      .select("game_id, winner_team_id")
+      .select("winner_team_id, game_id")
       .eq("sport", "NFL");
 
     if (resultsError) {
-      console.error("History results error:", resultsError);
+      console.error("Survivor history results error:", resultsError);
       return NextResponse.json({ rows: [] });
     }
 
-    const resultMap: Record<number, string> = {};
-    results?.forEach((r) => {
-      resultMap[r.game_id] = r.winner_team_id;
-    });
+    const winningTeams = new Set(results.map((r) => r.winner_team_id));
 
     // 3. Load team info
-    const teamIds = Array.from(
-      new Set(picks.map((p) => p.winner_team_id))
-    );
+    const teamIds = Array.from(new Set(picks.map((p) => p.winner_team_id)));
 
     const { data: teams } = await supabase
       .from("teams_sports")
@@ -81,8 +77,7 @@ export async function GET(req: Request) {
     // 4. Build history rows
     const rows = picks.map((p) => {
       const team = teamMap[p.winner_team_id];
-      const correctWinner = resultMap[p.game_id];
-      const correct = correctWinner === p.winner_team_id;
+      const correct = winningTeams.has(p.winner_team_id);
 
       return {
         week: p.week_number,
@@ -96,7 +91,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json({ rows });
   } catch (err: any) {
-    console.error("History fatal error:", err);
+    console.error("Survivor history fatal error:", err);
     return NextResponse.json({ rows: [] });
   }
 }

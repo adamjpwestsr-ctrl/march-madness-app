@@ -8,9 +8,9 @@ export async function POST(req: Request) {
   );
 
   try {
-    const { week, teamId, gameId } = await req.json();
+    const { week, teamId } = await req.json();
 
-    // Read mm_session cookie for user info
+    // Read mm_session cookie
     const cookie = req.headers.get("cookie") || "";
     const sessionRaw = cookie
       .split("; ")
@@ -28,32 +28,33 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid session" }, { status: 400 });
     }
 
-    if (!week || !teamId || !gameId || !user?.userId) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    if (!week || !teamId || !user?.userId) {
+      return NextResponse.json(
+        { error: "Missing required fields" },
+        { status: 400 }
+      );
     }
 
-    // Upsert Pick’em pick (one per game)
-    const { error } = await supabase
-      .from("user_picks")
-      .upsert(
-        {
-          user_id: user.userId,
-          sport: "NFL",
-          week_number: week,
-          game_id: gameId,
-          winner_team_id: teamId,
-        },
-        { onConflict: "user_id,game_id,sport,week_number" }
-      );
+    // Survivor mode: one pick per week, game_id = null
+    const { error } = await supabase.from("user_picks").upsert(
+      {
+        user_id: user.userId,
+        sport: "NFL",
+        week_number: week,
+        game_id: null, // Survivor-specific
+        winner_team_id: teamId,
+      },
+      { onConflict: "user_id,sport,week_number" }
+    );
 
     if (error) {
-      console.error("Pick submission error:", error);
+      console.error("Survivor pick error:", error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });
   } catch (err: any) {
-    console.error("Pick submission fatal error:", err);
+    console.error("Survivor pick fatal error:", err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

@@ -1,23 +1,45 @@
+// /app/admin/nfl-survivor/AdminSurvivorClient.tsx
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ResponsiveContainer, BarChart, Bar, XAxis, Tooltip } from "recharts";
 
 const WEEKS = Array.from({ length: 17 }, (_, i) => i + 1);
 
-interface AdminWeeklyProps {
+interface AdminSurvivorProps {
   teams: any[];
   settings: any[];
 }
 
-export default function AdminWeeklyClient({ teams, settings }: AdminWeeklyProps) {
+type LeaderboardRow = {
+  user_id: string;
+  name: string | null;
+  longestStreak: number;
+  currentStreak: number;
+  totalCorrect: number;
+  eliminatedWeek: number | null;
+  rank: number;
+};
+
+type HistoryRow = {
+  week: number;
+  team: string;
+  abbrev: string;
+  logo: string | null;
+  correct: boolean;
+  points: number;
+};
+
+export default function AdminSurvivorClient({ teams, settings }: AdminSurvivorProps) {
   const [currentWeek, setCurrentWeek] = useState(1);
-  const [winningTeams, setWinningTeams] = useState<string[]>([]);
-  const [leaderboard, setLeaderboard] = useState<any[]>([]);
+  const [winningTeam, setWinningTeam] = useState<string>("");
+  const [leaderboard, setLeaderboard] = useState<LeaderboardRow[]>([]);
+  const [history, setHistory] = useState<HistoryRow[]>([]);
   const [overrideUser, setOverrideUser] = useState("");
   const [overrideTeam, setOverrideTeam] = useState("");
   const [overrideWeek, setOverrideWeek] = useState(1);
+  const [lockTime, setLockTime] = useState("");
+  const [countdown, setCountdown] = useState("");
   const [toast, setToast] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,11 +48,13 @@ export default function AdminWeeklyClient({ teams, settings }: AdminWeeklyProps)
     [settings, currentWeek]
   );
 
-  const [lockTime, setLockTime] = useState(
-    typeof weekSettings?.lock_time === "string" ? weekSettings.lock_time : ""
-  );
-
-  const [countdown, setCountdown] = useState("");
+  useEffect(() => {
+    if (typeof weekSettings?.lock_time === "string") {
+      setLockTime(weekSettings.lock_time);
+    } else {
+      setLockTime("");
+    }
+  }, [weekSettings]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -47,24 +71,6 @@ export default function AdminWeeklyClient({ teams, settings }: AdminWeeklyProps)
     return () => clearInterval(interval);
   }, [lockTime]);
 
-  const loadLeaderboard = async () => {
-    const res = await fetch("/api/nfl/weekly/leaderboard");
-    const data = await res.json();
-    setLeaderboard(data.rows || []);
-  };
-
-  useEffect(() => {
-    loadLeaderboard();
-  }, []);
-
-  const toggleWinner = (teamId: string) => {
-    setWinningTeams((prev) =>
-      prev.includes(teamId)
-        ? prev.filter((t) => t !== teamId)
-        : [...prev, teamId]
-    );
-  };
-
   const showToast = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 2500);
@@ -74,35 +80,48 @@ export default function AdminWeeklyClient({ teams, settings }: AdminWeeklyProps)
     setError(msg);
     setTimeout(() => setError(null), 3000);
   };
-  /* ---------------------------
-     SUBMIT WINNERS
-  ---------------------------- */
-  const submitWinners = async () => {
+
+  const loadLeaderboard = async () => {
+    const res = await fetch("/api/nfl/survivor/leaderboard");
+    const data = await res.json();
+    setLeaderboard(data.rows || []);
+  };
+
+  const loadHistory = async () => {
+    const res = await fetch("/api/nfl/survivor/history");
+    const data = await res.json();
+    setHistory(data.rows || []);
+  };
+
+  useEffect(() => {
+    loadLeaderboard();
+    loadHistory();
+  }, []);
+
+  const submitWinner = async () => {
     try {
-      const res = await fetch("/api/nfl/weekly/results", {
+      const res = await fetch("/api/admin/nfl/survivor/results", {
         method: "POST",
         body: JSON.stringify({
           week: currentWeek,
-          winningTeams,
+          winningTeamId: winningTeam,
         }),
       });
 
-      if (!res.ok) throw new Error("Failed to submit winners");
+      if (!res.ok) throw new Error("Failed to submit Survivor winner");
 
-      showToast("Results submitted + points awarded!");
+      showToast("Survivor winner submitted + eliminations processed!");
       loadLeaderboard();
-      setWinningTeams([]);
+      loadHistory();
+      setWinningTeam("");
     } catch (err: any) {
       showError(err.message);
     }
   };
 
-  /* ---------------------------
-     OVERRIDE PICK
-  ---------------------------- */
   const overridePick = async () => {
     try {
-      const res = await fetch("/api/nfl/weekly/pick", {
+      const res = await fetch("/api/nfl/survivor/pick", {
         method: "POST",
         body: JSON.stringify({
           week: overrideWeek,
@@ -111,43 +130,39 @@ export default function AdminWeeklyClient({ teams, settings }: AdminWeeklyProps)
         }),
       });
 
-      if (!res.ok) throw new Error("Failed to override pick");
+      if (!res.ok) throw new Error("Failed to override Survivor pick");
 
-      showToast("Pick overridden!");
+      showToast("Survivor pick overridden!");
       loadLeaderboard();
+      loadHistory();
     } catch (err: any) {
       showError(err.message);
     }
   };
 
-  /* ---------------------------
-     RESET WEEK
-  ---------------------------- */
   const resetWeek = async () => {
-    if (!confirm(`Reset Week ${currentWeek}? This removes all picks + points.`))
+    if (!confirm(`Reset Survivor Week ${currentWeek}? This removes picks, eliminations, and recalculates streaks.`))
       return;
 
     try {
-      const res = await fetch("/api/admin/nfl/weekly/reset", {
+      const res = await fetch("/api/admin/nfl/survivor/reset", {
         method: "POST",
         body: JSON.stringify({ week: currentWeek }),
       });
 
-      if (!res.ok) throw new Error("Failed to reset week");
+      if (!res.ok) throw new Error("Failed to reset Survivor week");
 
-      showToast(`Week ${currentWeek} reset!`);
+      showToast(`Survivor Week ${currentWeek} reset!`);
       loadLeaderboard();
+      loadHistory();
     } catch (err: any) {
       showError(err.message);
     }
   };
 
-  /* ---------------------------
-     UPDATE LOCK TIME
-  ---------------------------- */
   const updateLockTime = async () => {
     try {
-      const res = await fetch("/api/admin/nfl/weekly/lock", {
+      const res = await fetch("/api/admin/nfl/survivor/lock", {
         method: "POST",
         body: JSON.stringify({
           week: currentWeek,
@@ -155,25 +170,14 @@ export default function AdminWeeklyClient({ teams, settings }: AdminWeeklyProps)
         }),
       });
 
-      if (!res.ok) throw new Error("Failed to update lock time");
+      if (!res.ok) throw new Error("Failed to update Survivor lock time");
 
-      showToast("Lock time updated!");
+      showToast("Survivor lock time updated!");
     } catch (err: any) {
       showError(err.message);
     }
   };
 
-  /* ---------------------------
-     MINI CHART DATA
-  ---------------------------- */
-  const chartData = leaderboard.map((entry: any) => ({
-    email: entry.email,
-    points: entry.points,
-  }));
-
-  /* ---------------------------
-     RENDER
-  ---------------------------- */
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-100 p-10">
       <motion.h1
@@ -181,10 +185,9 @@ export default function AdminWeeklyClient({ teams, settings }: AdminWeeklyProps)
         animate={{ opacity: 1, y: 0 }}
         className="text-3xl font-bold mb-8"
       >
-        NFL Weekly Picks — Admin Tools
+        NFL Survivor — Admin Tools
       </motion.h1>
 
-      {/* Toast */}
       <AnimatePresence>
         {toast && (
           <motion.div
@@ -198,7 +201,6 @@ export default function AdminWeeklyClient({ teams, settings }: AdminWeeklyProps)
         )}
       </AnimatePresence>
 
-      {/* Error Banner */}
       <AnimatePresence>
         {error && (
           <motion.div
@@ -230,13 +232,9 @@ export default function AdminWeeklyClient({ teams, settings }: AdminWeeklyProps)
                   whileTap={{ scale: 0.95 }}
                   onClick={() => {
                     setCurrentWeek(week);
-                    setWinningTeams([]);
-                    setLockTime(
-                      typeof settings.find((s) => s.week_number === week)?.lock_time ===
-                        "string"
-                        ? settings.find((s) => s.week_number === week)!.lock_time
-                        : ""
-                    );
+                    setWinningTeam("");
+                    const s = settings.find((x) => x.week_number === week);
+                    setLockTime(typeof s?.lock_time === "string" ? s.lock_time : "");
                   }}
                   className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${
                     week === currentWeek
@@ -255,48 +253,33 @@ export default function AdminWeeklyClient({ teams, settings }: AdminWeeklyProps)
             </div>
           </motion.div>
 
-          {/* Winner Selection */}
+          {/* Survivor Winner Selection */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             className="bg-slate-900 border border-slate-700 p-6 rounded-xl shadow-lg"
           >
-            <h2 className="text-xl font-bold mb-4">Select Winning Teams</h2>
+            <h2 className="text-xl font-bold mb-4">Set Survivor Winning Team</h2>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+            <select
+              value={winningTeam}
+              onChange={(e) => setWinningTeam(e.target.value)}
+              className="w-full mb-4 px-3 py-2 rounded bg-slate-800 border border-slate-700"
+            >
+              <option value="">Select Winning Team</option>
               {teams.map((team: any) => (
-                <motion.button
-                  key={team.id}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => toggleWinner(team.id)}
-                  className={`p-4 rounded-xl border text-center transition ${
-                    winningTeams.includes(team.id)
-                      ? "border-emerald-400 bg-emerald-500/20"
-                      : "border-slate-700 bg-slate-800 hover:border-emerald-400"
-                  }`}
-                >
-                  {team.logo_url ? (
-                    <img
-                      src={team.logo_url}
-                      alt={team.name}
-                      className="h-10 w-10 mx-auto mb-2 object-contain"
-                    />
-                  ) : (
-                    <div className="text-3xl mb-2">{team.emoji}</div>
-                  )}
-
-                  <div className="font-semibold">{team.name}</div>
-                </motion.button>
+                <option key={team.id} value={team.id}>
+                  {team.name}
+                </option>
               ))}
-            </div>
+            </select>
 
             <motion.button
               whileTap={{ scale: 0.95 }}
-              onClick={submitWinners}
-              className="mt-6 bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg"
+              onClick={submitWinner}
+              className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg"
             >
-              Submit Winners + Award Points
+              Submit Survivor Winner + Process Eliminations
             </motion.button>
           </motion.div>
 
@@ -306,7 +289,7 @@ export default function AdminWeeklyClient({ teams, settings }: AdminWeeklyProps)
             animate={{ opacity: 1, y: 0 }}
             className="bg-slate-900 border border-slate-700 p-6 rounded-xl shadow-lg"
           >
-            <h2 className="text-xl font-bold mb-4">Reset Week</h2>
+            <h2 className="text-xl font-bold mb-4">Reset Survivor Week</h2>
 
             <motion.button
               whileTap={{ scale: 0.95 }}
@@ -326,34 +309,42 @@ export default function AdminWeeklyClient({ teams, settings }: AdminWeeklyProps)
             animate={{ opacity: 1, y: 0 }}
             className="bg-slate-900 border border-slate-700 p-6 rounded-xl shadow-lg"
           >
-            <h2 className="text-xl font-bold mb-4">Leaderboard</h2>
+            <h2 className="text-xl font-bold mb-4">Survivor Leaderboard</h2>
 
-            <div className="space-y-3">
-              {leaderboard.map((entry: any, i: number) => (
+            <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
+              {leaderboard.map((entry, i) => (
                 <motion.div
-                  key={i}
+                  key={entry.user_id}
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.2, delay: i * 0.03 }}
-                  className="flex justify-between bg-slate-800 px-3 py-2 rounded-lg"
+                  className="flex justify-between bg-slate-800 px-3 py-2 rounded-lg text-sm"
                 >
-                  <span>{entry.email}</span>
-                  <span className="font-bold text-emerald-400">
-                    {entry.points}
-                  </span>
+                  <div className="flex flex-col">
+                    <span className="font-medium">
+                      {entry.name || `User ${entry.user_id.slice(0, 6)}`}
+                    </span>
+                    <span className="text-xs text-slate-400">
+                      Rank {entry.rank} • Longest {entry.longestStreak} • Current{" "}
+                      {entry.currentStreak}
+                    </span>
+                  </div>
+                  <div className="flex flex-col items-end">
+                    {entry.eliminatedWeek === null ? (
+                      <span className="text-emerald-400 text-xs font-semibold">
+                        Still Alive
+                      </span>
+                    ) : (
+                      <span className="text-red-400 text-xs font-semibold">
+                        Eliminated (W{entry.eliminatedWeek})
+                      </span>
+                    )}
+                    <span className="text-xs text-slate-400">
+                      Total Correct {entry.totalCorrect}
+                    </span>
+                  </div>
                 </motion.div>
               ))}
-            </div>
-
-            {/* Mini Chart */}
-            <div className="mt-6 h-40">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData}>
-                  <XAxis dataKey="email" hide />
-                  <Tooltip />
-                  <Bar dataKey="points" fill="#10b981" />
-                </BarChart>
-              </ResponsiveContainer>
             </div>
           </motion.div>
 
@@ -363,7 +354,7 @@ export default function AdminWeeklyClient({ teams, settings }: AdminWeeklyProps)
             animate={{ opacity: 1, y: 0 }}
             className="bg-slate-900 border border-slate-700 p-6 rounded-xl shadow-lg"
           >
-            <h2 className="text-xl font-bold mb-4">Override User Pick</h2>
+            <h2 className="text-xl font-bold mb-4">Override Survivor Pick</h2>
 
             <input
               type="text"
@@ -413,7 +404,7 @@ export default function AdminWeeklyClient({ teams, settings }: AdminWeeklyProps)
             animate={{ opacity: 1, y: 0 }}
             className="p-4 border border-slate-700 rounded-xl bg-slate-900/70 shadow-lg"
           >
-            <h3 className="text-lg font-semibold mb-2">Weekly Lock Time</h3>
+            <h3 className="text-lg font-semibold mb-2">Survivor Lock Time</h3>
 
             <input
               type="datetime-local"

@@ -21,7 +21,7 @@ export async function GET(req: Request) {
       .order("week_number", { ascending: true });
 
     if (scheduleError) {
-      console.error("Schedule error:", scheduleError);
+      console.error("Survivor state schedule error:", scheduleError);
       return NextResponse.json({ error: scheduleError.message }, { status: 500 });
     }
 
@@ -46,7 +46,7 @@ export async function GET(req: Request) {
       .order("game_date", { ascending: true });
 
     if (gamesError) {
-      console.error("Games error:", gamesError);
+      console.error("Survivor state games error:", gamesError);
       return NextResponse.json({ error: gamesError.message }, { status: 500 });
     }
 
@@ -61,7 +61,7 @@ export async function GET(req: Request) {
       .in("id", teamIds);
 
     if (teamsError) {
-      console.error("Teams error:", teamsError);
+      console.error("Survivor state teams error:", teamsError);
       return NextResponse.json({ error: teamsError.message }, { status: 500 });
     }
 
@@ -83,7 +83,7 @@ export async function GET(req: Request) {
       game_date: g.game_date,
     }));
 
-    // 5. Compute lock time (earliest game)
+    // 5. Compute lock time (earliest kickoff)
     const lockTime =
       games.length > 0
         ? games.reduce<string | null>((min, g) => {
@@ -100,7 +100,7 @@ export async function GET(req: Request) {
       lockTime,
     });
   } catch (err: any) {
-    console.error("Weekly state fatal error:", err);
+    console.error("Survivor state fatal error:", err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

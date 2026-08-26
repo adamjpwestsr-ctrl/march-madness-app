@@ -35,7 +35,6 @@ export default function WeeklyClient({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  // Read mm_session cookie
   function getLocalSession() {
     const raw = document.cookie
       .split("; ")
@@ -180,7 +179,6 @@ export default function WeeklyClient({
 
       {/* WEEK NAVIGATION */}
       <div className="flex items-center justify-between mb-4">
-        {/* Prev */}
         <a
           href={`?week=${prevWeek}`}
           className={`px-3 py-2 rounded border ${
@@ -192,7 +190,6 @@ export default function WeeklyClient({
           ← Prev
         </a>
 
-        {/* Dropdown */}
         <select
           value={week}
           onChange={(e) => {
@@ -207,7 +204,6 @@ export default function WeeklyClient({
           ))}
         </select>
 
-        {/* Next */}
         <a
           href={`?week=${nextWeek}`}
           className={`px-3 py-2 rounded border ${

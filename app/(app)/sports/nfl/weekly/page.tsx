@@ -62,12 +62,19 @@ export default async function WeeklyPage() {
         }, null)
       : null;
 
+  // Patch missing fields for WeeklyGame type
+  const patchedGames = games.map((g) => ({
+    ...g,
+    sport: "NFL",
+    season_year: new Date().getFullYear(),
+  }));
+
   return (
     <div className="min-h-screen text-white p-6">
       <WeeklyClient
         sport="NFL"
         week={week}
-        games={games}
+        games={patchedGames}
         teamsById={teamsById}
         lockTime={lockTime}
       />

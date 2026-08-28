@@ -35,6 +35,12 @@ export default function WeeklyClient({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
+  // NEW: animated fade transition
+  const [fade, setFade] = useState(false);
+
+  // NEW: live countdown
+  const [countdown, setCountdown] = useState<string | null>(null);
+
   function getLocalSession() {
     const raw = document.cookie
       .split("; ")
@@ -55,6 +61,39 @@ export default function WeeklyClient({
   const isLocked = useMemo(() => {
     if (!lockTime) return false;
     return new Date(lockTime) <= new Date();
+  }, [lockTime]);
+
+  // NEW: fade animation when week changes
+  useEffect(() => {
+    setFade(true);
+    const t = setTimeout(() => setFade(false), 250);
+    return () => clearTimeout(t);
+  }, [week]);
+
+  // NEW: live countdown timer
+  useEffect(() => {
+    if (!lockTime) return;
+
+    const update = () => {
+      const now = new Date().getTime();
+      const lock = new Date(lockTime).getTime();
+      const diff = lock - now;
+
+      if (diff <= 0) {
+        setCountdown("Locked");
+        return;
+      }
+
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      setCountdown(`${hours}h ${minutes}m ${seconds}s`);
+    };
+
+    update();
+    const interval = setInterval(update, 1000);
+    return () => clearInterval(interval);
   }, [lockTime]);
 
   // Load used teams
@@ -177,43 +216,45 @@ export default function WeeklyClient({
   return (
     <div className="flex flex-col gap-6">
 
-      {/* WEEK NAVIGATION */}
-      <div className="flex items-center justify-between mb-4">
-        <a
-          href={`?week=${prevWeek}`}
-          className={`px-3 py-2 rounded border ${
-            prevWeek
-              ? "border-slate-700 hover:bg-slate-800"
-              : "opacity-40 cursor-not-allowed"
-          }`}
-        >
-          ← Prev
-        </a>
+      {/* STICKY WEEK SELECTOR */}
+      <div className="sticky top-0 z-40 bg-slate-900/80 backdrop-blur-md py-3">
+        <div className="flex items-center justify-between mb-2">
+          <a
+            href={`/sports/nfl/weekly?week=${prevWeek}`}
+            className={`px-3 py-2 rounded border ${
+              prevWeek
+                ? "border-slate-700 hover:bg-slate-800"
+                : "opacity-40 cursor-not-allowed"
+            }`}
+          >
+            ← Prev
+          </a>
 
-        <select
-          value={week}
-          onChange={(e) => {
-            window.location.href = `?week=${e.target.value}`;
-          }}
-          className="px-3 py-2 rounded bg-slate-800 border border-slate-700"
-        >
-          {allWeeks.map((w) => (
-            <option key={w} value={w}>
-              Week {w}
-            </option>
-          ))}
-        </select>
+          <select
+            value={week}
+            onChange={(e) => {
+              window.location.href = `/sports/nfl/weekly?week=${e.target.value}`;
+            }}
+            className="px-3 py-2 rounded bg-slate-800 border border-slate-700"
+          >
+            {allWeeks.map((w) => (
+              <option key={w} value={w}>
+                Week {w}
+              </option>
+            ))}
+          </select>
 
-        <a
-          href={`?week=${nextWeek}`}
-          className={`px-3 py-2 rounded border ${
-            nextWeek
-              ? "border-slate-700 hover:bg-slate-800"
-              : "opacity-40 cursor-not-allowed"
-          }`}
-        >
-          Next →
-        </a>
+          <a
+            href={`/sports/nfl/weekly?week=${nextWeek}`}
+            className={`px-3 py-2 rounded border ${
+              nextWeek
+                ? "border-slate-700 hover:bg-slate-800"
+                : "opacity-40 cursor-not-allowed"
+            }`}
+          >
+            Next →
+          </a>
+        </div>
       </div>
 
       {/* HEADER */}
@@ -222,9 +263,18 @@ export default function WeeklyClient({
           <h1 className="text-xl font-semibold">
             NFL Weekly Pick’em — Week {week}
           </h1>
+
           {lockTime && (
             <p className="text-sm text-muted-foreground">
               Lock time: {new Date(lockTime).toLocaleString()}
+            </p>
+          )}
+
+          {countdown && (
+            <p className="text-xs text-emerald-400 mt-1">
+              {countdown === "Locked"
+                ? "Picks are locked"
+                : `${countdown} until lock`}
             </p>
           )}
         </div>
@@ -238,55 +288,49 @@ export default function WeeklyClient({
         </button>
       </header>
 
-      {/* ERRORS / SUCCESS */}
-      {error && (
-        <div className="rounded bg-red-100 text-red-800 px-3 py-2 text-sm">
-          {error}
+      {/* ANIMATED WEEK TRANSITION */}
+      <div
+        className={`transition-opacity duration-300 ${
+          fade ? "opacity-0" : "opacity-100"
+        }`}
+      >
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {teams.map((team) => {
+            const isUsed = usedTeams.includes(team.id);
+            const isSelected = selectedTeam === team.id;
+
+            return (
+              <button
+                key={team.id}
+                onClick={() => !isLocked && !isUsed && setSelectedTeam(team.id)}
+                disabled={isUsed || isLocked}
+                className={[
+                  "rounded-xl border p-4 flex flex-col items-center gap-2 transition",
+                  isUsed
+                    ? "opacity-40 cursor-not-allowed"
+                    : "hover:bg-slate-800 hover:border-blue-600",
+                  isSelected ? "border-blue-600 bg-blue-50 text-black" : "",
+                ].join(" ")}
+              >
+                {team.logo_url && (
+                  <img
+                    src={team.logo_url}
+                    alt={team.name}
+                    className="w-16 h-16 rounded-full object-contain"
+                  />
+                )}
+
+                <span className="font-semibold text-center">{team.name}</span>
+
+                {team.opponent && (
+                  <span className="text-xs text-slate-400">
+                    vs {team.opponent}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
-      )}
-      {success && (
-        <div className="rounded bg-green-100 text-green-800 px-3 py-2 text-sm">
-          {success}
-        </div>
-      )}
-
-      {/* TEAM GRID */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {teams.map((team) => {
-          const isUsed = usedTeams.includes(team.id);
-          const isSelected = selectedTeam === team.id;
-
-          return (
-            <button
-              key={team.id}
-              onClick={() => !isLocked && !isUsed && setSelectedTeam(team.id)}
-              disabled={isUsed || isLocked}
-              className={[
-                "rounded-xl border p-4 flex flex-col items-center gap-2 transition",
-                isUsed
-                  ? "opacity-40 cursor-not-allowed"
-                  : "hover:bg-slate-800 hover:border-blue-600",
-                isSelected ? "border-blue-600 bg-blue-50 text-black" : "",
-              ].join(" ")}
-            >
-              {team.logo_url && (
-                <img
-                  src={team.logo_url}
-                  alt={team.name}
-                  className="w-16 h-16 rounded-full object-contain"
-                />
-              )}
-
-              <span className="font-semibold text-center">{team.name}</span>
-
-              {team.opponent && (
-                <span className="text-xs text-slate-400">
-                  vs {team.opponent}
-                </span>
-              )}
-            </button>
-          );
-        })}
       </div>
 
       {teams.length === 0 && (

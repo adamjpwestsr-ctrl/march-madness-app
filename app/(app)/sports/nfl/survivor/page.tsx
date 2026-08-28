@@ -7,8 +7,8 @@ export const dynamic = "force-dynamic";
 export default async function SurvivorPage() {
   const supabase = await createSupabaseServerClient();
 
-  // Load Survivor state from your existing API
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/nfl/survivor/state`, {
+  // Use relative API path to avoid Invalid URL errors
+  const res = await fetch("/api/nfl/survivor/state", {
     cache: "no-store",
   });
 

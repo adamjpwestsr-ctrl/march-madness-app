@@ -1,0 +1,75 @@
+name: NCAAF ESPN Sync
+
+on:
+  schedule:
+    # Live scores every 10 minutes
+    - cron: "*/10 * * * *"
+    # Weekly refresh every Monday at 1 AM
+    - cron: "0 1 * * 1"
+    # Rankings refresh every 6 hours
+    - cron: "0 */6 * * *"
+
+  workflow_dispatch: {} # manual trigger
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Start Sync Log
+        run: echo "Starting NCAAF sync at $(date)"
+
+      - name: Call Teams Sync
+        run: |
+          echo "Syncing teams..."
+          for i in {1..3}; do
+            curl -s -f -X GET \
+              -H "x-sync-key: ${{ secrets.BB_SYNC_KEY }}" \
+              "https://bracketboss-theta.vercel.app/api/ncaaf/sync/teams" && break || \
+              echo "Retrying teams sync ($i/3)..."
+            sleep 5
+          done
+
+      - name: Call Schedule Sync
+        run: |
+          echo "Syncing schedule..."
+          for i in {1..3}; do
+            curl -s -f -X GET \
+              -H "x-sync-key: ${{ secrets.BB_SYNC_KEY }}" \
+              "https://bracketboss-theta.vercel.app/api/ncaaf/sync/schedule" && break || \
+              echo "Retrying schedule sync ($i/3)..."
+            sleep 5
+          done
+
+      - name: Call Rankings Sync
+        run: |
+          echo "Syncing rankings..."
+          for i in {1..3}; do
+            curl -s -f -X GET \
+              -H "x-sync-key: ${{ secrets.BB_SYNC_KEY }}" \
+              "https://bracketboss-theta.vercel.app/api/ncaaf/sync/rankings" && break || \
+              echo "Retrying rankings sync ($i/3)..."
+            sleep 5
+          done
+
+      - name: Call Scores Sync
+        run: |
+          echo "Syncing scores..."
+          for i in {1..3}; do
+            curl -s -f -X GET \
+              -H "x-sync-key: ${{ secrets.BB_SYNC_KEY }}" \
+              "https://bracketboss-theta.vercel.app/api/ncaaf/sync/scores" && break || \
+              echo "Retrying scores sync ($i/3)..."
+            sleep 5
+          done
+
+      - name: Sync Complete
+        run: echo "NCAAF sync completed at $(date)"
+
+      - name: Notify on Failure
+        if: failure()
+        run: |
+          curl -X POST -H "Content-Type: application/json" \
+            -d "{\"text\": \"❌ NCAAF Sync Failed in GitHub Actions\"}" \
+            ${{ secrets.BB_DISCORD_WEBHOOK }}

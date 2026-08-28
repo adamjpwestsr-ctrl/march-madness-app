@@ -10,11 +10,13 @@ type Props = {
   games: WeeklyGame[];
   teamsById: Record<string, Team>;
   lockTime: string | null;
-
-  // NEW props for week selector + navigation
   allWeeks: number[];
   prevWeek: number | null;
   nextWeek: number | null;
+};
+
+type SessionUser = {
+  userId: string;
 };
 
 export default function WeeklyClient({
@@ -29,48 +31,50 @@ export default function WeeklyClient({
 }: Props) {
   const supabase = createSupabaseBrowserClient();
 
+  const [user, setUser] = useState<SessionUser | null>(null);
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
   const [usedTeams, setUsedTeams] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-
-  // NEW: animated fade transition
   const [fade, setFade] = useState(false);
-
-  // NEW: live countdown
   const [countdown, setCountdown] = useState<string | null>(null);
 
-  function getLocalSession() {
+  // Read mm_session only on client
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+
     const raw = document.cookie
       .split("; ")
       .find((row) => row.startsWith("mm_session="))
       ?.split("=")[1];
 
-    if (!raw) return null;
+    if (!raw) {
+      setUser(null);
+      return;
+    }
 
     try {
-      return JSON.parse(decodeURIComponent(raw));
+      const parsed = JSON.parse(decodeURIComponent(raw));
+      setUser(parsed);
     } catch {
-      return null;
+      setUser(null);
     }
-  }
-
-  const user = getLocalSession();
+  }, []);
 
   const isLocked = useMemo(() => {
     if (!lockTime) return false;
     return new Date(lockTime) <= new Date();
   }, [lockTime]);
 
-  // NEW: fade animation when week changes
+  // Fade animation when week changes
   useEffect(() => {
     setFade(true);
     const t = setTimeout(() => setFade(false), 250);
     return () => clearTimeout(t);
   }, [week]);
 
-  // NEW: live countdown timer
+  // Live countdown
   useEffect(() => {
     if (!lockTime) return;
 
@@ -111,7 +115,7 @@ export default function WeeklyClient({
     }
 
     loadUsedTeams();
-  }, []);
+  }, [user, supabase]);
 
   // Load existing pick for this week
   useEffect(() => {
@@ -132,7 +136,7 @@ export default function WeeklyClient({
     }
 
     loadExistingPick();
-  }, [week]);
+  }, [user, week, supabase]);
 
   // Build team list for Pick’em
   const teams = useMemo(() => {
@@ -215,7 +219,6 @@ export default function WeeklyClient({
 
   return (
     <div className="flex flex-col gap-6">
-
       {/* STICKY WEEK SELECTOR */}
       <div className="sticky top-0 z-40 bg-slate-900/80 backdrop-blur-md py-3">
         <div className="flex items-center justify-between mb-2">
@@ -287,6 +290,18 @@ export default function WeeklyClient({
           {isLocked ? "Locked" : submitting ? "Saving…" : "Submit Pick"}
         </button>
       </header>
+
+      {/* ERRORS / SUCCESS */}
+      {error && (
+        <div className="rounded bg-red-100 text-red-800 px-3 py-2 text-sm">
+          {error}
+        </div>
+      )}
+      {success && (
+        <div className="rounded bg-green-100 text-green-800 px-3 py-2 text-sm">
+          {success}
+        </div>
+      )}
 
       {/* ANIMATED WEEK TRANSITION */}
       <div

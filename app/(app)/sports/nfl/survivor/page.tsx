@@ -7,8 +7,11 @@ export const dynamic = "force-dynamic";
 export default async function SurvivorPage() {
   const supabase = await createSupabaseServerClient();
 
-  // Use relative API path to avoid Invalid URL errors
-  const res = await fetch("/api/nfl/survivor/state", {
+  const baseUrl = process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : "http://localhost:3000";
+
+  const res = await fetch(`${baseUrl}/api/nfl/survivor/state`, {
     cache: "no-store",
   });
 

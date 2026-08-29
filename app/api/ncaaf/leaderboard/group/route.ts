@@ -19,14 +19,14 @@ export async function GET(req: Request) {
 
   const byUser: Record<number, number> = {};
 
-  rows.forEach((r) => {
+  (rows ?? []).forEach((r) => {
     byUser[r.user_id] = (byUser[r.user_id] ?? 0) + r.correct_picks;
   });
 
   const leaderboard = Object.entries(byUser)
     .map(([userId, score]) => ({
       userId: parseInt(userId),
-      email: users.find((u) => u.id === parseInt(userId))?.email,
+      email: users?.find((u) => u.id === parseInt(userId))?.email ?? null,
       score,
     }))
     .sort((a, b) => b.score - a.score);

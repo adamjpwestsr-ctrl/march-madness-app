@@ -91,6 +91,8 @@ export default async function NcaafWeeklyPage() {
         allWeeks={allWeeks}
         prevWeek={prevWeek}
         nextWeek={nextWeek}
+	userEmail={user.email}
+	mode="GLOBAL"
       />
     </div>
   );

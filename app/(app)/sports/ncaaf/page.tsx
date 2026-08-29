@@ -1,6 +1,6 @@
 // app/(app)/sports/ncaaf/weekly/page.tsx
 
-import WeeklyClient from "./WeeklyClient";
+import WeeklyClient from "./weekly/WeeklyClient";
 import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 
 export const runtime = "edge";

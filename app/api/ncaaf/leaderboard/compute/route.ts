@@ -16,7 +16,8 @@ export async function POST(req: Request) {
 
   // Build winner map
   const winners: Record<string, string | null> = {};
-  games.forEach((g) => {
+
+  (games ?? []).forEach((g) => {
     if (g.home_team_score > g.away_team_score) {
       winners[g.game_id] = g.home_team_id;
     } else if (g.away_team_score > g.home_team_score) {
@@ -35,7 +36,7 @@ export async function POST(req: Request) {
 
   // Group picks by user + group
   const grouped: Record<string, any[]> = {};
-  picks.forEach((p) => {
+  (picks ?? []).forEach((p) => {
     const key = `${p.user_id}-${p.group_id ?? "GLOBAL"}`;
     if (!grouped[key]) grouped[key] = [];
     grouped[key].push(p);
@@ -56,7 +57,7 @@ export async function POST(req: Request) {
       season_year: seasonYear,
       week,
       correct_picks: correct,
-      total_games: games.length,
+      total_games: (games ?? []).length,
     };
   });
 

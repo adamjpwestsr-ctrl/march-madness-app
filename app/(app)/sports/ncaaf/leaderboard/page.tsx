@@ -1,4 +1,5 @@
 import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
+import LeaderboardTable from "@/components/ncaaf/LeaderboardTable";
 
 export const runtime = "edge";
 export const dynamic = "force-dynamic";

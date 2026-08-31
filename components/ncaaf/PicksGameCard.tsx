@@ -5,6 +5,11 @@ export default function PicksGameCard({
   pickedTeamId,
   onPick,
   locked,
+}: {
+  game: any;
+  pickedTeamId: string | undefined;
+  onPick: (gameId: string, teamId: string) => void;
+  locked: boolean;
 }) {
   const home = game.home_team;
   const away = game.away_team;

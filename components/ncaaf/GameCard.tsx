@@ -1,4 +1,10 @@
-export default function GameCard({ game, teamsById }) {
+export default function GameCard({
+  game,
+  teamsById,
+}: {
+  game: any;
+  teamsById: Record<string, any>;
+}) {
   const home = teamsById[game.home_team_id];
   const away = teamsById[game.away_team_id];
 

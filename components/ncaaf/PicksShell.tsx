@@ -9,6 +9,12 @@ export default function PicksShell({
   seasonYear,
   week,
   lockTime,
+}: {
+  games: any[];
+  userId: string | null;
+  seasonYear: number;
+  week: number;
+  lockTime: string | null;
 }) {
   const [now, setNow] = useState<Date>(new Date());
   const [saving, setSaving] = useState(false);

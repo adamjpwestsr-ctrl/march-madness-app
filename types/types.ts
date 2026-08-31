@@ -69,4 +69,7 @@ export interface CfbdTeam {
     latitude: number | null;
     longitude: number | null;
   };
+
+  // ⭐ Add this
+  rank?: number | null;
 }

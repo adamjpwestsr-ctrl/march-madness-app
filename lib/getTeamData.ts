@@ -1,10 +1,13 @@
 import rawTeams from "../data/cfbd/teams.json";
-import { CfbdTeam } from "../types/types";
+import type { CfbdTeam } from "../types/types";
 
-// Convert array → dictionary keyed by school name
 const teams: Record<string, CfbdTeam> = {};
 
-for (const t of rawTeams as CfbdTeam[]) {
+for (const item of rawTeams as unknown as any[]) {
+  if (!item || typeof item !== "object") continue;
+  if (!("school" in item)) continue; // skip non-team entries
+
+  const t = item as CfbdTeam;
   teams[t.school.toLowerCase()] = t;
 }
 

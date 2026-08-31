@@ -8,7 +8,6 @@ export default function TeamHoverCard({ team }: { team: string }) {
   const data = getTeamData(team)
   if (!data) return null
 
-  // Runtime type check
   const isMarchMadness = "seed" in data
 
   return (
@@ -29,13 +28,14 @@ export default function TeamHoverCard({ team }: { team: string }) {
       <h3 style={{ margin: 0, marginBottom: 6, color: '#e5e7eb', fontSize: 16 }}>
         {team}
         {isMarchMadness && ` (Seed ${(data as unknown as TeamData).seed})`}
-        {!isMarchMadness && (data as CfbdTeam).rank && ` (Rank ${(data as CfbdTeam).rank})`}
+        {!isMarchMadness && (data as unknown as CfbdTeam).rank && 
+          ` (Rank ${(data as unknown as CfbdTeam).rank})`}
       </h3>
 
       <div style={{ fontSize: 13, color: '#cbd5e1', lineHeight: 1.4 }}>
         {isMarchMadness ? (
           (() => {
-            const mm = data as TeamData
+            const mm = data as unknown as TeamData   // ⭐ SAFE NARROWING
 
             return (
               <>
@@ -56,7 +56,7 @@ export default function TeamHoverCard({ team }: { team: string }) {
           })()
         ) : (
           (() => {
-            const cfbd = data as CfbdTeam
+            const cfbd = data as unknown as CfbdTeam   // ⭐ SAFE NARROWING
 
             return (
               <>

@@ -101,7 +101,13 @@ export default async function NcaafScoreboardPage() {
   );
 }
 
-function ScoreCard({ game, status }) {
+function ScoreCard({
+  game,
+  status,
+}: {
+  game: any;
+  status: string;
+}) {
   const home = game.home_team;
   const away = game.away_team;
 
@@ -124,7 +130,6 @@ function ScoreCard({ game, status }) {
         </span>
       </div>
 
-      {/* HOME */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <img
@@ -141,7 +146,6 @@ function ScoreCard({ game, status }) {
 
       <div className="text-center text-slate-400 my-2">vs</div>
 
-      {/* AWAY */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <img

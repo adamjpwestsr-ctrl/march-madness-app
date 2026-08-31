@@ -5,7 +5,11 @@ import PicksShell from "@/components/ncaaf/PicksShell";
 export const runtime = "edge";
 export const dynamic = "force-dynamic";
 
-export default async function NcaafWeeklyPage({ params }) {
+export default async function NcaafWeeklyPage({
+  params,
+}: {
+  params: { year: string; week: string };
+}) {
   const supabase = await createSupabaseServerClient();
 
   const year = Number(params.year);

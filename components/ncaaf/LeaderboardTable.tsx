@@ -1,6 +1,10 @@
 "use client";
 
-export default function LeaderboardTable({ rows }) {
+export default function LeaderboardTable({
+  rows,
+}: {
+  rows: any[];
+}) {
   return (
     <div className="overflow-x-auto rounded-xl border border-slate-800 bg-slate-900/60">
       <table className="w-full text-left text-sm">

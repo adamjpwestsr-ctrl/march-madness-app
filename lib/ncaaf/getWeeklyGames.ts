@@ -1,7 +1,7 @@
-import { createClient } from "@/utils/supabase/server";
+import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 
 export async function getWeeklyGames(year: number, week: number) {
-  const supabase = createClient();
+  const supabase = await createSupabaseServerClient();
 
   const { data } = await supabase
     .from("ncaaf_games")

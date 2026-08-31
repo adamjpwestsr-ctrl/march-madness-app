@@ -28,7 +28,7 @@ export default function TeamHoverCard({ team }: { team: string }) {
     >
       <h3 style={{ margin: 0, marginBottom: 6, color: '#e5e7eb', fontSize: 16 }}>
         {team}
-        {isMarchMadness && ` (Seed ${(data as TeamData).seed})`}
+        {isMarchMadness && ` (Seed ${(data as unknown as TeamData).seed})`}
         {!isMarchMadness && (data as CfbdTeam).rank && ` (Rank ${(data as CfbdTeam).rank})`}
       </h3>
 

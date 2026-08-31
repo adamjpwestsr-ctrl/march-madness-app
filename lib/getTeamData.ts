@@ -1,10 +1,10 @@
 import rawTeams from "../data/cfbd/teams.json";
-import { TeamData } from "../types/types";
+import { CfbdTeam } from "../types/types";
 
 // Convert array → dictionary keyed by school name
-const teams: Record<string, TeamData> = {};
+const teams: Record<string, CfbdTeam> = {};
 
-for (const t of rawTeams as TeamData[]) {
+for (const t of rawTeams as CfbdTeam[]) {
   teams[t.school.toLowerCase()] = t;
 }
 

@@ -29,7 +29,7 @@ export type Game = {
   source_game2: number | null;
 };
 
-// EXTRA TEAM METRICS (OPTIONAL)
+// EXTRA TEAM METRICS (OPTIONAL — MARCH MADNESS ONLY)
 export type TeamData = {
   seed: number;
   conference: string;
@@ -46,3 +46,27 @@ export type TeamData = {
   streak: string;
   last10: string;
 };
+
+// ⭐ CFBD TEAM TYPE (MATCHES /data/cfbd/teams.json)
+export interface CfbdTeam {
+  id: number;
+  school: string;
+  mascot: string;
+  abbreviation: string;
+  alternateNames: string[];
+  conference: string;
+  division: string | null;
+  classification: string;
+  color: string;
+  alternateColor: string;
+  logos: string[] | null;
+  twitter: string | null;
+  location: {
+    city: string;
+    state: string;
+    zip: string | null;
+    country: string;
+    latitude: number | null;
+    longitude: number | null;
+  };
+}

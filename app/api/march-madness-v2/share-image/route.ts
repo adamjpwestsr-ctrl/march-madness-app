@@ -26,7 +26,13 @@ export async function POST(req: Request) {
       championTeam,
     });
 
-    return new NextResponse(imageBuffer, {
+    // ⭐ FIX: Convert Buffer → ArrayBuffer
+    const arrayBuffer = imageBuffer.buffer.slice(
+      imageBuffer.byteOffset,
+      imageBuffer.byteOffset + imageBuffer.byteLength
+    );
+
+    return new NextResponse(arrayBuffer, {
       headers: {
         "Content-Type": "image/png",
       },

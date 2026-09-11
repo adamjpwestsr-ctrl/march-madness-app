@@ -2,7 +2,7 @@
 
 import React, { useRef, useEffect } from "react";
 import MatchupCard from "./MatchupCard";
-import ConfettiBurst from "../fx/ConfettiBurst";
+import ConfettiBurst, { ConfettiBurstHandle } from "../fx/ConfettiBurst";
 
 export default function ChampionshipPanel({
   matchup,
@@ -11,12 +11,13 @@ export default function ChampionshipPanel({
   matchup: any; // single championship game
   onPick: (gameId: string, teamId: string) => void;
 }) {
-  const confettiRef = useRef<HTMLButtonElement>(null);
+  // Correct ref type for ConfettiBurst
+  const confettiRef = useRef<ConfettiBurstHandle>(null);
 
   // Fire confetti when a champion is selected
   useEffect(() => {
     if (matchup?.selectedTeamId) {
-      confettiRef.current?.click();
+      confettiRef.current?.fire();
     }
   }, [matchup?.selectedTeamId]);
 

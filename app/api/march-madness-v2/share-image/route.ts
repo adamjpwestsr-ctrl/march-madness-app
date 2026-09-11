@@ -26,13 +26,10 @@ export async function POST(req: Request) {
       championTeam,
     });
 
-    // ⭐ FIX: Convert Buffer → ArrayBuffer
-    const arrayBuffer = imageBuffer.buffer.slice(
-      imageBuffer.byteOffset,
-      imageBuffer.byteOffset + imageBuffer.byteLength
-    );
+    // ⭐ FIX: Convert Buffer → Uint8Array (NextResponse-safe)
+    const uint8 = new Uint8Array(imageBuffer);
 
-    return new NextResponse(arrayBuffer, {
+    return new NextResponse(uint8, {
       headers: {
         "Content-Type": "image/png",
       },

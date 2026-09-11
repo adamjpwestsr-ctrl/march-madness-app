@@ -27,21 +27,21 @@ export async function generateBracketShareImage({
     const res = await fetch(championTeam.logo_url);
     const raw = Buffer.from(await res.arrayBuffer());
 
-    // Resize BEFORE composite (Sharp does not allow width/height in overlay)
+    // Resize BEFORE composite
     logoBuffer = await sharp(raw).resize(220, 220).toBuffer();
   } catch {
     logoBuffer = null;
   }
 
-  // FIX: channels must be "rgba", not number 4
-  const background = {
+  // FIX: Use sharp({ create: ... }) directly
+  const base = sharp({
     create: {
       width: 1200,
       height: 630,
-      channels: "rgba",
-      background: "#0f172a", // slate-900
+      channels: 4,            // Turbopack requires number, not string
+      background: "#0f172a",  // slate-900
     },
-  };
+  });
 
   // Compose text overlays using Sharp
   const svg = `
@@ -89,7 +89,7 @@ export async function generateBracketShareImage({
   }
 
   // Final PNG
-  const finalImage = await sharp(background)
+  const finalImage = await base
     .composite(composites)
     .png()
     .toBuffer();

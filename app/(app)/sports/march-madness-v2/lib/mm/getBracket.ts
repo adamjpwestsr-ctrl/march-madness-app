@@ -1,5 +1,15 @@
 import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 
+// --- FIX: Add proper region typing ---
+type RegionKey = "east" | "west" | "south" | "midwest";
+
+type RegionRounds = {
+  round64: any[];
+  round32: any[];
+  sweet16: any[];
+  elite8: any[];
+};
+
 /**
  * Loads the full March Madness bracket structure from Supabase.
  * Returns a fully formatted bracket object ready for useBracketState.
@@ -42,32 +52,12 @@ export async function getBracket(seasonYear: number) {
     selectedTeamName: null,
   });
 
-  // Organize games by region + round
-  const regions = {
-    east: {
-      round64: [],
-      round32: [],
-      sweet16: [],
-      elite8: [],
-    },
-    west: {
-      round64: [],
-      round32: [],
-      sweet16: [],
-      elite8: [],
-    },
-    south: {
-      round64: [],
-      round32: [],
-      sweet16: [],
-      elite8: [],
-    },
-    midwest: {
-      round64: [],
-      round32: [],
-      sweet16: [],
-      elite8: [],
-    },
+  // --- FIX: Typed regions object ---
+  const regions: Record<RegionKey, RegionRounds> = {
+    east: { round64: [], round32: [], sweet16: [], elite8: [] },
+    west: { round64: [], round32: [], sweet16: [], elite8: [] },
+    south: { round64: [], round32: [], sweet16: [], elite8: [] },
+    midwest: { round64: [], round32: [], sweet16: [], elite8: [] },
   };
 
   const finalFour: any[] = [];
@@ -76,18 +66,21 @@ export async function getBracket(seasonYear: number) {
   games.forEach((g) => {
     const mapped = mapGame(g);
 
+    // --- FIX: Ensure region key is typed ---
+    const regionKey = g.region as RegionKey;
+
     switch (g.round) {
       case 64:
-        regions[g.region].round64.push(mapped);
+        regions[regionKey].round64.push(mapped);
         break;
       case 32:
-        regions[g.region].round32.push(mapped);
+        regions[regionKey].round32.push(mapped);
         break;
       case 16:
-        regions[g.region].sweet16.push(mapped);
+        regions[regionKey].sweet16.push(mapped);
         break;
       case 8:
-        regions[g.region].elite8.push(mapped);
+        regions[regionKey].elite8.push(mapped);
         break;
       case 4:
         finalFour.push(mapped);

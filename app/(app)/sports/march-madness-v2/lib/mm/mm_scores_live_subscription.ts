@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createClient } from "@supabase/supabase-js";
 
 /**
  * Live subscription to mm_scores table.
@@ -16,7 +16,11 @@ export function useLiveScores({
   groupId: string | null;
   onUpdate: (scores: any[]) => void;
 }) {
-  const supabase = createClientComponentClient();
+  // Correct Supabase client for client-side usage
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
 
   useEffect(() => {
     // Initial load

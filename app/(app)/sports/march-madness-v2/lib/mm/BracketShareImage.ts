@@ -25,7 +25,10 @@ export async function generateBracketShareImage({
   let logoBuffer: Buffer | null = null;
   try {
     const res = await fetch(championTeam.logo_url);
-    logoBuffer = Buffer.from(await res.arrayBuffer());
+    const raw = Buffer.from(await res.arrayBuffer());
+
+    // FIX: Resize BEFORE composite (Sharp does not allow width/height in overlay)
+    logoBuffer = await sharp(raw).resize(220, 220).toBuffer();
   } catch {
     logoBuffer = null;
   }
@@ -73,7 +76,7 @@ export async function generateBracketShareImage({
 
   const svgBuffer = Buffer.from(svg);
 
-  // If logo exists, composite it
+  // Build composite list
   const composites: sharp.OverlayOptions[] = [
     { input: svgBuffer, top: 0, left: 0 },
   ];
@@ -83,8 +86,6 @@ export async function generateBracketShareImage({
       input: logoBuffer,
       top: 350,
       left: 1200 / 2 - 110,
-      width: 220,
-      height: 220,
     });
   }
 

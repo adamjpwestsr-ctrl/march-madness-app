@@ -1,5 +1,14 @@
 import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 
+export type FeedItem = {
+  id: string;
+  type: "pick" | "score";
+  timestamp: string;
+  userName: string;
+  teamName?: string;
+  points?: number;
+};
+
 export async function generateFeedActivity(groupId: string) {
   const supabase = await createSupabaseServerClient();
 
@@ -13,7 +22,8 @@ export async function generateFeedActivity(groupId: string) {
     .select("user_id, score, updated_at")
     .eq("group_id", groupId);
 
-  const feed = [];
+  // FIX: give feed a real type
+  const feed: FeedItem[] = [];
 
   picks?.forEach((p) => {
     feed.push({

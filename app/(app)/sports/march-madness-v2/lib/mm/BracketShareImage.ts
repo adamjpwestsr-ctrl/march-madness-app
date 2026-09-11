@@ -27,18 +27,18 @@ export async function generateBracketShareImage({
     const res = await fetch(championTeam.logo_url);
     const raw = Buffer.from(await res.arrayBuffer());
 
-    // FIX: Resize BEFORE composite (Sharp does not allow width/height in overlay)
+    // Resize BEFORE composite (Sharp does not allow width/height in overlay)
     logoBuffer = await sharp(raw).resize(220, 220).toBuffer();
   } catch {
     logoBuffer = null;
   }
 
-  // Base background
+  // FIX: channels must be "rgba", not number 4
   const background = {
     create: {
       width: 1200,
       height: 630,
-      channels: 4,
+      channels: "rgba",
       background: "#0f172a", // slate-900
     },
   };
@@ -76,7 +76,6 @@ export async function generateBracketShareImage({
 
   const svgBuffer = Buffer.from(svg);
 
-  // Build composite list
   const composites: sharp.OverlayOptions[] = [
     { input: svgBuffer, top: 0, left: 0 },
   ];

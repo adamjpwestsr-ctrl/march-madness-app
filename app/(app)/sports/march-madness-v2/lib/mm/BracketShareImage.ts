@@ -1,4 +1,4 @@
-import { createCanvas, loadImage } from "canvas";
+import sharp from "sharp";
 
 export type BracketShareImageInput = {
   userName: string;
@@ -13,7 +13,7 @@ export type BracketShareImageInput = {
 
 /**
  * Generates a branded shareable PNG for a user's bracket.
- * Returns a Buffer you can send as an image response.
+ * Uses Sharp (Vercel-compatible) instead of node-canvas.
  */
 export async function generateBracketShareImage({
   userName,
@@ -21,67 +21,78 @@ export async function generateBracketShareImage({
   seasonYear,
   championTeam,
 }: BracketShareImageInput) {
-  // Canvas size (Twitter/X, IG-friendly)
-  const width = 1200;
-  const height = 630;
-
-  const canvas = createCanvas(width, height);
-  const ctx = canvas.getContext("2d");
-
-  // Background
-  ctx.fillStyle = "#0f172a"; // slate-900
-  ctx.fillRect(0, 0, width, height);
-
-  // Gold accent bar
-  ctx.fillStyle = "#facc15"; // yellow-400
-  ctx.fillRect(0, 0, width, 12);
-
-  // Title
-  ctx.fillStyle = "#facc15";
-  ctx.font = "bold 60px 'Arial'";
-  ctx.textAlign = "center";
-  ctx.fillText("March Madness", width / 2, 120);
-
-  // Season
-  ctx.fillStyle = "#e2e8f0"; // slate-200
-  ctx.font = "bold 36px 'Arial'";
-  ctx.fillText(`Season ${seasonYear}`, width / 2, 180);
-
-  // User name
-  ctx.fillStyle = "#ffffff";
-  ctx.font = "bold 48px 'Arial'";
-  ctx.fillText(userName, width / 2, 260);
-
-  // Group name
-  if (groupName) {
-    ctx.fillStyle = "#94a3b8"; // slate-400
-    ctx.font = "bold 32px 'Arial'";
-    ctx.fillText(`Group: ${groupName}`, width / 2, 310);
-  }
-
-  // Champion logo
+  // Load champion logo (fallback to blank if fails)
+  let logoBuffer: Buffer | null = null;
   try {
-    const logo = await loadImage(championTeam.logo_url);
-    const logoSize = 220;
-    ctx.drawImage(
-      logo,
-      width / 2 - logoSize / 2,
-      350,
-      logoSize,
-      logoSize
-    );
+    const res = await fetch(championTeam.logo_url);
+    logoBuffer = Buffer.from(await res.arrayBuffer());
   } catch {
-    // fallback circle
-    ctx.fillStyle = "#334155"; // slate-700
-    ctx.beginPath();
-    ctx.arc(width / 2, 460, 110, 0, Math.PI * 2);
-    ctx.fill();
+    logoBuffer = null;
   }
 
-  // Champion name
-  ctx.fillStyle = "#facc15";
-  ctx.font = "bold 50px 'Arial'";
-  ctx.fillText(championTeam.name, width / 2, 620);
+  // Base background
+  const background = {
+    create: {
+      width: 1200,
+      height: 630,
+      channels: 4,
+      background: "#0f172a", // slate-900
+    },
+  };
 
-  return canvas.toBuffer("image/png");
+  // Compose text overlays using Sharp
+  const svg = `
+    <svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
+      <rect width="1200" height="12" fill="#facc15" />
+
+      <text x="600" y="120" font-size="60" font-weight="bold" fill="#facc15" text-anchor="middle">
+        March Madness
+      </text>
+
+      <text x="600" y="180" font-size="36" font-weight="bold" fill="#e2e8f0" text-anchor="middle">
+        Season ${seasonYear}
+      </text>
+
+      <text x="600" y="260" font-size="48" font-weight="bold" fill="#ffffff" text-anchor="middle">
+        ${userName}
+      </text>
+
+      ${
+        groupName
+          ? `<text x="600" y="310" font-size="32" font-weight="bold" fill="#94a3b8" text-anchor="middle">
+               Group: ${groupName}
+             </text>`
+          : ""
+      }
+
+      <text x="600" y="620" font-size="50" font-weight="bold" fill="#facc15" text-anchor="middle">
+        ${championTeam.name}
+      </text>
+    </svg>
+  `;
+
+  const svgBuffer = Buffer.from(svg);
+
+  // If logo exists, composite it
+  const composites: sharp.OverlayOptions[] = [
+    { input: svgBuffer, top: 0, left: 0 },
+  ];
+
+  if (logoBuffer) {
+    composites.push({
+      input: logoBuffer,
+      top: 350,
+      left: 1200 / 2 - 110,
+      width: 220,
+      height: 220,
+    });
+  }
+
+  // Final PNG
+  const finalImage = await sharp(background)
+    .composite(composites)
+    .png()
+    .toBuffer();
+
+  return finalImage;
 }

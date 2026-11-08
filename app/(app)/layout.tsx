@@ -1,5 +1,4 @@
 
-import SidebarNav from "@/app/components/SidebarNav";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -10,8 +9,7 @@ export default async function AppLayout({
 }) {
   const requestHeaders = await headers();
 
-  // Identify the March Madness login route using the header
-  // supplied by app/proxy.ts.
+  // Allow the March Madness login route without requiring a session.
   const isMarchMadnessLogin =
     requestHeaders.get("x-public-route") === "march-madness-login";
 
@@ -32,12 +30,8 @@ export default async function AppLayout({
   }
 
   return (
-    <div className="flex min-h-screen bg-slate-950 text-white overflow-hidden">
-      <aside className="group w-64 lg:w-16 hover:w-64 transition-all duration-300 ease-in-out border-r border-slate-800 bg-slate-900 overflow-hidden">
-        <SidebarNav />
-      </aside>
-
-      <main className="flex-1 overflow-y-auto p-4">
+    <div className="flex min-h-screen w-full bg-slate-950 text-white overflow-hidden">
+      <main className="flex-1 min-w-0 w-full overflow-y-auto p-4">
         {children}
       </main>
     </div>

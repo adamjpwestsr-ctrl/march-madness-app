@@ -24,9 +24,12 @@ export function middleware(req: NextRequest) {
   console.log("MIDDLEWARE HIT:", pathname);
   console.log("COOKIE RAW:", req.cookies.get("mm_session"));
 
+  // Pass the current pathname to the application layout.
+  const requestHeaders = new Headers(req.headers);
+  requestHeaders.set("x-pathname", pathname);
+
   // Allow the March Madness login page without requiring mm_session.
   if (pathname === "/sports/march-madness-v2/login") {
-    const requestHeaders = new Headers(req.headers);
     requestHeaders.set("x-public-route", "march-madness-login");
 
     return NextResponse.next({
@@ -38,7 +41,11 @@ export function middleware(req: NextRequest) {
 
   // Allow other public routes.
   if (isPublic(pathname)) {
-    return NextResponse.next();
+    return NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    });
   }
 
   const sessionCookie = req.cookies.get("mm_session");
@@ -67,7 +74,11 @@ export function middleware(req: NextRequest) {
     }
   }
 
-  return NextResponse.next();
+  return NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  });
 }
 
 export const config = {

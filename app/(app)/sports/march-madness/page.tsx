@@ -1,10 +1,5 @@
-// app/(app)/sports/march-madness/page.tsx
-import { MarchMadnessClient } from './MarchMadnessClient';
+import { redirect } from "next/navigation";
 
-export default function MarchMadnessPage() {
-  return (
-    <div className="p-6">
-      <MarchMadnessClient />
-    </div>
-  );
+export default function LegacyMarchMadnessRedirect() {
+  redirect("/sports/march-madness-v2");
 }

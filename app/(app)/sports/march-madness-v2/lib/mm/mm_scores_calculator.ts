@@ -1,26 +1,24 @@
 import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 
 /**
- * Scoring rules (customizable):
- * Round of 64  → 1 point
- * Round of 32  → 2 points
- * Sweet 16     → 4 points
- * Elite 8      → 8 points
- * Final Four   → 16 points
- * Championship → 32 points
+ * Scoring rules:
+ * Opening Round → 1 point (NO seed bonus)
+ * Round of 64  → 1 + seed
+ * Round of 32  → 2 + seed
+ * Sweet 16     → 4 + seed
+ * Elite 8      → 8 + seed
+ * Final Four   → 16 + seed
+ * Championship → 32 + seed
  */
 const ROUND_POINTS: Record<number, number> = {
-  64: 1,
-  32: 2,
-  16: 4,
-  8: 8,
-  4: 16,
-  2: 32,
+  1: 1,   // Round of 64
+  2: 2,   // Round of 32
+  3: 4,   // Sweet 16
+  4: 8,   // Elite 8
+  5: 16,  // Final Four
+  6: 32,  // Championship
 };
 
-/**
- * Calculates scores for all users in a group (or global if groupId = null)
- */
 export async function calculateScores(seasonYear: number, groupId: string | null) {
   const supabase = await createSupabaseServerClient();
 
@@ -49,6 +47,18 @@ export async function calculateScores(seasonYear: number, groupId: string | null
 
   if (!picks) throw new Error("Failed to load picks");
 
+  // Load team seeds
+  const { data: teams } = await supabase
+    .from("mm_teams")
+    .select("id, seed");
+
+  if (!teams) throw new Error("Failed to load team seeds");
+
+  const teamSeedMap: Record<string, number> = {};
+  teams.forEach((t) => {
+    teamSeedMap[t.id] = t.seed;
+  });
+
   // Aggregate scores
   const scores: Record<string, number> = {};
 
@@ -59,7 +69,16 @@ export async function calculateScores(seasonYear: number, groupId: string | null
     const isCorrect = p.selected_team_id === result.winning_team_id;
     if (!isCorrect) return;
 
-    const points = ROUND_POINTS[result.round] || 0;
+    let points = 0;
+
+    if (result.round === 0) {
+      // Opening Round: fixed 1 point
+      points = 1;
+    } else {
+      const base = ROUND_POINTS[result.round] || 0;
+      const seed = teamSeedMap[result.winning_team_id] || 0;
+      points = base + seed;
+    }
 
     scores[p.user_id] = (scores[p.user_id] || 0) + points;
   });

@@ -1,18 +1,34 @@
+
 import SidebarNav from "@/app/components/SidebarNav";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 
-export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const cookieStore = await cookies();
-  const sessionCookie = cookieStore.get("mm_session");
+export default async function AppLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const requestHeaders = await headers();
 
-  if (!sessionCookie) redirect("/login");
+  // Identify the March Madness login route using the header
+  // supplied by app/proxy.ts.
+  const isMarchMadnessLogin =
+    requestHeaders.get("x-public-route") === "march-madness-login";
 
-  let session: any;
-  try {
-    session = JSON.parse(sessionCookie.value);
-  } catch {
-    redirect("/login");
+  // Require a valid mm_session cookie on all other routes.
+  if (!isMarchMadnessLogin) {
+    const cookieStore = await cookies();
+    const sessionCookie = cookieStore.get("mm_session");
+
+    if (!sessionCookie) {
+      redirect("/login");
+    }
+
+    try {
+      JSON.parse(sessionCookie.value);
+    } catch {
+      redirect("/login");
+    }
   }
 
   return (

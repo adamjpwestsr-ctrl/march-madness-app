@@ -1,55 +1,40 @@
 "use client";
 
-import React from "react";
+import { useEffect, useState, useCallback } from "react";
 import LeaderboardPanel from "./LeaderboardPanel";
 
-export type GlobalLeaderboardEntry = {
-  userId: string;
-  name: string;
-  avatarUrl?: string;
-  score: number;
-  rank: number;
-  groups: string[]; // list of groups the user belongs to
-};
+export default function GlobalLeaderboardPage() {
+  const [leaderboard, setLeaderboard] = useState([]);
 
-export default function GlobalLeaderboard({
-  seasonYear,
-  entries,
-}: {
-  seasonYear: number;
-  entries: GlobalLeaderboardEntry[];
-}) {
+  const loadLeaderboard = useCallback(async () => {
+    try {
+      const res = await fetch("/api/march-madness-v2/leaderboard/get");
+      const data = await res.json();
+      if (data.success) {
+        setLeaderboard(data.leaderboard);
+      }
+    } catch (err) {
+      console.error("Failed to load leaderboard:", err);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadLeaderboard();
+
+    const interval = setInterval(() => {
+      loadLeaderboard();
+    }, 15000); // refresh every 15 seconds
+
+    return () => clearInterval(interval);
+  }, [loadLeaderboard]);
+
   return (
-    <div className="rounded-2xl bg-slate-950/70 border border-white/10 p-8 shadow-2xl backdrop-blur-md">
-      {/* HEADER */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-3xl font-extrabold text-yellow-400 tracking-tight drop-shadow-lg">
-            Global Leaderboard
-          </h1>
-          <p className="text-slate-400 text-sm mt-1">
-            Season {seasonYear} • All groups combined
-          </p>
-        </div>
+    <div className="min-h-screen bg-slate-900 text-white p-6">
+      <h1 className="text-4xl font-bold text-yellow-400 mb-6 text-center">
+        Global Leaderboard
+      </h1>
 
-        {/* SUMMARY */}
-        <div className="flex items-center gap-6 text-sm text-slate-300">
-          <div className="flex flex-col text-right">
-            <span className="font-semibold text-slate-200">
-              {entries.length}
-            </span>
-            <span className="text-slate-500">Players</span>
-          </div>
-        </div>
-      </div>
-
-      {/* LEADERBOARD */}
-      <LeaderboardPanel entries={entries} />
-
-      {/* FOOTER */}
-      <div className="text-center text-slate-500 text-xs mt-6">
-        Rankings updated hourly • Includes all public & private groups
-      </div>
+      <LeaderboardPanel leaderboard={leaderboard} />
     </div>
   );
 }

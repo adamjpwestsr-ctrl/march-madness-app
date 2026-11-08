@@ -17,7 +17,6 @@ import {
   Circle,
   CircleDot,
 } from "lucide-react";
-
 export default function SidebarNav() {
   const pathname = usePathname();
   const router = useRouter();
@@ -39,17 +38,16 @@ export default function SidebarNav() {
       <span className="hidden group-hover:inline-block">{label}</span>
     </Link>
   );
-
   return (
     <nav className="flex flex-col gap-2 p-4 w-64 lg:w-16 group-hover:w-64 transition-all duration-300 ease-in-out overflow-hidden group">
       {link("/home", "Home", Home)}
 
-      {link("/sports/march-madness", "March Madness", Trophy)}
+      {link("/sports/march-madness-v2", "March Madness", Trophy)}
 
       {/* Challenges */}
-      <button
+      <div
         onClick={() => setOpenChallenges(!openChallenges)}
-        className="flex items-center gap-3 px-4 py-2 rounded-md text-slate-300 hover:bg-slate-800 transition-all duration-300"
+        className="flex items-center gap-3 px-4 py-2 rounded-md text-slate-300 hover:bg-slate-800 transition-all duration-300 cursor-pointer"
       >
         <ListChecks size={18} />
         <span className="hidden group-hover:inline-block">Challenges</span>
@@ -58,7 +56,7 @@ export default function SidebarNav() {
         ) : (
           <ChevronRight size={16} className="ml-auto hidden group-hover:inline-block" />
         )}
-      </button>
+      </div>
 
       <div
         className={`
@@ -136,14 +134,14 @@ export default function SidebarNav() {
       {link("/trivia", "Trivia", Brain)}
       {link("/leaderboard", "Leaderboard", Trophy)}
       {link("/settings", "Settings", Settings)}
-
-      <button
+      {/* Hydration-safe logout */}
+      <div
         onClick={handleLogout}
-        className="flex items-center gap-3 px-4 py-2 rounded-md text-red-400 hover:bg-slate-800 hover:text-red-300 transition-all duration-300"
+        className="flex items-center gap-3 px-4 py-2 rounded-md text-red-400 hover:bg-slate-800 hover:text-red-300 transition-all duration-300 cursor-pointer"
       >
         <LogOut size={18} />
         <span className="hidden group-hover:inline-block">Logout</span>
-      </button>
+      </div>
     </nav>
   );
 }

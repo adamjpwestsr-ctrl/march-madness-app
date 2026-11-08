@@ -1,3 +1,4 @@
+
 export const runtime = "edge";
 
 import { NextResponse } from "next/server";
@@ -12,7 +13,9 @@ const PUBLIC_PATHS = [
 ];
 
 function isPublic(path: string) {
-  return PUBLIC_PATHS.some((p) => path.startsWith(p));
+  return PUBLIC_PATHS.some(
+    (p) => path === p || path.startsWith(`${p}/`)
+  );
 }
 
 export function middleware(req: NextRequest) {
@@ -21,7 +24,19 @@ export function middleware(req: NextRequest) {
   console.log("MIDDLEWARE HIT:", pathname);
   console.log("COOKIE RAW:", req.cookies.get("mm_session"));
 
-  // Allow public routes
+  // Allow the March Madness login page without requiring mm_session.
+  if (pathname === "/sports/march-madness-v2/login") {
+    const requestHeaders = new Headers(req.headers);
+    requestHeaders.set("x-public-route", "march-madness-login");
+
+    return NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    });
+  }
+
+  // Allow other public routes.
   if (isPublic(pathname)) {
     return NextResponse.next();
   }
@@ -29,17 +44,19 @@ export function middleware(req: NextRequest) {
   const sessionCookie = req.cookies.get("mm_session");
   const isLoggedIn = !!sessionCookie;
 
-  // Not logged in → redirect to login
+  // Not logged in → redirect to login.
   if (!isLoggedIn) {
     const loginUrl = new URL("/login", req.url);
     loginUrl.searchParams.set("redirect", pathname);
+
     return NextResponse.redirect(loginUrl);
   }
 
-  // Admin route protection
+  // Admin route protection.
   if (pathname.startsWith("/admin")) {
     try {
       const parsed = JSON.parse(sessionCookie!.value);
+
       if (!parsed.isAdmin) {
         return NextResponse.redirect(new URL("/bracket", req.url));
       }

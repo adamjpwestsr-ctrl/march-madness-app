@@ -9,13 +9,14 @@ export default function BracketCanvas({
   bracket,
   onPick,
 }: {
-  bracket: any;            // full bracket structure (rounds, regions, matchups)
+  bracket: any;
   onPick: (gameId: string, teamId: string) => void;
 }) {
   return (
-    <div className="w-full flex flex-col gap-10">
+    <div className="mx-auto w-full max-w-[95vw] flex flex-col gap-10 px-4 lg:px-8">
+
       {/* TITLE */}
-      <div className="text-center">
+      <div className="text-center border-b border-slate-800 pb-4">
         <h1 className="text-4xl font-extrabold tracking-tight text-yellow-400 drop-shadow-lg">
           March Madness Bracket
         </h1>
@@ -25,52 +26,59 @@ export default function BracketCanvas({
       </div>
 
       {/* FULL BRACKET GRID */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-        {/* LEFT SIDE REGIONS */}
-        <div className="flex flex-col gap-10">
-          <RegionPanel
-            title="East"
-            regionId="east"
-            matchups={bracket.regions.east}
-            onPick={onPick}
-          />
+      <div className="flex justify-center w-full">
+        <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-5 gap-8 justify-center">
 
-          <RegionPanel
-            title="South"
-            regionId="south"
-            matchups={bracket.regions.south}
-            onPick={onPick}
-          />
-        </div>
+          {/* LEFT SIDE REGIONS */}
+          <div className="flex flex-col gap-6">
+            <RegionPanel
+              title="East"
+              regionId="east"
+              matchups={bracket.regions.east}
+              onPick={onPick}
+            />
 
-        {/* FINAL FOUR + CHAMPIONSHIP */}
-        <div className="flex flex-col gap-10">
-          <FinalFourPanel
-            matchups={bracket.finalFour}
-            onPick={onPick}
-          />
+            <RegionPanel
+              title="South"
+              regionId="south"
+              matchups={bracket.regions.south}
+              onPick={onPick}
+            />
+          </div>
 
-          <ChampionshipPanel
-            matchup={bracket.championship}
-            onPick={onPick}
-          />
-        </div>
+          {/* FINAL FOUR */}
+          <div className="flex flex-col gap-6 col-span-1 xl:col-span-1">
+            <FinalFourPanel
+              matchups={bracket.finalFour}
+              onPick={onPick}
+            />
+          </div>
 
-        {/* RIGHT SIDE REGIONS */}
-        <div className="flex flex-col gap-10">
-          <RegionPanel
-            title="West"
-            regionId="west"
-            matchups={bracket.regions.west}
-            onPick={onPick}
-          />
+          {/* CHAMPIONSHIP */}
+          <div className="flex flex-col gap-6 col-span-1 xl:col-span-1">
+            <ChampionshipPanel
+              matchup={bracket.championship}
+              onPick={onPick}
+            />
+          </div>
 
-          <RegionPanel
-            title="Midwest"
-            regionId="midwest"
-            matchups={bracket.regions.midwest}
-            onPick={onPick}
-          />
+          {/* RIGHT SIDE REGIONS */}
+          <div className="flex flex-col gap-6">
+            <RegionPanel
+              title="West"
+              regionId="west"
+              matchups={bracket.regions.west}
+              onPick={onPick}
+            />
+
+            <RegionPanel
+              title="Midwest"
+              regionId="midwest"
+              matchups={bracket.regions.midwest}
+              onPick={onPick}
+            />
+          </div>
+
         </div>
       </div>
     </div>

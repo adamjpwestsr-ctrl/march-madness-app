@@ -1,122 +1,65 @@
 'use client';
 
-import { useState } from 'react';
-import OverrideModal from './OverrideModal';
+import { useRouter } from 'next/navigation';
 
 export default function MarchMadnessAdminPage() {
-  const [loading, setLoading] = useState<string | null>(null);
-  const [log, setLog] = useState<string[]>([]);
-  const [overrideOpen, setOverrideOpen] = useState(false);
-
-  async function run(endpoint: string, label: string) {
-    setLoading(label);
-    setLog((prev) => [...prev, `▶️ ${label} started...`]);
-
-    try {
-      const res = await fetch(`/api/march-madness/${endpoint}`, {
-        method: 'POST',
-      });
-
-      const json = await res.json();
-
-      setLog((prev) => [
-        ...prev,
-        `✅ ${label} complete: ${JSON.stringify(json)}`,
-      ]);
-    } catch (err) {
-      setLog((prev) => [...prev, `❌ ${label} failed: ${err}`]);
-    }
-
-    setLoading(null);
-  }
+  const router = useRouter();
 
   return (
-    <div className="p-10 text-gray-100 bg-slate-900 min-h-screen">
-      <h1 className="text-4xl font-bold mb-6">March Madness Admin</h1>
+    <div className="min-h-screen bg-slate-900 p-10 text-gray-100">
+      <h1 className="mb-8 text-4xl font-bold">
+        March Madness Admin
+      </h1>
 
-      {/* ACTION GRID */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-        {/* ESPN SYNC */}
+      {/* PRIMARY ADMIN NAVIGATION */}
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+
+        {/* OPENING ROUND EDITOR */}
         <button
-          onClick={() => run('sync-scoreboard', 'Sync ESPN Scoreboard')}
-          disabled={loading !== null}
-          className="p-5 rounded-xl bg-slate-800 border border-slate-600 hover:bg-slate-700 transition"
+          onClick={() =>
+            router.push('/admin/march-madness/opening-round')
+          }
+          className="rounded-xl border border-slate-600 bg-slate-800 p-6 text-left text-xl font-bold transition hover:bg-slate-700"
         >
-          {loading === 'Sync ESPN Scoreboard'
-            ? '⏳ Syncing ESPN...'
-            : '📡 Sync ESPN Scoreboard'}
+          🏀 Opening Round Editor
+
+          <p className="mt-3 text-sm font-normal text-slate-300">
+            Configure the 12 Opening Round games by pairing the 24 teams
+            and wiring winners into Round of 64 slots.
+          </p>
         </button>
 
-        {/* ADVANCE WINNERS */}
+        {/* FULL BRACKET EDITOR */}
         <button
-          onClick={() => run('advance', 'Advance Winners')}
-          disabled={loading !== null}
-          className="p-5 rounded-xl bg-slate-800 border border-slate-600 hover:bg-slate-700 transition"
+          onClick={() =>
+            router.push('/admin/march-madness/full-bracket')
+          }
+          className="rounded-xl border border-slate-600 bg-slate-800 p-6 text-left text-xl font-bold transition hover:bg-slate-700"
         >
-          {loading === 'Advance Winners'
-            ? '⏳ Advancing...'
-            : '🏀 Advance Winners'}
+          📋 Full Bracket Editor
+
+          <p className="mt-3 text-sm font-normal text-slate-300">
+            Configure tournament matchups from the Round of 64 through
+            the Championship, including team advancement paths.
+          </p>
         </button>
 
-        {/* SCORE ENGINE */}
+        {/* GAME RESULTS AND SCORES */}
         <button
-          onClick={() => run('score', 'Recalculate Scores')}
-          disabled={loading !== null}
-          className="p-5 rounded-xl bg-slate-800 border border-slate-600 hover:bg-slate-700 transition"
+          onClick={() =>
+            router.push('/admin/march-madness/results')
+          }
+          className="rounded-xl border border-emerald-600 bg-emerald-900 p-6 text-left text-xl font-bold transition hover:bg-emerald-800"
         >
-          {loading === 'Recalculate Scores'
-            ? '⏳ Scoring...'
-            : '📊 Recalculate Scores'}
+          🏆 Game Results & Scores
+
+          <p className="mt-3 text-sm font-normal text-emerald-100">
+            Enter final game scores, automatically determine winners,
+            and advance winning teams through the tournament.
+          </p>
         </button>
 
-        {/* SETUP TOURNAMENT */}
-        <button
-          onClick={() => run('admin/setup', 'Setup Tournament')}
-          disabled={loading !== null}
-          className="p-5 rounded-xl bg-slate-800 border border-slate-600 hover:bg-slate-700 transition"
-        >
-          {loading === 'Setup Tournament'
-            ? '⏳ Setting up...'
-            : '🛠️ Setup Tournament'}
-        </button>
-
-        {/* OVERRIDE GAME — now opens modal */}
-        <button
-          onClick={() => setOverrideOpen(true)}
-          disabled={loading !== null}
-          className="p-5 rounded-xl bg-slate-800 border border-slate-600 hover:bg-slate-700 transition"
-        >
-          ⚠️ Override Game Result
-        </button>
-
-        {/* REFRESH STATE */}
-        <button
-          onClick={() => run('state', 'Refresh State')}
-          disabled={loading !== null}
-          className="p-5 rounded-xl bg-slate-800 border border-slate-600 hover:bg-slate-700 transition"
-        >
-          {loading === 'Refresh State'
-            ? '⏳ Refreshing...'
-            : '🔄 Refresh State'}
-        </button>
       </div>
-
-      {/* LOG PANEL */}
-      <div className="bg-slate-800 border border-slate-700 rounded-xl p-6 max-h-[400px] overflow-y-auto">
-        <h2 className="text-xl font-semibold mb-3">System Log</h2>
-        <div className="space-y-2 text-sm font-mono">
-          {log.map((line, i) => (
-            <div key={i}>{line}</div>
-          ))}
-        </div>
-      </div>
-
-      {/* OVERRIDE MODAL */}
-      <OverrideModal
-        open={overrideOpen}
-        onClose={() => setOverrideOpen(false)}
-        onLog={(msg) => setLog((prev) => [...prev, msg])}
-      />
     </div>
   );
 }

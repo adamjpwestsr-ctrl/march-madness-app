@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ErrorMessage } from "@/components/ErrorMessage";
 import JerseyAvatar from "@/components/JerseyAvatar";
+import BracketBossHelper from "@/components/march-madness/BracketBossHelper";
 
 export default function NewBracketV2Page() {
   const router = useRouter();
@@ -113,7 +114,7 @@ export default function NewBracketV2Page() {
           {/* Name */}
           <input
             className="p-3 rounded-lg bg-white/10 w-full border border-white/20"
-            placeholder="Your Name"
+            placeholder="Your Name - New Bracket, who dis?"
             value={userName}
             onChange={(e) => setUserName(e.target.value)}
           />
@@ -121,7 +122,7 @@ export default function NewBracketV2Page() {
           {/* Optional Username */}
           <input
             className="p-3 rounded-lg bg-white/10 w-full border border-white/20"
-            placeholder="Username (optional)"
+            placeholder="Username - This is optional, but ideal!"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
           />
@@ -129,7 +130,7 @@ export default function NewBracketV2Page() {
           {/* Passcode */}
           <input
             className="p-3 rounded-lg bg-white/10 w-full border border-white/20"
-            placeholder="Passcode (same one used at login)"
+            placeholder="Passcode - Same code used at login"
             value={passcode}
             onChange={(e) => setPasscode(e.target.value)}
           />
@@ -137,7 +138,7 @@ export default function NewBracketV2Page() {
           {/* Bracket Name */}
           <input
             className="p-3 rounded-lg bg-white/10 w-full border border-white/20"
-            placeholder="Bracket Name"
+            placeholder="Bracket Name - Points for uniqueness, not really!"
             value={bracketName}
             onChange={(e) => setBracketName(e.target.value)}
           />
@@ -145,47 +146,11 @@ export default function NewBracketV2Page() {
           {/* Tiebreaker */}
           <input
             className="p-3 rounded-lg bg-white/10 w-full border border-white/20"
-            placeholder="Championship Game Total Score"
+            placeholder="Tie Breaker - Championship Game Total Score"
             value={tiebreakerScore}
             onChange={(e) => setTiebreakerScore(e.target.value)}
           />
 
-          {/* Avatar Picker */}
-          <div className="bg-white/10 p-4 rounded-lg border border-white/20">
-            <p className="mb-2 font-semibold">Choose Your Jersey Avatar</p>
-
-            <div className="flex gap-4 items-center">
-              <JerseyAvatar
-                color={avatarColor}
-                number={avatarNumber}
-                size={64}
-              />
-
-              <div className="flex flex-col gap-2">
-                <select
-                  className="p-2 rounded bg-slate-800 text-white border border-white/20"
-                  value={avatarColor}
-                  onChange={(e) => setAvatarColor(e.target.value)}
-                >
-                  <option value="blue">Blue</option>
-                  <option value="red">Red</option>
-                  <option value="green">Green</option>
-                  <option value="yellow">Yellow</option>
-                  <option value="purple">Purple</option>
-                  <option value="black">Black</option>
-                  <option value="white">White</option>
-                </select>
-
-                <input
-                  className="p-2 rounded bg-white/10 border border-white/20"
-                  placeholder="Number (00–99)"
-                  value={avatarNumber}
-                  onChange={(e) => setAvatarNumber(e.target.value)}
-                  maxLength={2}
-                />
-              </div>
-            </div>
-          </div>
 
           {/* Submit */}
           <button
@@ -201,6 +166,7 @@ export default function NewBracketV2Page() {
           </button>
         </div>
       </div>
+    <BracketBossHelper/>
     </div>
   );
 }

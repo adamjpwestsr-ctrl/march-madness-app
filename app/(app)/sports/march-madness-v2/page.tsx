@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Forum from "@/app/components/march-madness/Forum";
 import CollegeSportsTicker from "@/app/components/march-madness/CollegeSportsTicker";
+import BracketBossHelper from "@/components/march-madness/BracketBossHelper";
 
 type LeaderboardRow = {
   bracket_id: string;
@@ -813,6 +814,8 @@ export default function MarchMadnessHubPage() {
         </p>
         <p className="mt-1 text-[9px] text-slate-700">BracketBoss</p>
       </footer>
+
+      <BracketBossHelper />
     </div>
   );
 }

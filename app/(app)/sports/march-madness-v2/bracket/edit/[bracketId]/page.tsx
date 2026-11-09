@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
@@ -366,35 +367,35 @@ export default function DynamicBracketBuilder({
     });
   }
 
- function handleMatchupInfo(game: Game) {
-  const displayedGame = projectedMap.get(game.id) || game;
+  function handleMatchupInfo(game: Game) {
+    const displayedGame = projectedMap.get(game.id) || game;
 
-  const team1 = getTeam(displayedGame.team1_id);
-  const team2 = getTeam(displayedGame.team2_id);
+    const team1 = getTeam(displayedGame.team1_id);
+    const team2 = getTeam(displayedGame.team2_id);
 
-  // Identify teams using the actual official Opening Round games.
-  const openingRoundTeamIds = new Set(
-    games
-      .filter((officialGame) => officialGame.round === 0)
-      .flatMap((officialGame) => [
-        officialGame.team1_id,
-        officialGame.team2_id,
-      ])
-      .filter((id): id is string => Boolean(id))
-  );
+    // Identify teams using the actual official Opening Round games.
+    const openingRoundTeamIds = new Set(
+      games
+        .filter((officialGame) => officialGame.round === 0)
+        .flatMap((officialGame) => [
+          officialGame.team1_id,
+          officialGame.team2_id,
+        ])
+        .filter((id): id is string => Boolean(id))
+    );
 
-  setSelectedMatchup({
-    game: displayedGame,
-    team1,
-    team2,
-    team1IsOpeningRoundTeam: Boolean(
-      team1 && openingRoundTeamIds.has(team1.id)
-    ),
-    team2IsOpeningRoundTeam: Boolean(
-      team2 && openingRoundTeamIds.has(team2.id)
-    ),
-  });
-}
+    setSelectedMatchup({
+      game: displayedGame,
+      team1,
+      team2,
+      team1IsOpeningRoundTeam: Boolean(
+        team1 && openingRoundTeamIds.has(team1.id)
+      ),
+      team2IsOpeningRoundTeam: Boolean(
+        team2 && openingRoundTeamIds.has(team2.id)
+      ),
+    });
+  }
 
   function closeMatchupInfo() {
     setSelectedMatchup(null);
@@ -545,7 +546,7 @@ export default function DynamicBracketBuilder({
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-950 text-gray-100">
+    <div className="flex min-h-screen min-w-0 flex-col bg-slate-950 text-gray-100">
       <header className="w-full border-b border-slate-800 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950">
         <div className="mx-auto flex max-w-[1600px] flex-col gap-4 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <div className="flex flex-col">
@@ -585,7 +586,7 @@ export default function DynamicBracketBuilder({
       </header>
 
       <main className="min-w-0 flex-1">
-        <div className="mx-auto w-full max-w-[1800px] px-3 py-5 sm:px-4 lg:px-6 lg:py-7">
+        <div className="mx-auto w-full max-w-[1800px] min-w-0 px-3 py-5 sm:px-4 lg:px-6 lg:py-7">
           <div className="mb-5 flex min-w-0 gap-2 overflow-x-auto border-b border-slate-800 sm:gap-4">
             {regions.map((region) => {
               const locked = !canActivateTab(region);
@@ -962,78 +963,85 @@ function RegionBracket({
           Regional games are not available yet.
         </div>
       ) : (
-        <div className="w-full min-w-0">
-          <div className="mb-3 grid min-w-0 grid-cols-4 gap-x-2 sm:gap-x-3">
-            {[1, 2, 3, 4].map((round) => (
-              <div
-                key={round}
-                className="min-w-0 text-center text-[0.55rem] font-bold uppercase tracking-wide text-slate-400 sm:text-[0.65rem] sm:tracking-wider"
-              >
-                {roundLabels[round]}
-              </div>
-            ))}
-          </div>
-
-          <div
-            className="relative grid min-w-0 grid-cols-4 gap-x-2 sm:gap-x-3"
-            style={{
-              gridTemplateRows: "repeat(8, minmax(104px, auto))",
-            }}
-          >
-            {/* Advancement connectors sit behind the matchup cards. */}
-            <svg
-              className="pointer-events-none absolute inset-0 z-0 h-full w-full overflow-visible"
-              viewBox="0 0 100 800"
-              preserveAspectRatio="none"
-              aria-hidden="true"
-            >
-              {connectorPaths.map((path, index) => (
-                <path
-                  key={index}
-                  d={path}
-                  fill="none"
-                  stroke="#64748b"
-                  strokeWidth="1.1"
-                  strokeOpacity="0.55"
-                  vectorEffect="non-scaling-stroke"
-                />
+        /*
+         * The regional bracket scrolls independently on narrow screens.
+         * The inner minimum width prevents the four rounds and matchup
+         * cards from being compressed on iPhones.
+         */
+        <div className="w-full min-w-0 overflow-x-auto overscroll-x-contain">
+          <div className="w-full min-w-[760px]">
+            <div className="mb-3 grid grid-cols-4 gap-x-2 sm:gap-x-3">
+              {[1, 2, 3, 4].map((round) => (
+                <div
+                  key={round}
+                  className="min-w-0 text-center text-[0.55rem] font-bold uppercase tracking-wide text-slate-400 sm:text-[0.65rem] sm:tracking-wider"
+                >
+                  {roundLabels[round]}
+                </div>
               ))}
-            </svg>
+            </div>
 
-            {[1, 2, 3, 4].map((round) => {
-              const roundGames = rounds[round] || [];
+            <div
+              className="relative grid grid-cols-4 gap-x-2 sm:gap-x-3"
+              style={{
+                gridTemplateRows: "repeat(8, minmax(104px, auto))",
+              }}
+            >
+              {/* Advancement connectors sit behind the matchup cards. */}
+              <svg
+                className="pointer-events-none absolute inset-0 z-0 h-full w-full overflow-visible"
+                viewBox="0 0 100 800"
+                preserveAspectRatio="none"
+                aria-hidden="true"
+              >
+                {connectorPaths.map((path, index) => (
+                  <path
+                    key={index}
+                    d={path}
+                    fill="none"
+                    stroke="#64748b"
+                    strokeWidth="1.1"
+                    strokeOpacity="0.55"
+                    vectorEffect="non-scaling-stroke"
+                  />
+                ))}
+              </svg>
 
-              return roundGames.map((game) => {
-                const position = layoutByGame.get(game.id);
+              {[1, 2, 3, 4].map((round) => {
+                const roundGames = rounds[round] || [];
 
-                if (!position) return null;
+                return roundGames.map((game) => {
+                  const position = layoutByGame.get(game.id);
 
-                return (
-                  <div
-                    key={game.id}
-                    className="relative z-10 flex min-w-0 items-center px-0.5"
-                    style={{
-                      gridColumn: round,
-                      gridRow: `${position.start + 1} / span ${position.span}`,
-                    }}
-                  >
-                    <MatchupCard
-                      game={game}
-                      team1={getTeam(game.team1_id)}
-                      team2={getTeam(game.team2_id)}
-                      team1Label={getTeamLabel(game.team1_id)}
-                      team2Label={getTeamLabel(game.team2_id)}
-                      team1Selectable={canPickEntrant(game.team1_id)}
-                      team2Selectable={canPickEntrant(game.team2_id)}
-                      winnerId={picks[game.id]}
-                      getLogoUrl={getLogoUrl}
-                      onPick={onPick}
-                      onInfo={onInfo}
-                    />
-                  </div>
-                );
-              });
-            })}
+                  if (!position) return null;
+
+                  return (
+                    <div
+                      key={game.id}
+                      className="relative z-10 flex min-w-0 items-center px-0.5"
+                      style={{
+                        gridColumn: round,
+                        gridRow: `${position.start + 1} / span ${position.span}`,
+                      }}
+                    >
+                      <MatchupCard
+                        game={game}
+                        team1={getTeam(game.team1_id)}
+                        team2={getTeam(game.team2_id)}
+                        team1Label={getTeamLabel(game.team1_id)}
+                        team2Label={getTeamLabel(game.team2_id)}
+                        team1Selectable={canPickEntrant(game.team1_id)}
+                        team2Selectable={canPickEntrant(game.team2_id)}
+                        winnerId={picks[game.id]}
+                        getLogoUrl={getLogoUrl}
+                        onPick={onPick}
+                        onInfo={onInfo}
+                      />
+                    </div>
+                  );
+                });
+              })}
+            </div>
           </div>
         </div>
       )}

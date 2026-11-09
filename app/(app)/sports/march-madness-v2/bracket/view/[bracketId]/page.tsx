@@ -1,4 +1,3 @@
-
 import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 
@@ -354,8 +353,8 @@ export default async function PrettyBracketViewPage({
   const bracketName = bracket.bracket_name || "My March Madness Bracket";
 
   return (
-    <main className="min-h-screen bg-[#070d19] px-3 py-4 text-white sm:px-5 lg:px-6">
-      <div className="mx-auto max-w-[1900px]">
+    <main className="min-h-screen min-w-0 overflow-x-hidden bg-[#070d19] px-3 py-4 text-white sm:px-5 lg:px-6">
+      <div className="mx-auto min-w-0 max-w-[1900px]">
         {/* Page header */}
         <header className="mb-5 rounded-2xl border border-slate-700/80 bg-gradient-to-r from-slate-900 via-[#101d33] to-[#101b30] p-4 shadow-xl sm:p-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -465,7 +464,7 @@ export default async function PrettyBracketViewPage({
         </details>
 
         {/* Main bracket */}
-        <section>
+        <section className="min-w-0">
           <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-300">
@@ -480,9 +479,9 @@ export default async function PrettyBracketViewPage({
             </p>
           </div>
 
-          <div className="grid grid-cols-1 items-start gap-3 xl:grid-cols-[minmax(0,1fr)_210px_minmax(0,1fr)]">
+          <div className="grid min-w-0 grid-cols-1 items-start gap-3 xl:grid-cols-[minmax(0,1fr)_210px_minmax(0,1fr)]">
             {/* Left side: games progress toward the center */}
-            <div className="space-y-3">
+            <div className="min-w-0 space-y-3">
               {["West", "South"].map((region) => (
                 <RegionPanel
                   key={region}
@@ -500,7 +499,7 @@ export default async function PrettyBracketViewPage({
             </div>
 
             {/* Center championship column */}
-            <div className="order-first space-y-3 xl:order-none xl:sticky xl:top-4">
+            <div className="order-first min-w-0 space-y-3 xl:order-none xl:sticky xl:top-4">
               <div className="rounded-xl border border-yellow-400/30 bg-gradient-to-b from-yellow-400/10 to-slate-900 p-3 text-center shadow-lg shadow-yellow-950/10">
                 <div className="text-3xl">🏆</div>
                 <p className="mt-1 text-[10px] font-black uppercase tracking-[0.2em] text-yellow-300">
@@ -592,7 +591,7 @@ export default async function PrettyBracketViewPage({
             </div>
 
             {/* Right side: reversed so games progress toward the center */}
-            <div className="space-y-3">
+            <div className="min-w-0 space-y-3">
               {["East", "Midwest"].map((region) => (
                 <RegionPanel
                   key={region}
@@ -845,7 +844,7 @@ function RegionPanel({
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-slate-700 bg-slate-900 shadow-lg">
+    <div className="min-w-0 overflow-hidden rounded-xl border border-slate-700 bg-slate-900 shadow-lg">
       <div className="flex items-center justify-between border-b border-slate-700 bg-slate-800/80 px-3 py-2.5">
         <h3 className="text-sm font-black uppercase tracking-[0.15em] text-white">
           {title} Region
@@ -855,86 +854,92 @@ function RegionPanel({
         </span>
       </div>
 
-      <div className="grid grid-cols-4 gap-1.5 px-2 pt-2 sm:gap-2 sm:px-3">
-        {rounds.map((round) => (
-          <div key={round} className="min-w-0">
-            <div className="min-h-8 border-b border-slate-700 pb-1">
-              <p className="text-center text-[8px] font-black uppercase leading-tight tracking-wide text-blue-300 sm:text-[9px]">
-                {round === 1
-                  ? "Round of 64"
-                  : round === 2
-                    ? "Round of 32"
-                    : round === 3
-                      ? "Sweet 16"
-                      : "Elite 8"}
-              </p>
+      {/* Scroll only this region horizontally on narrow screens. */}
+      <div className="overflow-x-auto overscroll-x-contain">
+        {/* Keep all four rounds wide enough to remain readable. */}
+        <div className="min-w-[720px]">
+          <div className="grid grid-cols-4 gap-2 px-3 pt-2">
+            {rounds.map((round) => (
+              <div key={round} className="min-w-0">
+                <div className="min-h-8 border-b border-slate-700 pb-1">
+                  <p className="text-center text-[9px] font-black uppercase leading-tight tracking-wide text-blue-300">
+                    {round === 1
+                      ? "Round of 64"
+                      : round === 2
+                        ? "Round of 32"
+                        : round === 3
+                          ? "Sweet 16"
+                          : "Elite 8"}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div
+            className="relative mx-3 mb-3"
+            style={{ height: `${REGION_GRID_HEIGHT}px` }}
+          >
+            {/* Connector lines sit behind the matchup cards. */}
+            <svg
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 z-0 h-full w-full"
+              viewBox={`0 0 1000 ${REGION_GRID_HEIGHT}`}
+              preserveAspectRatio="none"
+            >
+              {connectorPaths.map((path, index) => (
+                <path
+                  key={`${title}-connector-${index}`}
+                  d={path}
+                  fill="none"
+                  stroke="#526985"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  opacity="0.7"
+                />
+              ))}
+            </svg>
+
+            {/* Each column shares the same eight-row grid. */}
+            <div className="relative z-10 grid h-full grid-cols-4 gap-2">
+              {rounds.map((round) => {
+                const roundGames = gamesByRound.get(round) ?? [];
+
+                return (
+                  <div
+                    key={round}
+                    className="grid min-w-0 grid-rows-8"
+                    style={{
+                      gridTemplateRows: "repeat(8, minmax(0, 1fr))",
+                    }}
+                  >
+                    {roundGames.map((game) => (
+                      <div key={game.id} style={getGridPlacement(game)}>
+                        <GameCard
+                          game={getProjectedGame(game)}
+                          officialGame={game}
+                          selectedWinner={getValidWinner(game)}
+                          getTeam={getTeam}
+                          getEntrantLabel={getEntrantLabel}
+                          isEliminatedOpeningPick={isEliminatedOpeningPick}
+                          compact
+                        />
+                      </div>
+                    ))}
+
+                    {roundGames.length === 0 && (
+                      <div className="row-span-8 flex items-center justify-center">
+                        <p className="text-center text-[10px] text-slate-600">
+                          —
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
-        ))}
-      </div>
-
-      <div
-        className="relative mx-2 mb-2 sm:mx-3 sm:mb-3"
-        style={{ height: `${REGION_GRID_HEIGHT}px` }}
-      >
-        {/* Connector lines sit behind the matchup cards. */}
-        <svg
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 z-0 h-full w-full"
-          viewBox={`0 0 1000 ${REGION_GRID_HEIGHT}`}
-          preserveAspectRatio="none"
-        >
-          {connectorPaths.map((path, index) => (
-            <path
-              key={`${title}-connector-${index}`}
-              d={path}
-              fill="none"
-              stroke="#526985"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              opacity="0.7"
-            />
-          ))}
-        </svg>
-
-        {/* Each column shares the same eight-row grid. */}
-        <div className="relative z-10 grid h-full grid-cols-4 gap-1.5 sm:gap-2">
-          {rounds.map((round) => {
-            const roundGames = gamesByRound.get(round) ?? [];
-
-            return (
-              <div
-                key={round}
-                className="grid min-w-0 grid-rows-8"
-                style={{
-                  gridTemplateRows: "repeat(8, minmax(0, 1fr))",
-                }}
-              >
-                {roundGames.map((game) => (
-                  <div key={game.id} style={getGridPlacement(game)}>
-                    <GameCard
-                      game={getProjectedGame(game)}
-                      officialGame={game}
-                      selectedWinner={getValidWinner(game)}
-                      getTeam={getTeam}
-                      getEntrantLabel={getEntrantLabel}
-                      isEliminatedOpeningPick={isEliminatedOpeningPick}
-                      compact
-                    />
-                  </div>
-                ))}
-
-                {roundGames.length === 0 && (
-                  <div className="row-span-8 flex items-center justify-center">
-                    <p className="text-center text-[10px] text-slate-600">
-                      —
-                    </p>
-                  </div>
-                )}
-              </div>
-            );
-          })}
         </div>
       </div>
     </div>

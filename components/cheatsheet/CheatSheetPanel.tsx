@@ -122,23 +122,25 @@ export default function CheatSheetPanel({
           </button>
         </div>
 
-        {/* SCROLLABLE CHEAT SHEET CONTENT */}
+        {/* MAIN SCROLLABLE CHEAT SHEET CONTENT */}
         <div
           className="
             min-h-0 min-w-0 flex-1
             overflow-y-auto overflow-x-hidden
-            overscroll-contain
+            overscroll-y-auto
+            touch-pan-y
+            [-webkit-overflow-scrolling:touch]
             p-2 sm:p-3 lg:p-4
           "
         >
           <div className="mx-auto w-full min-w-0 max-w-[1450px]">
             <CheatSheetCard
-  teamA={team1}
-  teamB={team2}
-  round={game?.round}
-  isTeamAOpeningRound={selectedMatchup.team1IsOpeningRoundTeam}
-  isTeamBOpeningRound={selectedMatchup.team2IsOpeningRoundTeam}
-/>
+              teamA={team1}
+              teamB={team2}
+              round={game?.round}
+              isTeamAOpeningRound={selectedMatchup.team1IsOpeningRoundTeam}
+              isTeamBOpeningRound={selectedMatchup.team2IsOpeningRoundTeam}
+            />
           </div>
         </div>
 

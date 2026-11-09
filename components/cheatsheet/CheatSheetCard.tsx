@@ -85,23 +85,23 @@ export default function CheatSheetCard({
   const favoredTeamName = favorResult.favoredTeam;
   const favorPercent = favorResult.percent ?? 50;
 
-const getColors = (teamName: string) => {
-  const official = TEAM_NAME_MAP[teamName] || teamName;
+  const getColors = (teamName: string) => {
+    const official = TEAM_NAME_MAP[teamName] || teamName;
 
-  const colors = Object.prototype.hasOwnProperty.call(
-    TEAM_COLORS,
-    official
-  )
-    ? TEAM_COLORS[official as keyof typeof TEAM_COLORS]
-    : undefined;
+    const colors = Object.prototype.hasOwnProperty.call(
+      TEAM_COLORS,
+      official
+    )
+      ? TEAM_COLORS[official as keyof typeof TEAM_COLORS]
+      : undefined;
 
-  return (
-    colors || {
-      primary: "#22c55e",
-      secondary: "#0f172a",
-    }
-  );
-};
+    return (
+      colors || {
+        primary: "#22c55e",
+        secondary: "#0f172a",
+      }
+    );
+  };
 
   const colorsA = getColors(teamAData.name);
   const colorsB = getColors(teamBData.name);
@@ -289,10 +289,10 @@ const getColors = (teamName: string) => {
               {/* TEAM NAMES, SEEDS AND LOGOS */}
               <div className="min-w-0 shrink-0">
                 <MatchupHeader
-  			teamA={teamAData}
-			teamB={teamBData}
-			round={round}
-		/>
+                  teamA={teamAData}
+                  teamB={teamBData}
+                  round={round}
+                />
               </div>
 
               {/* PROJECTED ADVANTAGE */}
@@ -445,8 +445,9 @@ const getColors = (teamName: string) => {
               </span>
             </div>
 
-            {/* INDEPENDENT NUMBERS SCROLL */}
-            <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain overflow-x-hidden p-2 sm:p-3">
+            {/* MOBILE: CONTENT EXPANDS INTO MAIN PANEL SCROLL.
+                DESKTOP: RETAINS INDEPENDENT NUMBERS SCROLL. */}
+            <div className="min-h-0 min-w-0 flex-1 overflow-visible p-2 sm:p-3 lg:overflow-y-auto lg:overscroll-contain lg:overflow-x-hidden">
               <StatsComparison
                 teamA={teamAData}
                 teamB={teamBData}
@@ -472,8 +473,9 @@ const getColors = (teamName: string) => {
               </span>
             </div>
 
-            {/* INDEPENDENT EDGE SCROLL */}
-            <div className="min-h-0 min-w-0 flex-1 space-y-2 overflow-y-auto overscroll-contain overflow-x-hidden p-2 sm:space-y-3 sm:p-3">
+            {/* MOBILE: CONTENT EXPANDS INTO MAIN PANEL SCROLL.
+                DESKTOP: RETAINS INDEPENDENT EDGE SCROLL. */}
+            <div className="min-h-0 min-w-0 flex-1 space-y-2 overflow-visible p-2 sm:space-y-3 sm:p-3 lg:overflow-y-auto lg:overscroll-contain lg:overflow-x-hidden">
               <div>
                 <p className="mb-1.5 text-[8px] font-bold uppercase tracking-[0.15em] text-slate-500 sm:text-[9px]">
                   Historical Context

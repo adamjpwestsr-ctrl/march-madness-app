@@ -18,8 +18,6 @@ type LeaderboardRow = {
   scoring_status?: "scored" | "pending";
   rank?: number | null;
   has_paid?: boolean | null;
-  shame_count?: number;
-  you_shamed?: boolean;
 };
 
 type UserBracket = {
@@ -53,7 +51,6 @@ export default function MarchMadnessHubPage() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [shamingUserId, setShamingUserId] = useState<number | null>(null);
   const [inviteCopied, setInviteCopied] = useState(false);
 
   function handleLogout() {
@@ -228,52 +225,6 @@ export default function MarchMadnessHubPage() {
 
     return () => window.clearInterval(interval);
   }, [authChecked, currentUser]);
-
-  // --------------------------------------------------
-  // SHAME VOTE
-  // --------------------------------------------------
-
-  async function handleShame(targetUserId: number) {
-    if (!currentUser?.user_id) return;
-
-    if (String(targetUserId) === String(currentUser.user_id)) {
-      return;
-    }
-
-    setShamingUserId(targetUserId);
-    setError(null);
-
-    try {
-      const response = await fetch("/api/march-madness-v2/shame", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          voter_user_id: currentUser.user_id,
-          target_user_id: targetUserId,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          result.error || "Unable to record shame vote."
-        );
-      }
-
-      await refreshLeaderboard();
-    } catch (err) {
-      console.error("Shame vote error:", err);
-
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Unable to record shame vote."
-      );
-    } finally {
-      setShamingUserId(null);
-    }
-  }
 
   // --------------------------------------------------
   // PAGE GUARDS
@@ -516,160 +467,140 @@ export default function MarchMadnessHubPage() {
               </div>
             ) : (
               <>
+                {/* MOBILE / TABLET LEADERBOARD CARDS */}
+                <div className="space-y-3 p-3 lg:hidden">
+                  {leaderboard.map((row, index) => {
+                    const mine = isCurrentUser(row);
+                    const pending = row.scoring_status === "pending";
+                    const rank = row.rank ?? index + 1;
 
+                    return (
+                      <article
+                        key={`mobile-${row.bracket_id}-${index}`}
+                        className={`rounded-xl border p-3 ${
+                          mine
+                            ? "border-cyan-400/40 bg-cyan-400/[0.08]"
+                            : "border-slate-700/70 bg-[#091426]/80"
+                        }`}
+                      >
+                        {/* PLAYER AND RANK */}
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex min-w-0 items-center gap-2">
+                            <span
+                              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-black ${
+                                rank === 1
+                                  ? "bg-amber-400/15 text-amber-300"
+                                  : rank === 2
+                                    ? "bg-slate-300/10 text-slate-200"
+                                    : rank === 3
+                                      ? "bg-orange-400/10 text-orange-300"
+                                      : "bg-slate-800 text-slate-400"
+                              }`}
+                            >
+                              {pending ? "—" : rank}
+                            </span>
 
-{/* MOBILE / TABLET LEADERBOARD CARDS */}
-<div className="space-y-3 p-3 lg:hidden">
-  {leaderboard.map((row, index) => {
-    const mine = isCurrentUser(row);
-    const pending = row.scoring_status === "pending";
-    const rank = row.rank ?? index + 1;
+                            <div className="min-w-0">
+                              <div className="flex flex-wrap items-center gap-1.5">
+                                <span className="truncate text-sm font-bold text-white">
+                                  {row.display_name || row.user_id || "Player"}
+                                </span>
 
-    return (
-      <article
-        key={`mobile-${row.bracket_id}-${index}`}
-        className={`rounded-xl border p-3 ${
-          mine
-            ? "border-cyan-400/40 bg-cyan-400/[0.08]"
-            : "border-slate-700/70 bg-[#091426]/80"
-        }`}
-      >
-        {/* PLAYER AND RANK */}
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex min-w-0 items-center gap-2">
-            <span
-              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-black ${
-                rank === 1
-                  ? "bg-amber-400/15 text-amber-300"
-                  : rank === 2
-                    ? "bg-slate-300/10 text-slate-200"
-                    : rank === 3
-                      ? "bg-orange-400/10 text-orange-300"
-                      : "bg-slate-800 text-slate-400"
-              }`}
-            >
-              {pending ? "—" : rank}
-            </span>
+                                {mine && (
+                                  <span className="rounded border border-cyan-400/30 bg-cyan-400/10 px-1.5 py-0.5 text-[8px] font-black uppercase text-cyan-200">
+                                    You
+                                  </span>
+                                )}
+                              </div>
 
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-1.5">
-                <span className="truncate text-sm font-bold text-white">
-                  {row.display_name || row.user_id || "Player"}
-                </span>
+                              <p className="mt-0.5 truncate text-[10px] text-slate-400">
+                                {row.bracket_name || "Bracket"}
+                              </p>
+                            </div>
+                          </div>
 
-                {mine && (
-                  <span className="rounded border border-cyan-400/30 bg-cyan-400/10 px-1.5 py-0.5 text-[8px] font-black uppercase text-cyan-200">
-                    You
-                  </span>
-                )}
-              </div>
+                          <div className="shrink-0 text-right">
+                            <p className="text-[9px] font-bold uppercase tracking-wider text-slate-500">
+                              Points
+                            </p>
+                            {pending ? (
+                              <span className="text-xs font-bold text-amber-300">
+                                Pending
+                              </span>
+                            ) : (
+                              <span className="text-xl font-black tabular-nums text-cyan-200">
+                                {row.total_points ?? 0}
+                              </span>
+                            )}
+                          </div>
+                        </div>
 
-              <p className="mt-0.5 truncate text-[10px] text-slate-400">
-                {row.bracket_name || "Bracket"}
-              </p>
-            </div>
-          </div>
+                        {/* POINT TOTALS */}
+                        <div className="mt-3 grid grid-cols-2 gap-2">
+                          <div className="rounded-lg border border-slate-700/60 bg-slate-800/40 px-3 py-2">
+                            <p className="text-[9px] font-bold uppercase tracking-wider text-slate-500">
+                              Max Possible
+                            </p>
+                            <p className="mt-0.5 text-sm font-bold tabular-nums text-slate-200">
+                              {row.max_possible_points ?? "—"}
+                            </p>
+                          </div>
 
-          <div className="shrink-0 text-right">
-            <p className="text-[9px] font-bold uppercase tracking-wider text-slate-500">
-              Points
-            </p>
-            {pending ? (
-              <span className="text-xs font-bold text-amber-300">
-                Pending
-              </span>
-            ) : (
-              <span className="text-xl font-black tabular-nums text-cyan-200">
-                {row.total_points ?? 0}
-              </span>
-            )}
-          </div>
-        </div>
+                          <div className="rounded-lg border border-slate-700/60 bg-slate-800/40 px-3 py-2">
+                            <p className="text-[9px] font-bold uppercase tracking-wider text-slate-500">
+                              Champion Pick
+                            </p>
+                            <p className="mt-0.5 truncate text-sm font-semibold text-slate-300">
+                              {championPicksLocked
+                                ? "Hidden"
+                                : row.champion_pick || "—"}
+                            </p>
+                          </div>
+                        </div>
 
-        {/* POINT TOTALS */}
-        <div className="mt-3 grid grid-cols-2 gap-2">
-          <div className="rounded-lg border border-slate-700/60 bg-slate-800/40 px-3 py-2">
-            <p className="text-[9px] font-bold uppercase tracking-wider text-slate-500">
-              Max Possible
-            </p>
-            <p className="mt-0.5 text-sm font-bold tabular-nums text-slate-200">
-              {row.max_possible_points ?? "—"}
-            </p>
-          </div>
+                        {/* PAYMENT STATUS */}
+                        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-white/[0.06] pt-3">
+                          <div>
+                            {row.has_paid === true ? (
+                              <span className="inline-flex rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2.5 py-1 text-[9px] font-extrabold text-emerald-300">
+                                PAID ✓
+                              </span>
+                            ) : row.has_paid === false ? (
+                              <span className="inline-flex rounded-full border border-red-400/30 bg-red-500/10 px-2.5 py-1 text-[9px] font-extrabold text-red-300">
+                                NOT PAID
+                              </span>
+                            ) : (
+                              <span className="text-[10px] text-slate-500">
+                                Payment —
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
 
-          <div className="rounded-lg border border-slate-700/60 bg-slate-800/40 px-3 py-2">
-            <p className="text-[9px] font-bold uppercase tracking-wider text-slate-500">
-              Champion Pick
-            </p>
-            <p className="mt-0.5 truncate text-sm font-semibold text-slate-300">
-              {championPicksLocked
-                ? "Hidden"
-                : row.champion_pick || "—"}
-            </p>
-          </div>
-        </div>
-
-        {/* PAYMENT AND SHAME */}
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-white/[0.06] pt-3">
-          <div>
-            {row.has_paid === true ? (
-              <span className="inline-flex rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2.5 py-1 text-[9px] font-extrabold text-emerald-300">
-                PAID ✓
-              </span>
-            ) : row.has_paid === false ? (
-              <span className="inline-flex rounded-full border border-red-400/30 bg-red-500/10 px-2.5 py-1 text-[9px] font-extrabold text-red-300">
-                NOT PAID
-              </span>
-            ) : (
-              <span className="text-[10px] text-slate-500">Payment —</span>
-            )}
-          </div>
-
-          {row.user_id != null && (
-            <div className="flex flex-wrap items-center justify-end gap-2">
-              {(row.shame_count ?? 0) > 0 && (
-                <span className="rounded-full border border-amber-400/30 bg-amber-400/10 px-2 py-1 text-[9px] font-extrabold text-amber-300">
-                  😂 {row.shame_count}{" "}
-                  {row.shame_count === 1 ? "SHAME" : "SHAMES"}
-                </span>
-              )}
-
-              {!mine && row.has_paid === false && (
-                <button
-                  type="button"
-                  onClick={() => handleShame(row.user_id!)}
-                  disabled={
-                    row.you_shamed ||
-                    shamingUserId === row.user_id
-                  }
-                  className="whitespace-nowrap rounded-md border border-amber-400/30 bg-amber-400/10 px-2.5 py-1.5 text-[9px] font-bold text-amber-200 transition hover:border-amber-300 hover:bg-amber-400/20 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {shamingUserId === row.user_id
-                    ? "SENDING..."
-                    : row.you_shamed
-                      ? "SHAMED ✓"
-                      : "SHAME 😂"}
-                </button>
-              )}
-            </div>
-          )}
-        </div>
-      </article>
-    );
-  })}
-</div>
+                {/* DESKTOP LEADERBOARD TABLE */}
                 <div className="hidden w-full lg:block">
                   <table className="w-full table-fixed border-collapse text-left">
                     <thead>
                       <tr className="border-b border-slate-700/70 bg-[#091426]/80 text-[9px] font-bold uppercase tracking-wider text-slate-500">
-                        <th className="w-[7%] px-1 py-2.5 text-center">Rank</th>
-                        <th className="w-[15%] px-1 py-2.5">Player</th>
-                        <th className="w-[14%] px-1 py-2.5">Bracket</th>
-                        <th className="w-[12%] px-1 py-2.5">Champion</th>
-                        <th className="w-[9%] px-1 py-2.5 text-right">Points</th>
-                        <th className="w-[13%] px-1 py-2.5 text-right">Max Possible</th>
-                        <th className="w-[13%] px-1 py-2.5 text-center">Payment</th>
-                        <th className="w-[17%] px-1 py-2.5 text-center">Shame</th>
+                        <th className="w-[8%] px-1 py-2.5 text-center">
+                          Rank
+                        </th>
+                        <th className="w-[17%] px-1 py-2.5">Player</th>
+                        <th className="w-[16%] px-1 py-2.5">Bracket</th>
+                        <th className="w-[15%] px-1 py-2.5">Champion</th>
+                        <th className="w-[10%] px-1 py-2.5 text-right">
+                          Points
+                        </th>
+                        <th className="w-[18%] px-1 py-2.5 text-right">
+                          Max Possible
+                        </th>
+                        <th className="w-[16%] px-1 py-2.5 text-center">
+                          Payment
+                        </th>
                       </tr>
                     </thead>
 
@@ -767,52 +698,6 @@ export default function MarchMadnessHubPage() {
                                 </span>
                               )}
                             </td>
-
-                            {/* SHAME VOTES */}
-                            <td className="px-3 py-3 text-center sm:px-4">
-                              {row.user_id != null ? (
-                                <div className="flex flex-col items-center gap-1">
-                                  {(row.shame_count ?? 0) > 0 && (
-                                    <span className="whitespace-nowrap rounded-full border border-amber-400/30 bg-amber-400/10 px-2 py-1 text-[9px] font-extrabold text-amber-300">
-                                      😂 {row.shame_count}{" "}
-                                      {row.shame_count === 1
-                                        ? "SHAME"
-                                        : "SHAMES"}
-                                    </span>
-                                  )}
-
-                                  {/* Only allow shaming someone else */}
-                                  {!mine && row.has_paid === false && (
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        handleShame(row.user_id!)
-                                      }
-                                      disabled={
-                                        row.you_shamed ||
-                                        shamingUserId === row.user_id
-                                      }
-                                      title={
-                                        row.you_shamed
-                                          ? "You've already shamed this player!"
-                                          : "Give this unpaid player a friendly nudge!"
-                                      }
-                                      className="whitespace-nowrap rounded-md border border-amber-400/30 bg-amber-400/10 px-2 py-1 text-[9px] font-bold text-amber-200 transition hover:border-amber-300 hover:bg-amber-400/20 disabled:cursor-not-allowed disabled:opacity-50"
-                                    >
-                                      {shamingUserId === row.user_id
-                                        ? "SENDING..."
-                                        : row.you_shamed
-                                          ? "SHAMED ✓"
-                                          : "SHAME 😂"}
-                                    </button>
-                                  )}
-                                </div>
-                              ) : (
-                                <span className="text-[10px] text-slate-600">
-                                  —
-                                </span>
-                              )}
-                            </td>
                           </tr>
                         );
                       })}
@@ -838,7 +723,7 @@ export default function MarchMadnessHubPage() {
 
           {/* Supporting column */}
           <div className="flex min-w-0 flex-col gap-4">
-            {/* FORUM - MOVED ABOVE CHAMPION PICKS */}
+            {/* FORUM */}
             <section className="overflow-hidden rounded-2xl border border-slate-700/70 bg-[#0d1a2e]/95 shadow-[0_12px_35px_rgba(0,0,0,0.2)]">
               <div className="border-b border-white/[0.07] bg-gradient-to-r from-[#142640] to-[#0e1c31] px-4 py-3">
                 <div className="text-[9px] font-bold uppercase tracking-[0.25em] text-cyan-300">

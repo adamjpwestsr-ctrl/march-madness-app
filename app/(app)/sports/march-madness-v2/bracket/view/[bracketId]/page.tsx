@@ -1,3 +1,4 @@
+
 import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 
@@ -381,7 +382,15 @@ export default async function PrettyBracketViewPage({
               </div>
             </div>
 
+            {/* Navigation buttons */}
             <div className="flex shrink-0 flex-wrap gap-2">
+              <Link
+                href="/sports/march-madness-v2"
+                className="rounded-lg border border-cyan-400/30 bg-cyan-500/10 px-4 py-2.5 text-xs font-bold text-cyan-300 transition hover:bg-cyan-500/20 sm:text-sm"
+              >
+                🏠 Bracket HUB
+              </Link>
+
               <Link
                 href={`/sports/march-madness-v2/bracket/edit/${bracketId}`}
                 className="rounded-lg bg-yellow-400 px-4 py-2.5 text-xs font-black text-slate-950 transition hover:bg-yellow-300 sm:text-sm"
@@ -398,6 +407,7 @@ export default async function PrettyBracketViewPage({
             </div>
           </div>
 
+          {/* Bracket statistics */}
           <div className="mt-4 grid grid-cols-3 gap-2 border-t border-slate-700/70 pt-4">
             <CompactStat
               label="Picks Made"

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -30,10 +31,10 @@ export default function MarchMadnessLoginPage() {
   async function handleLogin() {
     setError("");
 
-    const trimmedEmail = email.trim();
+    const normalizedEmail = email.trim().toLowerCase();
     const trimmedPasscode = passcode.trim();
 
-    if (!trimmedEmail || !trimmedPasscode) {
+    if (!normalizedEmail || !trimmedPasscode) {
       setError("Please enter both email and passcode.");
       return;
     }
@@ -42,7 +43,7 @@ export default function MarchMadnessLoginPage() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        email: trimmedEmail,
+        email: normalizedEmail,
         passcode: trimmedPasscode,
       }),
     });
@@ -64,12 +65,12 @@ export default function MarchMadnessLoginPage() {
 
     const user = json.user;
 
-    // 🔥 ALWAYS store bracketUser so hub page can hydrate
+    // Always store bracketUser with a normalized email
     localStorage.setItem(
       "bracketUser",
       JSON.stringify({
         user_id: user.user_id,
-        email: user.email,
+        email: normalizedEmail,
         name: user.name,
         username: user.username ?? null,
         is_admin: user.is_admin ?? false,
@@ -99,11 +100,11 @@ export default function MarchMadnessLoginPage() {
   async function handleCreateAccount() {
     setError("");
 
-    const trimmedEmail = email.trim();
+    const normalizedEmail = email.trim().toLowerCase();
     const trimmedName = newName.trim();
     const trimmedPasscode = newPasscode.trim();
 
-    if (!trimmedName || !trimmedEmail || !trimmedPasscode) {
+    if (!trimmedName || !normalizedEmail || !trimmedPasscode) {
       setError("All fields are required.");
       return;
     }
@@ -113,7 +114,7 @@ export default function MarchMadnessLoginPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name: trimmedName,
-        email: trimmedEmail,
+        email: normalizedEmail,
         passcode: trimmedPasscode,
       }),
     });
@@ -127,12 +128,12 @@ export default function MarchMadnessLoginPage() {
 
     const user = json.user;
 
-    // 🔥 ALWAYS store bracketUser
+    // Always store bracketUser with a normalized email
     localStorage.setItem(
       "bracketUser",
       JSON.stringify({
         user_id: user.user_id,
-        email: user.email,
+        email: normalizedEmail,
         name: user.name,
         username: user.username ?? null,
         is_admin: user.is_admin ?? false,
@@ -149,8 +150,13 @@ export default function MarchMadnessLoginPage() {
   async function handleSetInitialPasscode() {
     setError("");
 
-    const trimmedEmail = email.trim();
+    const normalizedEmail = email.trim().toLowerCase();
     const trimmedPasscode = initialPasscode.trim();
+
+    if (!normalizedEmail) {
+      setError("Please enter your email.");
+      return;
+    }
 
     if (!trimmedPasscode) {
       setError("Please enter a passcode.");
@@ -161,7 +167,7 @@ export default function MarchMadnessLoginPage() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        email: trimmedEmail,
+        email: normalizedEmail,
         passcode: trimmedPasscode,
       }),
     });
@@ -175,12 +181,12 @@ export default function MarchMadnessLoginPage() {
 
     const user = json.user;
 
-    // 🔥 ALWAYS store bracketUser
+    // Always store bracketUser with a normalized email
     localStorage.setItem(
       "bracketUser",
       JSON.stringify({
         user_id: user.user_id,
-        email: user.email,
+        email: normalizedEmail,
         name: user.name,
         username: user.username ?? null,
         is_admin: user.is_admin ?? false,
@@ -195,12 +201,12 @@ export default function MarchMadnessLoginPage() {
   // EMAIL RESET OPTIONS
   // -----------------------------------------------------
   function sendViaEmailApp() {
-    const trimmedEmail = email.trim();
+    const normalizedEmail = email.trim().toLowerCase();
     const commissionerEmail = "adamjpwestsr@gmail.com";
 
     const subject = encodeURIComponent("March Madness Passcode Reset Request");
     const body = encodeURIComponent(
-      `Hello Commissioner,\n\nI need help resetting my March Madness passcode.\n\nMy email: ${trimmedEmail}\n\nThank you!`
+      `Hello Commissioner,\n\nI need help resetting my March Madness passcode.\n\nMy email: ${normalizedEmail}\n\nThank you!`
     );
 
     window.location.href = `mailto:${commissionerEmail}?subject=${subject}&body=${body}`;
@@ -208,12 +214,12 @@ export default function MarchMadnessLoginPage() {
   }
 
   function sendViaGmail() {
-    const trimmedEmail = email.trim();
+    const normalizedEmail = email.trim().toLowerCase();
     const commissionerEmail = "adamjpwestsr@gmail.com";
 
     const subject = encodeURIComponent("March Madness Passcode Reset Request");
     const body = encodeURIComponent(
-      `Hello Commissioner,\n\nI need help resetting my March Madness passcode.\n\nMy email: ${trimmedEmail}\n\nThank you!`
+      `Hello Commissioner,\n\nI need help resetting my March Madness passcode.\n\nMy email: ${normalizedEmail}\n\nThank you!`
     );
 
     const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${commissionerEmail}&su=${subject}&body=${body}`;

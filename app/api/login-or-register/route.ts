@@ -18,6 +18,9 @@ export async function POST(req: Request) {
       );
     }
 
+    const normalizedEmail = email.trim().toLowerCase();
+    const trimmedPasscode = passcode.trim();
+
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -28,7 +31,7 @@ export async function POST(req: Request) {
       .select(
         "user_id, email, name, username, is_admin, favorite_sport, theme, passcode"
       )
-      .eq("email", email.trim())
+      .ilike("email", normalizedEmail)
       .maybeSingle();
 
     if (error) {
@@ -53,7 +56,7 @@ export async function POST(req: Request) {
       });
     }
 
-    if (existingUser.passcode !== passcode.trim()) {
+    if (existingUser.passcode !== trimmedPasscode) {
       return NextResponse.json({
         success: false,
         error: "Incorrect passcode",

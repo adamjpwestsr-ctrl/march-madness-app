@@ -435,24 +435,24 @@ export default function MarchMadnessHubPage() {
                 </p>
               </div>
 
-<div className="flex flex-wrap items-center gap-2 self-start sm:self-center">
-  <button
-    type="button"
-    onClick={() => setShowPaymentInfo(true)}
-    className="inline-flex items-center gap-2 rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider text-amber-200 transition hover:border-amber-300/60 hover:bg-amber-400/20"
-  >
-    <span className="text-sm">📝</span>
-    Payment Info
-  </button>
+              <div className="flex flex-wrap items-center gap-2 self-start sm:self-center">
+                <button
+                  type="button"
+                  onClick={() => setShowPaymentInfo(true)}
+                  className="inline-flex items-center gap-2 rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider text-amber-200 transition hover:border-amber-300/60 hover:bg-amber-400/20"
+                >
+                  <span className="text-sm">📝</span>
+                  Payment Info
+                </button>
 
-  <div className="flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1.5">
-    <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
-    <span className="text-[9px] font-extrabold uppercase tracking-wider text-emerald-300">
-      Live Scoring
-    </span>
-  </div>
-</div>
-</div>
+                <div className="flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1.5">
+                  <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
+                  <span className="text-[9px] font-extrabold uppercase tracking-wider text-emerald-300">
+                    Live Scoring
+                  </span>
+                </div>
+              </div>
+            </div>
 
             {error && (
               <div className="m-4 rounded-xl border border-red-400/30 bg-red-500/10 p-3 text-xs text-red-300">
@@ -479,163 +479,29 @@ export default function MarchMadnessHubPage() {
               </div>
             ) : (
               <>
-                {/* MOBILE / TABLET LEADERBOARD CARDS */}
-                <div className="space-y-3 p-3 lg:hidden">
-                  {leaderboard.map((row, index) => {
-                    const mine = isCurrentUser(row);
-                    const pending = row.scoring_status === "pending";
-                    const rank = row.rank ?? index + 1;
+                {/* COMPACT, SCROLLABLE LEADERBOARD */}
+                <div className="max-h-[560px] overflow-y-auto overscroll-contain scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
+                  {/* MOBILE / TABLET LEADERBOARD */}
+                  <div className="space-y-1.5 p-2 lg:hidden">
+                    {leaderboard.map((row, index) => {
+                      const mine = isCurrentUser(row);
+                      const pending = row.scoring_status === "pending";
+                      const rank = row.rank ?? index + 1;
 
-                    return (
-                      <article
-                        key={`mobile-${row.bracket_id}-${index}`}
-                        className={`rounded-xl border p-3 ${
-                          mine
-                            ? "border-cyan-400/40 bg-cyan-400/[0.08]"
-                            : "border-slate-700/70 bg-[#091426]/80"
-                        }`}
-                      >
-                        {/* PLAYER AND RANK */}
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex min-w-0 items-center gap-2">
-                            <span
-                              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-black ${
-                                rank === 1
-                                  ? "bg-amber-400/15 text-amber-300"
-                                  : rank === 2
-                                    ? "bg-slate-300/10 text-slate-200"
-                                    : rank === 3
-                                      ? "bg-orange-400/10 text-orange-300"
-                                      : "bg-slate-800 text-slate-400"
-                              }`}
-                            >
-                              {pending ? "—" : rank}
-                            </span>
-
-                            <div className="min-w-0">
-                              <div className="flex flex-wrap items-center gap-1.5">
-                                <span className="truncate text-sm font-bold text-white">
-                                  {row.display_name || row.user_id || "Player"}
-                                </span>
-
-                                {mine && (
-                                  <span className="rounded border border-cyan-400/30 bg-cyan-400/10 px-1.5 py-0.5 text-[8px] font-black uppercase text-cyan-200">
-                                    You
-                                  </span>
-                                )}
-                              </div>
-
-                              <p className="mt-0.5 truncate text-[10px] text-slate-400">
-                                {row.bracket_name || "Bracket"}
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className="shrink-0 text-right">
-                            <p className="text-[9px] font-bold uppercase tracking-wider text-slate-500">
-                              Points
-                            </p>
-                            {pending ? (
-                              <span className="text-xs font-bold text-amber-300">
-                                Pending
-                              </span>
-                            ) : (
-                              <span className="text-xl font-black tabular-nums text-cyan-200">
-                                {row.total_points ?? 0}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* POINT TOTALS */}
-                        <div className="mt-3 grid grid-cols-2 gap-2">
-                          <div className="rounded-lg border border-slate-700/60 bg-slate-800/40 px-3 py-2">
-                            <p className="text-[9px] font-bold uppercase tracking-wider text-slate-500">
-                              Max Possible
-                            </p>
-                            <p className="mt-0.5 text-sm font-bold tabular-nums text-slate-200">
-                              {row.max_possible_points ?? "—"}
-                            </p>
-                          </div>
-
-                          <div className="rounded-lg border border-slate-700/60 bg-slate-800/40 px-3 py-2">
-                            <p className="text-[9px] font-bold uppercase tracking-wider text-slate-500">
-                              Champion Pick
-                            </p>
-                            <p className="mt-0.5 truncate text-sm font-semibold text-slate-300">
-                              {championPicksLocked
-                                ? "Hidden"
-                                : row.champion_pick || "—"}
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* PAYMENT STATUS */}
-                        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-white/[0.06] pt-3">
-                          <div>
-                            {row.has_paid === true ? (
-                              <span className="inline-flex rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2.5 py-1 text-[9px] font-extrabold text-emerald-300">
-                                PAID ✓
-                              </span>
-                            ) : row.has_paid === false ? (
-                              <span className="inline-flex rounded-full border border-red-400/30 bg-red-500/10 px-2.5 py-1 text-[9px] font-extrabold text-red-300">
-                                NOT PAID
-                              </span>
-                            ) : (
-                              <span className="text-[10px] text-slate-500">
-                                Payment —
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </article>
-                    );
-                  })}
-                </div>
-
-                {/* DESKTOP LEADERBOARD TABLE */}
-                <div className="hidden w-full lg:block">
-                  <table className="w-full table-fixed border-collapse text-left">
-                    <thead>
-                      <tr className="border-b border-slate-700/70 bg-[#091426]/80 text-[9px] font-bold uppercase tracking-wider text-slate-500">
-                        <th className="w-[8%] px-1 py-2.5 text-center">
-                          Rank
-                        </th>
-                        <th className="w-[17%] px-1 py-2.5">Player</th>
-                        <th className="w-[16%] px-1 py-2.5">Bracket</th>
-                        <th className="w-[15%] px-1 py-2.5">Champion</th>
-                        <th className="w-[10%] px-1 py-2.5 text-right">
-                          Points
-                        </th>
-                        <th className="w-[18%] px-1 py-2.5 text-right">
-                          Max Possible
-                        </th>
-                        <th className="w-[16%] px-1 py-2.5 text-center">
-                          Payment
-                        </th>
-                      </tr>
-                    </thead>
-
-                    <tbody>
-                      {leaderboard.map((row, index) => {
-                        const mine = isCurrentUser(row);
-                        const pending = row.scoring_status === "pending";
-                        const rank = row.rank ?? index + 1;
-
-                        return (
-                          <tr
-                            key={`${row.bracket_id}-${index}`}
-                            className={`border-b border-white/[0.05] transition ${
-                              mine
-                                ? "bg-cyan-400/[0.09] shadow-[inset_3px_0_0_rgba(34,211,238,0.9)]"
-                                : index % 2 === 0
-                                  ? "bg-white/[0.015]"
-                                  : "bg-transparent"
-                            } hover:bg-cyan-400/[0.06]`}
-                          >
-                            <td className="px-3 py-3 text-center sm:px-4">
+                      return (
+                        <article
+                          key={`mobile-${row.bracket_id}-${index}`}
+                          className={`rounded-lg border px-2.5 py-2 ${
+                            mine
+                              ? "border-cyan-400/40 bg-cyan-400/[0.08]"
+                              : "border-slate-700/60 bg-[#091426]/80"
+                          }`}
+                        >
+                          {/* ROW 1: RANK, PLAYER, POINTS */}
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex min-w-0 items-center gap-2">
                               <span
-                                className={`inline-flex h-7 min-w-7 items-center justify-center rounded-lg px-2 text-xs font-black ${
+                                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[10px] font-black ${
                                   rank === 1
                                     ? "bg-amber-400/15 text-amber-300"
                                     : rank === 2
@@ -647,76 +513,192 @@ export default function MarchMadnessHubPage() {
                               >
                                 {pending ? "—" : rank}
                               </span>
-                            </td>
 
-                            <td className="px-2 py-3">
-                              <div className="flex items-center gap-1.5">
-                                <span className="max-w-[135px] truncate text-xs font-bold text-white">
-                                  {row.display_name || row.user_id || "Player"}
+                              <span className="truncate text-xs font-bold text-white">
+                                {row.display_name || row.user_id || "Player"}
+                              </span>
+
+                              {mine && (
+                                <span className="shrink-0 rounded border border-cyan-400/30 bg-cyan-400/10 px-1 py-0.5 text-[8px] font-black uppercase text-cyan-200">
+                                  You
                                 </span>
-                                {mine && (
-                                  <span className="rounded border border-cyan-400/30 bg-cyan-400/10 px-1 py-0.5 text-[8px] font-black uppercase text-cyan-200">
-                                    You
-                                  </span>
-                                )}
-                              </div>
-                            </td>
+                              )}
+                            </div>
 
-                            <td className="px-2 py-3">
-                              <span className="block max-w-[130px] truncate text-[11px] text-slate-300">
-                                {row.bracket_name || "Bracket"}
-                              </span>
-                            </td>
-
-                            <td className="px-2 py-3">
-                              <span className="block max-w-[110px] truncate text-[10px] text-slate-400">
-                                {championPicksLocked
-                                  ? "Hidden"
-                                  : row.champion_pick || "—"}
-                              </span>
-                            </td>
-
-                            <td className="px-2 py-3 text-right">
+                            <div className="shrink-0 text-right">
                               {pending ? (
                                 <span className="text-[10px] font-bold text-amber-300">
                                   Pending
                                 </span>
                               ) : (
-                                <span className="text-sm font-black tabular-nums text-cyan-200">
-                                  {row.total_points ?? 0}
+                                <span className="text-base font-black tabular-nums text-cyan-200">
+                                  {row.total_points ?? 0} pts
                                 </span>
                               )}
-                            </td>
+                            </div>
+                          </div>
 
-                            <td className="px-3 py-3 text-right sm:px-4">
-                              <span className="text-xs font-bold tabular-nums text-slate-300">
-                                {row.max_possible_points ?? "—"}
+                          {/* ROW 2: BRACKET, MAX, CHAMPION, PAYMENT */}
+                          <div className="mt-1 flex min-w-0 items-center justify-between gap-2 pl-8">
+                            <span className="min-w-0 truncate text-[9px] font-medium text-slate-400">
+                              {row.bracket_name || "Bracket"}
+                            </span>
+
+                            <div className="flex shrink-0 items-center gap-2 text-[9px]">
+                              <span className="whitespace-nowrap text-slate-400">
+                                Max:{" "}
+                                <span className="font-bold text-slate-200">
+                                  {row.max_possible_points ?? "—"}
+                                </span>
                               </span>
-                            </td>
 
-                            {/* PAYMENT STATUS */}
-                            <td className="px-2 py-3 text-center">
+                              <span className="max-w-[65px] truncate text-slate-400">
+                                {championPicksLocked
+                                  ? "Hidden"
+                                  : row.champion_pick || "—"}
+                              </span>
+
                               {row.has_paid === true ? (
-                                <span className="inline-flex whitespace-nowrap rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2 py-1 text-[9px] font-extrabold tracking-wide text-emerald-300">
+                                <span className="whitespace-nowrap rounded border border-emerald-400/30 bg-emerald-400/10 px-1.5 py-0.5 font-extrabold text-emerald-300">
                                   PAID ✓
                                 </span>
                               ) : row.has_paid === false ? (
-                                <span className="inline-flex whitespace-nowrap rounded-full border border-red-400/30 bg-red-500/10 px-2 py-1 text-[9px] font-extrabold tracking-wide text-red-300">
-                                  NOT PAID
+                                <span className="whitespace-nowrap rounded border border-red-400/30 bg-red-500/10 px-1.5 py-0.5 font-extrabold text-red-300">
+                                  UNPAID
                                 </span>
-                              ) : (
-                                <span className="text-[10px] text-slate-500">
-                                  —
+                              ) : null}
+                            </div>
+                          </div>
+                        </article>
+                      );
+                    })}
+                  </div>
+
+                  {/* DESKTOP LEADERBOARD TABLE */}
+                  <div className="hidden w-full lg:block">
+                    <table className="w-full table-fixed border-collapse text-left">
+                      <thead className="sticky top-0 z-10">
+                        <tr className="border-b border-slate-700/70 bg-[#091426] text-[9px] font-bold uppercase tracking-wider text-slate-500">
+                          <th className="w-[8%] px-2 py-2 text-center">
+                            Rank
+                          </th>
+                          <th className="w-[17%] px-2 py-2">Player</th>
+                          <th className="w-[16%] px-2 py-2">Bracket</th>
+                          <th className="w-[15%] px-2 py-2">Champion</th>
+                          <th className="w-[10%] px-2 py-2 text-right">
+                            Points
+                          </th>
+                          <th className="w-[18%] px-2 py-2 text-right">
+                            Max Possible
+                          </th>
+                          <th className="w-[16%] px-2 py-2 text-center">
+                            Payment
+                          </th>
+                        </tr>
+                      </thead>
+
+                      <tbody>
+                        {leaderboard.map((row, index) => {
+                          const mine = isCurrentUser(row);
+                          const pending = row.scoring_status === "pending";
+                          const rank = row.rank ?? index + 1;
+
+                          return (
+                            <tr
+                              key={`${row.bracket_id}-${index}`}
+                              className={`border-b border-white/[0.05] transition ${
+                                mine
+                                  ? "bg-cyan-400/[0.09] shadow-[inset_3px_0_0_rgba(34,211,238,0.9)]"
+                                  : index % 2 === 0
+                                    ? "bg-white/[0.015]"
+                                    : "bg-transparent"
+                              } hover:bg-cyan-400/[0.06]`}
+                            >
+                              <td className="px-2 py-2 text-center">
+                                <span
+                                  className={`inline-flex h-6 min-w-6 items-center justify-center rounded-md px-1.5 text-[10px] font-black ${
+                                    rank === 1
+                                      ? "bg-amber-400/15 text-amber-300"
+                                      : rank === 2
+                                        ? "bg-slate-300/10 text-slate-200"
+                                        : rank === 3
+                                          ? "bg-orange-400/10 text-orange-300"
+                                          : "bg-slate-800 text-slate-400"
+                                  }`}
+                                >
+                                  {pending ? "—" : rank}
                                 </span>
-                              )}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+                              </td>
+
+                              <td className="px-2 py-2">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="max-w-[135px] truncate text-xs font-bold text-white">
+                                    {row.display_name || row.user_id || "Player"}
+                                  </span>
+                                  {mine && (
+                                    <span className="rounded border border-cyan-400/30 bg-cyan-400/10 px-1 py-0.5 text-[8px] font-black uppercase text-cyan-200">
+                                      You
+                                    </span>
+                                  )}
+                                </div>
+                              </td>
+
+                              <td className="px-2 py-2">
+                                <span className="block max-w-[130px] truncate text-[10px] text-slate-300">
+                                  {row.bracket_name || "Bracket"}
+                                </span>
+                              </td>
+
+                              <td className="px-2 py-2">
+                                <span className="block max-w-[110px] truncate text-[10px] text-slate-400">
+                                  {championPicksLocked
+                                    ? "Hidden"
+                                    : row.champion_pick || "—"}
+                                </span>
+                              </td>
+
+                              <td className="px-2 py-2 text-right">
+                                {pending ? (
+                                  <span className="text-[10px] font-bold text-amber-300">
+                                    Pending
+                                  </span>
+                                ) : (
+                                  <span className="text-sm font-black tabular-nums text-cyan-200">
+                                    {row.total_points ?? 0}
+                                  </span>
+                                )}
+                              </td>
+
+                              <td className="px-2 py-2 text-right">
+                                <span className="text-xs font-bold tabular-nums text-slate-300">
+                                  {row.max_possible_points ?? "—"}
+                                </span>
+                              </td>
+
+                              <td className="px-2 py-2 text-center">
+                                {row.has_paid === true ? (
+                                  <span className="inline-flex whitespace-nowrap rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2 py-1 text-[9px] font-extrabold tracking-wide text-emerald-300">
+                                    PAID ✓
+                                  </span>
+                                ) : row.has_paid === false ? (
+                                  <span className="inline-flex whitespace-nowrap rounded-full border border-red-400/30 bg-red-500/10 px-2 py-1 text-[9px] font-extrabold tracking-wide text-red-300">
+                                    NOT PAID
+                                  </span>
+                                ) : (
+                                  <span className="text-[10px] text-slate-500">
+                                    —
+                                  </span>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
 
+                {/* LEADERBOARD SUMMARY - OUTSIDE SCROLL AREA */}
                 <div className="flex flex-col justify-between gap-1 border-t border-white/[0.06] bg-[#091426]/60 px-4 py-2.5 text-[9px] text-slate-500 sm:flex-row sm:items-center">
                   <span>
                     {scoredEntries} scored
@@ -854,163 +836,165 @@ export default function MarchMadnessHubPage() {
         <p className="mt-1 text-[9px] text-slate-700">BracketBoss</p>
       </footer>
 
-{/* PAYMENT INFORMATION MODAL */}
-{showPaymentInfo && (
-  <div
-    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 p-3 backdrop-blur-sm"
-    onClick={() => setShowPaymentInfo(false)}
-  >
-    <section
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="payment-info-title"
-      className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-amber-400/30 bg-[#0d1a2e] p-5 shadow-2xl sm:p-6"
-      onClick={(event) => event.stopPropagation()}
-    >
-      <button
-        type="button"
-        onClick={() => setShowPaymentInfo(false)}
-        aria-label="Close payment information"
-        className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-lg border border-slate-700 bg-slate-800 text-lg text-slate-300 transition hover:bg-slate-700 hover:text-white"
-      >
-        ×
-      </button>
-
-      <div className="mb-5 pr-8">
-        <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-amber-300">
-          BracketBoss · March Madness
-        </div>
-        <h2
-          id="payment-info-title"
-          className="mt-1 text-2xl font-black text-white"
-        >
-          Payment Information
-        </h2>
-        <p className="mt-2 text-sm leading-relaxed text-slate-400">
-          Many forms of payment are accepted. Choose whichever method works
-          best for you! Remember, brackets are $25.00 per bracket. Enter up to 5 brackets per person.
-        </p>
-      </div>
-
-      <div className="space-y-3">
-        {/* CASH */}
-        <div className="rounded-xl border border-slate-700 bg-[#091426] p-4">
-          <h3 className="font-black text-emerald-300">
-            💵 CASH
-          </h3>
-          <p className="mt-2 text-sm leading-relaxed text-slate-300">
-            Hand delivered or securely mailed to:
-          </p>
-          <p className="mt-1 text-sm font-bold text-white">
-            761 Route 80 Guilford CT 06437
-          </p>
-          <p className="mt-2 text-xs leading-relaxed text-amber-200/90">
-            Disclaimer: If sending cash via mail, the Commissioners are not
-            responsible for lost or stolen money. Please consider hand
-            delivering cash instead!
-          </p>
-        </div>
-
-        {/* CHECK */}
-        <div className="rounded-xl border border-slate-700 bg-[#091426] p-4">
-          <h3 className="font-black text-blue-300">
-            🏦 CHECK
-          </h3>
-          <p className="mt-2 text-sm leading-relaxed text-slate-300">
-            Make checks payable to:
-          </p>
-          <p className="mt-1 font-bold text-white">
-            Adam West - March Madness
-          </p>
-          <p className="mt-1 text-sm text-slate-300">
-            Mail to:
-          </p>
-          <p className="mt-1 text-sm font-bold text-white">
-            761 Route 80 Guilford CT 06437
-          </p>
-        </div>
-
-        {/* VENMO */}
-        <div className="rounded-xl border border-cyan-400/30 bg-cyan-400/[0.06] p-4">
-          <h3 className="font-black text-cyan-300">
-            📱 VENMO
-          </h3>
-          <p className="mt-2 text-sm text-slate-300">
-            Find me here:
-          </p>
-          <p className="mt-1 text-lg font-black text-white">
-            @Adam-West-9
-          </p>
-
-          <a
-            href="https://venmo.com/u/Adam-West-9"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-[#008CFF] px-4 py-3 text-sm font-black text-white transition hover:bg-[#0074d4]"
-          >
-            Open Venmo Profile
-            <span>↗</span>
-          </a>
-          <p className="mt-2 text-[10px] leading-relaxed text-slate-500">
-            On supported mobile devices, this profile link may open directly
-            in the Venmo app. Otherwise, it opens Venmo in your browser.
-          </p>
-        </div>
-
-{/* OTHER PAYMENT METHODS */}
-<div className="rounded-xl border border-slate-700 bg-[#091426] p-4">
-  <h3 className="font-black text-slate-200">
-    OTHER PAYMENT METHODS
-  </h3>
-
-  <p className="mt-2 text-sm leading-relaxed text-slate-300">
-    Other forms of payment will be considered, but please contact
-    Adam first to discuss:
-  </p>
-
-  <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
-    <a
-      href="tel:2038488221"
-      className="flex items-center justify-center gap-2 rounded-lg border border-cyan-400/30 bg-cyan-400/10 px-3 py-3 text-sm font-bold text-cyan-300 transition hover:bg-cyan-400/20"
-    >
-      📞 Call Adam
-    </a>
-
-    <a
-      href="sms:2038488221"
-      className="flex items-center justify-center gap-2 rounded-lg border border-emerald-400/30 bg-emerald-400/10 px-3 py-3 text-sm font-bold text-emerald-300 transition hover:bg-emerald-400/20"
-    >
-      💬 Text Adam
-    </a>
-
-    <a
-      href="mailto:adamjpwestsr@gmail.com"
-      className="flex items-center justify-center gap-2 rounded-lg border border-amber-400/30 bg-amber-400/10 px-3 py-3 text-sm font-bold text-amber-300 transition hover:bg-amber-400/20"
-    >
-      ✉️ Email Adam
-    </a>
-  </div>
-</div>
-</div>
-
-      <div className="mt-5 border-t border-slate-700 pt-4 text-center">
-        <p className="text-lg font-black text-amber-300">
-          Good luck!
-        </p>
-        <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-slate-500">
-          BracketBoss · Where Madness Meets Mastery
-        </p>
-        <button
-          type="button"
+      {/* PAYMENT INFORMATION MODAL */}
+      {showPaymentInfo && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 p-3 backdrop-blur-sm"
           onClick={() => setShowPaymentInfo(false)}
-          className="mt-4 w-full rounded-lg border border-slate-600 bg-slate-800 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-slate-700"
         >
-          Close
-        </button>
-      </div>
-    </section>
-  </div>
-)}
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="payment-info-title"
+            className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-amber-400/30 bg-[#0d1a2e] p-5 shadow-2xl sm:p-6"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setShowPaymentInfo(false)}
+              aria-label="Close payment information"
+              className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-lg border border-slate-700 bg-slate-800 text-lg text-slate-300 transition hover:bg-slate-700 hover:text-white"
+            >
+              ×
+            </button>
+
+            <div className="mb-5 pr-8">
+              <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-amber-300">
+                BracketBoss · March Madness
+              </div>
+              <h2
+                id="payment-info-title"
+                className="mt-1 text-2xl font-black text-white"
+              >
+                Payment Information
+              </h2>
+              <p className="mt-2 text-sm leading-relaxed text-slate-400">
+                Many forms of payment are accepted. Choose whichever method
+                works best for you! Remember, brackets are $25.00 per bracket.
+                Enter up to 5 brackets per person.
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              {/* CASH */}
+              <div className="rounded-xl border border-slate-700 bg-[#091426] p-4">
+                <h3 className="font-black text-emerald-300">
+                  💵 CASH
+                </h3>
+                <p className="mt-2 text-sm leading-relaxed text-slate-300">
+                  Hand delivered or securely mailed to:
+                </p>
+                <p className="mt-1 text-sm font-bold text-white">
+                  761 Route 80 Guilford CT 06437
+                </p>
+                <p className="mt-2 text-xs leading-relaxed text-amber-200/90">
+                  Disclaimer: If sending cash via mail, the Commissioners are
+                  not responsible for lost or stolen money. Please consider
+                  hand delivering cash instead!
+                </p>
+              </div>
+
+              {/* CHECK */}
+              <div className="rounded-xl border border-slate-700 bg-[#091426] p-4">
+                <h3 className="font-black text-blue-300">
+                  🏦 CHECK
+                </h3>
+                <p className="mt-2 text-sm leading-relaxed text-slate-300">
+                  Make checks payable to:
+                </p>
+                <p className="mt-1 font-bold text-white">
+                  Adam West - March Madness
+                </p>
+                <p className="mt-1 text-sm text-slate-300">
+                  Mail to:
+                </p>
+                <p className="mt-1 text-sm font-bold text-white">
+                  761 Route 80 Guilford CT 06437
+                </p>
+              </div>
+
+              {/* VENMO */}
+              <div className="rounded-xl border border-cyan-400/30 bg-cyan-400/[0.06] p-4">
+                <h3 className="font-black text-cyan-300">
+                  📱 VENMO
+                </h3>
+                <p className="mt-2 text-sm text-slate-300">
+                  Find me here:
+                </p>
+                <p className="mt-1 text-lg font-black text-white">
+                  @Adam-West-9
+                </p>
+
+                <a
+                  href="https://venmo.com/u/Adam-West-9"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-[#008CFF] px-4 py-3 text-sm font-black text-white transition hover:bg-[#0074d4]"
+                >
+                  Open Venmo Profile
+                  <span>↗</span>
+                </a>
+                <p className="mt-2 text-[10px] leading-relaxed text-slate-500">
+                  On supported mobile devices, this profile link may open
+                  directly in the Venmo app. Otherwise, it opens Venmo in your
+                  browser.
+                </p>
+              </div>
+
+              {/* OTHER PAYMENT METHODS */}
+              <div className="rounded-xl border border-slate-700 bg-[#091426] p-4">
+                <h3 className="font-black text-slate-200">
+                  OTHER PAYMENT METHODS
+                </h3>
+
+                <p className="mt-2 text-sm leading-relaxed text-slate-300">
+                  Other forms of payment will be considered, but please contact
+                  Adam first to discuss:
+                </p>
+
+                <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                  <a
+                    href="tel:2038488221"
+                    className="flex items-center justify-center gap-2 rounded-lg border border-cyan-400/30 bg-cyan-400/10 px-3 py-3 text-sm font-bold text-cyan-300 transition hover:bg-cyan-400/20"
+                  >
+                    📞 Call Adam
+                  </a>
+
+                  <a
+                    href="sms:2038488221"
+                    className="flex items-center justify-center gap-2 rounded-lg border border-emerald-400/30 bg-emerald-400/10 px-3 py-3 text-sm font-bold text-emerald-300 transition hover:bg-emerald-400/20"
+                  >
+                    💬 Text Adam
+                  </a>
+
+                  <a
+                    href="mailto:adamjpwestsr@gmail.com"
+                    className="flex items-center justify-center gap-2 rounded-lg border border-amber-400/30 bg-amber-400/10 px-3 py-3 text-sm font-bold text-amber-300 transition hover:bg-amber-400/20"
+                  >
+                    ✉️ Email Adam
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-5 border-t border-slate-700 pt-4 text-center">
+              <p className="text-lg font-black text-amber-300">
+                Good luck!
+              </p>
+              <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                BracketBoss · Where Madness Meets Mastery
+              </p>
+              <button
+                type="button"
+                onClick={() => setShowPaymentInfo(false)}
+                className="mt-4 w-full rounded-lg border border-slate-600 bg-slate-800 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-slate-700"
+              >
+                Close
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
 
       <BracketBossHelper />
     </div>

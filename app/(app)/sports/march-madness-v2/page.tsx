@@ -52,6 +52,7 @@ export default function MarchMadnessHubPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [inviteCopied, setInviteCopied] = useState(false);
+  const [showPaymentInfo, setShowPaymentInfo] = useState(false);
 
   function handleLogout() {
     localStorage.removeItem("bracketUser");
@@ -434,13 +435,24 @@ export default function MarchMadnessHubPage() {
                 </p>
               </div>
 
-              <div className="flex items-center gap-2 self-start rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1.5 sm:self-center">
-                <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
-                <span className="text-[9px] font-extrabold uppercase tracking-wider text-emerald-300">
-                  Live Scoring
-                </span>
-              </div>
-            </div>
+<div className="flex flex-wrap items-center gap-2 self-start sm:self-center">
+  <button
+    type="button"
+    onClick={() => setShowPaymentInfo(true)}
+    className="inline-flex items-center gap-2 rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider text-amber-200 transition hover:border-amber-300/60 hover:bg-amber-400/20"
+  >
+    <span className="text-sm">📝</span>
+    Payment Info
+  </button>
+
+  <div className="flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1.5">
+    <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
+    <span className="text-[9px] font-extrabold uppercase tracking-wider text-emerald-300">
+      Live Scoring
+    </span>
+  </div>
+</div>
+</div>
 
             {error && (
               <div className="m-4 rounded-xl border border-red-400/30 bg-red-500/10 p-3 text-xs text-red-300">
@@ -841,6 +853,164 @@ export default function MarchMadnessHubPage() {
         </p>
         <p className="mt-1 text-[9px] text-slate-700">BracketBoss</p>
       </footer>
+
+{/* PAYMENT INFORMATION MODAL */}
+{showPaymentInfo && (
+  <div
+    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 p-3 backdrop-blur-sm"
+    onClick={() => setShowPaymentInfo(false)}
+  >
+    <section
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="payment-info-title"
+      className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-amber-400/30 bg-[#0d1a2e] p-5 shadow-2xl sm:p-6"
+      onClick={(event) => event.stopPropagation()}
+    >
+      <button
+        type="button"
+        onClick={() => setShowPaymentInfo(false)}
+        aria-label="Close payment information"
+        className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-lg border border-slate-700 bg-slate-800 text-lg text-slate-300 transition hover:bg-slate-700 hover:text-white"
+      >
+        ×
+      </button>
+
+      <div className="mb-5 pr-8">
+        <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-amber-300">
+          BracketBoss · March Madness
+        </div>
+        <h2
+          id="payment-info-title"
+          className="mt-1 text-2xl font-black text-white"
+        >
+          Payment Information
+        </h2>
+        <p className="mt-2 text-sm leading-relaxed text-slate-400">
+          Many forms of payment are accepted. Choose whichever method works
+          best for you! Remember, brackets are $25.00 per bracket. Enter up to 5 brackets per person.
+        </p>
+      </div>
+
+      <div className="space-y-3">
+        {/* CASH */}
+        <div className="rounded-xl border border-slate-700 bg-[#091426] p-4">
+          <h3 className="font-black text-emerald-300">
+            💵 CASH
+          </h3>
+          <p className="mt-2 text-sm leading-relaxed text-slate-300">
+            Hand delivered or securely mailed to:
+          </p>
+          <p className="mt-1 text-sm font-bold text-white">
+            761 Route 80 Guilford CT 06437
+          </p>
+          <p className="mt-2 text-xs leading-relaxed text-amber-200/90">
+            Disclaimer: If sending cash via mail, the Commissioners are not
+            responsible for lost or stolen money. Please consider hand
+            delivering cash instead!
+          </p>
+        </div>
+
+        {/* CHECK */}
+        <div className="rounded-xl border border-slate-700 bg-[#091426] p-4">
+          <h3 className="font-black text-blue-300">
+            🏦 CHECK
+          </h3>
+          <p className="mt-2 text-sm leading-relaxed text-slate-300">
+            Make checks payable to:
+          </p>
+          <p className="mt-1 font-bold text-white">
+            Adam West - March Madness
+          </p>
+          <p className="mt-1 text-sm text-slate-300">
+            Mail to:
+          </p>
+          <p className="mt-1 text-sm font-bold text-white">
+            761 Route 80 Guilford CT 06437
+          </p>
+        </div>
+
+        {/* VENMO */}
+        <div className="rounded-xl border border-cyan-400/30 bg-cyan-400/[0.06] p-4">
+          <h3 className="font-black text-cyan-300">
+            📱 VENMO
+          </h3>
+          <p className="mt-2 text-sm text-slate-300">
+            Find me here:
+          </p>
+          <p className="mt-1 text-lg font-black text-white">
+            @Adam-West-9
+          </p>
+
+          <a
+            href="https://venmo.com/u/Adam-West-9"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-[#008CFF] px-4 py-3 text-sm font-black text-white transition hover:bg-[#0074d4]"
+          >
+            Open Venmo Profile
+            <span>↗</span>
+          </a>
+          <p className="mt-2 text-[10px] leading-relaxed text-slate-500">
+            On supported mobile devices, this profile link may open directly
+            in the Venmo app. Otherwise, it opens Venmo in your browser.
+          </p>
+        </div>
+
+{/* OTHER PAYMENT METHODS */}
+<div className="rounded-xl border border-slate-700 bg-[#091426] p-4">
+  <h3 className="font-black text-slate-200">
+    OTHER PAYMENT METHODS
+  </h3>
+
+  <p className="mt-2 text-sm leading-relaxed text-slate-300">
+    Other forms of payment will be considered, but please contact
+    Adam first to discuss:
+  </p>
+
+  <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
+    <a
+      href="tel:2038488221"
+      className="flex items-center justify-center gap-2 rounded-lg border border-cyan-400/30 bg-cyan-400/10 px-3 py-3 text-sm font-bold text-cyan-300 transition hover:bg-cyan-400/20"
+    >
+      📞 Call Adam
+    </a>
+
+    <a
+      href="sms:2038488221"
+      className="flex items-center justify-center gap-2 rounded-lg border border-emerald-400/30 bg-emerald-400/10 px-3 py-3 text-sm font-bold text-emerald-300 transition hover:bg-emerald-400/20"
+    >
+      💬 Text Adam
+    </a>
+
+    <a
+      href="mailto:adamjpwestsr@gmail.com"
+      className="flex items-center justify-center gap-2 rounded-lg border border-amber-400/30 bg-amber-400/10 px-3 py-3 text-sm font-bold text-amber-300 transition hover:bg-amber-400/20"
+    >
+      ✉️ Email Adam
+    </a>
+  </div>
+</div>
+</div>
+
+      <div className="mt-5 border-t border-slate-700 pt-4 text-center">
+        <p className="text-lg font-black text-amber-300">
+          Good luck!
+        </p>
+        <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+          BracketBoss · Where Madness Meets Mastery
+        </p>
+        <button
+          type="button"
+          onClick={() => setShowPaymentInfo(false)}
+          className="mt-4 w-full rounded-lg border border-slate-600 bg-slate-800 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-slate-700"
+        >
+          Close
+        </button>
+      </div>
+    </section>
+  </div>
+)}
 
       <BracketBossHelper />
     </div>

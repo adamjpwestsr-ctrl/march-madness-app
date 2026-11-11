@@ -116,20 +116,24 @@ export default function DynamicBracketBuilder({
 
         const { data: pickData, error: pickError } = await supabase
           .from("bracket_picks")
-          .select("game_id, picked_team, winner_team_id")
+          .select("game_id, picked_team")
           .eq("bracket_id", bracketId);
 
         if (pickError) throw pickError;
 
         if (cancelled) return;
 
+        // Only picked_team represents this user's actual selection.
+        // Do not use official tournament winners or winner_team_id
+        // as a fallback for a user's bracket pick.
         const pickMap: Record<string, string> = {};
 
         (pickData || []).forEach((pick) => {
-          const selectedTeam = pick.picked_team || pick.winner_team_id;
+          const selectedTeam = pick.picked_team;
 
           if (
             typeof selectedTeam === "string" &&
+            selectedTeam.length > 0 &&
             !selectedTeam.startsWith(OPENING_PREFIX)
           ) {
             pickMap[pick.game_id] = selectedTeam;
@@ -170,8 +174,17 @@ export default function DynamicBracketBuilder({
   );
 
   /*
-   * Project the user's selected winners through the official tournament tree.
-   * The official game relationships remain the source of advancement order.
+   * Build a private projection of the tournament tree for this user.
+   *
+   * Important separation:
+   * - Round 0 and Round 1 provide the official scheduled matchups.
+   * - Round 1 Opening Round slots are represented by placeholders until
+   *   this user selects an Opening Round winner.
+   * - Round 2 and later start empty, regardless of official team IDs
+   *   already stored in tournament_games.
+   * - Later-round teams are populated exclusively from this user's picks.
+   *
+   * This does not update or modify tournament_games.
    */
   const projectedGames = useMemo(() => {
     const projected = games.map((game) => ({ ...game }));
@@ -180,6 +193,41 @@ export default function DynamicBracketBuilder({
       projected.map((game) => [game.id, game])
     );
 
+    /*
+     * First, remove all official team assignments from Round of 32
+     * onward. Those assignments belong to the real tournament and
+     * must not appear as preselected teams in a user's bracket.
+     */
+    projected.forEach((game) => {
+      if (game.round >= 2) {
+        game.team1_id = null;
+        game.team2_id = null;
+      }
+    });
+
+    /*
+     * Restore Opening Round placeholders in the user's Round of 64.
+     *
+     * The official tournament table may already contain the actual
+     * Opening Round winner in the destination's team2_id. Replace
+     * that value in this display-only projection with a placeholder.
+     * The placeholder resolves only after this user makes a pick.
+     */
+    projected.forEach((game) => {
+      if (game.round !== 0 || !game.winner_to_game_id) return;
+
+      const destination = projectedMap.get(game.winner_to_game_id);
+
+      if (!destination || destination.round !== 1) return;
+
+      destination.team2_id = `${OPENING_PREFIX}${game.id}`;
+    });
+
+    /*
+     * Build the advancement relationships from the official tree.
+     * These relationships determine which matchup feeds each slot,
+     * but they do not supply the user's selected winners.
+     */
     const incoming = new Map<string, Game[]>();
 
     projected.forEach((game) => {
@@ -200,6 +248,10 @@ export default function DynamicBracketBuilder({
       });
     });
 
+    /*
+     * Process games in tournament order so that a user's selection
+     * can flow from one round into the next.
+     */
     const orderedGames = [...projected].sort(
       (a, b) =>
         a.round - b.round ||
@@ -213,11 +265,20 @@ export default function DynamicBracketBuilder({
       if (!selectedWinner || !source.winner_to_game_id) continue;
 
       const destination = projectedMap.get(source.winner_to_game_id);
+
       if (!destination) continue;
 
+      /*
+       * Resolve Opening Round placeholders using this user's pick.
+       * A placeholder without a user selection resolves to null.
+       */
       const sourceTeam1 = resolveActualTeamId(source.team1_id, picks);
       const sourceTeam2 = resolveActualTeamId(source.team2_id, picks);
 
+      /*
+       * A saved selection is allowed to advance only if it matches
+       * one of the actual entrants in this user's projected matchup.
+       */
       if (
         selectedWinner !== sourceTeam1 &&
         selectedWinner !== sourceTeam2
@@ -225,12 +286,21 @@ export default function DynamicBracketBuilder({
         continue;
       }
 
+      /*
+       * Opening Round winners feed the Team 2 position in the
+       * corresponding Round of 64 matchup.
+       */
       if (source.round === 0) {
         destination.team2_id = selectedWinner;
         continue;
       }
 
+      /*
+       * For all later rounds, the feeder order determines whether
+       * the selected winner occupies Team 1 or Team 2.
+       */
       const feeders = incoming.get(destination.id) || [];
+
       const feederIndex = feeders.findIndex(
         (feeder) => feeder.id === source.id
       );
@@ -347,6 +417,7 @@ export default function DynamicBracketBuilder({
     if (!teamMap.has(teamId)) return;
 
     const game = projectedMap.get(gameId);
+
     if (!game) return;
 
     const entrant1 = getTeam(game.team1_id);
@@ -741,7 +812,8 @@ export default function DynamicBracketBuilder({
 }
 
 /*
- * Resolves an Opening Round placeholder into its selected winner.
+ * Resolves an Opening Round placeholder into this user's selected winner.
+ * It deliberately does not consult tournament_games.winner.
  */
 function resolveActualTeamId(
   id: string | null,

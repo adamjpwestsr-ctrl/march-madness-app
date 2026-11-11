@@ -1,8 +1,28 @@
+
 import { getConferenceStrength } from "@/utils/conferenceStrength";
 
 /* -------------------------------------------------------
    FAVORABILITY ENGINE — BracketBoss
+
+   Conference strength establishes the initial advantage.
+   Team performance determines whether that advantage
+   holds or whether the opponent earns the model's lean.
+
+   MODEL WEIGHTS:
+   Conference strength: 40%
+   Last 10:             20%
+   Overall record:      15%
+   Strength of schedule:15%
+   Against top 10:      10%
 ------------------------------------------------------- */
+
+const WEIGHTS = {
+  conference: 0.40,
+  last10: 0.20,
+  record: 0.15,
+  sos: 0.15,
+  top10: 0.10,
+};
 
 export default function calculateFavor(teamA, teamB) {
   const scoreA = computeCompositeScore(teamA, teamB);
@@ -16,7 +36,6 @@ export default function calculateFavor(teamA, teamB) {
   let percentA = Math.round((safeScoreA / total) * 100);
   let percentB = 100 - percentA;
 
-  // Keep existing 1%–99% display limits.
   percentA = Math.min(Math.max(percentA, 1), 99);
   percentB = Math.min(Math.max(percentB, 1), 99);
 
@@ -39,45 +58,41 @@ function computeCompositeScore(team, opponent) {
     opponent?.conference
   );
 
-  const sosScore = getSOSScore(team?.sos);
+  const last10Score = getRecordComparison(
+    team?.last10 || team?.last_10,
+    opponent?.last10 || opponent?.last_10
+  );
 
-  const top10Score = getTop10Score(
+  const recordScore = getRecordComparison(
+    team?.record,
+    opponent?.record
+  );
+
+  const sosScore = getSOSComparison(
+    team?.sos,
+    opponent?.sos
+  );
+
+  const top10Score = getRecordComparison(
     team?.vsTop10 || team?.vs_top_10,
     opponent?.vsTop10 || opponent?.vs_top_10
   );
 
-  const recordScore = getRecordScore(
-    team?.record,
-    opponent?.record,
-    team?.conference,
-    opponent?.conference
-  );
-
-  const safeConference = safeScore(conferenceScore);
-  const safeSOS = safeScore(sosScore);
-  const safeTop10 = safeScore(top10Score);
-  const safeRecord = safeScore(recordScore);
-
   return (
-    safeConference * 0.5 +
-    safeSOS * 0.2 +
-    safeTop10 * 0.15 +
-    safeRecord * 0.15
+    conferenceScore * WEIGHTS.conference +
+    last10Score * WEIGHTS.last10 +
+    recordScore * WEIGHTS.record +
+    sosScore * WEIGHTS.sos +
+    top10Score * WEIGHTS.top10
   );
-}
-
-function safeScore(value) {
-  return Number.isFinite(value) ? value : 0.5;
 }
 
 /* -------------------------------------------------------
    1. CONFERENCE STRENGTH
 
-   Uses the isolated conferenceStrength configuration.
+   Higher conference rating = stronger conference.
 
-   A missing or unrecognized conference is neutral.
-   The rating difference contributes gradually rather
-   than automatically deciding the matchup.
+   Unknown conferences are neutral.
 ------------------------------------------------------- */
 
 function getConferenceScore(confA, confB) {
@@ -88,99 +103,70 @@ function getConferenceScore(confA, confB) {
     return 0.5;
   }
 
-  // A 10-point rating difference creates a 10% edge
-  // in this component, not in the final matchup result.
-  const score = 0.5 + (strengthA - strengthB) / 100;
+  const difference = strengthA - strengthB;
 
-  return Math.min(Math.max(score, 0.2), 0.8);
+  // A 30-point conference difference creates a
+  // maximum 30-point advantage within this category.
+  const score = 0.5 + difference / 100;
+
+  return clamp(score, 0.2, 0.8);
 }
 
 /* -------------------------------------------------------
-   2. SOS SCORE
-   Rank 1–150; lower rank = tougher schedule.
+   2. OVERALL RECORD / LAST 10 / TOP 10
+
+   Compare winning percentages directly.
+
+   A missing statistic is neutral.
 ------------------------------------------------------- */
 
-function getSOSScore(sos) {
-  if (sos === null || sos === undefined || sos === "") {
+function getRecordComparison(recordA, recordB) {
+  const a = parseRecord(recordA);
+  const b = parseRecord(recordB);
+
+  if (!a || !b) return 0.5;
+
+  return compareValues(a.percentage, b.percentage);
+}
+
+/* -------------------------------------------------------
+   3. STRENGTH OF SCHEDULE
+
+   Lower SOS rank = tougher schedule = advantage.
+
+   Example:
+   SOS 40 beats SOS 44.
+------------------------------------------------------- */
+
+function getSOSComparison(sosA, sosB) {
+  const a = parseSOS(sosA);
+  const b = parseSOS(sosB);
+
+  if (a === null || b === null) return 0.5;
+
+  return compareValues(b, a);
+}
+
+/* -------------------------------------------------------
+   SHARED COMPARISON
+
+   Produces a symmetric matchup score:
+   A score + reverse B score = 1.
+------------------------------------------------------- */
+
+function compareValues(valueA, valueB) {
+  if (
+    !Number.isFinite(valueA) ||
+    !Number.isFinite(valueB)
+  ) {
     return 0.5;
   }
 
-  const rank = parseInt(sos, 10);
+  const total = Math.abs(valueA) + Math.abs(valueB);
 
-  if (!Number.isFinite(rank)) return 0.5;
+  if (total === 0) return 0.5;
 
-  const clamped = Math.min(Math.max(rank, 1), 150);
-
-  // Rank 1 → 1.0, Rank 150 → 0.0.
-  const strength = 1 - (clamped - 1) / 149;
-
-  return Math.min(Math.max(strength, 0), 1);
-}
-
-/* Exported for HistoricalInsight. */
-export function normalizeSOS(sos) {
-  if (sos === null || sos === undefined || sos === "") {
-    return 75;
-  }
-
-  const rank = parseInt(sos, 10);
-
-  if (!Number.isFinite(rank)) return 75;
-
-  return Math.min(Math.max(rank, 1), 150);
-}
-
-/* -------------------------------------------------------
-   3. TOP 10 RECORD
-------------------------------------------------------- */
-
-function getTop10Score(recA, recB) {
-  const a = parseRecord(recA);
-  const b = parseRecord(recB);
-
-  const pctA = a.total > 0 ? a.wins / a.total : 0.5;
-  const pctB = b.total > 0 ? b.wins / b.total : 0.5;
-
-  const sum = pctA + pctB || 1;
-
-  return pctA / sum;
-}
-
-/* -------------------------------------------------------
-   4. OVERALL RECORD
-   Retains the existing +9-win rule.
-------------------------------------------------------- */
-
-function getRecordScore(recA, recB, confA, confB) {
-  const a = parseRecord(recA);
-  const b = parseRecord(recB);
-
-  const pctA = a.total > 0 ? a.wins / a.total : 0.5;
-  const pctB = b.total > 0 ? b.wins / b.total : 0.5;
-
-  const powerConferences = [
-    "SEC",
-    "Big Ten",
-    "ACC",
-    "Big 12",
-    "Big East",
-  ];
-
-  const isA_Power = confA && powerConferences.includes(confA);
-  const isB_Power = confB && powerConferences.includes(confB);
-
-  // Preserve the existing +9-win adjustment.
-  if (!isA_Power && isB_Power && a.wins - b.wins >= 9) {
-    return 0.7;
-  }
-
-  if (!isB_Power && isA_Power && b.wins - a.wins >= 9) {
-    return 0.3;
-  }
-
-  const sum = pctA + pctB || 1;
-
-  return pctA / sum;
+  return valueA / (valueA + valueB || 1);
 }
 
 /* -------------------------------------------------------
@@ -188,21 +174,63 @@ function getRecordScore(recA, recB, confA, confB) {
 ------------------------------------------------------- */
 
 function parseRecord(record) {
-  if (
-    !record ||
-    typeof record !== "string" ||
-    !/^\s*\d+\s*-\s*\d+\s*$/.test(record)
-  ) {
-    return { wins: 0, losses: 0, total: 0 };
+  if (!record || typeof record !== "string") {
+    return null;
   }
 
-  const [wins, losses] = record
-    .split("-")
-    .map((value) => parseInt(value.trim(), 10));
+  const match = record
+    .trim()
+    .match(/^(\d+)\s*[-–]\s*(\d+)$/);
+
+  if (!match) return null;
+
+  const wins = Number(match[1]);
+  const losses = Number(match[2]);
+  const total = wins + losses;
+
+  if (total === 0) return null;
 
   return {
     wins,
     losses,
-    total: wins + losses,
+    total,
+    percentage: wins / total,
   };
+}
+
+/* -------------------------------------------------------
+   SOS PARSER
+
+   Rank 1 = toughest schedule.
+   Rank 150 = weakest schedule.
+------------------------------------------------------- */
+
+function parseSOS(sos) {
+  if (sos === null || sos === undefined || sos === "") {
+    return null;
+  }
+
+  const rank = Number(sos);
+
+  if (!Number.isFinite(rank)) return null;
+
+  return clamp(rank, 1, 150);
+}
+
+/* -------------------------------------------------------
+   EXPORTED FOR HISTORICAL INSIGHT
+------------------------------------------------------- */
+
+export function normalizeSOS(sos) {
+  const rank = parseSOS(sos);
+
+  return rank === null ? 75 : rank;
+}
+
+/* -------------------------------------------------------
+   HELPERS
+------------------------------------------------------- */
+
+function clamp(value, min = 0, max = 1) {
+  return Math.min(Math.max(value, min), max);
 }

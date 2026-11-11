@@ -22,6 +22,7 @@ type Team = {
   team_name: string;
   seed: number | null;
   region: string | null;
+  logo_url: string | null;
 };
 
 type BracketPick = {
@@ -83,9 +84,9 @@ export default async function PrettyBracketViewPage({
     .order("round", { ascending: true })
     .order("game_number", { ascending: true });
 
-  const { data: rawTeams, error: teamsErr } = await supabase
-    .from("tournament_teams")
-    .select("id, team_name, seed, region");
+const { data: rawTeams, error: teamsErr } = await supabase
+  .from("tournament_teams")
+  .select("id, team_name, seed, region, logo_url");
 
   const { data: rawPicks, error: picksErr } = await supabase
     .from("bracket_picks")
@@ -515,9 +516,21 @@ export default async function PrettyBracketViewPage({
                 <p className="mt-1 text-[10px] font-black uppercase tracking-[0.2em] text-yellow-300">
                   National Champion
                 </p>
-                <h3 className="mt-2 break-words text-lg font-black leading-tight">
-                  {championTeam?.team_name ?? "Not selected"}
-                </h3>
+                <div className="mt-2 flex flex-col items-center gap-2">
+  {championTeam?.logo_url && (
+    <img
+      src={championTeam.logo_url}
+      alt={`${championTeam.team_name} logo`}
+      className="h-12 w-12 object-contain"
+    />
+  )}
+
+  <h3 className="break-words text-lg font-black leading-tight">
+    {championTeam?.team_name ?? "Not selected"}
+  </h3>
+</div>
+
+
                 {championTeam?.seed != null && (
                   <p className="mt-1 text-[10px] text-yellow-100/70">
                     {championTeam.seed} seed
@@ -1214,6 +1227,24 @@ function CompactTeamRow({
       >
         {team?.seed ?? "–"}
       </span>
+
+      {/* College team logo */}
+      {team?.logo_url ? (
+        <img
+          src={team.logo_url}
+          alt={`${team.team_name} logo`}
+          className={`shrink-0 object-contain ${
+            compact ? "h-4 w-4" : "h-5 w-5"
+          }`}
+          loading="lazy"
+        />
+      ) : (
+        <span
+          className={`shrink-0 ${
+            compact ? "h-4 w-4" : "h-5 w-5"
+          }`}
+        />
+      )}
 
       <span
         className={`min-w-0 flex-1 truncate font-bold leading-tight ${colorClass} ${

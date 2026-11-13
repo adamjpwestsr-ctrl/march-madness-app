@@ -4,6 +4,9 @@ import { createClient } from "@/lib/supabaseServer";
 
 export const dynamic = "force-dynamic";
 
+// The upcoming tournament is the 2027 season.
+const CURRENT_SEASON_YEAR = 2027;
+
 const ROUND_POINTS: Record<number, number> = {
   0: 1,
   1: 1,
@@ -123,13 +126,159 @@ function buildPossibleWinnersByGame(games: OfficialGame[]) {
   return cache;
 }
 
+// --------------------------------------------------
+// HISTORICAL LEADERBOARD
+// --------------------------------------------------
+// Historical seasons are retrieved from the archive.
+// They are never recalculated using the current tournament.
+
+async function getHistoricalLeaderboard(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  seasonYear: number
+) {
+  const { data: archivedRows, error: archiveError } = await supabase
+    .from("historical_leaderboard")
+    .select("*")
+    .eq("season_year", seasonYear)
+    .order("finishing_rank", { ascending: true });
+
+  if (archiveError) {
+    console.error("HISTORICAL LEADERBOARD ERROR:", archiveError);
+
+    return NextResponse.json(
+      { success: false, error: archiveError.message },
+      { status: 500 }
+    );
+  }
+
+  const leaderboard = (archivedRows ?? []).map((row) => {
+    const sourceData =
+      row.source_data &&
+      typeof row.source_data === "object" &&
+      !Array.isArray(row.source_data)
+        ? row.source_data
+        : {};
+
+    const sourceUserId =
+      row.source_user_id !== null &&
+      row.source_user_id !== undefined
+        ? Number(row.source_user_id)
+        : null;
+
+    return {
+      // A historical entry may not have an original bracket ID.
+      // Give it a stable display identifier instead.
+      bracket_id:
+        row.source_bracket_id ??
+        `historical-${row.id}`,
+
+      user_id:
+        sourceUserId !== null && Number.isFinite(sourceUserId)
+          ? sourceUserId
+          : null,
+
+      bracket_name: row.bracket_name ?? null,
+
+      display_name:
+        row.player_name ?? "Unknown",
+
+      avatar_url:
+        row.avatar_url ??
+        sourceData.avatar_url ??
+        null,
+
+      has_paid:
+        typeof row.has_paid === "boolean"
+          ? row.has_paid
+          : null,
+
+      // Historical shame voting is not recalculated.
+      shame_count: 0,
+      you_shamed: false,
+
+      champion_pick: row.champion_pick ?? null,
+      champion_logo_url: row.champion_logo_url ?? null,
+
+      total_points: row.total_points ?? null,
+      max_possible_points: row.max_possible_points ?? null,
+
+      rank: row.finishing_rank,
+
+      // Historical entries are archived records, not live pending scores.
+      scoring_status: "scored",
+
+      created_at: row.archived_at ?? row.created_at,
+
+      // Additional historical information.
+      payout_amount: row.payout_amount ?? null,
+      previous_points: row.previous_points ?? null,
+      previous_rank: row.previous_rank ?? null,
+    };
+  });
+
+  return NextResponse.json(
+    {
+      success: true,
+      seasonYear,
+      isHistorical: true,
+      leaderboard,
+
+      // Historical champion-pick breakdowns are not currently archived.
+      topChampionPicks: [],
+
+      // Keep the HUB from attempting to display live champion-pick data.
+      championPicksLocked: true,
+
+      lockTime: null,
+    },
+    {
+      headers: {
+        "Cache-Control": "no-store",
+      },
+    }
+  );
+}
+
 export async function GET(request: Request) {
   try {
     const supabase = await createClient();
 
-    const viewerUserId = new URL(request.url).searchParams.get(
-      "viewer_user_id"
-    );
+    const searchParams = new URL(request.url).searchParams;
+
+    const viewerUserId = searchParams.get("viewer_user_id");
+    const requestedYear = searchParams.get("season_year");
+
+    // --------------------------------------------------
+    // 0. DETERMINE WHICH SEASON TO DISPLAY
+    // --------------------------------------------------
+
+    let seasonYear = CURRENT_SEASON_YEAR;
+
+    if (requestedYear !== null) {
+      seasonYear = Number(requestedYear);
+
+      if (
+        !Number.isInteger(seasonYear) ||
+        seasonYear < 2000 ||
+        seasonYear > 2100
+      ) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Invalid season_year.",
+          },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Historical years use the archive and bypass all live calculations.
+    if (seasonYear !== CURRENT_SEASON_YEAR) {
+      return await getHistoricalLeaderboard(
+        supabase,
+        seasonYear
+      );
+    }
 
     // --------------------------------------------------
     // 1. GET TOURNAMENT LOCK TIME
@@ -182,6 +331,8 @@ export async function GET(request: Request) {
       return NextResponse.json(
         {
           success: true,
+          seasonYear: CURRENT_SEASON_YEAR,
+          isHistorical: false,
           leaderboard: [],
           topChampionPicks: [],
           championPicksLocked: !isLocked,
@@ -304,7 +455,6 @@ export async function GET(request: Request) {
         score,
       ])
     );
-
 
     // --------------------------------------------------
     // 6. CALCULATE MAXIMUM POSSIBLE POINTS
@@ -467,10 +617,12 @@ export async function GET(request: Request) {
 
     const championPickByBracket = new Map<string, string>();
     const teamNameById = new Map<string, string>();
+    const teamLogoById = new Map<string, string | null>();
 
     let topChampionPicks: {
       team_id: string;
       team_name: string;
+      logo_url: string | null;
       count: number;
       percentage: number;
     }[] = [];
@@ -550,7 +702,7 @@ export async function GET(request: Request) {
           const { data: championTeams, error: championTeamsError } =
             await supabase
               .from("tournament_teams")
-              .select("id, team_name")
+              .select("id, team_name, logo_url")
               .in("id", teamIds);
 
           if (championTeamsError) {
@@ -567,6 +719,7 @@ export async function GET(request: Request) {
 
           for (const team of championTeams ?? []) {
             teamNameById.set(team.id, team.team_name);
+            teamLogoById.set(team.id, team.logo_url ?? null);
           }
 
           const totalPicks = validPicks.length;
@@ -574,8 +727,8 @@ export async function GET(request: Request) {
           topChampionPicks = [...counts.entries()]
             .map(([teamId, count]) => ({
               team_id: teamId,
-              team_name:
-                teamNameById.get(teamId) ?? "Unknown Team",
+              team_name: teamNameById.get(teamId) ?? "Unknown Team",
+              logo_url: teamLogoById.get(teamId) ?? null,
               count,
               percentage:
                 totalPicks > 0
@@ -640,11 +793,17 @@ export async function GET(request: Request) {
             ? championTeamName
             : null,
 
+          // Champion logo is returned only after the tournament lock.
+          champion_logo_url: championTeamId
+            ? teamLogoById.get(championTeamId) ?? null
+            : null,
+
           total_points: score?.total_points ?? null,
 
           // Current score plus all remaining points still possible.
-max_possible_points:
-  maxPossibleByBracket.get(String(bracket.bracket_id)) ?? 0,
+          max_possible_points:
+            maxPossibleByBracket.get(String(bracket.bracket_id)) ?? 0,
+
           rank: score?.rank ?? null,
           scoring_status: score ? "scored" : "pending",
           created_at: bracket.created_at,
@@ -675,6 +834,8 @@ max_possible_points:
     return NextResponse.json(
       {
         success: true,
+        seasonYear: CURRENT_SEASON_YEAR,
+        isHistorical: false,
         leaderboard,
         topChampionPicks: isLocked
           ? topChampionPicks

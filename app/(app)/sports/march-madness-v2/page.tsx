@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -6,6 +5,8 @@ import { useRouter } from "next/navigation";
 import Forum from "@/app/components/march-madness/Forum";
 import CollegeSportsTicker from "@/app/components/march-madness/CollegeSportsTicker";
 import BracketBossHelper from "@/components/march-madness/BracketBossHelper";
+
+const ENTRY_FEE = 25;
 
 type LeaderboardRow = {
   bracket_id: string;
@@ -123,36 +124,36 @@ export default function MarchMadnessHubPage() {
   // LOAD LEADERBOARD
   // --------------------------------------------------
 
- async function refreshLeaderboard() {
-  if (!currentUser?.user_id) return;
+  async function refreshLeaderboard() {
+    if (!currentUser?.user_id) return;
 
-  const response = await fetch(
-    `/api/march-madness-v2/leaderboard?season_year=${selectedSeasonYear}&viewer_user_id=${encodeURIComponent(
-      String(currentUser.user_id)
-    )}`,
-    { cache: "no-store" }
-  );
+    const response = await fetch(
+      `/api/march-madness-v2/leaderboard?season_year=${selectedSeasonYear}&viewer_user_id=${encodeURIComponent(
+        String(currentUser.user_id)
+      )}`,
+      { cache: "no-store" }
+    );
 
-  const data = await response.json();
+    const data = await response.json();
 
-  if (!response.ok || !data.success) {
-    throw new Error(data.error ?? "Failed to refresh leaderboard.");
+    if (!response.ok || !data.success) {
+      throw new Error(data.error ?? "Failed to refresh leaderboard.");
+    }
+
+    setLeaderboard(data.leaderboard ?? []);
+
+    setChampionPicksLocked(
+      data.championPicksLocked !== false
+    );
+
+    setTopChampionPicks(
+      data.championPicksLocked === false
+        ? data.topChampionPicks ?? []
+        : []
+    );
+
+    setLockTime(data.lockTime ?? null);
   }
-
-  setLeaderboard(data.leaderboard ?? []);
-
-  setChampionPicksLocked(
-    data.championPicksLocked !== false
-  );
-
-  setTopChampionPicks(
-    data.championPicksLocked === false
-      ? data.topChampionPicks ?? []
-      : []
-  );
-
-  setLockTime(data.lockTime ?? null);
-}
 
   // --------------------------------------------------
   // INITIAL HUB DATA
@@ -258,6 +259,36 @@ export default function MarchMadnessHubPage() {
   const scoredEntries = leaderboard.filter(
     (row) => row.scoring_status !== "pending"
   ).length;
+
+  // --------------------------------------------------
+  // POOL PURSE CALCULATIONS
+  // --------------------------------------------------
+
+  // Every leaderboard row represents one tournament entry.
+  // Only entries explicitly marked has_paid === true count
+  // toward the confirmed purse.
+
+  const poolEntryCount = leaderboard.length;
+
+  const paidEntryCount = leaderboard.filter(
+    (row) => row.has_paid === true
+  ).length;
+
+  const unpaidEntryCount = poolEntryCount - paidEntryCount;
+
+  const confirmedPurse = paidEntryCount * ENTRY_FEE;
+
+  const possiblePurse = poolEntryCount * ENTRY_FEE;
+
+  const outstandingPurse = unpaidEntryCount * ENTRY_FEE;
+
+  const paymentProgress =
+    poolEntryCount > 0
+      ? Math.round((paidEntryCount / poolEntryCount) * 100)
+      : 0;
+
+  const fullyFunded =
+    poolEntryCount > 0 && paidEntryCount === poolEntryCount;
 
   const formattedLockTime = lockTime
     ? new Date(lockTime).toLocaleString(undefined, {
@@ -426,87 +457,204 @@ export default function MarchMadnessHubPage() {
           {/* Leaderboard */}
           <section className="min-w-0 overflow-hidden rounded-2xl border border-cyan-400/20 bg-[#0d1a2e]/95 shadow-[0_12px_40px_rgba(0,0,0,0.22)]">
             <div className="flex flex-col justify-between gap-3 border-b border-white/[0.07] bg-gradient-to-r from-[#132b47] to-[#0e1c31] px-4 py-3 sm:flex-row sm:items-center sm:px-5">
-  <div>
-    <div className="text-[9px] font-bold uppercase tracking-[0.25em] text-cyan-300">
-      The Competition
-    </div>
+              <div>
+                <div className="text-[9px] font-bold uppercase tracking-[0.25em] text-cyan-300">
+                  The Competition
+                </div>
 
-    <h2 className="mt-0.5 text-xl font-black text-white">
-      Leaderboard
-      <span className="ml-2 text-sm font-bold text-cyan-300">
-        {selectedSeasonYear}
-      </span>
-    </h2>
+                <h2 className="mt-0.5 text-xl font-black text-white">
+                  Leaderboard
+                  <span className="ml-2 text-sm font-bold text-cyan-300">
+                    {selectedSeasonYear}
+                  </span>
+                </h2>
 
-    <p className="mt-0.5 text-[11px] text-slate-400">
-      {selectedSeasonYear === 2027
-        ? "See how your bracket stacks up against the field."
-        : `Final standings from the ${selectedSeasonYear} tournament.`}
-    </p>
-  </div>
+                <p className="mt-0.5 text-[11px] text-slate-400">
+                  {selectedSeasonYear === 2027
+                    ? "See how your bracket stacks up against the field."
+                    : `Final standings from the ${selectedSeasonYear} tournament.`}
+                </p>
+              </div>
 
-  <div className="flex flex-wrap items-center gap-2 self-start sm:self-center">
-    {/* SEASON SELECTOR */}
-    <div className="flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-400/[0.08] px-3 py-1.5">
-      <span className="text-[9px] font-extrabold uppercase tracking-wider text-cyan-200">
-        Season
-      </span>
+              <div className="flex flex-wrap items-center gap-2 self-start sm:self-center">
+                {/* SEASON SELECTOR */}
+                <div className="flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-400/[0.08] px-3 py-1.5">
+                  <span className="text-[9px] font-extrabold uppercase tracking-wider text-cyan-200">
+                    Season
+                  </span>
 
-      <select
-        value={selectedSeasonYear}
-        onChange={(event) =>
-          setSelectedSeasonYear(Number(event.target.value))
-        }
-        aria-label="Select leaderboard season"
-        className="cursor-pointer bg-transparent text-xs font-extrabold text-white outline-none"
-      >
-        <option value={2027} className="bg-[#0d1a2e] text-white">
-          2027 · Current
-        </option>
-        <option value={2026} className="bg-[#0d1a2e] text-white">
-          2026 · Historical
-        </option>
-      </select>
-    </div>
+                  <select
+                    value={selectedSeasonYear}
+                    onChange={(event) =>
+                      setSelectedSeasonYear(Number(event.target.value))
+                    }
+                    aria-label="Select leaderboard season"
+                    className="cursor-pointer bg-transparent text-xs font-extrabold text-white outline-none"
+                  >
+                    <option value={2027} className="bg-[#0d1a2e] text-white">
+                      2027 · Current
+                    </option>
+                    <option value={2026} className="bg-[#0d1a2e] text-white">
+                      2026 · Historical
+                    </option>
+                  </select>
+                </div>
 
-    <button
-      type="button"
-      onClick={() => setShowPaymentInfo(true)}
-      className="inline-flex items-center gap-2 rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider text-amber-200 transition hover:border-amber-300/60 hover:bg-amber-400/20"
-    >
-      <span className="text-sm">📝</span>
-      Payment Info
-    </button>
+                <button
+                  type="button"
+                  onClick={() => setShowPaymentInfo(true)}
+                  className="inline-flex items-center gap-2 rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider text-amber-200 transition hover:border-amber-300/60 hover:bg-amber-400/20"
+                >
+                  <span className="text-sm">📝</span>
+                  Payment Info
+                </button>
 
-    <div
-      className={`flex items-center gap-2 rounded-full border px-3 py-1.5 ${
-        selectedSeasonYear === 2027
-          ? "border-emerald-400/20 bg-emerald-400/10"
-          : "border-amber-400/20 bg-amber-400/10"
-      }`}
-    >
-      <span
-        className={`h-2 w-2 rounded-full ${
-          selectedSeasonYear === 2027
-            ? "animate-pulse bg-emerald-400"
-            : "bg-amber-400"
-        }`}
-      />
+                <div
+                  className={`flex items-center gap-2 rounded-full border px-3 py-1.5 ${
+                    selectedSeasonYear === 2027
+                      ? "border-emerald-400/20 bg-emerald-400/10"
+                      : "border-amber-400/20 bg-amber-400/10"
+                  }`}
+                >
+                  <span
+                    className={`h-2 w-2 rounded-full ${
+                      selectedSeasonYear === 2027
+                        ? "animate-pulse bg-emerald-400"
+                        : "bg-amber-400"
+                    }`}
+                  />
 
-      <span
-        className={`text-[9px] font-extrabold uppercase tracking-wider ${
-          selectedSeasonYear === 2027
-            ? "text-emerald-300"
-            : "text-amber-300"
-        }`}
-      >
-        {selectedSeasonYear === 2027
-          ? "Live Scoring"
-          : "Archived Results"}
-      </span>
-    </div>
-  </div>
-</div>
+                  <span
+                    className={`text-[9px] font-extrabold uppercase tracking-wider ${
+                      selectedSeasonYear === 2027
+                        ? "text-emerald-300"
+                        : "text-amber-300"
+                    }`}
+                  >
+                    {selectedSeasonYear === 2027
+                      ? "Live Scoring"
+                      : "Archived Results"}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* --------------------------------------------------
+                COMPACT POOL PURSE TRACKER
+                Current season only
+            -------------------------------------------------- */}
+
+            {selectedSeasonYear === 2027 && !loading && (
+              <div className="border-b border-amber-400/15 bg-[#101c30]/80 px-4 py-3 sm:px-5">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
+                  {/* TITLE */}
+                  <div className="flex shrink-0 items-center gap-2">
+                    <span className="text-lg">🏆</span>
+                    <div>
+                      <h3 className="text-[10px] font-black uppercase tracking-[0.15em] text-amber-200">
+                        Pool Purse
+                      </h3>
+                      <p className="text-[9px] text-slate-500">
+                        $25 per entry
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* PURSE TOTALS */}
+                  <div className="flex flex-1 items-center gap-5 sm:gap-7">
+                    <div>
+                      <p className="text-[8px] font-bold uppercase tracking-wider text-emerald-400">
+                        Confirmed
+                      </p>
+                      <p className="text-xl font-black tabular-nums leading-tight text-emerald-300">
+                        {confirmedPurse.toLocaleString("en-US", {
+                          style: "currency",
+                          currency: "USD",
+                          maximumFractionDigits: 0,
+                        })}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-[8px] font-bold uppercase tracking-wider text-slate-400">
+                        Possible
+                      </p>
+                      <p className="text-xl font-black tabular-nums leading-tight text-white">
+                        {possiblePurse.toLocaleString("en-US", {
+                          style: "currency",
+                          currency: "USD",
+                          maximumFractionDigits: 0,
+                        })}
+                      </p>
+                    </div>
+
+                    <div className="hidden sm:block">
+                      <p className="text-[8px] font-bold uppercase tracking-wider text-slate-500">
+                        Outstanding
+                      </p>
+                      <p className="text-sm font-bold tabular-nums text-amber-200">
+                        {outstandingPurse.toLocaleString("en-US", {
+                          style: "currency",
+                          currency: "USD",
+                          maximumFractionDigits: 0,
+                        })}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* PAYMENT PROGRESS */}
+                  <div className="w-full sm:w-[190px] sm:shrink-0">
+                    <div className="mb-1.5 flex items-center justify-between">
+                      <span className="text-[8px] font-extrabold uppercase tracking-wider text-slate-400">
+                        {paidEntryCount}/{poolEntryCount} Paid
+                      </span>
+                      <span
+                        className={`text-[10px] font-black tabular-nums ${
+                          fullyFunded
+                            ? "text-amber-300"
+                            : "text-emerald-300"
+                        }`}
+                      >
+                        {paymentProgress}%
+                      </span>
+                    </div>
+
+                    <div
+                      className="h-2 overflow-hidden rounded-full border border-white/[0.06] bg-[#080f20]"
+                      role="progressbar"
+                      aria-label="Tournament entry payment progress"
+                      aria-valuenow={paymentProgress}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                    >
+                      <div
+                        className={`h-full rounded-full transition-all duration-700 ${
+                          fullyFunded
+                            ? "bg-gradient-to-r from-amber-500 to-yellow-300 shadow-[0_0_12px_rgba(251,191,36,0.65)]"
+                            : "bg-gradient-to-r from-emerald-600 to-emerald-300 shadow-[0_0_8px_rgba(52,211,153,0.3)]"
+                        }`}
+                        style={{ width: `${paymentProgress}%` }}
+                      />
+                    </div>
+
+                    {fullyFunded ? (
+                      <p className="mt-1 text-[8px] font-extrabold uppercase tracking-wider text-amber-300">
+                        ✓ Fully Funded
+                      </p>
+                    ) : (
+                      <p className="mt-1 text-[8px] text-slate-500 sm:hidden">
+                        {outstandingPurse.toLocaleString("en-US", {
+                          style: "currency",
+                          currency: "USD",
+                          maximumFractionDigits: 0,
+                        })}{" "}
+                        outstanding
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {error && (
               <div className="m-4 rounded-xl border border-red-400/30 bg-red-500/10 p-3 text-xs text-red-300">
@@ -608,20 +756,21 @@ export default function MarchMadnessHubPage() {
 
                               <span className="flex max-w-[100px] items-center gap-1 truncate text-slate-400">
                                 {row.champion_logo_url &&
-				  (selectedSeasonYear !== 2027 || !championPicksLocked) && (
-                                  <img
-                                    src={row.champion_logo_url}
-                                    alt=""
-                                    className="h-4 w-4 shrink-0 object-contain"
-                                    loading="lazy"
-                                  />
-                                )}
+                                  (selectedSeasonYear !== 2027 ||
+                                    !championPicksLocked) && (
+                                    <img
+                                      src={row.champion_logo_url}
+                                      alt=""
+                                      className="h-4 w-4 shrink-0 object-contain"
+                                      loading="lazy"
+                                    />
+                                  )}
                                 <span className="truncate">
                                   {selectedSeasonYear !== 2027
-  					? row.champion_pick || "—"
-  					: championPicksLocked
- 					? "Hidden"
-				        : row.champion_pick || "—"}
+                                    ? row.champion_pick || "—"
+                                    : championPicksLocked
+                                      ? "Hidden"
+                                      : row.champion_pick || "—"}
                                 </span>
                               </span>
 
@@ -719,7 +868,8 @@ export default function MarchMadnessHubPage() {
                               <td className="px-2 py-2">
                                 <div className="flex min-w-0 items-center gap-1.5">
                                   {row.champion_logo_url &&
-  				  (selectedSeasonYear !== 2027 || !championPicksLocked) && (
+                                    (selectedSeasonYear !== 2027 ||
+                                      !championPicksLocked) && (
                                       <img
                                         src={row.champion_logo_url}
                                         alt=""
@@ -729,10 +879,10 @@ export default function MarchMadnessHubPage() {
                                     )}
                                   <span className="block max-w-[110px] truncate text-[10px] text-slate-400">
                                     {selectedSeasonYear !== 2027
-					  ? row.champion_pick || "—"
-					  : championPicksLocked
-					  ? "Hidden"
-					  : row.champion_pick || "—"}
+                                      ? row.champion_pick || "—"
+                                      : championPicksLocked
+                                        ? "Hidden"
+                                        : row.champion_pick || "—"}
                                   </span>
                                 </div>
                               </td>
@@ -832,18 +982,18 @@ export default function MarchMadnessHubPage() {
 
               <div className="p-4">
                 {selectedSeasonYear !== 2027 ? (
-  <div className="rounded-xl border border-slate-700 bg-[#091426]/60 px-3 py-6 text-center">
-    <div className="mx-auto mb-2 flex h-9 w-9 items-center justify-center rounded-lg border border-slate-700 bg-slate-800/70 text-lg">
-      🏆
-    </div>
-    <p className="text-xs font-extrabold text-slate-200">
-      Historical Champion Picks
-    </p>
-    <p className="mx-auto mt-1.5 max-w-xs text-[10px] leading-relaxed text-slate-400">
-      Champion selection statistics are not available for this archived season.
-    </p>
-  </div>
-) : championPicksLocked ? (
+                  <div className="rounded-xl border border-slate-700 bg-[#091426]/60 px-3 py-6 text-center">
+                    <div className="mx-auto mb-2 flex h-9 w-9 items-center justify-center rounded-lg border border-slate-700 bg-slate-800/70 text-lg">
+                      🏆
+                    </div>
+                    <p className="text-xs font-extrabold text-slate-200">
+                      Historical Champion Picks
+                    </p>
+                    <p className="mx-auto mt-1.5 max-w-xs text-[10px] leading-relaxed text-slate-400">
+                      Champion selection statistics are not available for this archived season.
+                    </p>
+                  </div>
+                ) : championPicksLocked ? (
                   <div className="rounded-xl border border-amber-400/20 bg-amber-400/[0.06] px-3 py-5 text-center">
                     <div className="mx-auto mb-2 flex h-9 w-9 items-center justify-center rounded-lg border border-amber-400/20 bg-amber-400/10 text-lg">
                       🔒

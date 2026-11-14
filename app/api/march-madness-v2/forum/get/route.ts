@@ -1,3 +1,4 @@
+
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 
@@ -7,6 +8,7 @@ export async function GET() {
   const { data, error } = await supabase
     .from("forum_posts")
     .select("id, display_name, message, created_at, thread_id, email")
+    .or("deleted.is.null,deleted.eq.false")
     .order("created_at", { ascending: false })
     .limit(100);
 
@@ -18,6 +20,6 @@ export async function GET() {
     );
   }
 
-  // The query gets the newest 100; reverse them for chronological chat display.
+  // Retrieve the newest 100 messages, then display them chronologically.
   return NextResponse.json((data || []).reverse());
 }

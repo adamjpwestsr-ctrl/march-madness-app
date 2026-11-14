@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -34,7 +35,12 @@ const COMMISSIONER_EMAILS = [
 ];
 
 function getDisplayName(user: ForumUser | null) {
-  return user?.name?.trim() || user?.username?.trim() || user?.email?.split("@")[0] || "Player";
+  return (
+    user?.name?.trim() ||
+    user?.username?.trim() ||
+    user?.email?.split("@")[0] ||
+    "Player"
+  );
 }
 
 function isCommissioner(post: Post) {
@@ -77,17 +83,33 @@ export default function Forum({ currentUser }: ForumProps) {
 
   const displayName = getDisplayName(currentUser);
   const userEmail = currentUser?.email?.trim().toLowerCase() || "";
-  const seenKey = `bracketboss-forum-last-seen-${currentUser?.user_id ?? userEmail}`;
 
-  const markAsRead = useCallback((latestPosts: Post[]) => {
-    const latestPost = latestPosts[latestPosts.length - 1];
+  const seenKey = `bracketboss-forum-last-seen-${
+    currentUser?.user_id ?? userEmail
+  }`;
 
-    if (latestPost) {
-      localStorage.setItem(seenKey, latestPost.created_at);
-    }
+  // Identify messages written by the currently logged-in participant.
+  const isOwnPost = useCallback(
+    (post: Post) => {
+      const postEmail = post.email?.trim().toLowerCase() || "";
+      return Boolean(userEmail && postEmail === userEmail);
+    },
+    [userEmail]
+  );
 
-    setUnreadCount(0);
-  }, [seenKey]);
+  // Save the latest displayed activity as read.
+  const markAsRead = useCallback(
+    (latestPosts: Post[]) => {
+      const latestPost = latestPosts[latestPosts.length - 1];
+
+      if (latestPost) {
+        localStorage.setItem(seenKey, latestPost.created_at);
+      }
+
+      setUnreadCount(0);
+    },
+    [seenKey]
+  );
 
   const loadPosts = useCallback(async () => {
     try {
@@ -111,30 +133,46 @@ export default function Forum({ currentUser }: ForumProps) {
 
         const lastSeen = localStorage.getItem(seenKey);
 
-        // First visit: treat existing posts as already seen.
-if (!lastSeen) {
-  localStorage.setItem(
-    seenKey,
-    latestPost?.created_at || new Date().toISOString()
-  );
-} else if (lastSeen) {
-          const unread = orderedPosts.filter(
-            (post) => new Date(post.created_at).getTime() > new Date(lastSeen).getTime()
-          ).length;
+        // First visit: existing messages are treated as already seen.
+        if (!lastSeen) {
+          localStorage.setItem(
+            seenKey,
+            latestPost?.created_at || new Date().toISOString()
+          );
+
+          setUnreadCount(0);
+        } else {
+          const lastSeenTime = new Date(lastSeen).getTime();
+
+          const unread = orderedPosts.filter((post) => {
+            const postTime = new Date(post.created_at).getTime();
+
+            return (
+              postTime > lastSeenTime &&
+              !isOwnPost(post)
+            );
+          }).length;
 
           setUnreadCount(unread);
         }
-      } else if (isOpen) {
-        markAsRead(orderedPosts);
       } else {
         const lastSeen = localStorage.getItem(seenKey);
 
         if (lastSeen) {
-          const unread = orderedPosts.filter(
-            (post) => new Date(post.created_at).getTime() > new Date(lastSeen).getTime()
-          ).length;
+          const lastSeenTime = new Date(lastSeen).getTime();
+
+          const unread = orderedPosts.filter((post) => {
+            const postTime = new Date(post.created_at).getTime();
+
+            return (
+              postTime > lastSeenTime &&
+              !isOwnPost(post)
+            );
+          }).length;
 
           setUnreadCount(unread);
+        } else {
+          setUnreadCount(0);
         }
       }
     } catch (err) {
@@ -143,7 +181,7 @@ if (!lastSeen) {
     } finally {
       setIsLoading(false);
     }
-  }, [isOpen, markAsRead, seenKey]);
+  }, [isOwnPost, seenKey]);
 
   useEffect(() => {
     async function loadThreads() {
@@ -152,7 +190,9 @@ if (!lastSeen) {
           cache: "no-store",
         });
 
-        if (!res.ok) throw new Error("Unable to load forum setup.");
+        if (!res.ok) {
+          throw new Error("Unable to load forum setup.");
+        }
 
         const data = await res.json();
         setThreads(Array.isArray(data) ? data : []);
@@ -164,6 +204,7 @@ if (!lastSeen) {
     loadThreads();
   }, []);
 
+  // Initial load and automatic refresh every 30 seconds.
   useEffect(() => {
     loadPosts();
 
@@ -172,18 +213,28 @@ if (!lastSeen) {
     return () => window.clearInterval(interval);
   }, [loadPosts]);
 
+  // Give participants time to review the conversation before clearing
+  // their unread indicator. Closing the forum cancels the read timer.
   useEffect(() => {
-    if (isOpen) {
-      markAsRead(posts);
+    if (!isOpen || isLoading) return;
 
-      // Keep the newest conversation visible when opened or updated.
-      requestAnimationFrame(() => {
-        if (feedRef.current) {
-          feedRef.current.scrollTop = feedRef.current.scrollHeight;
-        }
-      });
-    }
-  }, [isOpen, posts, markAsRead]);
+    const readTimer = window.setTimeout(() => {
+      markAsRead(posts);
+    }, 2500);
+
+    return () => window.clearTimeout(readTimer);
+  }, [isOpen, isLoading, posts, markAsRead]);
+
+  // Keep the newest conversation visible when the forum is opened or updated.
+  useEffect(() => {
+    if (!isOpen) return;
+
+    requestAnimationFrame(() => {
+      if (feedRef.current) {
+        feedRef.current.scrollTop = feedRef.current.scrollHeight;
+      }
+    });
+  }, [isOpen, posts]);
 
   async function handlePost() {
     const trimmedMessage = message.trim();
@@ -213,35 +264,52 @@ if (!lastSeen) {
       }
 
       setMessage("");
+
+      // Reload messages. The author's own message is excluded from
+      // their unread count, but other participants will see it as new.
       await loadPosts();
-      markAsRead(posts);
     } catch (err) {
       console.error("Forum post error:", err);
-      setError(err instanceof Error ? err.message : "Your message could not be posted.");
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Your message could not be posted."
+      );
     } finally {
       setIsPosting(false);
     }
   }
 
   function handleToggle() {
-    const nextOpen = !isOpen;
-
-    setIsOpen(nextOpen);
-
-    if (nextOpen) {
-      markAsRead(posts);
-    }
+    setIsOpen((previous) => !previous);
   }
 
   return (
-    <section className="overflow-hidden rounded-xl border border-slate-700/80 bg-slate-950 shadow-lg">
+    <section
+      className={`overflow-hidden rounded-xl border bg-slate-950 shadow-lg transition-all duration-300 ${
+        unreadCount > 0
+          ? "border-red-500/50 shadow-[0_0_18px_rgba(239,68,68,0.12)]"
+          : "border-slate-700/80"
+      }`}
+    >
       <button
         type="button"
         onClick={handleToggle}
-        className="flex w-full items-center justify-between gap-3 bg-slate-900 px-4 py-3 text-left transition hover:bg-slate-800"
+        className={`flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition ${
+          unreadCount > 0
+            ? "bg-slate-900 shadow-[inset_0_0_22px_rgba(239,68,68,0.07)] hover:bg-slate-800"
+            : "bg-slate-900 hover:bg-slate-800"
+        }`}
       >
         <div className="flex min-w-0 items-center gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-500/15 text-blue-300">
+          <div
+            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-blue-300 transition-all duration-300 ${
+              unreadCount > 0
+                ? "bg-red-500/15 ring-2 ring-red-400/40 shadow-[0_0_14px_rgba(239,68,68,0.4)]"
+                : "bg-blue-500/15"
+            }`}
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
@@ -260,17 +328,21 @@ if (!lastSeen) {
 
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <h2 className="font-bold text-white">BracketBoss Forum</h2>
+              <h2 className="font-bold text-white">
+                BracketBoss Forum
+              </h2>
 
               {unreadCount > 0 && (
-                <span className="rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-white">
+                <span className="rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-white shadow-[0_0_10px_rgba(239,68,68,0.35)]">
                   {unreadCount} new
                 </span>
               )}
             </div>
 
             <p className="text-xs text-slate-400">
-              {isOpen ? "Join the conversation" : "Player chat and commissioner updates"}
+              {isOpen
+                ? "Join the conversation"
+                : "Player chat and commissioner updates"}
             </p>
           </div>
         </div>
@@ -292,7 +364,10 @@ if (!lastSeen) {
               </p>
             ) : posts.length === 0 ? (
               <div className="py-10 text-center">
-                <p className="font-semibold text-slate-300">The conversation starts here.</p>
+                <p className="font-semibold text-slate-300">
+                  The conversation starts here.
+                </p>
+
                 <p className="mt-1 text-xs text-slate-500">
                   Be the first to post a message.
                 </p>
@@ -300,6 +375,7 @@ if (!lastSeen) {
             ) : (
               posts.map((post) => {
                 const commissioner = isCommissioner(post);
+
                 const announcement = post.message
                   .trim()
                   .toUpperCase()
@@ -352,7 +428,8 @@ if (!lastSeen) {
           <div className="mt-3 rounded-lg border border-slate-700 bg-slate-900 p-3">
             <div className="mb-2 flex items-center justify-between gap-2">
               <span className="text-xs text-slate-400">
-                Posting as <strong className="text-white">{displayName}</strong>
+                Posting as{" "}
+                <strong className="text-white">{displayName}</strong>
               </span>
 
               {currentUser?.user_id != null &&
@@ -390,7 +467,12 @@ if (!lastSeen) {
               <button
                 type="button"
                 onClick={handlePost}
-                disabled={!message.trim() || !threads.length || isPosting || !userEmail}
+                disabled={
+                  !message.trim() ||
+                  !threads.length ||
+                  isPosting ||
+                  !userEmail
+                }
                 className="rounded-lg bg-blue-500 px-5 py-2 text-sm font-extrabold text-white shadow transition hover:bg-blue-400 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {isPosting ? "POSTING..." : "POST MESSAGE"}

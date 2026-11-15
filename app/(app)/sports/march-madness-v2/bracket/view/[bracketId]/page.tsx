@@ -1,5 +1,6 @@
 
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 
 type Game = {
@@ -44,6 +45,22 @@ export default async function PrettyBracketViewPage({
 }: {
   params: Promise<{ bracketId: string }>;
 }) {
+  // Identify admin sessions so the admin can review brackets without
+  // seeing participant editing links.
+  const cookieStore = await cookies();
+  const sessionCookie = cookieStore.get("mm_session");
+
+  let isAdmin = false;
+
+  if (sessionCookie) {
+    try {
+      const session = JSON.parse(sessionCookie.value);
+      isAdmin = session?.isAdmin === true;
+    } catch {
+      isAdmin = false;
+    }
+  }
+
   const supabase = await createSupabaseServerClient();
   const { bracketId } = await params;
 
@@ -65,10 +82,10 @@ export default async function PrettyBracketViewPage({
             link may be incorrect.
           </p>
           <Link
-            href="/sports/march-madness-v2/bracket/my"
+            href={isAdmin ? "/admin/brackets" : "/sports/march-madness-v2/bracket/my"}
             className="mt-6 inline-flex rounded-lg bg-blue-500 px-5 py-3 font-semibold text-white hover:bg-blue-400"
           >
-            Return to My Brackets
+            {isAdmin ? "Return to Admin Brackets" : "Return to My Brackets"}
           </Link>
         </div>
       </main>
@@ -84,9 +101,9 @@ export default async function PrettyBracketViewPage({
     .order("round", { ascending: true })
     .order("game_number", { ascending: true });
 
-const { data: rawTeams, error: teamsErr } = await supabase
-  .from("tournament_teams")
-  .select("id, team_name, seed, region, logo_url");
+  const { data: rawTeams, error: teamsErr } = await supabase
+    .from("tournament_teams")
+    .select("id, team_name, seed, region, logo_url");
 
   const { data: rawPicks, error: picksErr } = await supabase
     .from("bracket_picks")
@@ -111,10 +128,14 @@ const { data: rawTeams, error: teamsErr } = await supabase
             details. Please try refreshing this page.
           </p>
           <Link
-            href={`/sports/march-madness-v2/bracket/edit/${bracketId}`}
+            href={
+              isAdmin
+                ? "/admin/brackets"
+                : `/sports/march-madness-v2/bracket/edit/${bracketId}`
+            }
             className="mt-6 inline-flex rounded-lg bg-yellow-400 px-5 py-3 font-semibold text-black hover:bg-yellow-300"
           >
-            Return to Bracket Editor
+            {isAdmin ? "Return to Admin Brackets" : "Return to Bracket Editor"}
           </Link>
         </div>
       </main>
@@ -377,7 +398,9 @@ const { data: rawTeams, error: teamsErr } = await supabase
                     {bracketName}
                   </h1>
                   <p className="mt-1 text-xs text-slate-400 sm:text-sm">
-                    Your picks stay yours. Official results show what is still alive.
+                    {isAdmin
+                      ? "Administrative bracket review · Read-only view"
+                      : "Your picks stay yours. Official results show what is still alive."}
                   </p>
                 </div>
               </div>
@@ -392,18 +415,24 @@ const { data: rawTeams, error: teamsErr } = await supabase
                 🏠 Bracket HUB
               </Link>
 
-              <Link
-                href={`/sports/march-madness-v2/bracket/edit/${bracketId}`}
-                className="rounded-lg bg-yellow-400 px-4 py-2.5 text-xs font-black text-slate-950 transition hover:bg-yellow-300 sm:text-sm"
-              >
-                ✏️ Edit Bracket
-              </Link>
+              {!isAdmin && (
+                <Link
+                  href={`/sports/march-madness-v2/bracket/edit/${bracketId}`}
+                  className="rounded-lg bg-yellow-400 px-4 py-2.5 text-xs font-black text-slate-950 transition hover:bg-yellow-300 sm:text-sm"
+                >
+                  ✏️ Edit Bracket
+                </Link>
+              )}
 
               <Link
-                href="/sports/march-madness-v2/bracket/my"
+                href={
+                  isAdmin
+                    ? "/admin/brackets"
+                    : "/sports/march-madness-v2/bracket/my"
+                }
                 className="rounded-lg border border-slate-600 bg-slate-800 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-slate-700 sm:text-sm"
               >
-                My Brackets
+                {isAdmin ? "← Admin Brackets" : "My Brackets"}
               </Link>
             </div>
           </div>
@@ -517,19 +546,18 @@ const { data: rawTeams, error: teamsErr } = await supabase
                   National Champion
                 </p>
                 <div className="mt-2 flex flex-col items-center gap-2">
-  {championTeam?.logo_url && (
-    <img
-      src={championTeam.logo_url}
-      alt={`${championTeam.team_name} logo`}
-      className="h-12 w-12 object-contain"
-    />
-  )}
+                  {championTeam?.logo_url && (
+                    <img
+                      src={championTeam.logo_url}
+                      alt={`${championTeam.team_name} logo`}
+                      className="h-12 w-12 object-contain"
+                    />
+                  )}
 
-  <h3 className="break-words text-lg font-black leading-tight">
-    {championTeam?.team_name ?? "Not selected"}
-  </h3>
-</div>
-
+                  <h3 className="break-words text-lg font-black leading-tight">
+                    {championTeam?.team_name ?? "Not selected"}
+                  </h3>
+                </div>
 
                 {championTeam?.seed != null && (
                   <p className="mt-1 text-[10px] text-yellow-100/70">
@@ -637,12 +665,14 @@ const { data: rawTeams, error: teamsErr } = await supabase
           <p className="text-xs text-slate-500">
             BracketBoss · Your picks. Your path. Your championship.
           </p>
-          <Link
-            href={`/sports/march-madness-v2/bracket/edit/${bracketId}`}
-            className="mt-2 inline-block text-xs font-semibold text-blue-300 hover:text-blue-200"
-          >
-            Make changes to your bracket →
-          </Link>
+          {!isAdmin && (
+            <Link
+              href={`/sports/march-madness-v2/bracket/edit/${bracketId}`}
+              className="mt-2 inline-block text-xs font-semibold text-blue-300 hover:text-blue-200"
+            >
+              Make changes to your bracket →
+            </Link>
+          )}
         </footer>
       </div>
     </main>

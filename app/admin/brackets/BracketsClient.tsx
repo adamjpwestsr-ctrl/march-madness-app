@@ -361,7 +361,7 @@ export default function BracketsClient() {
       );
     }
   };
-
+ 
   const openIncompleteEmail = () => {
     const emails = getIncompleteEmails();
 
@@ -371,12 +371,23 @@ export default function BracketsClient() {
     }
 
     const subject =
-      "Reminder: Your BracketBoss March Madness Bracket Is Incomplete";
+      "🏀 Your Bracket Isn't Finished... And There's Money on the Line!";
+
+    const body =
+      "Hey BracketBoss!\n\n" +
+      "Your March Madness bracket is still incomplete!\n\n" +
+      "Here's the deal: You can't win the money if you don't complete your bracket! 💰\n\n" +
+      "Don't sit on the sidelines while everyone else battles it out. Head back to BracketBoss, finish your picks, and give yourself a shot at the prize!\n\n" +
+      "https://bracketboss-theta.vercel.app/sports/march-madness-v2\n\n" +
+      "The clock is ticking. Get those picks in!\n\n" +
+      "Good luck, and may your bracket survive the madness!\n\n" +
+      "The BracketBoss Team 🏆";
 
     const gmailUrl =
       `https://mail.google.com/mail/?view=cm&fs=1` +
       `&bcc=${encodeURIComponent(emails.join(","))}` +
-      `&su=${encodeURIComponent(subject)}`;
+      `&su=${encodeURIComponent(subject)}` +
+      `&body=${encodeURIComponent(body)}`;
 
     window.open(gmailUrl, "_blank", "noopener,noreferrer");
   };

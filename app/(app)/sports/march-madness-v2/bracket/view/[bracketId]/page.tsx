@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
+import { createClient } from "@supabase/supabase-js";
 
 type Game = {
   id: string;
@@ -45,19 +46,26 @@ export default async function PrettyBracketViewPage({
 }: {
   params: Promise<{ bracketId: string }>;
 }) {
-  // Identify admin sessions so the admin can review brackets without
-  // seeing participant editing links.
+  // Identify the current session, bracket owner, and admin.
   const cookieStore = await cookies();
   const sessionCookie = cookieStore.get("mm_session");
 
   let isAdmin = false;
+  let sessionUserId: string | null = null;
 
   if (sessionCookie) {
     try {
       const session = JSON.parse(sessionCookie.value);
-      isAdmin = session?.isAdmin === true;
+
+      // These are the actual field names stored in mm_session.
+      isAdmin = session?.is_admin === true;
+
+      if (session?.user_id != null) {
+        sessionUserId = String(session.user_id);
+      }
     } catch {
       isAdmin = false;
+      sessionUserId = null;
     }
   }
 
@@ -82,7 +90,11 @@ export default async function PrettyBracketViewPage({
             link may be incorrect.
           </p>
           <Link
-            href={isAdmin ? "/admin/brackets" : "/sports/march-madness-v2/bracket/my"}
+            href={
+              isAdmin
+                ? "/admin/brackets"
+                : "/sports/march-madness-v2/bracket/my"
+            }
             className="mt-6 inline-flex rounded-lg bg-blue-500 px-5 py-3 font-semibold text-white hover:bg-blue-400"
           >
             {isAdmin ? "Return to Admin Brackets" : "Return to My Brackets"}
@@ -91,6 +103,76 @@ export default async function PrettyBracketViewPage({
       </main>
     );
   }
+
+  // Identify whether this bracket belongs to the current participant.
+  const isOwner =
+    sessionUserId !== null &&
+    String(bracket.user_id) === sessionUserId;
+
+  // Read the existing tournament lock setting using the service role,
+  // matching the existing lock-date GET route.
+  const settingsClient = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    {
+      auth: { persistSession: false },
+    }
+  );
+
+  const { data: lockSettings, error: lockError } = await settingsClient
+    .from("settings")
+    .select("lock_date")
+    .eq("id", 1)
+    .single();
+
+  const lockDate = lockSettings?.lock_date
+    ? new Date(lockSettings.lock_date)
+    : null;
+
+  const validLockDate =
+    !lockError &&
+    lockDate !== null &&
+    Number.isFinite(lockDate.getTime());
+
+  const isLocked =
+    validLockDate && lockDate !== null
+      ? Date.now() >= lockDate.getTime()
+      : false;
+
+  // Admins and owners can always view their respective brackets.
+  // Other participants must wait until the official lock has passed.
+  if (!isAdmin && !isOwner && !isLocked) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-slate-950 px-6 py-16 text-white">
+        <div className="mx-auto max-w-xl rounded-2xl border border-yellow-400/30 bg-slate-900 p-8 text-center shadow-xl">
+          <div className="mb-4 text-5xl">🔒</div>
+
+          <h1 className="text-2xl font-black text-yellow-300">
+            Bracket Viewing Locked
+          </h1>
+
+          <p className="mt-4 text-slate-300">
+            Other participants' brackets will become available for viewing
+            once the tournament entry period has closed.
+          </p>
+
+          <Link
+            href="/sports/march-madness-v2"
+            className="mt-6 inline-flex rounded-lg bg-yellow-400 px-5 py-3 font-bold text-slate-950 transition hover:bg-yellow-300"
+          >
+            Return to Bracket HUB
+          </Link>
+        </div>
+      </main>
+    );
+  }
+
+  // Only the bracket owner can edit, and only before the tournament locks.
+  // Admins and other participants always receive a read-only view.
+  const canEdit =
+    isOwner &&
+    !lockError &&
+    (!lockDate || Date.now() < lockDate.getTime());
 
   const { data: rawGames, error: gamesErr } = await supabase
     .from("tournament_games")
@@ -400,7 +482,9 @@ export default async function PrettyBracketViewPage({
                   <p className="mt-1 text-xs text-slate-400 sm:text-sm">
                     {isAdmin
                       ? "Administrative bracket review · Read-only view"
-                      : "Your picks stay yours. Official results show what is still alive."}
+                      : isOwner
+                        ? "Your picks stay yours. Official results show what is still alive."
+                        : "Participant bracket · Read-only view"}
                   </p>
                 </div>
               </div>
@@ -415,7 +499,7 @@ export default async function PrettyBracketViewPage({
                 🏠 Bracket HUB
               </Link>
 
-              {!isAdmin && (
+              {canEdit && (
                 <Link
                   href={`/sports/march-madness-v2/bracket/edit/${bracketId}`}
                   className="rounded-lg bg-yellow-400 px-4 py-2.5 text-xs font-black text-slate-950 transition hover:bg-yellow-300 sm:text-sm"
@@ -665,7 +749,7 @@ export default async function PrettyBracketViewPage({
           <p className="text-xs text-slate-500">
             BracketBoss · Your picks. Your path. Your championship.
           </p>
-          {!isAdmin && (
+          {canEdit && (
             <Link
               href={`/sports/march-madness-v2/bracket/edit/${bracketId}`}
               className="mt-2 inline-block text-xs font-semibold text-blue-300 hover:text-blue-200"

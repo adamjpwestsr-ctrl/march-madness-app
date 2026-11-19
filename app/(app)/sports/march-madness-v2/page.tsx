@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Forum from "@/app/components/march-madness/Forum";
 import CollegeSportsTicker from "@/app/components/march-madness/CollegeSportsTicker";
 import BracketBossHelper from "@/components/march-madness/BracketBossHelper";
+import Link from "next/link";
 
 const ENTRY_FEE = 25;
 
@@ -716,9 +717,18 @@ export default function MarchMadnessHubPage() {
                                 {pending ? "—" : rank}
                               </span>
 
-                              <span className="truncate text-xs font-bold text-white">
-                                {row.display_name || row.user_id || "Player"}
-                              </span>
+                              <Link
+  href={`/sports/march-madness-v2/bracket/view/${row.bracket_id}`}
+  className="flex min-w-0 flex-col text-left group"
+  title={`View ${row.display_name || "Player"}'s bracket`}
+>
+  <span className="truncate text-xs font-bold text-white transition group-hover:text-cyan-300 group-hover:underline">
+    {row.display_name || row.user_id || "Player"}
+  </span>
+  <span className="text-[9px] font-semibold text-cyan-400">
+    View bracket ↗
+  </span>
+</Link>
 
                               {mine && (
                                 <span className="shrink-0 rounded border border-cyan-400/30 bg-cyan-400/10 px-1 py-0.5 text-[8px] font-black uppercase text-cyan-200">
@@ -848,9 +858,18 @@ export default function MarchMadnessHubPage() {
 
                               <td className="px-2 py-2">
                                 <div className="flex items-center gap-1.5">
-                                  <span className="max-w-[135px] truncate text-xs font-bold text-white">
-                                    {row.display_name || row.user_id || "Player"}
-                                  </span>
+                                  <Link
+  href={`/sports/march-madness-v2/bracket/view/${row.bracket_id}`}
+  className="group flex min-w-0 flex-col"
+  title={`View ${row.display_name || "Player"}'s bracket`}
+>
+  <span className="max-w-[135px] truncate text-xs font-bold text-white transition group-hover:text-cyan-300 group-hover:underline">
+    {row.display_name || row.user_id || "Player"}
+  </span>
+  <span className="text-[9px] font-semibold text-cyan-400">
+    View bracket ↗
+  </span>
+</Link>
                                   {mine && (
                                     <span className="rounded border border-cyan-400/30 bg-cyan-400/10 px-1 py-0.5 text-[8px] font-black uppercase text-cyan-200">
                                       You

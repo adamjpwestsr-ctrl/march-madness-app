@@ -1,60 +1,73 @@
+
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
-import UserRow from "./UserRow";
+import UsersClient from "./UsersClient";
 
 export default async function UsersAdminPage() {
   const cookieStore = await cookies();
   const sessionCookie = cookieStore.get("mm_session");
 
-  if (!sessionCookie) redirect("/login");
+  if (!sessionCookie) {
+    redirect("/login");
+  }
 
-  let session: any;
+  let session;
+
   try {
     session = JSON.parse(sessionCookie.value);
   } catch {
     redirect("/login");
   }
 
-  if (!session.isAdmin) redirect("/");
+  // Match the existing BracketBoss Admin authentication.
+  if (!session.email || !session.userId) {
+    redirect("/login");
+  }
+
+  if (!session.isAdmin) {
+    redirect("/bracket");
+  }
 
   const supabase = await createSupabaseServerClient();
 
-  const { data: adminUser } = await supabase
-    .from("users")
-    .select("*")
-    .eq("user_id", session.userId)
-    .maybeSingle();
+  const [usersResult, bracketsResult, mulligansResult] =
+    await Promise.all([
+      supabase
+        .from("users")
+        .select("user_id, name, email, is_admin, is_active, has_paid")
+        .order("email", { ascending: true }),
 
-  if (!adminUser || !adminUser.is_admin) redirect("/login");
+      supabase
+        .from("brackets")
+        .select("bracket_id, user_id, bracket_name, created_at"),
 
-  // ⭐ Admin authenticated — load users
-  const { data: users } = await supabase
-    .from("users")
-    .select("user_id, email, is_active, has_paid")
-    .order("email");
+      supabase
+        .from("mulligan_requests")
+        .select(
+          "id, user_id, bracket_id, game_id, replacement_team, status, created_at"
+        ),
+    ]);
+
+  if (usersResult.error) {
+    console.error("Admin users load error:", usersResult.error.message);
+  }
+
+  if (bracketsResult.error) {
+    console.error("Admin brackets load error:", bracketsResult.error.message);
+  }
+
+  if (mulligansResult.error) {
+    console.error("Admin mulligans load error:", mulligansResult.error.message);
+  }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 p-10">
-      <h1 className="text-3xl font-bold mb-8">Admin: User List</h1>
-
-      <div className="bg-slate-900 border border-slate-800 rounded-lg p-6">
-        <table className="w-full text-left">
-          <thead className="text-slate-400 border-b border-slate-700">
-            <tr>
-              <th className="py-2">Email</th>
-              <th className="py-2">Active</th>
-              <th className="py-2">Paid</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {users?.map((u) => (
-              <UserRow key={u.user_id} user={u} />
-            ))}
-          </tbody>
-        </table>
-      </div>
+    <div className="min-h-screen bg-slate-950 p-4 text-slate-100 sm:p-6 lg:p-10">
+      <UsersClient
+        users={usersResult.data ?? []}
+        brackets={bracketsResult.data ?? []}
+        mulligans={mulligansResult.data ?? []}
+      />
     </div>
   );
 }

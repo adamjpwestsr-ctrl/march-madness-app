@@ -122,7 +122,7 @@ export default function NewBracketV2Page() {
           {/* Optional Username */}
           <input
             className="p-3 rounded-lg bg-white/10 w-full border border-white/20"
-            placeholder="Username - This is optional, but ideal!"
+            placeholder="Username - Make it fun!"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
           />
@@ -146,7 +146,7 @@ export default function NewBracketV2Page() {
           {/* Tiebreaker */}
           <input
             className="p-3 rounded-lg bg-white/10 w-full border border-white/20"
-            placeholder="Tie Breaker - Championship Game Total Score"
+            placeholder="Tie Breaker - Championship Game Total Score. Ex. 134"
             value={tiebreakerScore}
             onChange={(e) => setTiebreakerScore(e.target.value)}
           />

@@ -24,6 +24,8 @@ export default function MarchMadnessLoginPage() {
 
   // Set Initial Passcode fields
   const [initialPasscode, setInitialPasscode] = useState("");
+  const [passcodeSetupError, setPasscodeSetupError] = useState("");
+  const [isSettingPasscode, setIsSettingPasscode] = useState(false);
 
   // -----------------------------------------------------
   // LOGIN
@@ -39,45 +41,54 @@ export default function MarchMadnessLoginPage() {
       return;
     }
 
-    const res = await fetch("/api/login-or-register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email: normalizedEmail,
-        passcode: trimmedPasscode,
-      }),
-    });
+    try {
+      const res = await fetch("/api/login-or-register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: normalizedEmail,
+          passcode: trimmedPasscode,
+        }),
+      });
 
-    const json = await res.json();
+      const json = await res.json();
 
-    if (!json.success) {
-      if (json.error === "No user found") {
-        setError("It looks like you don’t have a passcode yet — create your setup first.");
-        setShowCreateModal(true);
-      } else if (json.error === "Passcode not set") {
-        setError("Your email is in our system, but you have not set a passcode yet.");
-        setShowSetPasscodeModal(true);
-      } else {
-        setError(json.error || "Login failed.");
+      if (!json.success) {
+        if (json.error === "No user found") {
+          setError(
+            "It looks like you don’t have a passcode yet — create your setup first."
+          );
+          setShowCreateModal(true);
+        } else if (json.error === "Passcode not set") {
+          setError(
+            "Your email is in our system, but you have not set a passcode yet."
+          );
+          setPasscodeSetupError("");
+          setShowSetPasscodeModal(true);
+        } else {
+          setError(json.error || "Login failed.");
+        }
+        return;
       }
-      return;
+
+      const user = json.user;
+
+      localStorage.setItem(
+        "bracketUser",
+        JSON.stringify({
+          user_id: user.user_id,
+          email: normalizedEmail,
+          name: user.name,
+          username: user.username ?? null,
+          is_admin: user.is_admin ?? false,
+        })
+      );
+
+      router.push("/sports/march-madness-v2");
+    } catch (err) {
+      console.error("Login request failed:", err);
+      setError("Unable to complete login. Please try again.");
     }
-
-    const user = json.user;
-
-    // Always store bracketUser with a normalized email
-    localStorage.setItem(
-      "bracketUser",
-      JSON.stringify({
-        user_id: user.user_id,
-        email: normalizedEmail,
-        name: user.name,
-        username: user.username ?? null,
-        is_admin: user.is_admin ?? false,
-      })
-    );
-
-    router.push("/sports/march-madness-v2");
   }
 
   // -----------------------------------------------------
@@ -109,92 +120,110 @@ export default function MarchMadnessLoginPage() {
       return;
     }
 
-    const res = await fetch("/api/create-user", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: trimmedName,
-        email: normalizedEmail,
-        passcode: trimmedPasscode,
-      }),
-    });
+    try {
+      const res = await fetch("/api/create-user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: trimmedName,
+          email: normalizedEmail,
+          passcode: trimmedPasscode,
+        }),
+      });
 
-    const json = await res.json();
+      const json = await res.json();
 
-    if (!json.success) {
-      setError(json.error || "Unable to create account.");
-      return;
+      if (!json.success) {
+        setError(json.error || "Unable to create account.");
+        return;
+      }
+
+      const user = json.user;
+
+      localStorage.setItem(
+        "bracketUser",
+        JSON.stringify({
+          user_id: user.user_id,
+          email: normalizedEmail,
+          name: user.name,
+          username: user.username ?? null,
+          is_admin: user.is_admin ?? false,
+        })
+      );
+
+      setShowCreateModal(false);
+      router.push("/sports/march-madness-v2");
+    } catch (err) {
+      console.error("Account creation request failed:", err);
+      setError("Unable to create your account. Please try again.");
     }
-
-    const user = json.user;
-
-    // Always store bracketUser with a normalized email
-    localStorage.setItem(
-      "bracketUser",
-      JSON.stringify({
-        user_id: user.user_id,
-        email: normalizedEmail,
-        name: user.name,
-        username: user.username ?? null,
-        is_admin: user.is_admin ?? false,
-      })
-    );
-
-    setShowCreateModal(false);
-    router.push("/sports/march-madness-v2");
   }
 
   // -----------------------------------------------------
   // SET INITIAL PASSCODE
   // -----------------------------------------------------
   async function handleSetInitialPasscode() {
-    setError("");
+    if (isSettingPasscode) return;
+
+    setPasscodeSetupError("");
 
     const normalizedEmail = email.trim().toLowerCase();
     const trimmedPasscode = initialPasscode.trim();
 
     if (!normalizedEmail) {
-      setError("Please enter your email.");
+      setPasscodeSetupError("Please enter your email.");
       return;
     }
 
     if (!trimmedPasscode) {
-      setError("Please enter a passcode.");
+      setPasscodeSetupError("Please enter a passcode.");
       return;
     }
 
-    const res = await fetch("/api/set-passcode-initial", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email: normalizedEmail,
-        passcode: trimmedPasscode,
-      }),
-    });
+    setIsSettingPasscode(true);
 
-    const json = await res.json();
+    try {
+      const res = await fetch("/api/set-passcode-initial", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: normalizedEmail,
+          passcode: trimmedPasscode,
+        }),
+      });
 
-    if (!json.success) {
-      setError(json.error || "Unable to set passcode.");
-      return;
+      const json = await res.json();
+
+      if (!res.ok || !json.success) {
+        setPasscodeSetupError(
+          json.error || "Unable to set passcode. Please try again."
+        );
+        return;
+      }
+
+      const user = json.user;
+
+      localStorage.setItem(
+        "bracketUser",
+        JSON.stringify({
+          user_id: user.user_id,
+          email: normalizedEmail,
+          name: user.name,
+          username: user.username ?? null,
+          is_admin: user.is_admin ?? false,
+        })
+      );
+
+      setShowSetPasscodeModal(false);
+      router.push("/sports/march-madness-v2");
+    } catch (err) {
+      console.error("Initial passcode setup request failed:", err);
+      setPasscodeSetupError(
+        "Unable to connect to the server. Please try again."
+      );
+    } finally {
+      setIsSettingPasscode(false);
     }
-
-    const user = json.user;
-
-    // Always store bracketUser with a normalized email
-    localStorage.setItem(
-      "bracketUser",
-      JSON.stringify({
-        user_id: user.user_id,
-        email: normalizedEmail,
-        name: user.name,
-        username: user.username ?? null,
-        is_admin: user.is_admin ?? false,
-      })
-    );
-
-    setShowSetPasscodeModal(false);
-    router.push("/sports/march-madness-v2");
   }
 
   // -----------------------------------------------------
@@ -277,28 +306,44 @@ export default function MarchMadnessLoginPage() {
             <h2 className="text-xl font-bold text-green-400 mb-3 text-center">
               Set Your Passcode
             </h2>
+
             <p className="text-slate-300 text-sm mb-4 text-center">
               Your email is in our system, but you haven't set a passcode yet.
             </p>
+
+            {passcodeSetupError && (
+              <p className="text-red-400 text-sm mb-3 text-center">
+                {passcodeSetupError}
+              </p>
+            )}
 
             <input
               className="p-3 rounded-lg bg-white/10 w-full border border-white/20 mb-4"
               placeholder="Create Passcode"
               value={initialPasscode}
-              onChange={(e) => setInitialPasscode(e.target.value)}
+              onChange={(e) => {
+                setInitialPasscode(e.target.value);
+                setPasscodeSetupError("");
+              }}
+              disabled={isSettingPasscode}
             />
 
             <div className="flex flex-col gap-3">
               <button
                 onClick={handleSetInitialPasscode}
-                className="px-4 py-2 bg-green-400 text-slate-900 font-bold rounded-lg hover:bg-green-300 transition"
+                disabled={isSettingPasscode}
+                className="px-4 py-2 bg-green-400 text-slate-900 font-bold rounded-lg hover:bg-green-300 transition disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                Set Passcode
+                {isSettingPasscode ? "Setting Passcode..." : "Set Passcode"}
               </button>
 
               <button
-                onClick={() => setShowSetPasscodeModal(false)}
-                className="px-4 py-2 bg-slate-700 text-slate-300 font-bold rounded-lg hover:bg-slate-600 transition"
+                onClick={() => {
+                  setShowSetPasscodeModal(false);
+                  setPasscodeSetupError("");
+                }}
+                disabled={isSettingPasscode}
+                className="px-4 py-2 bg-slate-700 text-slate-300 font-bold rounded-lg hover:bg-slate-600 transition disabled:opacity-60"
               >
                 Cancel
               </button>
@@ -411,7 +456,9 @@ export default function MarchMadnessLoginPage() {
         </p>
 
         <div className="mt-6 p-4 bg-[#0A0F1F] border border-blue-500/30 rounded-xl shadow-[0_0_15px_rgba(59,130,246,0.25)]">
-          <h3 className="text-blue-400 font-bold text-sm mb-1">Commissioner Contact</h3>
+          <h3 className="text-blue-400 font-bold text-sm mb-1">
+            Commissioner Contact
+          </h3>
           <p className="text-slate-300 text-xs">
             Email: <span className="text-yellow-400">adamjpwestsr@gmail.com</span>
           </p>

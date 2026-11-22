@@ -1137,7 +1137,8 @@ export default function MarchMadnessHubPage() {
                 id="payment-info-title"
                 className="mt-1 text-2xl font-black text-white"
               >
-                Payment Information
+
+Payment Information
               </h2>
               <p className="mt-2 text-sm leading-relaxed text-slate-400">
                 Many forms of payment are accepted. Choose whichever method
@@ -1209,6 +1210,33 @@ export default function MarchMadnessHubPage() {
                   On supported mobile devices, this profile link may open
                   directly in the Venmo app. Otherwise, it opens Venmo in your
                   browser.
+                </p>
+              </div>
+
+              {/* PAYPAL */}
+              <div className="rounded-xl border border-blue-400/30 bg-blue-400/[0.06] p-4">
+                <h3 className="font-black text-blue-300">
+                  💳 PAYPAL
+                </h3>
+                <p className="mt-2 text-sm text-slate-300">
+                  Find me here:
+                </p>
+                <p className="mt-1 text-lg font-black text-white">
+                 Jennifer.West223@gmail.com
+                </p>
+
+                <a
+                  href="https://www.paypal.me/jennifer.west223@gmail.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-[#003087] px-4 py-3 text-sm font-black text-white transition hover:bg-[#001f5b]"
+                >
+                  Open PayPal Profile
+                  <span>↗</span>
+                </a>
+                <p className="mt-2 text-[10px] leading-relaxed text-slate-500">
+                  On supported mobile devices, this link may open directly
+                  in the PayPal app. Otherwise, it opens PayPal in your browser.
                 </p>
               </div>
 

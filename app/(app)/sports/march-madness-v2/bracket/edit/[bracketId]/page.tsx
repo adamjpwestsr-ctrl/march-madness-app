@@ -475,6 +475,14 @@ export default function DynamicBracketBuilder({
   async function saveBracket() {
     if (saving) return;
 
+    // Normalize and validate the bracket name before saving.
+    const normalizedBracketName = bracketName.trim();
+
+    if (!normalizedBracketName) {
+      window.alert("Please enter a bracket name.");
+      return;
+    }
+
     setSaving(true);
 
     try {
@@ -508,6 +516,7 @@ export default function DynamicBracketBuilder({
             picks: validPicks,
             email: currentUser.email,
             user_id: currentUser.user_id,
+            bracket_name: normalizedBracketName,
           }),
         }
       );
@@ -640,9 +649,19 @@ export default function DynamicBracketBuilder({
                 {userName}
               </div>
 
-              <div className="truncate text-xs text-slate-400">
-                {bracketName}
-              </div>
+              <label className="mt-1 flex flex-col gap-1 text-left sm:items-end">
+                <span className="text-[0.6rem] font-semibold uppercase tracking-wide text-slate-500">
+                  Bracket Name
+                </span>
+                <input
+                  type="text"
+                  value={bracketName}
+                  onChange={(event) => setBracketName(event.target.value)}
+                  maxLength={60}
+                  aria-label="Bracket name"
+                  className="w-48 rounded-md border border-slate-700 bg-slate-800 px-2 py-1.5 text-xs text-white outline-none transition focus:border-yellow-400 sm:w-64 sm:text-right"
+                />
+              </label>
             </div>
 
             <button

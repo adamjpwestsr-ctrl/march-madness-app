@@ -1,3 +1,4 @@
+
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabaseServerClient";
 
@@ -8,7 +9,7 @@ export async function POST(req: Request) {
   try {
     const supabase = await createSupabaseServerClient();
     const body = await req.json();
-    const { bracket_id, picks, email, user_id } = body;
+    const { bracket_id, picks, email, user_id, bracket_name } = body;
 
     if (!UUID_RE.test(String(bracket_id || ""))) {
       return NextResponse.json(
@@ -29,6 +30,21 @@ export async function POST(req: Request) {
         { success: false, error: "Missing email or user_id" },
         { status: 400 }
       );
+    }
+
+    // The bracket name is optional for compatibility with any existing callers.
+    // When supplied, it must contain a nonblank value.
+    let normalizedBracketName: string | null = null;
+
+    if (bracket_name !== undefined) {
+      if (typeof bracket_name !== "string" || !bracket_name.trim()) {
+        return NextResponse.json(
+          { success: false, error: "Bracket name is required." },
+          { status: 400 }
+        );
+      }
+
+      normalizedBracketName = bracket_name.trim();
     }
 
     const { data: bracket, error: bracketError } = await supabase
@@ -171,6 +187,40 @@ export async function POST(req: Request) {
         { success: false, error: deleteError.message },
         { status: 500 }
       );
+    }
+
+    // Save the renamed bracket only after the picks have been saved.
+    // A duplicate name does not undo or prevent the pick save.
+    if (normalizedBracketName !== null) {
+      const { error: nameUpdateError } = await supabase
+        .from("brackets")
+        .update({ bracket_name: normalizedBracketName })
+        .eq("bracket_id", bracket_id)
+        .eq("user_id", user_id);
+
+      if (nameUpdateError) {
+        if (nameUpdateError.code === "23505") {
+          return NextResponse.json(
+            {
+              success: false,
+              picks_saved: true,
+              error: "Your picks were saved, but that bracket name is already taken. Please choose another name.",
+            },
+            { status: 409 }
+          );
+        }
+
+        console.error("Bracket name update error:", nameUpdateError);
+
+        return NextResponse.json(
+          {
+            success: false,
+            picks_saved: true,
+            error: "Your picks were saved, but we couldn't update the bracket name. Please try saving again.",
+          },
+          { status: 500 }
+        );
+      }
     }
 
     return NextResponse.json({ success: true });

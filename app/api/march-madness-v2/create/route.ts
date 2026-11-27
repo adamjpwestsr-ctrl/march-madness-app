@@ -183,6 +183,15 @@ export async function POST(req: Request) {
     if (bracketError) {
       console.error("Bracket create error:", bracketError);
 
+      if (bracketError.code === "23505") {
+        return NextResponse.json(
+          {
+            error: "That bracket name is already taken. Please choose another name.",
+          },
+          { status: 409 }
+        );
+      }
+
       return NextResponse.json(
         { error: bracketError.message },
         { status: 500 }
